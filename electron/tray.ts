@@ -19,6 +19,7 @@ export function createTray(overlay: OverlayController): Tray | null {
 
   const menu = Menu.buildFromTemplate([
     { label: 'Show / hide overlay', click: () => overlay.toggleVisibility() },
+    { label: 'Settings…', click: () => overlay.setSettingsOpen(true) },
     { label: 'Move / resize mode', click: () => overlay.toggleMoveMode() },
     { label: 'Click-through', click: () => overlay.toggleClickThrough() },
     { type: 'separator' },
