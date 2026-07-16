@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Central design tokens — dark, compact overlay theme (plan §3).
+   Tailwind v4 turns each --color-* token into bg-/text-/border- utilities. */
+@theme {
+  --color-overlay-bg: #0e1118;
+  --color-overlay-panel: #161b26;
+  --color-overlay-border: #2a3346;
+  --color-overlay-accent: #c8a24a;
+  --color-overlay-text: #e6e9f0;
+  --color-overlay-muted: #8b93a7;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  /* Must stay transparent so only the panel is painted over the game. */
+  background: transparent;
+  color: var(--color-overlay-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  cursor: default;
+}
+
+/* Frameless-window drag support (plan §4): a click-through window can't be
+   grabbed, so move mode marks the header draggable and buttons non-draggable. */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.resize-grip {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 50%,
+    var(--color-overlay-accent) 50%,
+    var(--color-overlay-accent) 100%
+  );
+  opacity: 0.6;
+}

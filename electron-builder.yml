@@ -1,0 +1,20 @@
+appId: com.poelevelingoverlay.app
+productName: PoE Leveling Overlay
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+extraResources:
+  - from: build/icon.png
+    to: icon.png
+win:
+  target: nsis
+  icon: build/icon.png
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+# Note: producing the Windows installer requires running on Windows (or wine).
+# P0 verifies build + a headless launch only; packaging is exercised later.
