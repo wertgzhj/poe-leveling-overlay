@@ -1,5 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Channels, type AppInfo, type OverlayState } from './channels'
+import {
+  Channels,
+  type AppInfo,
+  type OverlayState,
+  type SettingsSetResult
+} from './channels'
 
 // The only surface exposed to the renderer. Sandboxed + contextIsolated, so the
 // overlay can reach exactly these channels and nothing else (plan §11.1).
@@ -14,10 +19,22 @@ const api = {
 
   exitMoveMode: (): void => ipcRenderer.send(Channels.overlayExitMoveMode),
 
+  setSettingsOpen: (open: boolean): void =>
+    ipcRenderer.send(Channels.overlaySetSettingsOpen, open),
+
   resizeBy: (dx: number, dy: number): void =>
     ipcRenderer.send(Channels.overlayResizeBy, { dx, dy }),
 
   getSettings: () => ipcRenderer.invoke(Channels.settingsGetAll),
+
+  setSettings: (patch: unknown): Promise<SettingsSetResult> =>
+    ipcRenderer.invoke(Channels.settingsSet, patch),
+
+  pauseHotkeys: (): void => ipcRenderer.send(Channels.hotkeysPause),
+  resumeHotkeys: (): void => ipcRenderer.send(Channels.hotkeysResume),
+
+  pickClientTxt: (): Promise<string | null> =>
+    ipcRenderer.invoke(Channels.dialogPickClientTxt),
 
   getAppInfo: (): Promise<AppInfo> => ipcRenderer.invoke(Channels.appGetInfo)
 }

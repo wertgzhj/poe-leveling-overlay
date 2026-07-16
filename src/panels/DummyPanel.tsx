@@ -1,4 +1,5 @@
 import { useOverlayStore } from '../stores/overlayStore'
+import { formatAccelerator } from '../lib/accelerator'
 
 // P0 placeholder panel. Later phases replace this with the Guide / Gem / Tree
 // panels (plan §4). Its job now is to prove the transparent window renders and
@@ -9,9 +10,7 @@ function StateChip({ label, on }: { label: string; on: boolean }): React.JSX.Ele
     <span
       className={
         'rounded px-2 py-0.5 text-[11px] font-medium ' +
-        (on
-          ? 'bg-overlay-accent/20 text-overlay-accent'
-          : 'bg-white/5 text-overlay-muted')
+        (on ? 'bg-overlay-accent/20 text-overlay-accent' : 'bg-white/5 text-overlay-muted')
       }
     >
       {label}
@@ -35,7 +34,7 @@ function ResizeGrip(): React.JSX.Element {
 }
 
 export function DummyPanel(): React.JSX.Element {
-  const { visible, clickThrough, moveMode, appVersion, opacity } = useOverlayStore()
+  const { visible, clickThrough, moveMode, appVersion, opacity, hotkeys } = useOverlayStore()
 
   if (!visible) return <div />
 
@@ -59,14 +58,23 @@ export function DummyPanel(): React.JSX.Element {
             <span className="text-overlay-accent">◆</span>
             <span className="text-sm font-semibold tracking-wide">PoE Leveling Overlay</span>
           </div>
-          {moveMode && (
+          <div className="flex items-center gap-1.5">
+            {moveMode && (
+              <button
+                className="no-drag rounded bg-overlay-accent/20 px-2 py-0.5 text-[11px] text-overlay-accent"
+                onClick={() => window.overlay?.exitMoveMode()}
+              >
+                Done
+              </button>
+            )}
             <button
-              className="no-drag rounded bg-overlay-accent/20 px-2 py-0.5 text-[11px] text-overlay-accent"
-              onClick={() => window.overlay?.exitMoveMode()}
+              className="no-drag rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
+              title="Settings"
+              onClick={() => window.overlay?.setSettingsOpen(true)}
             >
-              Done
+              ⚙
             </button>
-          )}
+          </div>
         </header>
 
         <div className="space-y-3 px-3 pb-3 text-overlay-text">
@@ -85,16 +93,16 @@ export function DummyPanel(): React.JSX.Element {
               Hotkeys
             </div>
             <dl className="space-y-1 text-xs">
-              <Hotkey combo="Ctrl+Shift+O" desc="Show / hide overlay" />
-              <Hotkey combo="Ctrl+Shift+C" desc="Toggle click-through" />
-              <Hotkey combo="Ctrl+Shift+M" desc="Move / resize mode" />
+              <Hotkey combo={hotkeys.toggleVisibility} desc="Show / hide overlay" />
+              <Hotkey combo={hotkeys.toggleClickThrough} desc="Toggle click-through" />
+              <Hotkey combo={hotkeys.toggleMoveMode} desc="Move / resize mode" />
             </dl>
           </div>
 
           <p className="text-[10px] text-overlay-muted">
             {moveMode
               ? 'Drag the title bar to move · drag the bottom-right corner to resize.'
-              : 'Run the game in Windowed Fullscreen so the overlay stays visible.'}
+              : 'Run the game in Windowed Fullscreen so the overlay stays visible. Open ⚙ to rebind keys.'}
           </p>
         </div>
 
@@ -115,7 +123,7 @@ function Hotkey({ combo, desc }: { combo: string; desc: string }): React.JSX.Ele
     <div className="flex items-center justify-between gap-3">
       <dd className="text-overlay-text">{desc}</dd>
       <dt className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-overlay-muted">
-        {combo}
+        {formatAccelerator(combo)}
       </dt>
     </div>
   )

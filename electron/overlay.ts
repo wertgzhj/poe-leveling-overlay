@@ -14,6 +14,7 @@ export class OverlayController {
   private win: BrowserWindow | null = null
   private clickThrough: boolean
   private moveMode = false
+  private settingsOpen = false
   private saveTimer: NodeJS.Timeout | null = null
 
   constructor() {
@@ -87,8 +88,20 @@ export class OverlayController {
   }
 
   toggleClickThrough(): void {
-    this.clickThrough = !this.clickThrough
-    store.set('clickThrough', this.clickThrough)
+    this.setClickThrough(!this.clickThrough)
+  }
+
+  setClickThrough(value: boolean): void {
+    this.clickThrough = value
+    store.set('clickThrough', value)
+    this.applyMouseEvents()
+    this.pushState()
+  }
+
+  setSettingsOpen(on: boolean): void {
+    this.settingsOpen = on
+    // Settings must be interactable even if click-through is the user's default.
+    if (on && !this.win?.isVisible()) this.win?.showInactive()
     this.applyMouseEvents()
     this.pushState()
   }
@@ -118,14 +131,16 @@ export class OverlayController {
     return {
       visible: this.win?.isVisible() ?? false,
       clickThrough: this.clickThrough,
-      moveMode: this.moveMode
+      moveMode: this.moveMode,
+      settingsOpen: this.settingsOpen
     }
   }
 
   private applyMouseEvents(): void {
     if (!this.win) return
-    // Pass clicks through to the game unless the user is interacting or moving.
-    const passthrough = this.clickThrough && !this.moveMode
+    // Pass clicks through to the game unless the user is interacting, moving,
+    // or editing settings.
+    const passthrough = this.clickThrough && !this.moveMode && !this.settingsOpen
     this.win.setIgnoreMouseEvents(passthrough, { forward: true })
   }
 

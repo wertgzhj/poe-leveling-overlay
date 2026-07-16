@@ -43,8 +43,11 @@ and Exile Leveling. Full guardrails: [`docs/plan.md`](docs/plan.md) §2.
 | Toggle click-through | `Ctrl+Shift+C` | Click-through lets clicks reach the game |
 | Move / resize mode | `Ctrl+Shift+M` | Drag the title bar; drag the corner to resize |
 
-All hotkeys are rebindable (defaults are chosen to avoid PoE's own binds). The tray
-icon offers the same actions plus **Quit**.
+All hotkeys are rebindable in-app: open **Settings** (the ⚙ button in the overlay, or
+the tray → *Settings…*), click a binding, and press the new combo — the change takes
+effect immediately and is saved. Defaults are chosen to avoid PoE's own binds; a
+combo that's already taken is flagged as a conflict. The tray also offers show/hide,
+move mode, click-through, and **Quit**.
 
 ## Create a build profile
 
