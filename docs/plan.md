@@ -62,11 +62,22 @@ Main process
 ├── ProfileStore       Load/save build profiles & settings + last-known progress state
 │                      (level, current step, checkedIds — survives overlay restarts)
 ├── ApiTracker         (optional) OAuth + GGG API refresh → progress:updated (§7)
-└── Hotkeys            globalShortcut: overlay on/off, click-through, step forward/back
-                       Rebindable from P0; defaults must not collide with PoE binds
+└── Hotkeys            globalShortcut: overlay on/off, click-through, move/resize, step forward/back
+                       Rebindable via SettingsPanel (P0.5); editing a bind live re-registers the
+                       global shortcut. Defaults must not collide with PoE binds
+
+Renderer (overlay)
+├── GuidePanel         Current route step + upcoming steps
+├── GemPanel           Loadout of the current stage (links + socket colors) + purchases/pickups
+├── TreePanel          Current tree stage (list view, see §8)
+├── SettingsPanel      Small in-overlay settings: hotkey rebinding (capture combo + conflict
+│                      check), opacity, click-through default, Client.txt path
+│                      (P0.5; grows over later phases)
+└── DebugPanel         Parsed events only, in-memory (dev only, see §11.1)
 ```
 
-IPC events (main → renderer): `area:entered {areaId, name, areaLevel, ts}`, `player:levelup {name, charClass, level}`, `profile:changed`, `progress:updated {checkedIds}`.
+IPC events (main → renderer): `area:entered {areaId, name, areaLevel, ts}`, `player:levelup {name, charClass, level}`, `profile:changed`, `progress:updated {checkedIds}`, `overlay:state {visible, clickThrough, moveMode}`.
+Renderer → main: `settings:set {patch}` — persists the change and, when the `hotkeys` key changes, re-registers the global shortcuts without a restart.
 
 ---
 
@@ -208,7 +219,8 @@ From this, the app automatically generates: a **shopping list per town visit** (
 
 | Phase | Content | Definition of Done |
 |---|---|---|
-| **P0 Scaffold** | Electron shell, transparent overlay (`backgroundThrottling: false`, alwaysOnTop `'screen-saver'` level), hotkeys (on/off, click-through via `setIgnoreMouseEvents(true, {forward:true})`, move/resize mode; rebindable, defaults off PoE binds), settings persistence, dummy panel, README skeleton | Overlay sits on top of PoE (Windowed Fullscreen), keeps updating while the game has focus, hotkeys work; checked at DPI scaling ≠ 100% and on multi-monitor |
+| **P0 Scaffold** | Electron shell, transparent overlay (`backgroundThrottling: false`, alwaysOnTop `'screen-saver'` level), hotkeys (on/off, click-through via `setIgnoreMouseEvents(true, {forward:true})`, move/resize mode; defaults off PoE binds, rebinding UI lands in P0.5), settings persistence, dummy panel, README skeleton | Overlay sits on top of PoE (Windowed Fullscreen), keeps updating while the game has focus, hotkeys work; checked at DPI scaling ≠ 100% and on multi-monitor |
+| **P0.5 Settings panel** | Small in-overlay `SettingsPanel` (§4): rebind the three hotkeys (capture a combo, validate the accelerator, show registration conflicts), edit opacity, click-through default, and the `Client.txt` path. `settings:set` IPC persists changes; hotkey edits re-register `globalShortcut` live. Bumped ahead of the P3 editor. | Hotkeys are rebindable from inside the overlay; a rebind takes effect without restart, survives relaunch, and a conflicting/failed bind is surfaced rather than silently dropped |
 | **P1 LogWatcher** | **Starts with fixture capture:** real `Client.txt` lines (English client) through `sanitize-fixtures.ts`, then: polling tail, area-id + level-up parsing, startup backscan/resume, DebugPanel | Area changes in game appear live in the overlay; parser tests green against real fixtures; overlay restart mid-session resumes level + area correctly |
 | **P2 Route format + guide** | Schema from §5.1 (areaId-keyed), GuidePanel with auto-advance + manual forward/back, **pilot: Act 1 complete** | Act 1 playable with the guide tracking along; a town visit via portal and return does **not** derail auto-advance |
 | **P3 Profile schema + editor** | Build profile JSON, editor window (manual maintenance), GemPanel with generated shopping list. **In parallel: send the GGG OAuth client-registration email** (`oauth@grindinggear.com`, §7) — approval takes weeks and gates P7 | A manually created profile drives gem/reward displays in Act 1; registration email sent |
@@ -227,7 +239,7 @@ Backlog (post-v1): vendor recipe hints (movement speed boots, +1 wand), lab layo
 poe-leveling-overlay/
 ├── electron/          main.ts, logWatcher.ts, hotkeys.ts, profileStore.ts, apiTracker.ts
 ├── src/               React app (overlay)
-│   ├── panels/        Guide, Gems, Tree, Debug
+│   ├── panels/        Guide, Gems, Tree, Settings, Debug
 │   ├── stores/        zustand
 │   └── styles/        tokens.css
 ├── editor/            Editor window (separate Vite entry)
@@ -304,3 +316,7 @@ Findings from the 2026-07-16 plan review, folded in per section:
 - **§10 Repo:** `data/areas/` and `NOTICE` added.
 - **§11 Privacy:** fixture sanitizer also strips instance-server IPs; README disclaimer ("not affiliated with GGG") added; settings row mentions the stored character name.
 - **§12 Getting started:** fixture capture moved to the start of P1 and now explicitly includes the area-generation line and a party level-up.
+
+### Post-v2 adjustments
+
+- **2026-07-16 — hotkey settings bumped up:** inserted phase **P0.5 (Settings panel)** ahead of the P3 editor so hotkeys are rebindable from inside the overlay early, instead of only via the settings file. §4 restores the renderer-panel block and adds `SettingsPanel` plus the `settings:set` IPC (hotkey edits live re-register `globalShortcut`); §10 lists the panel. P0 shipped with hotkeys rebindable in config only — the UI is P0.5.
