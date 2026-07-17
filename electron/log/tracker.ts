@@ -58,6 +58,8 @@ export class ProgressTracker {
   private lastSeen = new Map<string, { level: number; charClass: string }>()
 
   private area: AreaState | null = null
+  /** A Generating line was seen and its localized "You have entered" is still expected. */
+  private pendingName = false
 
   constructor(opts: TrackerOptions) {
     this.areaNames = opts.areaNames
@@ -144,24 +146,33 @@ export class ProgressTracker {
           areaLevel: ev.areaLevel,
           ts: this.now()
         }
+        this.pendingName = true
         if (emit) this.callbacks.onArea?.(this.area)
         break
       }
       case 'zoneEntered': {
-        // Same zone as the pending Generating line: nothing to do. An id we
-        // couldn't map to a display name: adopt the localized name from this
-        // line. Anything else means the debug line was missed (pattern drift,
-        // §8) — fall back to a reverse name lookup for the id.
-        if (this.area && this.area.name === ev.zoneName) break
-        if (this.area?.areaId && this.areaNames[this.area.areaId] === undefined) {
-          this.area = { ...this.area, name: ev.zoneName }
-        } else {
-          this.area = {
-            areaId: this.reverseNames.get(ev.zoneName.toLowerCase()) ?? null,
-            name: ev.zoneName,
-            areaLevel: null,
-            ts: this.now()
+        // Every instance load logs the Generating line first, then this INFO
+        // line with the localized display name (verified: act1-real.log pairs
+        // them without exception). While a Generating area awaits its name,
+        // adopt the localized name and keep the id — this also self-heals a
+        // wrong entry in the areas/<lang> map.
+        if (this.pendingName && this.area) {
+          this.pendingName = false
+          if (this.area.name !== ev.zoneName) {
+            this.area = { ...this.area, name: ev.zoneName }
+            if (emit) this.callbacks.onArea?.(this.area)
           }
+          break
+        }
+        // Repeat announcement of the current zone: nothing to do.
+        if (this.area && this.area.name === ev.zoneName) break
+        // Fallback: the debug line was missed (pattern drift, §8) — reverse
+        // name lookup; unknown or act-ambiguous names yield a null id.
+        this.area = {
+          areaId: this.reverseNames.get(ev.zoneName.toLowerCase()) ?? null,
+          name: ev.zoneName,
+          areaLevel: null,
+          ts: this.now()
         }
         if (emit) this.callbacks.onArea?.(this.area)
         break

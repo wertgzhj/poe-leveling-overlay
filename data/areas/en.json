@@ -1,15 +1,11 @@
 {
-  "_note": "PROVISIONAL area id -> display name map (plan §5.1, §8). ids must be confirmed against real Client.txt 'Generating level N area \"<id>\"' fixtures. Display-only + reverse lookup (name -> id) on re-entry; the live name always comes from the 'You have entered' line. Populated far enough for the Act 1 pilot; grows in P6.",
+  "_note": "areaId -> display name (plan §5.1, §8). Every id below is VERIFIED against a real Client.txt capture (fixtures/act1-real.log, 2026-07-17). Campaign ids are act-scoped and sometimes sub-numbered (e.g. 1_1_4_1); towns end in _town; non-campaign instances use word ids (Hideout*, MapWorlds*, …) and are deliberately NOT listed — the tracker adopts their display name from the 'You have entered' line. Unverified ids are absent on purpose: a wrong id silently mismatches route steps, a missing one degrades gracefully. Grows as captures confirm more zones (P2/P6).",
   "language": "en",
   "areas": {
     "1_1_1": "The Twilight Strand",
     "1_1_town": "Lioneye's Watch",
-    "1_1_2": "The Mud Flats",
-    "1_1_3": "The Submerged Passage",
-    "1_1_4": "The Ledge",
-    "1_1_5": "The Climb",
-    "1_1_6": "The Lower Prison",
-    "1_1_7": "The Ship Graveyard",
-    "1_2_town": "The Forest Encampment"
+    "1_1_2": "The Coast",
+    "1_1_3": "The Mud Flats",
+    "1_1_4_1": "The Submerged Passage"
   }
 }
