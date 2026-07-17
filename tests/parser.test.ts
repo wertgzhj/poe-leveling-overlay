@@ -56,6 +56,28 @@ test('ignores unrelated system lines', () => {
   }
 })
 
+test('real capture: every line parses and the event mix is right', () => {
+  const lines = loadFixtureLines('act1-real.log')
+  const events = lines.map((l) => parser.parseLine(l))
+  events.forEach((e, i) => assert.ok(e !== null, `unparsed real line ${i + 1}: ${lines[i]}`))
+
+  const byKind = { areaGenerated: 0, levelUp: 0, zoneEntered: 0 }
+  for (const e of events) byKind[e!.kind]++
+  assert.equal(byKind.levelUp, 3)
+  assert.equal(byKind.areaGenerated + byKind.zoneEntered, lines.length - 3)
+
+  // Spot checks: sub-numbered campaign id and word-id map instance.
+  assert.ok(
+    events.some((e) => e?.kind === 'areaGenerated' && e.areaId === '1_1_4_1' && e.areaLevel === 5)
+  )
+  assert.ok(
+    events.some((e) => e?.kind === 'areaGenerated' && e.areaId === 'MapWorldsMemoryVault2' && e.areaLevel === 84)
+  )
+  assert.ok(
+    events.some((e) => e?.kind === 'levelUp' && e.name === 'Exile1' && e.charClass === 'Witch' && e.level === 4)
+  )
+})
+
 test('fixture sweep: expected event mix from the synthetic Act 1 log', () => {
   const events = loadFixtureLines('act1-synthetic.log')
     .map((l) => parser.parseLine(l))

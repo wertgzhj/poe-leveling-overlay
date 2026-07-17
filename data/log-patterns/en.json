@@ -1,5 +1,5 @@
 {
-  "_note": "PROVISIONAL patterns (plan §8). Verify the exact substrings against real Client.txt fixtures and adjust here — no code change needed. Regexes use named groups; only the distinctive substring is matched, so the timestamp/log-tag prefix is ignored. 'chat' matches chat/whisper/party/guild/trade lines by their channel sigil after the ']' tag; the tracker drops those lines BEFORE parsing (privacy §11.1 + prevents a whisper from spoofing a level-up or zone).",
+  "_note": "Patterns (plan §8). areaGenerated, levelUp and zoneEntered are VERIFIED verbatim against a real capture (fixtures/act1-real.log, 2026-07-17). The 'chat' sigil filter remains assumption-based — chat lines are stripped from committed fixtures, so revisit it if a real chat line ever gets through. Regexes use named groups; only the distinctive substring is matched, so the timestamp/log-tag prefix is ignored. The tracker drops chat lines BEFORE parsing (privacy §11.1 + prevents a whisper from spoofing a level-up or zone).",
   "language": "en",
   "patterns": {
     "chat": "\\] (?:[$#@%&]|To |From )",

@@ -35,26 +35,38 @@ test('areaGenerated drives the area with mapped display name + monster level', (
 test('zoneEntered matching the current area is a silent confirmation', () => {
   const { tracker, areas } = makeTracker()
   feed(tracker, '… [DEBUG Client 1] Generating level 2 area "1_1_2" with seed 9')
-  feed(tracker, '… [INFO Client 1] : You have entered The Mud Flats.')
+  feed(tracker, '… [INFO Client 1] : You have entered The Coast.')
   assert.equal(areas.length, 1)
 })
 
 test('zoneEntered without a Generating line falls back to reverse name lookup', () => {
   const { tracker, areas } = makeTracker()
-  feed(tracker, '… [INFO Client 1] : You have entered The Ledge.')
+  feed(tracker, '… [INFO Client 1] : You have entered The Coast.')
   assert.equal(areas.length, 1)
-  assert.equal(areas[0].areaId, '1_1_4')
+  assert.equal(areas[0].areaId, '1_1_2')
   assert.equal(areas[0].areaLevel, null)
 })
 
-test('unknown areaId adopts the localized name from the follow-up line', () => {
+test('word-id instances (hideouts/maps) adopt their localized names', () => {
+  // Real lines from act1-real.log — non-campaign instances have word ids.
   const { tracker, areas } = makeTracker()
-  feed(tracker, '… [DEBUG Client 1] Generating level 33 area "2_6_7_1" with seed 1')
-  assert.equal(areas[0].name, '2_6_7_1') // no mapping yet — id as placeholder
-  feed(tracker, '… [INFO Client 1] : You have entered Prisoner\'s Gate.')
+  feed(tracker, '2026/04/19 13:15:21 310128500 1186a886 [DEBUG Client 33248] Generating level 60 area "HideoutWorldTurtle" with seed 1')
+  assert.equal(areas[0].name, 'HideoutWorldTurtle') // unmapped — id as placeholder
+  feed(tracker, '2026/04/19 13:15:22 310129390 cffb06dd [INFO Client 33248] : You have entered Cosmic Turtle Hideout.')
   assert.equal(areas.length, 2)
-  assert.equal(areas[1].areaId, '2_6_7_1')
-  assert.equal(areas[1].name, "Prisoner's Gate")
+  assert.equal(areas[1].areaId, 'HideoutWorldTurtle')
+  assert.equal(areas[1].name, 'Cosmic Turtle Hideout')
+  assert.equal(areas[1].areaLevel, 60)
+})
+
+test('a wrong display name in the area map self-heals from the entered line', () => {
+  const { tracker, areas } = makeTracker()
+  feed(tracker, '… [DEBUG Client 1] Generating level 2 area "1_1_2" with seed 9')
+  feed(tracker, '… [INFO Client 1] : You have entered Some Renamed Coast.')
+  assert.equal(areas.length, 2)
+  assert.equal(areas[1].areaId, '1_1_2', 'id from the Generating line is kept')
+  assert.equal(areas[1].name, 'Some Renamed Coast')
+  assert.equal(areas[1].areaLevel, 2)
 })
 
 test('first live level-up adopts the character; party members stay unbound', () => {
@@ -102,16 +114,31 @@ test('changing the explicit binding rebinds level from what was already seen', (
   assert.equal(snap.charClass, 'Witch')
 })
 
+test('real capture: backscan resumes the fresh-character session correctly', () => {
+  const { tracker, areas, levels } = makeTracker()
+  tracker.backscan(loadFixtureLines('act1-real.log'), parser)
+  assert.equal(areas.length, 0, 'backscan must not emit')
+  assert.equal(levels.length, 0, 'backscan must not emit')
+
+  const snap = tracker.snapshot()
+  assert.equal(snap.character, 'Exile1')
+  assert.equal(snap.level, 4)
+  assert.equal(snap.charClass, 'Witch')
+  assert.equal(snap.area?.areaId, '1_1_town')
+  assert.equal(snap.area?.name, "Lioneye's Watch")
+  assert.equal(snap.area?.areaLevel, 13)
+})
+
 test('hydrate restores persisted state only where the log gave nothing', () => {
   const { tracker } = makeTracker()
   tracker.hydrate({
-    area: { areaId: '1_1_3', name: 'The Submerged Passage', areaLevel: 5, ts: 1 },
+    area: { areaId: '1_1_4_1', name: 'The Submerged Passage', areaLevel: 5, ts: 1 },
     character: 'MyExile',
     charClass: 'Marauder',
     level: 7
   })
   const snap = tracker.snapshot()
-  assert.equal(snap.area?.areaId, '1_1_3')
+  assert.equal(snap.area?.areaId, '1_1_4_1')
   assert.equal(snap.level, 7)
 
   // A live event then wins over hydrated state.
