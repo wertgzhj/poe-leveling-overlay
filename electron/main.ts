@@ -3,12 +3,14 @@ import { OverlayController } from './overlay'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { registerIpc } from './ipc'
 import { createTray } from './tray'
+import { LogService } from './log/service.ts'
 
 // Set to a number of ms via SMOKE=<ms> to auto-quit after startup — used by the
 // headless launch check in CI/dev to prove the app boots without a display.
 const SMOKE_MS = process.env['SMOKE'] ? Number(process.env['SMOKE']) || 4000 : 0
 
 const overlay = new OverlayController()
+const logService = new LogService(overlay)
 let tray: ReturnType<typeof createTray> = null
 
 // Single instance: a second launch just resurfaces the existing overlay.
@@ -25,7 +27,8 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     overlay.create()
-    registerIpc(overlay)
+    registerIpc(overlay, logService)
+    logService.start()
     const failed = registerHotkeys(overlay)
     if (failed.length) {
       console.warn('[hotkeys] failed to register:', failed.join(', '))
@@ -46,6 +49,7 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   unregisterHotkeys()
+  logService.stop()
   tray?.destroy()
 })
 
@@ -59,7 +63,8 @@ function runSmoke(failedHotkeys: string[]): void {
       alwaysOnTop: win?.isAlwaysOnTop() ?? false,
       state: overlay.getState(),
       hotkeysFailed: failedHotkeys,
-      tray: !!tray
+      tray: !!tray,
+      log: logService.getSnapshot().status
     }
     console.log('SMOKE_OK ' + JSON.stringify(status))
     app.quit()

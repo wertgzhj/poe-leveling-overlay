@@ -1,7 +1,9 @@
 import Store from 'electron-store'
+import type { TrackerSnapshot } from './log/tracker.ts'
 
 // Persistent, user-editable settings. electron-store writes JSON into the OS
-// userData folder (docs/plan.md §3). No personal data beyond local file paths.
+// userData folder (docs/plan.md §3). No personal data beyond local file paths
+// and the optional in-game character name (§11.1).
 
 export interface HotkeyBindings {
   toggleVisibility: string
@@ -23,11 +25,20 @@ export interface AppSettings {
   /** when true the overlay is transparent to mouse input (game gets the clicks) */
   clickThrough: boolean
   hotkeys: HotkeyBindings
-  /** absolute path to the game's Client.txt (used from P1 onward) */
+  /** absolute path to the game's Client.txt (P1 log watching) */
   clientTxtPath: string | null
+  /** explicit character binding for level-ups; null = adopt heuristically (§8) */
+  characterName: string | null
+  /** log-pattern language (data/log-patterns/<lang>.json); v1 ships 'en' */
+  logLanguage: string
 }
 
-const defaults: AppSettings = {
+/** Everything persisted, including non-setting state (resume snapshot, §8). */
+interface StoreSchema extends AppSettings {
+  progress: TrackerSnapshot | null
+}
+
+const defaults: StoreSchema = {
   bounds: { width: 340, height: 480 },
   opacity: 0.95,
   clickThrough: true,
@@ -37,10 +48,13 @@ const defaults: AppSettings = {
     toggleClickThrough: 'CommandOrControl+Shift+C',
     toggleMoveMode: 'CommandOrControl+Shift+M'
   },
-  clientTxtPath: null
+  clientTxtPath: null,
+  characterName: null,
+  logLanguage: 'en',
+  progress: null
 }
 
-export const store = new Store<AppSettings>({ name: 'settings', defaults })
+export const store = new Store<StoreSchema>({ name: 'settings', defaults })
 
 export function getSettings(): AppSettings {
   return {
@@ -48,6 +62,8 @@ export function getSettings(): AppSettings {
     opacity: store.get('opacity'),
     clickThrough: store.get('clickThrough'),
     hotkeys: store.get('hotkeys'),
-    clientTxtPath: store.get('clientTxtPath')
+    clientTxtPath: store.get('clientTxtPath'),
+    characterName: store.get('characterName'),
+    logLanguage: store.get('logLanguage')
   }
 }

@@ -8,11 +8,22 @@ interface OverlayStore {
   settingsOpen: boolean
   // app + settings values
   appVersion: string
+  isDev: boolean
   opacity: number
   hotkeys: HotkeyBindingsBridge
   clientTxtPath: string | null
+  characterName: string | null
+  // log tracking (P1)
+  logStatus: WatcherStatusBridge | null
+  tracked: TrackerStateBridge | null
+  recentEvents: LogEventSummaryBridge[]
+  debugOpen: boolean
   patch: (partial: Partial<OverlayStore>) => void
+  applyLogSnapshot: (snap: LogSnapshotBridge) => void
+  pushEvent: (ev: LogEventSummaryBridge) => void
 }
+
+const RECENT_MAX = 100
 
 export const useOverlayStore = create<OverlayStore>((set) => ({
   visible: true,
@@ -20,6 +31,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   moveMode: false,
   settingsOpen: false,
   appVersion: '',
+  isDev: false,
   opacity: 0.95,
   hotkeys: {
     toggleVisibility: 'CommandOrControl+Shift+O',
@@ -27,5 +39,14 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     toggleMoveMode: 'CommandOrControl+Shift+M'
   },
   clientTxtPath: null,
-  patch: (partial) => set(partial)
+  characterName: null,
+  logStatus: null,
+  tracked: null,
+  recentEvents: [],
+  debugOpen: false,
+  patch: (partial) => set(partial),
+  applyLogSnapshot: (snap) =>
+    set({ logStatus: snap.status, tracked: snap.state, recentEvents: snap.recent }),
+  pushEvent: (ev) =>
+    set((s) => ({ recentEvents: [...s.recentEvents, ev].slice(-RECENT_MAX) }))
 }))

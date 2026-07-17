@@ -15,12 +15,14 @@ function hasModifier(accelerator: string): boolean {
 }
 
 export function SettingsPanel(): React.JSX.Element {
-  const { hotkeys, opacity, clickThrough, clientTxtPath, patch } = useOverlayStore()
+  const { hotkeys, opacity, clickThrough, clientTxtPath, characterName, patch } = useOverlayStore()
   const [recording, setRecording] = useState<HotkeyField | null>(null)
   const [failed, setFailed] = useState<Set<string>>(new Set())
   const [pathDraft, setPathDraft] = useState(clientTxtPath ?? '')
+  const [charDraft, setCharDraft] = useState(characterName ?? '')
 
   useEffect(() => setPathDraft(clientTxtPath ?? ''), [clientTxtPath])
+  useEffect(() => setCharDraft(characterName ?? ''), [characterName])
 
   // Re-register hotkeys from stored settings when the panel closes (covers
   // closing mid-capture, which leaves them paused).
@@ -80,6 +82,12 @@ export function SettingsPanel(): React.JSX.Element {
         commitPath(p)
       }
     })
+  }
+
+  const commitCharacter = (value: string): void => {
+    const v = value.trim()
+    patch({ characterName: v.length ? v : null })
+    void window.overlay?.setSettings({ characterName: v.length ? v : null })
   }
 
   return (
@@ -182,7 +190,24 @@ export function SettingsPanel(): React.JSX.Element {
                 Browse…
               </button>
             </div>
-            <p className="mt-1 text-[10px] text-overlay-muted">Used for zone/level tracking (from P1).</p>
+            <p className="mt-1 text-[10px] text-overlay-muted">Used for zone/level tracking.</p>
+
+            <label className="mt-2 block text-[11px] text-overlay-muted">
+              Character name (optional)
+            </label>
+            <input
+              type="text"
+              spellCheck={false}
+              value={charDraft}
+              placeholder="auto-detect from level-ups"
+              onChange={(e) => setCharDraft(e.target.value)}
+              onBlur={() => commitCharacter(charDraft)}
+              className="mt-1 w-full rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
+            />
+            <p className="mt-1 text-[10px] text-overlay-muted">
+              Binds level tracking to this character — set it if you play in a party, so a
+              partymate's level-up can't advance your progress.
+            </p>
           </Section>
         </div>
       </div>

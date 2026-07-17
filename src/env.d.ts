@@ -27,6 +27,8 @@ interface AppSettingsBridge {
   clickThrough: boolean
   hotkeys: HotkeyBindingsBridge
   clientTxtPath: string | null
+  characterName: string | null
+  logLanguage: string
 }
 
 interface SettingsPatchBridge {
@@ -34,15 +36,61 @@ interface SettingsPatchBridge {
   clickThrough?: boolean
   hotkeys?: HotkeyBindingsBridge
   clientTxtPath?: string | null
+  characterName?: string | null
 }
 
 interface SettingsSetResultBridge {
   failed: string[]
 }
 
+interface AreaStateBridge {
+  areaId: string | null
+  name: string
+  areaLevel: number | null
+  ts: number
+}
+
+interface LevelUpBridge {
+  name: string
+  charClass: string
+  level: number
+  isBound: boolean
+  ts: number
+}
+
+interface WatcherStatusBridge {
+  state: 'off' | 'missing' | 'watching' | 'error'
+  path: string | null
+  sizeBytes: number | null
+}
+
+interface TrackerStateBridge {
+  area: AreaStateBridge | null
+  character: string | null
+  charClass: string | null
+  level: number | null
+}
+
+interface LogEventSummaryBridge {
+  kind: 'area' | 'levelup'
+  ts: number
+  text: string
+}
+
+interface LogSnapshotBridge {
+  status: WatcherStatusBridge
+  state: TrackerStateBridge
+  recent: LogEventSummaryBridge[]
+}
+
 interface OverlayBridge {
   getState(): Promise<OverlayStateBridge>
   onState(cb: (state: OverlayStateBridge) => void): () => void
+  getLogSnapshot(): Promise<LogSnapshotBridge>
+  onLogStatus(cb: (status: WatcherStatusBridge) => void): () => void
+  onLogSnapshot(cb: (snap: LogSnapshotBridge) => void): () => void
+  onAreaEntered(cb: (area: AreaStateBridge) => void): () => void
+  onLevelUp(cb: (ev: LevelUpBridge) => void): () => void
   exitMoveMode(): void
   setSettingsOpen(open: boolean): void
   resizeBy(dx: number, dy: number): void

@@ -4,9 +4,10 @@ A **ToS-compliant** desktop overlay that helps you level through the Path of Exi
 campaign — route, quest rewards, vendor purchases and skill-tree stages, generated
 semi-automatically from a Path of Building import.
 
-> **Project status:** early development. Phase **P0 (scaffold)** — a transparent,
-> always-on-top overlay window with hotkeys and persistent settings. The route,
-> gem and tree panels arrive in later phases. See [`docs/plan.md`](docs/plan.md).
+> **Project status:** early development. Phases **P0–P1** — transparent overlay
+> with hotkeys, in-overlay settings, and live `Client.txt` tracking (current zone,
+> character level, restart-safe resume). The route, gem and tree panels arrive in
+> later phases. See [`docs/plan.md`](docs/plan.md).
 
 *Not affiliated with or endorsed by Grinding Gear Games.*
 
@@ -30,10 +31,12 @@ and Exile Leveling. Full guardrails: [`docs/plan.md`](docs/plan.md) §2.
 
 ## Setup
 
-1. Set the path to your `Client.txt`. Defaults:
+1. Set the path to your `Client.txt` (Settings → Game log). Defaults:
    - Steam: `…\steamapps\common\Path of Exile\logs\Client.txt`
    - Standalone: `…\Grinding Gear Games\Path of Exile\logs\Client.txt`
 2. Run Path of Exile in **Windowed Fullscreen** — exclusive fullscreen covers overlays.
+3. Optional: set your character name (Settings → Game log) if you play in a party,
+   so a partymate's level-up can't advance your progress. Solo it auto-detects.
 
 ## Hotkeys
 
@@ -78,7 +81,13 @@ npm run make-icon   # generate the tray/app icon (build/icon.png)
 npm run dev         # launch the overlay with hot reload
 npm run build       # bundle main + preload + renderer
 npm run typecheck   # tsc for the main and renderer projects
+npm test            # parser / tracker / log-watcher tests (node --test)
+npm run sanitize -- capture.txt out.log   # sanitize a Client.txt capture for fixtures
 ```
+
+Log-format note: the shipped patterns (`data/log-patterns/en.json`) and area ids
+(`data/areas/en.json`) are **provisional until validated against a real capture** —
+see `data/fixtures/README.md` for the capture + sanitize workflow.
 
 Requires Node 20+. The app targets Windows; `npm run package:win` builds the installer
 (run on Windows or with wine).
