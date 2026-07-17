@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import {
   Channels,
   type AppInfo,
+  type GuideState,
   type LogSnapshot,
   type OverlayState,
   type SettingsSetResult
@@ -30,6 +31,13 @@ const api = {
     subscribe(Channels.areaEntered, cb),
   onLevelUp: (cb: (ev: unknown) => void): (() => void) =>
     subscribe(Channels.playerLevelUp, cb),
+
+  getGuide: (): Promise<GuideState> => ipcRenderer.invoke(Channels.guideGet),
+  onGuideState: (cb: (state: GuideState) => void): (() => void) =>
+    subscribe(Channels.guideState, cb),
+  guideToggleStep: (stepId: string): void =>
+    ipcRenderer.send(Channels.guideToggleStep, stepId),
+  guideReset: (): void => ipcRenderer.send(Channels.guideReset),
 
   exitMoveMode: (): void => ipcRenderer.send(Channels.overlayExitMoveMode),
 

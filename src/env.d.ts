@@ -19,6 +19,8 @@ interface HotkeyBindingsBridge {
   toggleVisibility: string
   toggleClickThrough: string
   toggleMoveMode: string
+  stepForward: string
+  stepBack: string
 }
 
 interface AppSettingsBridge {
@@ -83,6 +85,40 @@ interface LogSnapshotBridge {
   recent: LogEventSummaryBridge[]
 }
 
+type StepTypeBridge =
+  | 'quest'
+  | 'waypoint'
+  | 'trial'
+  | 'town'
+  | 'boss'
+  | 'kill'
+  | 'enter'
+  | 'hint'
+
+interface RouteStepBridge {
+  id: string
+  type: StepTypeBridge
+  areaId?: string
+  zone?: string
+  text: string
+  hints?: string[]
+  rewardHint?: boolean
+}
+
+interface RouteBridge {
+  act: number
+  name?: string
+  steps: RouteStepBridge[]
+}
+
+interface GuideStateBridge {
+  route: RouteBridge | null
+  errors: string[]
+  doneIds: string[]
+  cursorIndex: number
+  cursorStepId: string | null
+}
+
 interface OverlayBridge {
   getState(): Promise<OverlayStateBridge>
   onState(cb: (state: OverlayStateBridge) => void): () => void
@@ -91,6 +127,10 @@ interface OverlayBridge {
   onLogSnapshot(cb: (snap: LogSnapshotBridge) => void): () => void
   onAreaEntered(cb: (area: AreaStateBridge) => void): () => void
   onLevelUp(cb: (ev: LevelUpBridge) => void): () => void
+  getGuide(): Promise<GuideStateBridge>
+  onGuideState(cb: (state: GuideStateBridge) => void): () => void
+  guideToggleStep(stepId: string): void
+  guideReset(): void
   exitMoveMode(): void
   setSettingsOpen(open: boolean): void
   resizeBy(dx: number, dy: number): void

@@ -4,10 +4,11 @@ A **ToS-compliant** desktop overlay that helps you level through the Path of Exi
 campaign — route, quest rewards, vendor purchases and skill-tree stages, generated
 semi-automatically from a Path of Building import.
 
-> **Project status:** early development. Phases **P0–P1** — transparent overlay
-> with hotkeys, in-overlay settings, and live `Client.txt` tracking (current zone,
-> character level, restart-safe resume). The route, gem and tree panels arrive in
-> later phases. See [`docs/plan.md`](docs/plan.md).
+> **Project status:** early development. Phases **P0–P2** — transparent overlay
+> with hotkeys, in-overlay settings, live `Client.txt` tracking (zone, level,
+> restart-safe resume), and a **route guide with auto-advance** driven by your
+> own hand-written route file. Gem/build panels arrive in later phases. See
+> [`docs/plan.md`](docs/plan.md).
 
 *Not affiliated with or endorsed by Grinding Gear Games.*
 
@@ -45,12 +46,32 @@ and Exile Leveling. Full guardrails: [`docs/plan.md`](docs/plan.md) §2.
 | Show / hide overlay | `Ctrl+Shift+O` | |
 | Toggle click-through | `Ctrl+Shift+C` | Click-through lets clicks reach the game |
 | Move / resize mode | `Ctrl+Shift+M` | Drag the title bar; drag the corner to resize |
+| Guide: next step | `Ctrl+Shift+N` | Marks the current step done |
+| Guide: previous step | `Ctrl+Shift+P` | Reopens the last completed step |
 
 All hotkeys are rebindable in-app: open **Settings** (the ⚙ button in the overlay, or
 the tray → *Settings…*), click a binding, and press the new combo — the change takes
 effect immediately and is saved. Defaults are chosen to avoid PoE's own binds; a
 combo that's already taken is flagged as a conflict. The tray also offers show/hide,
 move mode, click-through, and **Quit**.
+
+## Author your route
+
+The route content is **yours to write** — the app deliberately ships an engine plus a
+small Act 1 template, not imported guide data. Edit `data/campaign/act1.json` (or drop
+an override into `<userData>/routes/act1.json` for installed builds); the overlay
+**hot-reloads on save** and shows validation problems right in the panel.
+
+- A step needs an `id` (stable — progress is saved against it), a `type`
+  (`quest | waypoint | trial | town | boss | kill | enter | hint`), and a `text`.
+- Steps match the zone you enter by `areaId` (preferred — run in dev and the 🐞 panel
+  shows the id of every zone) or by `zone` display name until you've learned the id.
+- The guide always advances to the **next open step** for the zone you entered. Town
+  visits never skip pending steps, so portal trips to sell don't derail it. Hideouts
+  and endgame maps are ignored entirely.
+- `"rewardHint": true` marks quest-reward steps (used by the gem panel from P3 on).
+- Fix mistakes with the next/previous hotkeys or by clicking a step (needs
+  interactive mode, `Ctrl+Shift+C`).
 
 ## Create a build profile
 

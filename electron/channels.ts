@@ -3,6 +3,7 @@
 
 import type { TrackerSnapshot } from './log/tracker.ts'
 import type { WatcherStatus } from './log/watcher.ts'
+import type { Route } from './guide/route.ts'
 
 export const Channels = {
   /** main -> renderer: overlay interaction state changed */
@@ -36,7 +37,15 @@ export const Channels = {
   /** main -> renderer: a level-up line was seen (bound or party member) */
   playerLevelUp: 'player:levelup',
   /** renderer -> main (invoke): current status + tracker state + recent events */
-  logGetSnapshot: 'log:get-snapshot'
+  logGetSnapshot: 'log:get-snapshot',
+  /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
+  guideState: 'guide:state',
+  /** renderer -> main (invoke): current guide state */
+  guideGet: 'guide:get',
+  /** renderer -> main: toggle one step's done state */
+  guideToggleStep: 'guide:toggle-step',
+  /** renderer -> main: clear progress for the active character */
+  guideReset: 'guide:reset'
 } as const
 
 export interface OverlayState {
@@ -69,4 +78,13 @@ export interface LogSnapshot {
   status: WatcherStatus
   state: TrackerSnapshot
   recent: LogEventSummary[]
+}
+
+export interface GuideState {
+  route: Route | null
+  /** Route-file validation problems, shown to the author in the panel. */
+  errors: string[]
+  doneIds: string[]
+  cursorIndex: number
+  cursorStepId: string | null
 }

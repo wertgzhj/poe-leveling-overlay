@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useOverlayStore } from './stores/overlayStore'
-import { DummyPanel } from './panels/DummyPanel'
+import { GuidePanel } from './panels/GuidePanel'
 import { SettingsPanel } from './panels/SettingsPanel'
 import { DebugPanel } from './panels/DebugPanel'
 
@@ -27,12 +27,14 @@ export function App(): React.JSX.Element {
       })
     )
     void api.getLogSnapshot().then(applyLogSnapshot)
+    void api.getGuide().then((guide) => patch({ guide }))
 
     const store = useOverlayStore.getState
     const subs = [
       api.onState(patch),
       api.onLogSnapshot(applyLogSnapshot),
       api.onLogStatus((logStatus) => patch({ logStatus })),
+      api.onGuideState((guide) => patch({ guide })),
       api.onAreaEntered((area) => {
         const tracked = store().tracked
         patch({ tracked: { ...(tracked ?? emptyTracked), area } })
@@ -66,7 +68,7 @@ export function App(): React.JSX.Element {
 
   if (settingsOpen) return <SettingsPanel />
   if (debugOpen) return <DebugPanel />
-  return <DummyPanel />
+  return <GuidePanel />
 }
 
 const emptyTracked: TrackerStateBridge = {

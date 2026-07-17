@@ -7,7 +7,9 @@ type HotkeyField = keyof HotkeyBindingsBridge
 const HOTKEY_FIELDS: ReadonlyArray<readonly [HotkeyField, string]> = [
   ['toggleVisibility', 'Show / hide overlay'],
   ['toggleClickThrough', 'Toggle click-through'],
-  ['toggleMoveMode', 'Move / resize mode']
+  ['toggleMoveMode', 'Move / resize mode'],
+  ['stepForward', 'Guide: next step'],
+  ['stepBack', 'Guide: previous step']
 ]
 
 function hasModifier(accelerator: string): boolean {

@@ -1,6 +1,7 @@
 import { globalShortcut } from 'electron'
-import { store } from './settings'
+import { getHotkeys } from './settings'
 import type { OverlayController } from './overlay'
+import type { GuideService } from './guide/service.ts'
 
 /**
  * Register the global overlay hotkeys. These only ever drive the overlay — the
@@ -8,14 +9,16 @@ import type { OverlayController } from './overlay'
  * Returns the accelerators that failed to bind (e.g. already taken) so the
  * caller can surface a conflict.
  */
-export function registerHotkeys(overlay: OverlayController): string[] {
+export function registerHotkeys(overlay: OverlayController, guide: GuideService): string[] {
   unregisterHotkeys()
-  const hk = store.get('hotkeys')
+  const hk = getHotkeys()
 
   const bindings: Array<[string, () => void]> = [
     [hk.toggleVisibility, () => overlay.toggleVisibility()],
     [hk.toggleClickThrough, () => overlay.toggleClickThrough()],
-    [hk.toggleMoveMode, () => overlay.toggleMoveMode()]
+    [hk.toggleMoveMode, () => overlay.toggleMoveMode()],
+    [hk.stepForward, () => guide.forward()],
+    [hk.stepBack, () => guide.back()]
   ]
 
   const failed: string[] = []
