@@ -1,0 +1,10 @@
+{
+  "_note": "PROVISIONAL patterns (plan §8). Verify the exact substrings against real Client.txt fixtures and adjust here — no code change needed. Regexes use named groups; only the distinctive substring is matched, so the timestamp/log-tag prefix is ignored. 'chat' matches chat/whisper/party/guild/trade lines by their channel sigil after the ']' tag; the tracker drops those lines BEFORE parsing (privacy §11.1 + prevents a whisper from spoofing a level-up or zone).",
+  "language": "en",
+  "patterns": {
+    "chat": "\\] (?:[$#@%&]|To |From )",
+    "areaGenerated": "Generating level (?<areaLevel>\\d+) area \"(?<areaId>[^\"]+)\"",
+    "levelUp": "\\] : (?<name>[^:()]+?) \\((?<class>[A-Za-z]+)\\) is now level (?<level>\\d+)",
+    "zoneEntered": "\\] : You have entered (?<zoneName>.+?)\\.\\s*$"
+  }
+}

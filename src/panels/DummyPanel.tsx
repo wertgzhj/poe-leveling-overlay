@@ -33,8 +33,32 @@ function ResizeGrip(): React.JSX.Element {
   return <div className="resize-grip" onPointerDown={onPointerDown} title="Drag to resize" />
 }
 
+function trackerStatusLine(status: WatcherStatusBridge | null): string {
+  switch (status?.state) {
+    case 'watching':
+      return 'Watching Client.txt'
+    case 'missing':
+      return 'Client.txt not found — check the path in Settings'
+    case 'error':
+      return 'Log read error — see Settings'
+    default:
+      return 'Set the Client.txt path in Settings to enable tracking'
+  }
+}
+
 export function DummyPanel(): React.JSX.Element {
-  const { visible, clickThrough, moveMode, appVersion, opacity, hotkeys } = useOverlayStore()
+  const {
+    visible,
+    clickThrough,
+    moveMode,
+    appVersion,
+    opacity,
+    hotkeys,
+    isDev,
+    logStatus,
+    tracked,
+    patch
+  } = useOverlayStore()
 
   if (!visible) return <div />
 
@@ -67,6 +91,15 @@ export function DummyPanel(): React.JSX.Element {
                 Done
               </button>
             )}
+            {isDev && (
+              <button
+                className="no-drag rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
+                title="Log events (dev)"
+                onClick={() => patch({ debugOpen: true })}
+              >
+                🐞
+              </button>
+            )}
             <button
               className="no-drag rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
               title="Settings"
@@ -86,6 +119,40 @@ export function DummyPanel(): React.JSX.Element {
             <StateChip label="Visible" on={visible} />
             <StateChip label={clickThrough ? 'Click-through' : 'Interactive'} on={!clickThrough} />
             <StateChip label="Move mode" on={moveMode} />
+          </div>
+
+          <div className="rounded-md bg-black/25 p-2">
+            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+              <span
+                className={
+                  'inline-block h-1.5 w-1.5 rounded-full ' +
+                  (logStatus?.state === 'watching' ? 'bg-emerald-400' : 'bg-white/25')
+                }
+              />
+              Tracker
+            </div>
+            {logStatus?.state === 'watching' && (tracked?.area || tracked?.character) ? (
+              <div className="space-y-0.5 text-xs">
+                <div>
+                  <span className="text-overlay-muted">Zone: </span>
+                  <span className="text-overlay-text">{tracked?.area?.name ?? 'unknown'}</span>
+                  {tracked?.area?.areaLevel != null && (
+                    <span className="text-overlay-muted"> · monster lvl {tracked.area.areaLevel}</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-overlay-muted">Character: </span>
+                  <span className="text-overlay-text">
+                    {tracked?.character ?? 'waiting for a level-up…'}
+                  </span>
+                  {tracked?.level != null && (
+                    <span className="text-overlay-muted"> · level {tracked.level}</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-[11px] text-overlay-muted">{trackerStatusLine(logStatus)}</p>
+            )}
           </div>
 
           <div className="rounded-md bg-black/25 p-2">

@@ -1,0 +1,15 @@
+{
+  "_note": "PROVISIONAL area id -> display name map (plan §5.1, §8). ids must be confirmed against real Client.txt 'Generating level N area \"<id>\"' fixtures. Display-only + reverse lookup (name -> id) on re-entry; the live name always comes from the 'You have entered' line. Populated far enough for the Act 1 pilot; grows in P6.",
+  "language": "en",
+  "areas": {
+    "1_1_1": "The Twilight Strand",
+    "1_1_town": "Lioneye's Watch",
+    "1_1_2": "The Mud Flats",
+    "1_1_3": "The Submerged Passage",
+    "1_1_4": "The Ledge",
+    "1_1_5": "The Climb",
+    "1_1_6": "The Lower Prison",
+    "1_1_7": "The Ship Graveyard",
+    "1_2_town": "The Forest Encampment"
+  }
+}
