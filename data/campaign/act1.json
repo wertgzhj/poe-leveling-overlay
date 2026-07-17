@@ -1,0 +1,47 @@
+{
+  "_note": "Route template — the route is YOURS to write (owner decision, plan changelog 2026-07-17): edit this file freely, the overlay hot-reloads it on save and shows validation errors in the panel. Steps match by areaId when known (see data/areas/en.json; the dev 🐞 panel shows the id of every zone you enter) or by zone display name until you learn the id. Step types: quest | waypoint | trial | town | boss | kill | enter | hint. 'rewardHint: true' marks quest-reward steps for the P3 gem panel. Keep step ids stable — progress is saved against them.",
+  "act": 1,
+  "name": "Act 1",
+  "steps": [
+    {
+      "id": "a1-hillock",
+      "areaId": "1_1_1",
+      "type": "kill",
+      "text": "Clear the beach, kill Hillock, enter Lioneye's Watch"
+    },
+    {
+      "id": "a1-town-1",
+      "areaId": "1_1_town",
+      "type": "town",
+      "text": "Lioneye's Watch: pick your reward gem, then head out",
+      "rewardHint": true
+    },
+    {
+      "id": "a1-coast",
+      "areaId": "1_1_2",
+      "type": "waypoint",
+      "text": "The Coast: grab the waypoint, continue to the Mud Flats",
+      "hints": ["Tidal Island (Hailrake, medicine chest) is optional"]
+    },
+    {
+      "id": "a1-mud-flats",
+      "areaId": "1_1_3",
+      "type": "quest",
+      "text": "The Mud Flats: collect the 3 glyphs from the rhoa nests",
+      "rewardHint": true
+    },
+    {
+      "id": "a1-submerged",
+      "areaId": "1_1_4_1",
+      "type": "enter",
+      "text": "The Submerged Passage: push through toward The Ledge"
+    },
+    {
+      "id": "a1-ledge",
+      "zone": "The Ledge",
+      "type": "enter",
+      "text": "The Ledge: waypoint, keep going — extend this route from here on",
+      "hints": ["This step matches by zone name — replace with its areaId once you've entered it (🐞 panel shows it)"]
+    }
+  ]
+}

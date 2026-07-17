@@ -18,6 +18,8 @@ interface OverlayStore {
   tracked: TrackerStateBridge | null
   recentEvents: LogEventSummaryBridge[]
   debugOpen: boolean
+  // guide (P2)
+  guide: GuideStateBridge | null
   patch: (partial: Partial<OverlayStore>) => void
   applyLogSnapshot: (snap: LogSnapshotBridge) => void
   pushEvent: (ev: LogEventSummaryBridge) => void
@@ -36,7 +38,9 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   hotkeys: {
     toggleVisibility: 'CommandOrControl+Shift+O',
     toggleClickThrough: 'CommandOrControl+Shift+C',
-    toggleMoveMode: 'CommandOrControl+Shift+M'
+    toggleMoveMode: 'CommandOrControl+Shift+M',
+    stepForward: 'CommandOrControl+Shift+N',
+    stepBack: 'CommandOrControl+Shift+P'
   },
   clientTxtPath: null,
   characterName: null,
@@ -44,6 +48,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   tracked: null,
   recentEvents: [],
   debugOpen: false,
+  guide: null,
   patch: (partial) => set(partial),
   applyLogSnapshot: (snap) =>
     set({ logStatus: snap.status, tracked: snap.state, recentEvents: snap.recent }),

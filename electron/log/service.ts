@@ -21,6 +21,8 @@ export class LogService {
   private readonly watcher: LogFileWatcher
   private recent: LogEventSummary[] = []
   private persistTimer: NodeJS.Timeout | null = null
+  /** In-main consumers of live area events (e.g. the guide). */
+  private areaListeners: Array<(area: AreaState) => void> = []
 
   constructor(overlay: OverlayController) {
     this.overlay = overlay
@@ -64,6 +66,10 @@ export class LogService {
     this.tracker.setBoundCharacter(name)
     this.persistSoon()
     this.pushSnapshot()
+  }
+
+  addAreaListener(listener: (area: AreaState) => void): void {
+    this.areaListeners.push(listener)
   }
 
   getSnapshot(): LogSnapshot {
@@ -111,6 +117,7 @@ export class LogService {
       text: `→ ${area.name}${area.areaLevel != null ? ` (lvl ${area.areaLevel})` : ''}${area.areaId ? ` [${area.areaId}]` : ''}`
     })
     this.send(Channels.areaEntered, area)
+    for (const listener of this.areaListeners) listener(area)
     this.persistSoon()
   }
 

@@ -9,6 +9,8 @@ export interface HotkeyBindings {
   toggleVisibility: string
   toggleClickThrough: string
   toggleMoveMode: string
+  stepForward: string
+  stepBack: string
 }
 
 export interface OverlayBounds {
@@ -33,9 +35,11 @@ export interface AppSettings {
   logLanguage: string
 }
 
-/** Everything persisted, including non-setting state (resume snapshot, §8). */
+/** Everything persisted, including non-setting state (resume snapshot §8,
+ *  per-character guide progress). */
 interface StoreSchema extends AppSettings {
   progress: TrackerSnapshot | null
+  guideProgress: Record<string, string[]>
 }
 
 const defaults: StoreSchema = {
@@ -46,22 +50,32 @@ const defaults: StoreSchema = {
     // Defaults deliberately avoid Path of Exile's own binds; all rebindable.
     toggleVisibility: 'CommandOrControl+Shift+O',
     toggleClickThrough: 'CommandOrControl+Shift+C',
-    toggleMoveMode: 'CommandOrControl+Shift+M'
+    toggleMoveMode: 'CommandOrControl+Shift+M',
+    stepForward: 'CommandOrControl+Shift+N',
+    stepBack: 'CommandOrControl+Shift+P'
   },
   clientTxtPath: null,
   characterName: null,
   logLanguage: 'en',
-  progress: null
+  progress: null,
+  guideProgress: {}
 }
 
 export const store = new Store<StoreSchema>({ name: 'settings', defaults })
+
+/** Stored hotkeys merged over defaults — a settings.json written by an older
+ *  version lacks newly added bindings, and electron-store defaults don't merge
+ *  inside nested objects. */
+export function getHotkeys(): HotkeyBindings {
+  return { ...defaults.hotkeys, ...store.get('hotkeys') }
+}
 
 export function getSettings(): AppSettings {
   return {
     bounds: store.get('bounds'),
     opacity: store.get('opacity'),
     clickThrough: store.get('clickThrough'),
-    hotkeys: store.get('hotkeys'),
+    hotkeys: getHotkeys(),
     clientTxtPath: store.get('clientTxtPath'),
     characterName: store.get('characterName'),
     logLanguage: store.get('logLanguage')

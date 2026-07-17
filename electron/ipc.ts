@@ -1,13 +1,18 @@
 import { app, dialog, ipcMain } from 'electron'
 import { Channels, type AppInfo, type SettingsSetResult } from './channels'
-import { getSettings, store, type AppSettings, type HotkeyBindings } from './settings'
+import { getHotkeys, getSettings, store, type AppSettings, type HotkeyBindings } from './settings'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
+import type { GuideService } from './guide/service.ts'
 
 // Allow-listed IPC only (plan §11.1 Electron hardening). Every channel the
 // preload bridge can reach is registered here explicitly.
-export function registerIpc(overlay: OverlayController, log: LogService): void {
+export function registerIpc(
+  overlay: OverlayController,
+  log: LogService,
+  guide: GuideService
+): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
 
   ipcMain.handle(Channels.settingsGetAll, () => getSettings())
@@ -46,8 +51,8 @@ export function registerIpc(overlay: OverlayController, log: LogService): void {
 
     let failed: string[] = []
     if (patch.hotkeys) {
-      store.set('hotkeys', sanitizeHotkeys(patch.hotkeys, store.get('hotkeys')))
-      failed = registerHotkeys(overlay)
+      store.set('hotkeys', sanitizeHotkeys(patch.hotkeys))
+      failed = registerHotkeys(overlay, guide)
     }
     return { failed }
   })
@@ -55,7 +60,7 @@ export function registerIpc(overlay: OverlayController, log: LogService): void {
   // Suspend/resume global hotkeys around combo capture, so a shortcut that is
   // already bound reaches the renderer instead of firing its handler.
   ipcMain.on(Channels.hotkeysPause, () => unregisterHotkeys())
-  ipcMain.on(Channels.hotkeysResume, () => registerHotkeys(overlay))
+  ipcMain.on(Channels.hotkeysResume, () => registerHotkeys(overlay, guide))
 
   ipcMain.on(Channels.overlayExitMoveMode, () => overlay.setMoveMode(false))
 
@@ -69,6 +74,12 @@ export function registerIpc(overlay: OverlayController, log: LogService): void {
   })
 
   ipcMain.handle(Channels.logGetSnapshot, () => log.getSnapshot())
+
+  ipcMain.handle(Channels.guideGet, () => guide.snapshot())
+  ipcMain.on(Channels.guideToggleStep, (_e, stepId: unknown) => {
+    if (typeof stepId === 'string') guide.toggleStep(stepId)
+  })
+  ipcMain.on(Channels.guideReset, () => guide.reset())
 
   ipcMain.handle(Channels.dialogPickClientTxt, async (): Promise<string | null> => {
     const win = overlay.window
@@ -90,11 +101,14 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 // Only accept string accelerators; fall back to the previous binding per key.
-function sanitizeHotkeys(next: Partial<HotkeyBindings>, prev: HotkeyBindings): HotkeyBindings {
+function sanitizeHotkeys(next: Partial<HotkeyBindings>): HotkeyBindings {
+  const prev = getHotkeys()
   return {
     toggleVisibility: pickString(next.toggleVisibility, prev.toggleVisibility),
     toggleClickThrough: pickString(next.toggleClickThrough, prev.toggleClickThrough),
-    toggleMoveMode: pickString(next.toggleMoveMode, prev.toggleMoveMode)
+    toggleMoveMode: pickString(next.toggleMoveMode, prev.toggleMoveMode),
+    stepForward: pickString(next.stepForward, prev.stepForward),
+    stepBack: pickString(next.stepBack, prev.stepBack)
   }
 }
 
