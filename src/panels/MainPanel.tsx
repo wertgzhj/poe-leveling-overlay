@@ -355,7 +355,10 @@ function GemBody(): React.JSX.Element {
           {purchases.map((e) => (
             <div key={e.gem} className="text-xs text-overlay-text">
               {e.gem}
-              {e.source?.npc && <span className="text-overlay-muted"> · {e.source.npc}</span>}
+              <span className="text-overlay-muted">
+                {e.npc ? ` · ${e.npc}` : ''}
+                {e.act ? ` (Act ${e.act})` : ''}
+              </span>
             </div>
           ))}
         </div>
