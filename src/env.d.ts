@@ -181,6 +181,13 @@ interface ProfileSnapshotBridge {
   acquisitions: AcquisitionsBridge | null
 }
 
+interface PobImportResponseBridge {
+  ok: boolean
+  path?: string
+  warnings: string[]
+  errors: string[]
+}
+
 interface OverlayBridge {
   getState(): Promise<OverlayStateBridge>
   onState(cb: (state: OverlayStateBridge) => void): () => void
@@ -196,6 +203,7 @@ interface OverlayBridge {
   getProfile(): Promise<ProfileSnapshotBridge>
   onProfileState(cb: (snap: ProfileSnapshotBridge) => void): () => void
   pickProfile(): Promise<string | null>
+  importPob(input: string): Promise<PobImportResponseBridge>
   exitMoveMode(): void
   setSettingsOpen(open: boolean): void
   resizeBy(dx: number, dy: number): void

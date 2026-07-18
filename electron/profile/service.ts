@@ -4,7 +4,7 @@
 // (owner's file) or the bundled example; gems.json ships with the app.
 
 import { app } from 'electron'
-import { existsSync, readFileSync, watchFile, unwatchFile } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
 import { parseProfile, type Profile } from './profile.ts'
 import { GemData, type GemInfo } from './gems.ts'
@@ -46,6 +46,16 @@ export class ProfileService {
   setPath(path: string | null): void {
     store.set('profilePath', path)
     this.reload()
+  }
+
+  /** Persist an imported profile into userData and make it the active file. */
+  applyImport(profile: Profile): string {
+    const dir = join(app.getPath('userData'), 'profiles')
+    mkdirSync(dir, { recursive: true })
+    const path = join(dir, 'pob-import.json')
+    writeFileSync(path, JSON.stringify(profile, null, 2) + '\n')
+    this.setPath(path)
+    return path
   }
 
   snapshot(): ProfileSnapshot {

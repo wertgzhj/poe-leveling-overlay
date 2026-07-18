@@ -5,6 +5,7 @@ import {
   type GuideState,
   type LogSnapshot,
   type OverlayState,
+  type PobImportResponse,
   type ProfileSnapshot,
   type SettingsSetResult
 } from './channels'
@@ -44,6 +45,8 @@ const api = {
   onProfileState: (cb: (snap: ProfileSnapshot) => void): (() => void) =>
     subscribe(Channels.profileState, cb),
   pickProfile: (): Promise<string | null> => ipcRenderer.invoke(Channels.dialogPickProfile),
+  importPob: (input: string): Promise<PobImportResponse> =>
+    ipcRenderer.invoke(Channels.pobImport, input),
 
   exitMoveMode: (): void => ipcRenderer.send(Channels.overlayExitMoveMode),
 

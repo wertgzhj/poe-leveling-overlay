@@ -53,7 +53,9 @@ export const Channels = {
   /** main -> renderer: build profile / active stage changed (hot reload, level-up) */
   profileState: 'profile:state',
   /** renderer -> main (invoke): current profile snapshot */
-  profileGet: 'profile:get'
+  profileGet: 'profile:get',
+  /** renderer -> main (invoke): import a PoB code/link into an active profile */
+  pobImport: 'pob:import'
 } as const
 
 export interface OverlayState {
@@ -106,4 +108,11 @@ export interface ProfileSnapshot {
   activeStage: ResolvedStage | null
   nextStage: ResolvedStage | null
   acquisitions: Acquisitions | null
+}
+
+export interface PobImportResponse {
+  ok: boolean
+  path?: string
+  warnings: string[]
+  errors: string[]
 }

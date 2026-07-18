@@ -4,12 +4,12 @@ A **ToS-compliant** desktop overlay that helps you level through the Path of Exi
 campaign — route, quest rewards, vendor purchases and skill-tree stages, generated
 semi-automatically from a Path of Building import.
 
-> **Project status:** early development. Phases **P0–P3** — transparent overlay
+> **Project status:** early development. Phases **P0–P4** — transparent overlay
 > with hotkeys, in-overlay settings, live `Client.txt` tracking (zone, level,
-> restart-safe resume), a **route guide with auto-advance**, and a **build-profile
+> restart-safe resume), a **route guide with auto-advance**, a **build-profile
 > gem panel** (level-driven socket groups with computed colours, reward/vendor
-> hints) — both driven by your own hand-written JSON files. See
-> [`docs/plan.md`](docs/plan.md).
+> hints), and **Path of Building import** to generate a profile from a code or
+> `pobb.in` link. See [`docs/plan.md`](docs/plan.md).
 
 *Not affiliated with or endorsed by Grinding Gear Games.*
 
@@ -92,8 +92,16 @@ yourself for now.
   shows a neutral pip with a `?`. That file is partial for now (full gem data is a
   later phase).
 
-*Automatic profile generation from a Path of Building import lands in a later phase —
-see the plan.*
+**Import from Path of Building** instead of writing stages by hand: in
+**Settings → Build profile → Import from Path of Building**, paste a PoB export
+code or a `pobb.in` / `pastebin` link and hit **Import** — it decodes the build,
+reads the class and the per-level-range skill sets, and writes an active profile
+(reviewing any warnings it shows). Gem *sources* are left blank for you to fill
+(full gem data is a later phase). Headless equivalent:
+
+```bash
+npm run import-pob -- "<pob code or file>" --name "My Build" --out data/profiles/mine.json
+```
 
 ## Troubleshooting
 
@@ -118,8 +126,9 @@ npm run make-icon   # generate the tray/app icon (build/icon.png)
 npm run dev         # launch the overlay with hot reload
 npm run build       # bundle main + preload + renderer
 npm run typecheck   # tsc for the main and renderer projects
-npm test            # parser / tracker / log-watcher tests (node --test)
+npm test            # parser / tracker / watcher / guide / profile / PoB tests
 npm run sanitize -- capture.txt out.log   # sanitize a Client.txt capture for fixtures
+npm run import-pob -- "<pob code>" --out data/profiles/mine.json   # PoB -> profile
 ```
 
 Log-format note: the shipped patterns (`data/log-patterns/en.json`) and area ids

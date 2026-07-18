@@ -6,6 +6,9 @@ import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
 import type { GuideService } from './guide/service.ts'
 import type { ProfileService } from './profile/service.ts'
+import { importPobCode, importPobXml } from './profile/pob.ts'
+import { resolvePobInput } from './profile/pobbin.ts'
+import type { PobImportResponse } from './channels'
 
 // Allow-listed IPC only (plan §11.1 Electron hardening). Every channel the
 // preload bridge can reach is registered here explicitly.
@@ -89,6 +92,18 @@ export function registerIpc(
   ipcMain.on(Channels.guideReset, () => guide.reset())
 
   ipcMain.handle(Channels.profileGet, () => profile.snapshot())
+
+  ipcMain.handle(Channels.pobImport, async (_e, input: unknown): Promise<PobImportResponse> => {
+    if (typeof input !== 'string' || !input.trim()) {
+      return { ok: false, warnings: [], errors: ['paste a Path of Building code or link'] }
+    }
+    const resolved = await resolvePobInput(input)
+    if (resolved.error) return { ok: false, warnings: [], errors: [resolved.error] }
+    const result = resolved.xml ? importPobXml(resolved.xml) : importPobCode(resolved.code as string)
+    if (!result.profile) return { ok: false, warnings: result.warnings, errors: result.errors }
+    const path = profile.applyImport(result.profile)
+    return { ok: true, path, warnings: result.warnings, errors: [] }
+  })
 
   ipcMain.handle(Channels.dialogPickClientTxt, async (): Promise<string | null> => {
     return pickFile(overlay, 'Select Client.txt', [{ name: 'Client log', extensions: ['txt'] }])
