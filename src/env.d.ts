@@ -152,6 +152,7 @@ interface AcquisitionEntryBridge {
   npc?: string
   quest?: string
   note?: string
+  fallback?: boolean
 }
 
 interface AcquisitionsBridge {

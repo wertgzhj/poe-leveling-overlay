@@ -153,10 +153,14 @@ const SOURCED_GEMS = new GemData({
 
 test('earliestSource filters by class and prefers the earliest (act, quest first)', () => {
   assert.equal(SOURCED_GEMS.earliestSource('Frostbolt', 'Witch')?.kind, 'quest')
-  // Templar isn't in the quest list, so the vendor source wins.
-  assert.equal(SOURCED_GEMS.earliestSource('Frostbolt', 'Templar')?.kind, 'vendor')
-  // Marauder gets neither Frostbolt source.
-  assert.equal(SOURCED_GEMS.earliestSource('Frostbolt', 'Marauder'), null)
+  // Templar isn't in the quest list, so the specific vendor source wins.
+  const templarFrost = SOURCED_GEMS.earliestSource('Frostbolt', 'Templar')
+  assert.equal(templarFrost?.kind, 'vendor')
+  assert.equal(templarFrost?.fallback, undefined) // a real, gem-specific source
+  // Marauder has neither Frostbolt-specific source -> broad-vendor fallback (Siosa).
+  const marauderFrost = SOURCED_GEMS.earliestSource('Frostbolt', 'Marauder')
+  assert.equal(marauderFrost?.npc, 'Siosa')
+  assert.equal(marauderFrost?.fallback, true)
   // No class filter on Onslaught -> available to anyone.
   assert.equal(SOURCED_GEMS.earliestSource('Onslaught Support', 'Marauder')?.act, 2)
 })
@@ -177,12 +181,25 @@ test('acquisitions resolve sources live from gem data when the plan omits them',
 
   const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
   assert.deepEqual(acq.rewards.map((e) => e.gem), ['Frostbolt']) // Witch quest reward
+  // Onslaught has a specific vendor; Ground Slam has no Witch source, so it
+  // falls back to Siosa (the broad vendor) rather than being misattributed.
   assert.deepEqual(
     acq.purchases.map((e) => `${e.gem}@${e.npc}`),
-    ['Onslaught Support@Yeena']
+    ['Onslaught Support@Yeena', 'Ground Slam@Siosa']
   )
-  // Ground Slam has no Witch source -> falls to "other", not misattributed.
-  assert.deepEqual(acq.other.map((e) => e.gem), ['Ground Slam'])
+  assert.equal(acq.other.length, 0)
+  assert.equal(acq.purchases.find((e) => e.gem === 'Ground Slam')?.fallback, true)
+  assert.equal(acq.purchases.find((e) => e.gem === 'Onslaught Support')?.fallback, undefined)
+})
+
+test('known gems with no specific source fall back to the broad vendor (Siosa)', () => {
+  const gems = exampleGems() // shipped gems.json: attributes only, no sources
+  const src = gems.earliestSource('Fireball', 'Witch')
+  assert.equal(src?.npc, 'Siosa')
+  assert.equal(src?.act, 3)
+  assert.equal(src?.fallback, true)
+  // An unknown name is not claimed to be sold by Siosa.
+  assert.equal(gems.earliestSource('Totally Fake Gem', 'Witch'), null)
 })
 
 test('an authored source overrides the live lookup', () => {

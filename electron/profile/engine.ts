@@ -26,6 +26,8 @@ export interface AcquisitionEntry {
   npc?: string
   quest?: string
   note?: string
+  /** true when the source is the broad-vendor fallback (Siosa/Lilly), not gem-specific. */
+  fallback?: boolean
 }
 
 export interface Acquisitions {
@@ -120,7 +122,8 @@ function classify(
       act: src.act,
       npc: src.npc,
       quest: src.quest,
-      note: src.note
+      note: src.note,
+      fallback: src.fallback
     }
   }
   return { gem: entry.gem, count: entry.count, bucket: 'other' }
