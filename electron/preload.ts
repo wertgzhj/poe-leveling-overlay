@@ -5,6 +5,7 @@ import {
   type GuideState,
   type LogSnapshot,
   type OverlayState,
+  type ProfileSnapshot,
   type SettingsSetResult
 } from './channels'
 
@@ -38,6 +39,11 @@ const api = {
   guideToggleStep: (stepId: string): void =>
     ipcRenderer.send(Channels.guideToggleStep, stepId),
   guideReset: (): void => ipcRenderer.send(Channels.guideReset),
+
+  getProfile: (): Promise<ProfileSnapshot> => ipcRenderer.invoke(Channels.profileGet),
+  onProfileState: (cb: (snap: ProfileSnapshot) => void): (() => void) =>
+    subscribe(Channels.profileState, cb),
+  pickProfile: (): Promise<string | null> => ipcRenderer.invoke(Channels.dialogPickProfile),
 
   exitMoveMode: (): void => ipcRenderer.send(Channels.overlayExitMoveMode),
 

@@ -29,6 +29,8 @@ export interface AppSettings {
   hotkeys: HotkeyBindings
   /** absolute path to the game's Client.txt (P1 log watching) */
   clientTxtPath: string | null
+  /** absolute path to the active build profile JSON; null = bundled example (P3) */
+  profilePath: string | null
   /** explicit character binding for level-ups; null = adopt heuristically (§8) */
   characterName: string | null
   /** log-pattern language (data/log-patterns/<lang>.json); v1 ships 'en' */
@@ -55,6 +57,7 @@ const defaults: StoreSchema = {
     stepBack: 'CommandOrControl+Shift+P'
   },
   clientTxtPath: null,
+  profilePath: null,
   characterName: null,
   logLanguage: 'en',
   progress: null,
@@ -77,6 +80,7 @@ export function getSettings(): AppSettings {
     clickThrough: store.get('clickThrough'),
     hotkeys: getHotkeys(),
     clientTxtPath: store.get('clientTxtPath'),
+    profilePath: store.get('profilePath'),
     characterName: store.get('characterName'),
     logLanguage: store.get('logLanguage')
   }

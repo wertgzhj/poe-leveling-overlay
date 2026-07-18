@@ -1,0 +1,16 @@
+{
+  "_note": "gem -> primary attribute, used ONLY to compute socket colour (str=red, dex=green, int=blue). Partial by design: covers the example profile's gems; unknown gems render neutral so a partial list still works. Full per-gem data (incl. quest/vendor availability per class) is P5. Attributes should be spot-checked against the game — a wrong attr shows a wrong socket colour. Match is case-insensitive and ignores a trailing ' Support'.",
+  "gems": {
+    "Fireball": { "attr": "int" },
+    "Frostbolt": { "attr": "int" },
+    "Freezing Pulse": { "attr": "int" },
+    "Flame Dash": { "attr": "int" },
+    "Frost Bomb": { "attr": "int" },
+    "Arcane Surge Support": { "attr": "int" },
+    "Added Lightning Damage Support": { "attr": "int" },
+    "Elemental Focus Support": { "attr": "int" },
+    "Controlled Destruction Support": { "attr": "int" },
+    "Onslaught Support": { "attr": "dex" },
+    "Leap Slam": { "attr": "str" }
+  }
+}

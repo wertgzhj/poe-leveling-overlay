@@ -12,6 +12,7 @@ interface OverlayStore {
   opacity: number
   hotkeys: HotkeyBindingsBridge
   clientTxtPath: string | null
+  profilePath: string | null
   characterName: string | null
   // log tracking (P1)
   logStatus: WatcherStatusBridge | null
@@ -20,6 +21,9 @@ interface OverlayStore {
   debugOpen: boolean
   // guide (P2)
   guide: GuideStateBridge | null
+  // build profile (P3)
+  profile: ProfileSnapshotBridge | null
+  tab: 'guide' | 'gems'
   patch: (partial: Partial<OverlayStore>) => void
   applyLogSnapshot: (snap: LogSnapshotBridge) => void
   pushEvent: (ev: LogEventSummaryBridge) => void
@@ -43,12 +47,15 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     stepBack: 'CommandOrControl+Shift+P'
   },
   clientTxtPath: null,
+  profilePath: null,
   characterName: null,
   logStatus: null,
   tracked: null,
   recentEvents: [],
   debugOpen: false,
   guide: null,
+  profile: null,
+  tab: 'guide',
   patch: (partial) => set(partial),
   applyLogSnapshot: (snap) =>
     set({ logStatus: snap.status, tracked: snap.state, recentEvents: snap.recent }),
