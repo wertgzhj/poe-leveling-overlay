@@ -1,0 +1,11 @@
+{
+  "_note": "FALLBACK skeleton — replace with your own Act 4 route (hot-reloads on save).",
+  "act": 4,
+  "name": "Act 4",
+  "steps": [
+    { "id": "a4-town", "zone": "Highgate", "type": "town", "text": "Highgate: quests, gems, reward", "rewardHint": true },
+    { "id": "a4-lab", "type": "hint", "text": "Aspirants' Plaza → the Labyrinth (once all six normal trials are done) for your first ascendancy" },
+    { "id": "a4-mid", "type": "hint", "text": "Placeholder — Mines / Crystal Veins / Kaom's & Daresso's realms" },
+    { "id": "a4-boss", "type": "hint", "text": "Kill Malachai, then continue to Act 5" }
+  ]
+}

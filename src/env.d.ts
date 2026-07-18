@@ -105,6 +105,7 @@ interface RouteStepBridge {
   text: string
   hints?: string[]
   rewardHint?: boolean
+  act?: number
 }
 
 interface RouteBridge {
@@ -115,6 +116,7 @@ interface RouteBridge {
 
 interface GuideStateBridge {
   route: RouteBridge | null
+  acts: number[]
   errors: string[]
   doneIds: string[]
   cursorIndex: number

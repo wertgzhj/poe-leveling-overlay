@@ -1,0 +1,11 @@
+{
+  "_note": "FALLBACK skeleton — replace with your own Act 2 route (hot-reloads on save). Add areaIds from the dev 🐞 panel; text guidance works even before auto-advance matches.",
+  "act": 2,
+  "name": "Act 2",
+  "steps": [
+    { "id": "a2-town", "zone": "The Forest Encampment", "type": "town", "text": "The Forest Encampment: turn in quests, buy gems, pick your reward", "rewardHint": true },
+    { "id": "a2-bandits", "type": "hint", "text": "Bandits: help Alira / Oak / Kraityn for a bonus, or kill all three for 2 passive points" },
+    { "id": "a2-mid", "type": "hint", "text": "Placeholder — add the zones you take (Old Fields, The Crossroads, Chamber of Sins for a trial…)" },
+    { "id": "a2-boss", "zone": "The Vaal Ruins", "type": "boss", "text": "Kill the Vaal Oversoul, then waypoint to Act 3" }
+  ]
+}

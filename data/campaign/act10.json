@@ -1,0 +1,10 @@
+{
+  "_note": "FALLBACK skeleton — replace with your own Act 10 route (hot-reloads on save).",
+  "act": 10,
+  "name": "Act 10",
+  "steps": [
+    { "id": "a10-town", "zone": "Oriath Docks", "type": "town", "text": "Oriath Docks: quests, gems, reward", "rewardHint": true },
+    { "id": "a10-mid", "type": "hint", "text": "Placeholder — the Ravaged Square, the Ossuary (trial), Reliquary" },
+    { "id": "a10-boss", "type": "hint", "text": "Kill Kitava again to finish the campaign — another -30% resistances hit" }
+  ]
+}

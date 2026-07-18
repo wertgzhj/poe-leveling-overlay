@@ -1,0 +1,10 @@
+{
+  "_note": "FALLBACK skeleton — replace with your own Act 7 route (hot-reloads on save).",
+  "act": 7,
+  "name": "Act 7",
+  "steps": [
+    { "id": "a7-town", "zone": "The Bridge Encampment", "type": "town", "text": "The Bridge Encampment: quests, gems, reward", "rewardHint": true },
+    { "id": "a7-mid", "type": "hint", "text": "Placeholder — Ashen Fields, Maligaro's map, the Temple of Decay" },
+    { "id": "a7-boss", "type": "hint", "text": "Finish Act 7, then continue to Act 8" }
+  ]
+}

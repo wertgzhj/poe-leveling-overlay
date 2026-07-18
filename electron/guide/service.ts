@@ -1,13 +1,14 @@
-// Glue between the pure guide engine and the Electron app: route file loading
-// with hot reload (authoring feedback loop), per-character progress
-// persistence, hotkey actions, and IPC pushes. Route files resolve from
-// userData/routes/ (override) first, then the repo's data/campaign/ in dev or
-// resources/campaign/ when packaged.
+// Glue between the pure guide engine and the Electron app. Loads per-act route
+// files (act1.json … act10.json) and merges them into one campaign step list
+// with hot reload, per-character progress, hotkey actions, and IPC pushes.
+// Each act resolves from userData/routes/ (owner override) first, then the
+// bundled data/campaign/ (dev) or resources/campaign/ (packaged) — so the owner
+// can override a single act or all of them.
 
 import { app } from 'electron'
 import { existsSync, readFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
-import { parseRoute, type Route } from './route.ts'
+import { parseRoute, combineRoutes, type Route } from './route.ts'
 import { GuideEngine } from './engine.ts'
 import { store } from '../settings.ts'
 import { Channels, type GuideState } from '../channels.ts'
@@ -15,7 +16,7 @@ import type { OverlayController } from '../overlay.ts'
 import type { LogService } from '../log/service.ts'
 import type { AreaState } from '../log/tracker.ts'
 
-const ROUTE_FILE = 'act1.json'
+const ACTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
 const DEFAULT_CHAR_KEY = '(default)'
 
 export class GuideService {
@@ -23,6 +24,7 @@ export class GuideService {
   private readonly log: LogService
   private engine: GuideEngine | null = null
   private route: Route | null = null
+  private acts: number[] = []
   private errors: string[] = []
   private charKey = DEFAULT_CHAR_KEY
   private watched: string[] = []
@@ -35,13 +37,16 @@ export class GuideService {
   }
 
   start(): void {
-    this.reload()
-    // Watch both candidate paths — watchFile tolerates missing files and fires
-    // when they appear, so creating an override picks it up automatically.
-    for (const p of this.candidatePaths()) {
-      watchFile(p, { interval: 1000 }, () => this.reload())
-      this.watched.push(p)
+    // Watch every candidate path (override + bundled for each act) once —
+    // watchFile tolerates missing files and fires when one is created, so a new
+    // override is picked up on save.
+    for (const paths of this.candidatePaths().values()) {
+      for (const p of paths) {
+        watchFile(p, { interval: 1000 }, () => this.reload())
+        this.watched.push(p)
+      }
     }
+    this.reload()
   }
 
   stop(): void {
@@ -55,6 +60,7 @@ export class GuideService {
     const engineSnap = this.engine?.snapshot()
     return {
       route: this.route,
+      acts: this.acts,
       errors: this.errors,
       doneIds: engineSnap?.doneIds ?? [],
       cursorIndex: engineSnap?.cursorIndex ?? 0,
@@ -88,8 +94,6 @@ export class GuideService {
     }
   }
 
-  /** Progress is stored per bound character, so an alt does not inherit the
-   *  main's guide position. Rechecked lazily on each area event. */
   private syncCharacter(): void {
     const next = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
     if (next === this.charKey) return
@@ -102,33 +106,39 @@ export class GuideService {
   }
 
   private reload(): void {
-    const path = this.candidatePaths().find((p) => existsSync(p))
-    if (!path) {
-      this.errors = [`no route file found — expected data/campaign/${ROUTE_FILE}`]
+    const routes: Route[] = []
+    const errors: string[] = []
+    for (const [act, paths] of this.candidatePaths()) {
+      const path = paths.find((p) => existsSync(p))
+      if (!path) continue
+      let text: string
+      try {
+        text = readFileSync(path, 'utf8')
+      } catch (e) {
+        errors.push(`act ${act}: cannot read (${(e as Error).message})`)
+        continue
+      }
+      const { route, errors: routeErrors } = parseRoute(text)
+      for (const err of routeErrors) errors.push(`act${act}.json: ${err}`)
+      if (route) {
+        if (route.act !== act) errors.push(`act${act}.json declares act ${route.act} — using file position`)
+        routes.push({ ...route, act })
+      }
+    }
+
+    if (routes.length === 0) {
+      this.errors = errors.length ? errors : ['no route files found in data/campaign/']
       this.route = null
       this.engine = null
+      this.acts = []
       this.push()
       return
     }
 
-    let text: string
-    try {
-      text = readFileSync(path, 'utf8')
-    } catch (e) {
-      this.errors = [`cannot read ${path}: ${(e as Error).message}`]
-      this.push()
-      return
-    }
-
-    const { route, errors } = parseRoute(text)
-    this.errors = errors
-    if (!route) {
-      // Keep the last good route running while the author fixes the file —
-      // the errors are shown in the panel either way.
-      this.push()
-      return
-    }
-
+    const combined = combineRoutes(routes)
+    this.errors = [...errors, ...combined.errors]
+    this.acts = combined.acts
+    const route: Route = { act: combined.acts[0], name: 'Campaign', steps: combined.steps }
     this.route = route
     this.charKey = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
     if (this.engine) {
@@ -139,12 +149,18 @@ export class GuideService {
     this.push()
   }
 
-  private candidatePaths(): string[] {
-    const override = join(app.getPath('userData'), 'routes', ROUTE_FILE)
-    const bundled = app.isPackaged
-      ? join(process.resourcesPath, 'campaign', ROUTE_FILE)
-      : join(app.getAppPath(), 'data', 'campaign', ROUTE_FILE)
-    return [override, bundled]
+  /** act -> [override path, bundled path], highest priority first. */
+  private candidatePaths(): Map<number, string[]> {
+    const map = new Map<number, string[]>()
+    const routesDir = join(app.getPath('userData'), 'routes')
+    const bundledDir = app.isPackaged
+      ? join(process.resourcesPath, 'campaign')
+      : join(app.getAppPath(), 'data', 'campaign')
+    for (const act of ACTS) {
+      const file = `act${act}.json`
+      map.set(act, [join(routesDir, file), join(bundledDir, file)])
+    }
+    return map
   }
 
   private loadDone(charKey: string): string[] {

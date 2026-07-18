@@ -1,0 +1,10 @@
+{
+  "_note": "FALLBACK skeleton — replace with your own Act 9 route (hot-reloads on save).",
+  "act": 9,
+  "name": "Act 9",
+  "steps": [
+    { "id": "a9-town", "zone": "Highgate", "type": "town", "text": "Highgate (returned): quests, gems, reward", "rewardHint": true },
+    { "id": "a9-mid", "type": "hint", "text": "Placeholder — The Descent, the Rotting Core, the Storm of Corruption" },
+    { "id": "a9-boss", "type": "hint", "text": "Finish Act 9, then continue to Act 10" }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "_note": "FALLBACK skeleton — replace with your own Act 8 route (hot-reloads on save).",
+  "act": 8,
+  "name": "Act 8",
+  "steps": [
+    { "id": "a8-town", "zone": "The Sarn Encampment", "type": "town", "text": "The Sarn Encampment (returned): quests, gems, reward", "rewardHint": true },
+    { "id": "a8-mid", "type": "hint", "text": "Placeholder — Doedre, the Grain Gate, the Solaris/Lunaris temples" },
+    { "id": "a8-boss", "type": "hint", "text": "Finish Act 8, then continue to Act 9" }
+  ]
+}

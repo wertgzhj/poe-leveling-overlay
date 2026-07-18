@@ -1,0 +1,11 @@
+{
+  "_note": "FALLBACK skeleton — replace with your own Act 3 route (hot-reloads on save).",
+  "act": 3,
+  "name": "Act 3",
+  "steps": [
+    { "id": "a3-town", "zone": "The Sarn Encampment", "type": "town", "text": "The Sarn Encampment: quests, gems, reward", "rewardHint": true },
+    { "id": "a3-library", "type": "hint", "text": "Do 'A Fixture of Fate' (The Library) — unlocks Siosa, who sells almost every gem" },
+    { "id": "a3-trials", "type": "hint", "text": "Trials in The Crematorium, The Catacombs and The Imperial Gardens (see the Trials tab)" },
+    { "id": "a3-boss", "zone": "The Upper Sceptre of God", "type": "boss", "text": "Kill Dominus, then waypoint to Act 4" }
+  ]
+}

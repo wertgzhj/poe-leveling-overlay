@@ -62,10 +62,13 @@ move mode, click-through, and **Quit**.
 
 ## Author your route
 
-The route content is **yours to write** — the app deliberately ships an engine plus a
-small Act 1 template, not imported guide data. Edit `data/campaign/act1.json` (or drop
-an override into `<userData>/routes/act1.json` for installed builds); the overlay
-**hot-reloads on save** and shows validation problems right in the panel.
+The route content is **yours to write** — the app ships an engine plus **fallback
+skeletons for all ten acts** (`data/campaign/act1.json` … `act10.json`), which the
+guide combines into one campaign that advances across act boundaries. Act 1 covers the
+capture-verified zones; Acts 2–10 are rough placeholders (town + high-level notes) to
+replace. Edit those files, or drop a per-act override into `<userData>/routes/actN.json`
+for installed builds (override one act or all of them); the overlay **hot-reloads on
+save** and shows validation problems in the panel.
 
 - A step needs an `id` (stable — progress is saved against it), a `type`
   (`quest | waypoint | trial | town | boss | kill | enter | hint`), and a `text`.
