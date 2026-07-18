@@ -30,6 +30,7 @@ export function App(): React.JSX.Element {
     void api.getLogSnapshot().then(applyLogSnapshot)
     void api.getGuide().then((guide) => patch({ guide }))
     void api.getProfile().then((profile) => patch({ profile }))
+    void api.getTrials().then((trials) => patch({ trials }))
 
     const store = useOverlayStore.getState
     const subs = [
@@ -38,6 +39,7 @@ export function App(): React.JSX.Element {
       api.onLogStatus((logStatus) => patch({ logStatus })),
       api.onGuideState((guide) => patch({ guide })),
       api.onProfileState((profile) => patch({ profile })),
+      api.onTrialsState((trials) => patch({ trials })),
       api.onAreaEntered((area) => {
         const tracked = store().tracked
         patch({ tracked: { ...(tracked ?? emptyTracked), area } })

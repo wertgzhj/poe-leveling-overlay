@@ -6,6 +6,7 @@ import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
 import type { GuideService } from './guide/service.ts'
 import type { ProfileService } from './profile/service.ts'
+import type { TrialsService } from './trials/service.ts'
 import { importPobCode, importPobXml } from './profile/pob.ts'
 import { resolvePobInput } from './profile/pobbin.ts'
 import type { PobImportResponse } from './channels'
@@ -16,7 +17,8 @@ export function registerIpc(
   overlay: OverlayController,
   log: LogService,
   guide: GuideService,
-  profile: ProfileService
+  profile: ProfileService,
+  trials: TrialsService
 ): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
 
@@ -92,6 +94,12 @@ export function registerIpc(
   ipcMain.on(Channels.guideReset, () => guide.reset())
 
   ipcMain.handle(Channels.profileGet, () => profile.snapshot())
+
+  ipcMain.handle(Channels.trialsGet, () => trials.snapshot())
+  ipcMain.on(Channels.trialsToggle, (_e, id: unknown) => {
+    if (typeof id === 'string') trials.toggle(id)
+  })
+  ipcMain.on(Channels.trialsReset, () => trials.reset())
 
   ipcMain.handle(Channels.pobImport, async (_e, input: unknown): Promise<PobImportResponse> => {
     if (typeof input !== 'string' || !input.trim()) {

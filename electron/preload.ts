@@ -7,7 +7,8 @@ import {
   type OverlayState,
   type PobImportResponse,
   type ProfileSnapshot,
-  type SettingsSetResult
+  type SettingsSetResult,
+  type TrialsSnapshot
 } from './channels'
 
 function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -47,6 +48,12 @@ const api = {
   pickProfile: (): Promise<string | null> => ipcRenderer.invoke(Channels.dialogPickProfile),
   importPob: (input: string): Promise<PobImportResponse> =>
     ipcRenderer.invoke(Channels.pobImport, input),
+
+  getTrials: (): Promise<TrialsSnapshot> => ipcRenderer.invoke(Channels.trialsGet),
+  onTrialsState: (cb: (snap: TrialsSnapshot) => void): (() => void) =>
+    subscribe(Channels.trialsState, cb),
+  trialsToggle: (id: string): void => ipcRenderer.send(Channels.trialsToggle, id),
+  trialsReset: (): void => ipcRenderer.send(Channels.trialsReset),
 
   exitMoveMode: (): void => ipcRenderer.send(Channels.overlayExitMoveMode),
 

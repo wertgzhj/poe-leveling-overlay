@@ -42,6 +42,7 @@ export interface AppSettings {
 interface StoreSchema extends AppSettings {
   progress: TrackerSnapshot | null
   guideProgress: Record<string, string[]>
+  trialsProgress: Record<string, string[]>
 }
 
 const defaults: StoreSchema = {
@@ -61,7 +62,8 @@ const defaults: StoreSchema = {
   characterName: null,
   logLanguage: 'en',
   progress: null,
-  guideProgress: {}
+  guideProgress: {},
+  trialsProgress: {}
 }
 
 export const store = new Store<StoreSchema>({ name: 'settings', defaults })

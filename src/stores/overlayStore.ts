@@ -23,7 +23,9 @@ interface OverlayStore {
   guide: GuideStateBridge | null
   // build profile (P3)
   profile: ProfileSnapshotBridge | null
-  tab: 'guide' | 'gems'
+  // trials (P6)
+  trials: TrialsSnapshotBridge | null
+  tab: 'guide' | 'gems' | 'trials'
   patch: (partial: Partial<OverlayStore>) => void
   applyLogSnapshot: (snap: LogSnapshotBridge) => void
   pushEvent: (ev: LogEventSummaryBridge) => void
@@ -55,6 +57,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   debugOpen: false,
   guide: null,
   profile: null,
+  trials: null,
   tab: 'guide',
   patch: (partial) => set(partial),
   applyLogSnapshot: (snap) =>
