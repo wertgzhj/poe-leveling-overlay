@@ -1,8 +1,13 @@
 name: Build Windows
 
 # Produces the double-clickable Windows build on a Windows runner (electron-builder
-# can't build a Windows target from Linux without wine). Run it manually from the
-# Actions tab (Run workflow), or push a v* tag to also publish a GitHub Release.
+# can't build a Windows target from Linux without wine).
+#
+#  - Manual run (Actions tab -> Run workflow): a DEV build. Uploads the exes as a
+#    run artifact only — no release, and the version stays package.json's 0.0.0.
+#  - Push a v* tag (e.g. v0.1.0): a RELEASE build. The version comes FROM THE TAG
+#    (0.1.0), and the exes are attached to a GitHub Release. package.json is never
+#    bumped for dev.
 on:
   workflow_dispatch:
   push:
@@ -35,8 +40,17 @@ jobs:
       - name: Bundle (main + preload + renderer)
         run: npm run build
 
+      # Dev (manual) builds keep package.json's version (0.0.0). Tag builds take
+      # the version from the tag (v0.1.0 -> 0.1.0) without committing a bump.
       - name: Package Windows installer + portable exe
-        run: npx electron-builder --win --config electron-builder.yml --publish never
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            npx electron-builder --win --config electron-builder.yml --publish never \
+              -c.extraMetadata.version="${GITHUB_REF_NAME#v}"
+          else
+            npx electron-builder --win --config electron-builder.yml --publish never
+          fi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
