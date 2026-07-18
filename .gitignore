@@ -2,5 +2,7 @@ node_modules/
 out/
 dist/
 *.log
+# …but the sanitized test fixtures must be tracked (tests + CI read them).
+!data/fixtures/*.log
 .DS_Store
 .vite/
