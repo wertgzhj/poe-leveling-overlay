@@ -24,12 +24,22 @@ Hotkeys control the overlay only (the key combo is consumed system-wide and neve
 forwarded to the game). This mirrors long-tolerated tools like Awakened PoE Trade
 and Exile Leveling. Full guardrails: [`docs/plan.md`](docs/plan.md) §2.
 
-## Install
+## Install (Windows)
 
-- **Release:** download the latest build from the Releases page (coming with a later
-  phase) and run it. Windows may show a SmartScreen warning for an unsigned app —
-  choose *More info → Run anyway*.
-- **From source:** see [Development](#development) below.
+Two double-clickable options, both produced by the **Build Windows** GitHub Action
+(on the repo's Actions tab → *Build Windows* → *Run workflow*, or automatically when a
+`v*` tag is pushed → attached to the GitHub Release):
+
+- **Installer** — `PoE Leveling Overlay-<version>-setup.exe`: installs the app and adds
+  Start Menu + Desktop shortcuts. Double-click the shortcut to launch.
+- **Portable** — `PoE Leveling Overlay-<version>-portable.exe`: no install; double-click
+  the exe directly.
+
+The build is **unsigned**, so Windows SmartScreen warns on first run — choose
+*More info → Run anyway*. (Code signing needs a paid certificate; it's a later item.)
+
+To build it yourself on Windows: `npm ci && npm run make-icon && npm run package:win`
+(output in `dist/`). See [Development](#development) for source setup.
 
 ## Setup
 
