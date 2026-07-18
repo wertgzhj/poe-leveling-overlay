@@ -429,9 +429,16 @@ function GemBody(): React.JSX.Element {
               <span className="text-overlay-muted">
                 {e.npc ? ` · ${e.npc}` : ''}
                 {e.act ? ` (Act ${e.act})` : ''}
+                {e.fallback && <span title="general vendor — may be available earlier"> ≈</span>}
               </span>
             </div>
           ))}
+          {purchases.some((e) => e.fallback) && (
+            <p className="mt-1 text-[10px] text-overlay-muted">
+              ≈ general vendor: Siosa (Act 3, after the Library) / Lilly Roth (Act 6+) sell most
+              gems; you may find it earlier as a quest reward.
+            </p>
+          )}
         </div>
       )}
 
