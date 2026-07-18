@@ -103,6 +103,8 @@ export interface LogSnapshot {
 
 export interface GuideState {
   route: Route | null
+  /** Acts present in the combined campaign route, in order. */
+  acts: number[]
   /** Route-file validation problems, shown to the author in the panel. */
   errors: string[]
   doneIds: string[]

@@ -73,13 +73,18 @@ export function MainPanel(): React.JSX.Element {
 
   if (!visible) return <div />
 
-  const routeName = guide?.route ? (guide.route.name ?? `Act ${guide.route.act}`) : null
+  const currentAct = guide?.route?.steps[guide.cursorIndex]?.act
+  const guideTitle = guide?.route
+    ? currentAct
+      ? `Act ${currentAct}`
+      : 'Campaign'
+    : 'PoE Leveling Overlay'
   const title =
     tab === 'gems'
       ? (profile?.meta?.name ?? 'Build')
       : tab === 'trials'
         ? 'Trials of Ascendancy'
-        : (routeName ?? 'PoE Leveling Overlay')
+        : guideTitle
   const guideHasErrors = (guide?.errors?.length ?? 0) > 0
   const profileHasErrors = (profile?.errors?.length ?? 0) > 0
   const trialsBadge = trials ? `${trials.seenCount}/${trials.total}` : undefined
@@ -269,17 +274,24 @@ function GuideBody(): React.JSX.Element {
       )}
       {route && cursor >= steps.length && (
         <p className="px-1 text-xs text-overlay-accent">
-          Route complete — extend data/campaign/act1.json with your next steps.
+          All steps done — refine any act in data/campaign/act&lt;N&gt;.json.
         </p>
       )}
 
-      {visibleSteps.map((step) => {
+      {visibleSteps.map((step, vi) => {
         const idx = steps.indexOf(step)
         const isDone = done.has(step.id)
         const isCurrent = idx === cursor
+        const prevAct = vi > 0 ? visibleSteps[vi - 1].act : undefined
+        const showActDivider = step.act != null && step.act !== prevAct
         return (
+          <div key={step.id}>
+            {showActDivider && (
+              <div className="mb-1 mt-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-muted/70">
+                Act {step.act}
+              </div>
+            )}
           <button
-            key={step.id}
             onClick={() => window.overlay?.guideToggleStep(step.id)}
             title={clickThrough ? 'Enable interactive mode (hotkey) to click steps' : 'Click to toggle'}
             className={
@@ -311,6 +323,7 @@ function GuideBody(): React.JSX.Element {
               </div>
             </div>
           </button>
+          </div>
         )
       })}
 

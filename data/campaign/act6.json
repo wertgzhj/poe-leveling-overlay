@@ -1,0 +1,10 @@
+{
+  "_note": "FALLBACK skeleton — replace with your own Act 6 route (hot-reloads on save). Acts 6–10 reuse zone names from 1–5, so rely on areaIds where you can.",
+  "act": 6,
+  "name": "Act 6",
+  "steps": [
+    { "id": "a6-town", "zone": "Lioneye's Watch", "type": "town", "text": "Lioneye's Watch (returned): quests, gems. Lilly Roth now sells most gems", "rewardHint": true },
+    { "id": "a6-mid", "type": "hint", "text": "Placeholder — Twilight Strand → Prisoner's Gate → the Beacon / Brine King" },
+    { "id": "a6-boss", "type": "hint", "text": "Finish Act 6, then waypoint to Act 7" }
+  ]
+}

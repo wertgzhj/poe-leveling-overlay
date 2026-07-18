@@ -30,6 +30,8 @@ export interface RouteStep {
   hints?: string[]
   /** P3: the GemPanel shows the build's reward choice at this step. */
   rewardHint?: boolean
+  /** Owning act — set when acts are combined into one campaign list (not authored). */
+  act?: number
 }
 
 export interface Route {
@@ -123,4 +125,36 @@ export function validateRoute(raw: unknown): RouteParseResult {
 
   if (errors.length > 0) return { route: null, errors }
   return { route: { act, name: typeof obj['name'] === 'string' ? obj['name'] : undefined, steps }, errors: [] }
+}
+
+export interface CombinedRoute {
+  steps: RouteStep[]
+  /** Acts present, in order. */
+  acts: number[]
+  errors: string[]
+}
+
+/**
+ * Merge per-act routes into one campaign step list (act order), tagging each
+ * step with its act. Progress is keyed by step id, so ids must be unique across
+ * acts — a collision is reported and the later step dropped (keeping the guide
+ * usable rather than silently overwriting progress).
+ */
+export function combineRoutes(routes: Route[]): CombinedRoute {
+  const errors: string[] = []
+  const steps: RouteStep[] = []
+  const seen = new Set<string>()
+  const ordered = [...routes].sort((a, b) => a.act - b.act)
+
+  for (const route of ordered) {
+    for (const step of route.steps) {
+      if (seen.has(step.id)) {
+        errors.push(`duplicate step id "${step.id}" across acts — later one ignored`)
+        continue
+      }
+      seen.add(step.id)
+      steps.push({ ...step, act: route.act })
+    }
+  }
+  return { steps, acts: ordered.map((r) => r.act), errors }
 }

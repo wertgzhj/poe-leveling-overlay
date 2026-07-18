@@ -1,16 +1,20 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { parseRoute, type Route } from '../electron/guide/route.ts'
+import { parseRoute, combineRoutes, type Route } from '../electron/guide/route.ts'
 import { GuideEngine, isCampaignAreaId } from '../electron/guide/engine.ts'
 import { ProgressTracker, type AreaState } from '../electron/log/tracker.ts'
 import { makeParser, loadAreaNames, loadFixtureLines, repoPath } from './helpers.ts'
 
-function starterRoute(): Route {
-  const { route, errors } = parseRoute(readFileSync(repoPath('data/campaign/act1.json'), 'utf8'))
-  assert.deepEqual(errors, [], 'starter template must validate')
+function loadAct(act: number): Route {
+  const { route, errors } = parseRoute(readFileSync(repoPath(`data/campaign/act${act}.json`), 'utf8'))
+  assert.deepEqual(errors, [], `act${act}.json must validate`)
   assert.ok(route)
   return route
+}
+
+function starterRoute(): Route {
+  return loadAct(1)
 }
 
 // ---------- validation ----------
@@ -49,6 +53,49 @@ test('broken JSON yields an error, not a throw', () => {
   const { route, errors } = parseRoute('{ nope')
   assert.equal(route, null)
   assert.equal(errors.length, 1)
+})
+
+// ---------- multi-act campaign ----------
+
+test('all ten shipped act files validate and combine without errors', () => {
+  const routes: Route[] = []
+  for (let act = 1; act <= 10; act++) routes.push(loadAct(act))
+  const combined = combineRoutes(routes)
+  assert.deepEqual(combined.errors, [], 'act files must have unique step ids and combine cleanly')
+  assert.deepEqual(combined.acts, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+  // Every step is tagged with its act, in order.
+  assert.ok(combined.steps.every((s) => typeof s.act === 'number'))
+  assert.equal(combined.steps[0].act, 1)
+  assert.equal(combined.steps.at(-1)?.act, 10)
+})
+
+test('combineRoutes concatenates by act and flags cross-act id collisions', () => {
+  const a: Route = { act: 2, name: 'A2', steps: [{ id: 'x', type: 'town', zone: 'T', text: 'a' }] }
+  const b: Route = { act: 1, name: 'A1', steps: [{ id: 'x', type: 'kill', zone: 'Z', text: 'b' }] }
+  const combined = combineRoutes([a, b])
+  // Act 1 sorts first; the Act 2 duplicate id is dropped with an error.
+  assert.equal(combined.steps.length, 1)
+  assert.equal(combined.steps[0].text, 'b')
+  assert.equal(combined.steps[0].act, 1)
+  assert.ok(combined.errors.some((e) => e.includes('duplicate step id "x"')))
+})
+
+test('a combined campaign advances across act boundaries', () => {
+  const combined = combineRoutes([loadAct(1), loadAct(2)])
+  const engine = new GuideEngine({ act: 1, name: 'Campaign', steps: combined.steps })
+  // Walk Act 1 to the end, then enter Act 2's town.
+  for (const [areaId, name] of [
+    ['1_1_town', "Lioneye's Watch"],
+    ['1_1_2', 'The Coast'],
+    ['1_1_3', 'The Mud Flats'],
+    ['1_1_4_1', 'The Submerged Passage']
+  ] as const) {
+    engine.applyArea({ areaId, name })
+  }
+  engine.forward() // clear the trailing Act 1 name-matched step
+  engine.applyArea({ areaId: null, name: 'The Forest Encampment' }) // Act 2 town
+  const cursor = engine.snapshot().cursorStepId
+  assert.ok(cursor?.startsWith('a2-'), `expected an Act 2 step, got ${cursor}`)
 })
 
 // ---------- engine rules ----------
