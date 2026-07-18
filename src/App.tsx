@@ -31,6 +31,7 @@ export function App(): React.JSX.Element {
     void api.getGuide().then((guide) => patch({ guide }))
     void api.getProfile().then((profile) => patch({ profile }))
     void api.getTrials().then((trials) => patch({ trials }))
+    void api.getUpdateStatus().then((update) => patch({ update }))
 
     const store = useOverlayStore.getState
     const subs = [
@@ -40,6 +41,7 @@ export function App(): React.JSX.Element {
       api.onGuideState((guide) => patch({ guide })),
       api.onProfileState((profile) => patch({ profile })),
       api.onTrialsState((trials) => patch({ trials })),
+      api.onUpdateStatus((update) => patch({ update })),
       api.onAreaEntered((area) => {
         const tracked = store().tracked
         patch({ tracked: { ...(tracked ?? emptyTracked), area } })

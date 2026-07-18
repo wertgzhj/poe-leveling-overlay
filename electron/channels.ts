@@ -74,7 +74,15 @@ export const Channels = {
   /** renderer -> main: toggle one trial's seen state */
   trialsToggle: 'trials:toggle',
   /** renderer -> main: clear trials for the active character */
-  trialsReset: 'trials:reset'
+  trialsReset: 'trials:reset',
+  /** main -> renderer: auto-update status changed (checking/downloading/ready/…) */
+  updateStatus: 'update:status',
+  /** renderer -> main (invoke): current auto-update status */
+  updateGet: 'update:get',
+  /** renderer -> main: check for updates now */
+  updateCheck: 'update:check',
+  /** renderer -> main: quit and install a downloaded update */
+  updateInstall: 'update:install'
 } as const
 
 export interface OverlayState {
@@ -156,3 +164,13 @@ export interface EditorSaveResult {
   errors: string[]
   path?: string
 }
+
+/** Auto-update state machine, pushed to the renderer as it changes. */
+export type UpdateStatus =
+  | { state: 'idle' }
+  | { state: 'disabled'; reason: string }
+  | { state: 'checking' }
+  | { state: 'current'; version: string }
+  | { state: 'downloading'; version: string; percent: number }
+  | { state: 'ready'; version: string }
+  | { state: 'error'; message: string }

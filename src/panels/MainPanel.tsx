@@ -1,5 +1,6 @@
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
+import { UpdateBanner } from './UpdateBanner'
 
 // Main overlay panel (P2 guide + P3 gems) with a shared chrome and a tab switch.
 // Steps/stage auto-advance from the log; interacting needs interactive mode
@@ -135,6 +136,8 @@ export function MainPanel(): React.JSX.Element {
             </button>
           </div>
         </header>
+
+        <UpdateBanner />
 
         {/* Tab switch */}
         <div className="flex gap-1 px-2">

@@ -7,6 +7,7 @@ import type { LogService } from './log/service.ts'
 import type { GuideService } from './guide/service.ts'
 import type { ProfileService } from './profile/service.ts'
 import type { TrialsService } from './trials/service.ts'
+import type { UpdateService } from './update/service.ts'
 import { importPobCode, importPobXml } from './profile/pob.ts'
 import { resolvePobInput } from './profile/pobbin.ts'
 import type { EditorSaveResult, PobImportResponse } from './channels'
@@ -21,7 +22,8 @@ export function registerIpc(
   guide: GuideService,
   profile: ProfileService,
   trials: TrialsService,
-  editor: EditorWindow
+  editor: EditorWindow,
+  update: UpdateService
 ): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
 
@@ -116,6 +118,10 @@ export function registerIpc(
     if (typeof id === 'string') trials.toggle(id)
   })
   ipcMain.on(Channels.trialsReset, () => trials.reset())
+
+  ipcMain.handle(Channels.updateGet, () => update.snapshot())
+  ipcMain.on(Channels.updateCheck, () => update.check())
+  ipcMain.on(Channels.updateInstall, () => update.install())
 
   ipcMain.handle(Channels.pobImport, async (_e, input: unknown): Promise<PobImportResponse> => {
     if (typeof input !== 'string' || !input.trim()) {

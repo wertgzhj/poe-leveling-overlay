@@ -216,6 +216,10 @@ export function SettingsPanel(): React.JSX.Element {
             </div>
           </Section>
 
+          <Section title="Updates">
+            <UpdateRow />
+          </Section>
+
           <Section title="Game log">
             <label className="text-[11px] text-overlay-muted">Client.txt path</label>
             <div className="mt-1 flex gap-1.5">
@@ -324,6 +328,65 @@ export function SettingsPanel(): React.JSX.Element {
         </div>
       </div>
     </div>
+  )
+}
+
+// App-update status + manual controls. The passive banner (UpdateBanner) covers
+// downloading/ready during play; this is the full picture: current version,
+// up-to-date/checking/error, a manual "Check now", and the Restart button.
+function UpdateRow(): React.JSX.Element {
+  const update = useOverlayStore((s) => s.update)
+  const appVersion = useOverlayStore((s) => s.appVersion)
+  const state = update?.state ?? 'idle'
+  const busy = state === 'checking' || state === 'downloading'
+
+  const line = ((): string => {
+    switch (update?.state) {
+      case 'disabled':
+        return update.reason
+      case 'checking':
+        return 'Checking for updates…'
+      case 'current':
+        return `Up to date (v${update.version}).`
+      case 'downloading':
+        return `Downloading v${update.version}… ${update.percent}%`
+      case 'ready':
+        return `v${update.version} downloaded — restart to finish.`
+      case 'error':
+        return `Couldn't check: ${update.message}`
+      default:
+        return appVersion ? `Current version v${appVersion}.` : 'Checks automatically on launch.'
+    }
+  })()
+
+  return (
+    <>
+      <div className={'text-xs ' + (state === 'error' ? 'text-red-300' : 'text-overlay-text')}>{line}</div>
+      <div className="mt-2 flex items-center gap-2">
+        {state === 'ready' ? (
+          <button
+            onClick={() => window.overlay?.installUpdate()}
+            className="rounded bg-overlay-accent/25 px-2 py-1 text-[11px] font-medium text-overlay-accent hover:bg-overlay-accent/35"
+          >
+            Restart &amp; update
+          </button>
+        ) : (
+          <button
+            onClick={() => window.overlay?.checkForUpdates()}
+            disabled={busy || state === 'disabled'}
+            className="rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15 disabled:opacity-40"
+          >
+            {busy ? 'Checking…' : 'Check for updates'}
+          </button>
+        )}
+      </div>
+      {state === 'disabled' && (
+        <p className="mt-1.5 text-[10px] text-overlay-muted">
+          Auto-update works in the installed build. Downloads come from this project's GitHub
+          Releases.
+        </p>
+      )}
+    </>
   )
 }
 
