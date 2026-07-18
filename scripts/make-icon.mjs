@@ -75,3 +75,22 @@ const png = Buffer.concat([
 mkdirSync('build', { recursive: true })
 writeFileSync('build/icon.png', png)
 console.log(`wrote build/icon.png (${png.length} bytes, ${S}x${S})`)
+
+// Windows installer/exe icon: a single-image ICO wrapping the 256x256 PNG
+// (Vista+ supports PNG-compressed ICO entries). electron-builder uses this.
+const dir = Buffer.alloc(6)
+dir.writeUInt16LE(0, 0) // reserved
+dir.writeUInt16LE(1, 2) // type: icon
+dir.writeUInt16LE(1, 4) // image count
+const entry = Buffer.alloc(16)
+entry.writeUInt8(0, 0) // width 256 -> 0
+entry.writeUInt8(0, 1) // height 256 -> 0
+entry.writeUInt8(0, 2) // palette count
+entry.writeUInt8(0, 3) // reserved
+entry.writeUInt16LE(1, 4) // colour planes
+entry.writeUInt16LE(32, 6) // bits per pixel
+entry.writeUInt32LE(png.length, 8) // image size
+entry.writeUInt32LE(6 + 16, 12) // offset to image
+const ico = Buffer.concat([dir, entry, png])
+writeFileSync('build/icon.ico', ico)
+console.log(`wrote build/icon.ico (${ico.length} bytes)`)
