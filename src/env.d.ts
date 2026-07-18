@@ -183,6 +183,19 @@ interface PobImportResponseBridge {
   errors: string[]
 }
 
+interface TrialStateBridge {
+  id: string
+  act: number
+  zone: string
+  seen: boolean
+}
+
+interface TrialsSnapshotBridge {
+  trials: TrialStateBridge[]
+  seenCount: number
+  total: number
+}
+
 interface OverlayBridge {
   getState(): Promise<OverlayStateBridge>
   onState(cb: (state: OverlayStateBridge) => void): () => void
@@ -199,6 +212,10 @@ interface OverlayBridge {
   onProfileState(cb: (snap: ProfileSnapshotBridge) => void): () => void
   pickProfile(): Promise<string | null>
   importPob(input: string): Promise<PobImportResponseBridge>
+  getTrials(): Promise<TrialsSnapshotBridge>
+  onTrialsState(cb: (snap: TrialsSnapshotBridge) => void): () => void
+  trialsToggle(id: string): void
+  trialsReset(): void
   exitMoveMode(): void
   setSettingsOpen(open: boolean): void
   resizeBy(dx: number, dy: number): void

@@ -6,6 +6,9 @@ import type { WatcherStatus } from './log/watcher.ts'
 import type { Route } from './guide/route.ts'
 import type { ProfileMeta } from './profile/profile.ts'
 import type { ResolvedStage, Acquisitions } from './profile/engine.ts'
+import type { TrialsSnapshot } from './trials/engine.ts'
+
+export type { TrialsSnapshot }
 
 export const Channels = {
   /** main -> renderer: overlay interaction state changed */
@@ -55,7 +58,15 @@ export const Channels = {
   /** renderer -> main (invoke): current profile snapshot */
   profileGet: 'profile:get',
   /** renderer -> main (invoke): import a PoB code/link into an active profile */
-  pobImport: 'pob:import'
+  pobImport: 'pob:import',
+  /** main -> renderer: trials tracker state changed */
+  trialsState: 'trials:state',
+  /** renderer -> main (invoke): current trials state */
+  trialsGet: 'trials:get',
+  /** renderer -> main: toggle one trial's seen state */
+  trialsToggle: 'trials:toggle',
+  /** renderer -> main: clear trials for the active character */
+  trialsReset: 'trials:reset'
 } as const
 
 export interface OverlayState {

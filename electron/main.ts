@@ -6,6 +6,7 @@ import { createTray } from './tray'
 import { LogService } from './log/service.ts'
 import { GuideService } from './guide/service.ts'
 import { ProfileService } from './profile/service.ts'
+import { TrialsService } from './trials/service.ts'
 
 // Set to a number of ms via SMOKE=<ms> to auto-quit after startup — used by the
 // headless launch check in CI/dev to prove the app boots without a display.
@@ -15,6 +16,7 @@ const overlay = new OverlayController()
 const logService = new LogService(overlay)
 const guideService = new GuideService(overlay, logService)
 const profileService = new ProfileService(overlay, logService)
+const trialsService = new TrialsService(overlay, logService)
 let tray: ReturnType<typeof createTray> = null
 
 // Single instance: a second launch just resurfaces the existing overlay.
@@ -31,10 +33,11 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     overlay.create()
-    registerIpc(overlay, logService, guideService, profileService)
+    registerIpc(overlay, logService, guideService, profileService, trialsService)
     logService.start()
     guideService.start()
     profileService.start()
+    trialsService.start()
     const failed = registerHotkeys(overlay, guideService)
     if (failed.length) {
       console.warn('[hotkeys] failed to register:', failed.join(', '))
@@ -57,6 +60,7 @@ app.on('will-quit', () => {
   unregisterHotkeys()
   guideService.stop()
   profileService.stop()
+  trialsService.stop()
   logService.stop()
   tray?.destroy()
 })

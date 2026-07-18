@@ -4,12 +4,12 @@ A **ToS-compliant** desktop overlay that helps you level through the Path of Exi
 campaign — route, quest rewards, vendor purchases and skill-tree stages, generated
 semi-automatically from a Path of Building import.
 
-> **Project status:** early development. Phases **P0–P5** — transparent overlay
-> with hotkeys, in-overlay settings, live `Client.txt` tracking (zone, level,
-> restart-safe resume), a **route guide with auto-advance**, a **build-profile
-> gem panel** (level-driven socket groups with computed colours + class-aware
-> reward/vendor hints), and **Path of Building import**. See
-> [`docs/plan.md`](docs/plan.md).
+> **Project status:** early development. Phases **P0–P5** complete; **P6** in
+> progress. Transparent overlay with hotkeys, in-overlay settings, live
+> `Client.txt` tracking (zone, level, restart-safe resume), a **route guide with
+> auto-advance**, a **build-profile gem panel** (computed socket colours +
+> class-aware reward/vendor hints), **Path of Building import**, and a **Trials of
+> Ascendancy tracker**. See [`docs/plan.md`](docs/plan.md).
 
 *Not affiliated with or endorsed by Grinding Gear Games.*
 
@@ -49,6 +49,10 @@ and Exile Leveling. Full guardrails: [`docs/plan.md`](docs/plan.md) §2.
 | Move / resize mode | `Ctrl+Shift+M` | Drag the title bar; drag the corner to resize |
 | Guide: next step | `Ctrl+Shift+N` | Marks the current step done |
 | Guide: previous step | `Ctrl+Shift+P` | Reopens the last completed step |
+
+The overlay has **Guide**, **Gems** and **Trials** tabs. The Trials tab tracks the
+six normal-Labyrinth Trials of Ascendancy — it auto-checks a trial when you enter its
+zone, and you can click any trial to correct it; all six unlock the Labyrinth.
 
 All hotkeys are rebindable in-app: open **Settings** (the ⚙ button in the overlay, or
 the tray → *Settings…*), click a binding, and press the new combo — the change takes

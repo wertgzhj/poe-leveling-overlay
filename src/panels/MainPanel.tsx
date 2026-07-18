@@ -66,6 +66,7 @@ export function MainPanel(): React.JSX.Element {
     tracked,
     guide,
     profile,
+    trials,
     tab,
     patch
   } = useOverlayStore()
@@ -73,9 +74,15 @@ export function MainPanel(): React.JSX.Element {
   if (!visible) return <div />
 
   const routeName = guide?.route ? (guide.route.name ?? `Act ${guide.route.act}`) : null
-  const title = tab === 'gems' ? (profile?.meta?.name ?? 'Build') : (routeName ?? 'PoE Leveling Overlay')
+  const title =
+    tab === 'gems'
+      ? (profile?.meta?.name ?? 'Build')
+      : tab === 'trials'
+        ? 'Trials of Ascendancy'
+        : (routeName ?? 'PoE Leveling Overlay')
   const guideHasErrors = (guide?.errors?.length ?? 0) > 0
   const profileHasErrors = (profile?.errors?.length ?? 0) > 0
+  const trialsBadge = trials ? `${trials.seenCount}/${trials.total}` : undefined
 
   return (
     <div className="flex h-screen w-screen items-start justify-center p-2">
@@ -128,6 +135,7 @@ export function MainPanel(): React.JSX.Element {
         <div className="flex gap-1 px-2">
           <Tab label="Guide" active={tab === 'guide'} flag={guideHasErrors} onClick={() => patch({ tab: 'guide' })} />
           <Tab label="Gems" active={tab === 'gems'} flag={profileHasErrors} onClick={() => patch({ tab: 'gems' })} />
+          <Tab label="Trials" badge={trialsBadge} active={tab === 'trials'} onClick={() => patch({ tab: 'trials' })} />
         </div>
 
         <div className="mt-1 flex items-center gap-1.5 border-y border-overlay-border/60 bg-black/20 px-3 py-1 text-[11px] text-overlay-muted">
@@ -141,7 +149,9 @@ export function MainPanel(): React.JSX.Element {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
-          {tab === 'guide' ? <GuideBody /> : <GemBody />}
+          {tab === 'guide' && <GuideBody />}
+          {tab === 'gems' && <GemBody />}
+          {tab === 'trials' && <TrialsBody />}
         </div>
 
         {moveMode && <ResizeGrip />}
@@ -160,11 +170,13 @@ function Tab({
   label,
   active,
   flag,
+  badge,
   onClick
 }: {
   label: string
   active: boolean
   flag?: boolean
+  badge?: string
   onClick: () => void
 }): React.JSX.Element {
   return (
@@ -176,8 +188,54 @@ function Tab({
       }
     >
       {label}
+      {badge && <span className="ml-1 text-[10px] text-overlay-muted">{badge}</span>}
       {flag && <span className="ml-1 text-red-400">•</span>}
     </button>
+  )
+}
+
+function TrialsBody(): React.JSX.Element {
+  const { trials } = useOverlayStore()
+  if (!trials) return <p className="px-1 text-xs text-overlay-muted">Loading…</p>
+
+  return (
+    <>
+      <div className="mb-2 flex items-center justify-between px-1">
+        <span className="text-[11px] text-overlay-muted">
+          Normal Labyrinth · {trials.seenCount}/{trials.total} trials
+        </span>
+        <button
+          className="text-[10px] text-overlay-muted hover:text-overlay-text"
+          title="Clear trials for this character"
+          onClick={() => window.overlay?.trialsReset()}
+        >
+          reset
+        </button>
+      </div>
+      {trials.trials.map((t) => (
+        <button
+          key={t.id}
+          onClick={() => window.overlay?.trialsToggle(t.id)}
+          className={
+            'mb-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left ' +
+            (t.seen ? 'opacity-50' : 'bg-black/20')
+          }
+        >
+          <span className={'shrink-0 text-xs ' + (t.seen ? 'text-overlay-accent' : 'text-overlay-muted')}>
+            {t.seen ? '✓' : '△'}
+          </span>
+          <div className="min-w-0">
+            <div className={'text-xs ' + (t.seen ? 'text-overlay-muted line-through' : 'text-overlay-text')}>
+              {t.zone}
+            </div>
+            <div className="text-[10px] text-overlay-muted">Act {t.act}</div>
+          </div>
+        </button>
+      ))}
+      <p className="mt-1 px-1 text-[10px] text-overlay-muted">
+        Auto-checks when you enter the zone; click to correct. All six unlock the Labyrinth.
+      </p>
+    </>
   )
 }
 
