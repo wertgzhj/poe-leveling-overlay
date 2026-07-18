@@ -4,6 +4,8 @@
 import type { TrackerSnapshot } from './log/tracker.ts'
 import type { WatcherStatus } from './log/watcher.ts'
 import type { Route } from './guide/route.ts'
+import type { ProfileMeta } from './profile/profile.ts'
+import type { ResolvedStage, Acquisitions } from './profile/engine.ts'
 
 export const Channels = {
   /** main -> renderer: overlay interaction state changed */
@@ -26,6 +28,8 @@ export const Channels = {
   hotkeysResume: 'hotkeys:resume',
   /** renderer -> main (invoke): native file picker for the Client.txt path */
   dialogPickClientTxt: 'dialog:pick-client-txt',
+  /** renderer -> main (invoke): native file picker for the build profile path */
+  dialogPickProfile: 'dialog:pick-profile',
   /** renderer -> main (invoke): app/runtime info for the panel */
   appGetInfo: 'app:get-info',
   /** main -> renderer: log watcher status changed */
@@ -45,7 +49,11 @@ export const Channels = {
   /** renderer -> main: toggle one step's done state */
   guideToggleStep: 'guide:toggle-step',
   /** renderer -> main: clear progress for the active character */
-  guideReset: 'guide:reset'
+  guideReset: 'guide:reset',
+  /** main -> renderer: build profile / active stage changed (hot reload, level-up) */
+  profileState: 'profile:state',
+  /** renderer -> main (invoke): current profile snapshot */
+  profileGet: 'profile:get'
 } as const
 
 export interface OverlayState {
@@ -87,4 +95,15 @@ export interface GuideState {
   doneIds: string[]
   cursorIndex: number
   cursorStepId: string | null
+}
+
+export interface ProfileSnapshot {
+  meta: ProfileMeta | null
+  errors: string[]
+  level: number | null
+  /** The tracked class when it differs from the profile's class, else null (§8). */
+  classMismatch: string | null
+  activeStage: ResolvedStage | null
+  nextStage: ResolvedStage | null
+  acquisitions: Acquisitions | null
 }

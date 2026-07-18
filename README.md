@@ -4,10 +4,11 @@ A **ToS-compliant** desktop overlay that helps you level through the Path of Exi
 campaign — route, quest rewards, vendor purchases and skill-tree stages, generated
 semi-automatically from a Path of Building import.
 
-> **Project status:** early development. Phases **P0–P2** — transparent overlay
+> **Project status:** early development. Phases **P0–P3** — transparent overlay
 > with hotkeys, in-overlay settings, live `Client.txt` tracking (zone, level,
-> restart-safe resume), and a **route guide with auto-advance** driven by your
-> own hand-written route file. Gem/build panels arrive in later phases. See
+> restart-safe resume), a **route guide with auto-advance**, and a **build-profile
+> gem panel** (level-driven socket groups with computed colours, reward/vendor
+> hints) — both driven by your own hand-written JSON files. See
 > [`docs/plan.md`](docs/plan.md).
 
 *Not affiliated with or endorsed by Grinding Gear Games.*
@@ -75,9 +76,24 @@ an override into `<userData>/routes/act1.json` for installed builds); the overla
 
 ## Create a build profile
 
-Point the app at a Path of Building export string or `pobb.in` link; it detects the
-leveling stages and generates the gem plan for you, with a manual touch-up pass.
-*(PoB import lands in a later phase — see the plan.)*
+The **Gems** tab shows the gems to have socketed at your current level, with socket
+colours computed automatically (Str = red, Dex = green, Int = blue), plus what to buy
+or take as a quest reward. It's driven by a profile JSON — like routes, you write it
+yourself for now.
+
+- Point **Settings → Build profile** at your file (or edit the bundled
+  `data/profiles/example.json`); it **hot-reloads on save** with validation shown in
+  the panel. Leave the setting empty to use the example.
+- `meta` sets `name` + `class` (one of the seven classes). `stages` list `range`
+  (`[minLevel, maxLevel]`) and `socketGroups` (each a link of gem names) — the active
+  stage switches automatically as you level. `gemPlan` records where each gem comes
+  from (`questReward` / `vendor` / `drop`), which feeds the reward + buy hints.
+- Socket colours come from `data/gems.json` (gem → attribute); a gem missing there
+  shows a neutral pip with a `?`. That file is partial for now (full gem data is a
+  later phase).
+
+*Automatic profile generation from a Path of Building import lands in a later phase —
+see the plan.*
 
 ## Troubleshooting
 

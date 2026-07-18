@@ -17,14 +17,17 @@ function hasModifier(accelerator: string): boolean {
 }
 
 export function SettingsPanel(): React.JSX.Element {
-  const { hotkeys, opacity, clickThrough, clientTxtPath, characterName, patch } = useOverlayStore()
+  const { hotkeys, opacity, clickThrough, clientTxtPath, profilePath, characterName, patch } =
+    useOverlayStore()
   const [recording, setRecording] = useState<HotkeyField | null>(null)
   const [failed, setFailed] = useState<Set<string>>(new Set())
   const [pathDraft, setPathDraft] = useState(clientTxtPath ?? '')
   const [charDraft, setCharDraft] = useState(characterName ?? '')
+  const [profileDraft, setProfileDraft] = useState(profilePath ?? '')
 
   useEffect(() => setPathDraft(clientTxtPath ?? ''), [clientTxtPath])
   useEffect(() => setCharDraft(characterName ?? ''), [characterName])
+  useEffect(() => setProfileDraft(profilePath ?? ''), [profilePath])
 
   // Re-register hotkeys from stored settings when the panel closes (covers
   // closing mid-capture, which leaves them paused).
@@ -90,6 +93,21 @@ export function SettingsPanel(): React.JSX.Element {
     const v = value.trim()
     patch({ characterName: v.length ? v : null })
     void window.overlay?.setSettings({ characterName: v.length ? v : null })
+  }
+
+  const commitProfile = (value: string): void => {
+    const v = value.trim()
+    patch({ profilePath: v.length ? v : null })
+    void window.overlay?.setSettings({ profilePath: v.length ? v : null })
+  }
+
+  const browseProfile = (): void => {
+    void window.overlay?.pickProfile().then((p) => {
+      if (p) {
+        setProfileDraft(p)
+        commitProfile(p)
+      }
+    })
   }
 
   return (
@@ -209,6 +227,30 @@ export function SettingsPanel(): React.JSX.Element {
             <p className="mt-1 text-[10px] text-overlay-muted">
               Binds level tracking to this character — set it if you play in a party, so a
               partymate's level-up can't advance your progress.
+            </p>
+          </Section>
+
+          <Section title="Build profile">
+            <label className="text-[11px] text-overlay-muted">Profile JSON path</label>
+            <div className="mt-1 flex gap-1.5">
+              <input
+                type="text"
+                spellCheck={false}
+                value={profileDraft}
+                placeholder="bundled example (leave empty)"
+                onChange={(e) => setProfileDraft(e.target.value)}
+                onBlur={() => commitProfile(profileDraft)}
+                className="min-w-0 flex-1 rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
+              />
+              <button
+                onClick={browseProfile}
+                className="shrink-0 rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15"
+              >
+                Browse…
+              </button>
+            </div>
+            <p className="mt-1 text-[10px] text-overlay-muted">
+              Drives the Gems tab. Hot-reloads on save. Leave empty for the bundled example.
             </p>
           </Section>
         </div>

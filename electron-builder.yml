@@ -11,6 +11,8 @@ extraResources:
     to: icon.png
   - from: data/campaign
     to: campaign
+  - from: data/profiles
+    to: profiles
 win:
   target: nsis
   icon: build/icon.png

@@ -29,6 +29,7 @@ interface AppSettingsBridge {
   clickThrough: boolean
   hotkeys: HotkeyBindingsBridge
   clientTxtPath: string | null
+  profilePath: string | null
   characterName: string | null
   logLanguage: string
 }
@@ -38,6 +39,7 @@ interface SettingsPatchBridge {
   clickThrough?: boolean
   hotkeys?: HotkeyBindingsBridge
   clientTxtPath?: string | null
+  profilePath?: string | null
   characterName?: string | null
 }
 
@@ -119,6 +121,66 @@ interface GuideStateBridge {
   cursorStepId: string | null
 }
 
+type SocketColorBridge = 'R' | 'G' | 'B' | 'W'
+
+interface ColoredGemBridge {
+  name: string
+  color: SocketColorBridge
+  unknown: boolean
+}
+
+interface ColoredSocketGroupBridge {
+  gems: ColoredGemBridge[]
+  note?: string
+}
+
+interface ResolvedStageBridge {
+  index: number
+  label: string
+  range: [number, number]
+  groups: ColoredSocketGroupBridge[]
+  note?: string
+}
+
+interface GemSourceBridge {
+  kind: 'questReward' | 'vendor' | 'drop' | 'unobtainable'
+  questId?: string
+  npc?: string
+  act?: number
+  afterQuest?: string
+  note?: string
+}
+
+interface GemPlanEntryBridge {
+  gem: string
+  count?: number
+  source?: GemSourceBridge
+}
+
+interface AcquisitionsBridge {
+  rewards: GemPlanEntryBridge[]
+  purchases: GemPlanEntryBridge[]
+  other: GemPlanEntryBridge[]
+}
+
+interface ProfileMetaBridge {
+  name: string
+  class: string
+  ascendancy?: string
+  character?: string
+  pobSource?: string
+}
+
+interface ProfileSnapshotBridge {
+  meta: ProfileMetaBridge | null
+  errors: string[]
+  level: number | null
+  classMismatch: string | null
+  activeStage: ResolvedStageBridge | null
+  nextStage: ResolvedStageBridge | null
+  acquisitions: AcquisitionsBridge | null
+}
+
 interface OverlayBridge {
   getState(): Promise<OverlayStateBridge>
   onState(cb: (state: OverlayStateBridge) => void): () => void
@@ -131,6 +193,9 @@ interface OverlayBridge {
   onGuideState(cb: (state: GuideStateBridge) => void): () => void
   guideToggleStep(stepId: string): void
   guideReset(): void
+  getProfile(): Promise<ProfileSnapshotBridge>
+  onProfileState(cb: (snap: ProfileSnapshotBridge) => void): () => void
+  pickProfile(): Promise<string | null>
   exitMoveMode(): void
   setSettingsOpen(open: boolean): void
   resizeBy(dx: number, dy: number): void

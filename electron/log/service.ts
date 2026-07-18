@@ -23,6 +23,8 @@ export class LogService {
   private persistTimer: NodeJS.Timeout | null = null
   /** In-main consumers of live area events (e.g. the guide). */
   private areaListeners: Array<(area: AreaState) => void> = []
+  /** In-main consumers of bound-character level changes (e.g. the gem panel). */
+  private levelListeners: Array<(level: number) => void> = []
 
   constructor(overlay: OverlayController) {
     this.overlay = overlay
@@ -70,6 +72,10 @@ export class LogService {
 
   addAreaListener(listener: (area: AreaState) => void): void {
     this.areaListeners.push(listener)
+  }
+
+  addLevelListener(listener: (level: number) => void): void {
+    this.levelListeners.push(listener)
   }
 
   getSnapshot(): LogSnapshot {
@@ -128,6 +134,7 @@ export class LogService {
       text: `${ev.name} (${ev.charClass}) → level ${ev.level}${ev.isBound ? '' : ' — other player'}`
     })
     this.send(Channels.playerLevelUp, ev)
+    if (ev.isBound) for (const listener of this.levelListeners) listener(ev.level)
     this.persistSoon()
   }
 

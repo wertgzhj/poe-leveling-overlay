@@ -1,0 +1,31 @@
+{
+  "_note": "Example build profile (plan §5.3) — a placeholder so the gem panel has something to show. Replace it with your own: point Settings → Build profile at your file, or edit this one (hot-reloads on save, validation shows in the panel). 'stages' = which gems are linked in which level range; socket colours are computed from data/gems.json, not written here. 'gemPlan' = where each gem comes from (drives the reward pick + shopping list).",
+  "meta": {
+    "name": "Example Cold Witch",
+    "class": "Witch",
+    "ascendancy": "Elementalist"
+  },
+  "stages": [
+    {
+      "range": [1, 11],
+      "label": "Level 1–11",
+      "socketGroups": [
+        { "gems": ["Frostbolt", "Arcane Surge Support"], "note": "3-link as soon as you can" }
+      ]
+    },
+    {
+      "range": [12, 27],
+      "label": "Level 12–27",
+      "socketGroups": [
+        { "gems": ["Freezing Pulse", "Added Lightning Damage Support", "Elemental Focus Support"] },
+        { "gems": ["Flame Dash"], "note": "movement" }
+      ]
+    }
+  ],
+  "gemPlan": [
+    { "gem": "Frostbolt", "source": { "kind": "questReward", "questId": "enemy-at-the-gate", "note": "Act 1 opening quest" } },
+    { "gem": "Arcane Surge Support", "source": { "kind": "vendor", "npc": "Nessa", "act": 1, "afterQuest": "enemy-at-the-gate" } },
+    { "gem": "Freezing Pulse", "source": { "kind": "questReward", "questId": "mercy-mission" } },
+    { "gem": "Flame Dash", "source": { "kind": "vendor", "npc": "Nessa", "act": 1 } }
+  ]
+}

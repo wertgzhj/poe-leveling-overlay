@@ -5,13 +5,15 @@ import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
 import type { GuideService } from './guide/service.ts'
+import type { ProfileService } from './profile/service.ts'
 
 // Allow-listed IPC only (plan §11.1 Electron hardening). Every channel the
 // preload bridge can reach is registered here explicitly.
 export function registerIpc(
   overlay: OverlayController,
   log: LogService,
-  guide: GuideService
+  guide: GuideService,
+  profile: ProfileService
 ): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
 
@@ -44,6 +46,11 @@ export function registerIpc(
       const next = typeof c === 'string' && c.trim().length > 0 ? c.trim() : null
       store.set('characterName', next)
       log.setCharacter(next)
+    }
+    if ('profilePath' in patch) {
+      const p = patch.profilePath
+      const next = typeof p === 'string' && p.trim().length > 0 ? p.trim() : null
+      if (next !== store.get('profilePath')) profile.setPath(next)
     }
     if (typeof patch.clickThrough === 'boolean') {
       overlay.setClickThrough(patch.clickThrough)
@@ -81,19 +88,27 @@ export function registerIpc(
   })
   ipcMain.on(Channels.guideReset, () => guide.reset())
 
+  ipcMain.handle(Channels.profileGet, () => profile.snapshot())
+
   ipcMain.handle(Channels.dialogPickClientTxt, async (): Promise<string | null> => {
-    const win = overlay.window
-    const opts: Electron.OpenDialogOptions = {
-      title: 'Select Client.txt',
-      properties: ['openFile'],
-      filters: [{ name: 'Client log', extensions: ['txt'] }]
-    }
-    const result = win
-      ? await dialog.showOpenDialog(win, opts)
-      : await dialog.showOpenDialog(opts)
-    if (result.canceled || result.filePaths.length === 0) return null
-    return result.filePaths[0]
+    return pickFile(overlay, 'Select Client.txt', [{ name: 'Client log', extensions: ['txt'] }])
   })
+
+  ipcMain.handle(Channels.dialogPickProfile, async (): Promise<string | null> => {
+    return pickFile(overlay, 'Select build profile', [{ name: 'Profile JSON', extensions: ['json'] }])
+  })
+}
+
+async function pickFile(
+  overlay: OverlayController,
+  title: string,
+  filters: Electron.FileFilter[]
+): Promise<string | null> {
+  const win = overlay.window
+  const opts: Electron.OpenDialogOptions = { title, properties: ['openFile'], filters }
+  const result = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+  if (result.canceled || result.filePaths.length === 0) return null
+  return result.filePaths[0]
 }
 
 function clamp(value: number, min: number, max: number): number {
