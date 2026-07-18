@@ -142,25 +142,20 @@ interface ResolvedStageBridge {
   note?: string
 }
 
-interface GemSourceBridge {
-  kind: 'questReward' | 'vendor' | 'drop' | 'unobtainable'
-  questId?: string
-  npc?: string
+interface AcquisitionEntryBridge {
+  gem: string
+  count?: number
+  bucket: 'reward' | 'purchase' | 'other'
   act?: number
-  afterQuest?: string
+  npc?: string
+  quest?: string
   note?: string
 }
 
-interface GemPlanEntryBridge {
-  gem: string
-  count?: number
-  source?: GemSourceBridge
-}
-
 interface AcquisitionsBridge {
-  rewards: GemPlanEntryBridge[]
-  purchases: GemPlanEntryBridge[]
-  other: GemPlanEntryBridge[]
+  rewards: AcquisitionEntryBridge[]
+  purchases: AcquisitionEntryBridge[]
+  other: AcquisitionEntryBridge[]
 }
 
 interface ProfileMetaBridge {

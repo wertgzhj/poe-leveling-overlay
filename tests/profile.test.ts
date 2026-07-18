@@ -6,8 +6,7 @@ import { GemData } from '../electron/profile/gems.ts'
 import {
   activeStageIndex,
   resolveStage,
-  acquisitionsForStage,
-  rewardsForQuest
+  acquisitionsForStage
 } from '../electron/profile/engine.ts'
 import { repoPath } from './helpers.ts'
 
@@ -125,18 +124,76 @@ test('resolveStage colours the active group', () => {
 
 // ---------- acquisition views ----------
 
-test('acquisitions split the active stage gems into rewards vs purchases', () => {
+test('acquisitions split the active stage gems into rewards vs purchases (authored)', () => {
   const profile = exampleProfile()
   const acq = acquisitionsForStage(profile, 0) // stage 0 uses Frostbolt + Arcane Surge
   assert.deepEqual(acq.rewards.map((e) => e.gem), ['Frostbolt'])
   assert.deepEqual(acq.purchases.map((e) => e.gem), ['Arcane Surge Support'])
 })
 
-test('rewardsForQuest matches the route rewardHint join', () => {
-  const profile = exampleProfile()
+// ---------- P5: class-aware gem sources ----------
+
+const SOURCED_GEMS = new GemData({
+  Frostbolt: {
+    attr: 'int',
+    sources: [
+      { kind: 'quest', act: 1, quest: 'enemy-at-the-gate', classes: ['Witch', 'Shadow'] },
+      { kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch', 'Shadow', 'Templar'] }
+    ]
+  },
+  'Onslaught Support': {
+    attr: 'dex',
+    sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] // all classes
+  },
+  'Ground Slam': {
+    attr: 'str',
+    sources: [{ kind: 'quest', act: 1, quest: 'enemy-at-the-gate', classes: ['Marauder', 'Duelist'] }]
+  }
+})
+
+test('earliestSource filters by class and prefers the earliest (act, quest first)', () => {
+  assert.equal(SOURCED_GEMS.earliestSource('Frostbolt', 'Witch')?.kind, 'quest')
+  // Templar isn't in the quest list, so the vendor source wins.
+  assert.equal(SOURCED_GEMS.earliestSource('Frostbolt', 'Templar')?.kind, 'vendor')
+  // Marauder gets neither Frostbolt source.
+  assert.equal(SOURCED_GEMS.earliestSource('Frostbolt', 'Marauder'), null)
+  // No class filter on Onslaught -> available to anyone.
+  assert.equal(SOURCED_GEMS.earliestSource('Onslaught Support', 'Marauder')?.act, 2)
+})
+
+test('acquisitions resolve sources live from gem data when the plan omits them', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'live', class: 'Witch' },
+      stages: [
+        {
+          range: [1, 12],
+          socketGroups: [{ gems: ['Frostbolt', 'Onslaught Support', 'Ground Slam'] }]
+        }
+      ],
+      gemPlan: [{ gem: 'Frostbolt' }, { gem: 'Onslaught Support' }, { gem: 'Ground Slam' }]
+    })
+  ).profile!
+
+  const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
+  assert.deepEqual(acq.rewards.map((e) => e.gem), ['Frostbolt']) // Witch quest reward
   assert.deepEqual(
-    rewardsForQuest(profile, 'enemy-at-the-gate').map((e) => e.gem),
-    ['Frostbolt']
+    acq.purchases.map((e) => `${e.gem}@${e.npc}`),
+    ['Onslaught Support@Yeena']
   )
-  assert.deepEqual(rewardsForQuest(profile, 'no-such-quest'), [])
+  // Ground Slam has no Witch source -> falls to "other", not misattributed.
+  assert.deepEqual(acq.other.map((e) => e.gem), ['Ground Slam'])
+})
+
+test('an authored source overrides the live lookup', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'override', class: 'Witch' },
+      stages: [{ range: [1, 12], socketGroups: [{ gems: ['Frostbolt'] }] }],
+      gemPlan: [{ gem: 'Frostbolt', source: { kind: 'drop', note: 'using a drop' } }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
+  assert.equal(acq.rewards.length, 0)
+  assert.deepEqual(acq.other.map((e) => e.gem), ['Frostbolt'])
 })

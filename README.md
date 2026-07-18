@@ -4,12 +4,12 @@ A **ToS-compliant** desktop overlay that helps you level through the Path of Exi
 campaign — route, quest rewards, vendor purchases and skill-tree stages, generated
 semi-automatically from a Path of Building import.
 
-> **Project status:** early development. Phases **P0–P4** — transparent overlay
+> **Project status:** early development. Phases **P0–P5** — transparent overlay
 > with hotkeys, in-overlay settings, live `Client.txt` tracking (zone, level,
 > restart-safe resume), a **route guide with auto-advance**, a **build-profile
-> gem panel** (level-driven socket groups with computed colours, reward/vendor
-> hints), and **Path of Building import** to generate a profile from a code or
-> `pobb.in` link. See [`docs/plan.md`](docs/plan.md).
+> gem panel** (level-driven socket groups with computed colours + class-aware
+> reward/vendor hints), and **Path of Building import**. See
+> [`docs/plan.md`](docs/plan.md).
 
 *Not affiliated with or endorsed by Grinding Gear Games.*
 
@@ -89,8 +89,11 @@ yourself for now.
   stage switches automatically as you level. `gemPlan` records where each gem comes
   from (`questReward` / `vendor` / `drop`), which feeds the reward + buy hints.
 - Socket colours come from `data/gems.json` (gem → attribute); a gem missing there
-  shows a neutral pip with a `?`. That file is partial for now (full gem data is a
-  later phase).
+  shows a neutral pip with a `?`. It covers ~70 common gems for now — add your own.
+- Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
+  gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`
+  — but that field is intentionally empty until a verified gem-availability dataset is
+  added (the resolver is built and class-aware; only the data is pending).
 
 **Import from Path of Building** instead of writing stages by hand: in
 **Settings → Build profile → Import from Path of Building**, paste a PoB export

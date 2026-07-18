@@ -76,7 +76,7 @@ export class ProfileService {
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
           : null,
-      acquisitions: profile ? acquisitionsForStage(profile, stageIndex) : null
+      acquisitions: profile ? acquisitionsForStage(profile, stageIndex, this.gems) : null
     }
   }
 

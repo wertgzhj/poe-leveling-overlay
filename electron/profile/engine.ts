@@ -2,7 +2,7 @@
 // active stage for the current level, colours its socket groups, and derives
 // acquisition views (reward picks / vendor shopping list) from the gemPlan.
 
-import type { Profile, Stage, GemPlanEntry } from './profile.ts'
+import type { Profile, Stage, CharClass, GemSource } from './profile.ts'
 import { GemData, type ColoredGem } from './gems.ts'
 
 export interface ColoredSocketGroup {
@@ -18,13 +18,23 @@ export interface ResolvedStage {
   note?: string
 }
 
+export interface AcquisitionEntry {
+  gem: string
+  count?: number
+  bucket: 'reward' | 'purchase' | 'other'
+  act?: number
+  npc?: string
+  quest?: string
+  note?: string
+}
+
 export interface Acquisitions {
-  /** gemPlan entries sourced from quest rewards. */
-  rewards: GemPlanEntry[]
-  /** gemPlan entries bought from vendors. */
-  purchases: GemPlanEntry[]
-  /** drop-only or otherwise not obtainable en route. */
-  other: GemPlanEntry[]
+  /** gems taken as quest rewards. */
+  rewards: AcquisitionEntry[]
+  /** gems bought from a vendor. */
+  purchases: AcquisitionEntry[]
+  /** drop-only, unobtainable en route, or source unknown. */
+  other: AcquisitionEntry[]
 }
 
 /** Index of the stage whose range contains `level`; clamps below the first and
@@ -57,30 +67,61 @@ export function resolveStage(stage: Stage, index: number, gems: GemData): Resolv
   }
 }
 
-/** The gems used by the active stage, grouped by how they're acquired — the
- *  basis for the reward recommendation and the town shopping list. */
-export function acquisitionsForStage(profile: Profile, stageIndex: number): Acquisitions {
+/**
+ * The gems used by the active stage, grouped by how they're acquired — the
+ * basis for the reward recommendation and the town shopping list. A gem's
+ * source is the profile's authored `gemPlan.source` when present, otherwise
+ * resolved live from gems.json for the profile's class (P5), so a hand-written
+ * or imported plan without sources still gets buy/reward hints where the data
+ * exists.
+ */
+export function acquisitionsForStage(profile: Profile, stageIndex: number, gems?: GemData): Acquisitions {
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
   if (stage) for (const g of stage.socketGroups) for (const gem of g.gems) used.add(gem.toLowerCase())
 
-  const rewards: GemPlanEntry[] = []
-  const purchases: GemPlanEntry[] = []
-  const other: GemPlanEntry[] = []
+  const rewards: AcquisitionEntry[] = []
+  const purchases: AcquisitionEntry[] = []
+  const other: AcquisitionEntry[] = []
   for (const entry of profile.gemPlan) {
     if (used.size > 0 && !used.has(entry.gem.toLowerCase())) continue
-    const kind = entry.source?.kind
-    if (kind === 'questReward') rewards.push(entry)
-    else if (kind === 'vendor') purchases.push(entry)
-    else other.push(entry)
+    const acq = classify(entry, profile.meta.class, gems)
+    if (acq.bucket === 'reward') rewards.push(acq)
+    else if (acq.bucket === 'purchase') purchases.push(acq)
+    else other.push(acq)
   }
   return { rewards, purchases, other }
 }
 
-/** gemPlan entries for a specific quest reward step (route rewardHint join). */
-export function rewardsForQuest(profile: Profile, questId: string | null): GemPlanEntry[] {
-  if (!questId) return []
-  return profile.gemPlan.filter(
-    (e) => e.source?.kind === 'questReward' && e.source.questId === questId
-  )
+function classify(
+  entry: { gem: string; count?: number; source?: GemSource },
+  cls: CharClass,
+  gems?: GemData
+): AcquisitionEntry {
+  const authored = entry.source
+  if (authored) {
+    const bucket = authored.kind === 'questReward' ? 'reward' : authored.kind === 'vendor' ? 'purchase' : 'other'
+    return {
+      gem: entry.gem,
+      count: entry.count,
+      bucket,
+      act: authored.act,
+      npc: authored.npc,
+      quest: authored.questId,
+      note: authored.note
+    }
+  }
+  const src = gems?.earliestSource(entry.gem, cls)
+  if (src) {
+    return {
+      gem: entry.gem,
+      count: entry.count,
+      bucket: src.kind === 'quest' ? 'reward' : 'purchase',
+      act: src.act,
+      npc: src.npc,
+      quest: src.quest,
+      note: src.note
+    }
+  }
+  return { gem: entry.gem, count: entry.count, bucket: 'other' }
 }

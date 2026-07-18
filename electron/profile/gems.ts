@@ -1,13 +1,30 @@
-// Gem attribute -> socket colour lookup (pure). Socket colour is computed, never
-// authored (plan §5.3): Str->red, Dex->green, Int->blue. gems.json only needs a
-// gem's primary attribute; unknown gems render neutral so a partial gem list
-// still works (full data is P5).
+// Gem data: socket colour (from attribute) + acquisition sources (P5).
+// Socket colour is computed, never authored (plan §5.3): Str->red, Dex->green,
+// Int->blue. Sources say where a gem comes from, per class — the engine uses
+// them to fill a gemPlan and build the shopping list / reward recommendation.
+// The shipped data/gems.json is partial and flagged; unknown gems degrade
+// gracefully (neutral colour, no source).
+
+import type { CharClass } from './profile.ts'
 
 export type Attr = 'str' | 'dex' | 'int'
 export type SocketColor = 'R' | 'G' | 'B' | 'W'
 
+export interface GemSourceInfo {
+  kind: 'quest' | 'vendor'
+  act: number
+  /** quest reward: the quest offering it. vendor: the quest that unlocks it. */
+  quest?: string
+  /** vendor NPC (vendor kind). */
+  npc?: string
+  /** classes this source applies to; absent = all classes. */
+  classes?: CharClass[]
+  note?: string
+}
+
 export interface GemInfo {
   attr?: Attr
+  sources?: GemSourceInfo[]
 }
 
 const ATTR_COLOR: Record<Attr, SocketColor> = { str: 'R', dex: 'G', int: 'B' }
@@ -42,6 +59,26 @@ export class GemData {
   colorGroup(gems: string[]): ColoredGem[] {
     return gems.map((g) => this.color(g))
   }
+
+  /** Sources for a gem available to a class (or all, when no class given). */
+  sourcesFor(gem: string, cls?: CharClass | null): GemSourceInfo[] {
+    const all = this.info(gem)?.sources ?? []
+    if (!cls) return all
+    return all.filter((s) => !s.classes || s.classes.includes(cls))
+  }
+
+  /** Earliest source for a class: lowest act, quest reward before vendor. */
+  earliestSource(gem: string, cls?: CharClass | null): GemSourceInfo | null {
+    const options = this.sourcesFor(gem, cls)
+    if (options.length === 0) return null
+    return [...options].sort(
+      (a, b) => a.act - b.act || rank(a.kind) - rank(b.kind)
+    )[0]
+  }
+}
+
+function rank(kind: GemSourceInfo['kind']): number {
+  return kind === 'quest' ? 0 : 1
 }
 
 /** Forgiving match: case-insensitive, trailing " Support" optional, so
