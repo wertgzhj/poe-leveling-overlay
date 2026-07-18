@@ -24,6 +24,9 @@ export function SettingsPanel(): React.JSX.Element {
   const [pathDraft, setPathDraft] = useState(clientTxtPath ?? '')
   const [charDraft, setCharDraft] = useState(characterName ?? '')
   const [profileDraft, setProfileDraft] = useState(profilePath ?? '')
+  const [pobInput, setPobInput] = useState('')
+  const [pobBusy, setPobBusy] = useState(false)
+  const [pobResult, setPobResult] = useState<PobImportResponseBridge | null>(null)
 
   useEffect(() => setPathDraft(clientTxtPath ?? ''), [clientTxtPath])
   useEffect(() => setCharDraft(characterName ?? ''), [characterName])
@@ -106,6 +109,21 @@ export function SettingsPanel(): React.JSX.Element {
       if (p) {
         setProfileDraft(p)
         commitProfile(p)
+      }
+    })
+  }
+
+  const importPob = (): void => {
+    const input = pobInput.trim()
+    if (!input || pobBusy) return
+    setPobBusy(true)
+    setPobResult(null)
+    void window.overlay?.importPob(input).then((r) => {
+      setPobBusy(false)
+      setPobResult(r)
+      if (r?.ok) {
+        setPobInput('')
+        if (r.path) patch({ profilePath: r.path })
       }
     })
   }
@@ -252,6 +270,49 @@ export function SettingsPanel(): React.JSX.Element {
             <p className="mt-1 text-[10px] text-overlay-muted">
               Drives the Gems tab. Hot-reloads on save. Leave empty for the bundled example.
             </p>
+
+            <label className="mt-2 block text-[11px] text-overlay-muted">
+              Import from Path of Building
+            </label>
+            <textarea
+              spellCheck={false}
+              value={pobInput}
+              placeholder="paste a PoB export code, or a pobb.in / pastebin link"
+              onChange={(e) => setPobInput(e.target.value)}
+              rows={2}
+              className="mt-1 w-full resize-none rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
+            />
+            <div className="mt-1 flex items-center gap-2">
+              <button
+                onClick={importPob}
+                disabled={pobBusy || pobInput.trim().length === 0}
+                className="rounded bg-overlay-accent/20 px-2 py-1 text-[11px] text-overlay-accent disabled:opacity-40"
+              >
+                {pobBusy ? 'Importing…' : 'Import'}
+              </button>
+              <span className="text-[10px] text-overlay-muted">creates + activates a profile</span>
+            </div>
+            {pobResult && (
+              <div
+                className={
+                  'mt-1.5 rounded-md p-1.5 text-[10px] ' +
+                  (pobResult.ok
+                    ? 'border border-emerald-400/40 bg-emerald-400/10 text-emerald-300'
+                    : 'border border-red-400/40 bg-red-400/10 text-red-300')
+                }
+              >
+                {pobResult.ok ? (
+                  <div>Imported — now the active profile. See the Gems tab.</div>
+                ) : (
+                  pobResult.errors.map((e, i) => <div key={i}>· {e}</div>)
+                )}
+                {pobResult.warnings.map((w, i) => (
+                  <div key={i} className="text-amber-300/90">
+                    ⚠ {w}
+                  </div>
+                ))}
+              </div>
+            )}
           </Section>
         </div>
       </div>

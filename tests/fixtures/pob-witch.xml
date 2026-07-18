@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PathOfBuilding>
+	<Build level="28" targetVersion="3_0" bandit="None" className="Witch" ascendClassName="Elementalist" mainSocketGroup="1">
+		<PlayerStat stat="Life" value="612"/>
+	</Build>
+	<Skills sortGemsByDPSField="CombinedDPS" defaultGemQuality="0">
+		<SkillSet id="1" title="Level 1-11">
+			<Skill mainActiveSkillCalcs="1" slot="Weapon 1" mainActiveSkill="1" enabled="true">
+				<Gem enabled="true" skillId="Frostbolt" nameSpec="Frostbolt" level="1" quality="0" count="1"/>
+				<Gem enabled="true" skillId="SupportArcaneSurge" nameSpec="Arcane Surge Support" level="1" quality="0" count="1"/>
+			</Skill>
+			<Skill slot="Boots" enabled="true">
+				<Gem enabled="true" skillId="FlameDash" nameSpec="Flame Dash" level="1" quality="0" count="1"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet id="2" title="Level 12-28">
+			<Skill mainActiveSkillCalcs="1" slot="Weapon 1" mainActiveSkill="1" enabled="true">
+				<Gem enabled="true" skillId="FreezingPulse" nameSpec="Freezing Pulse" level="1" quality="0" count="1"/>
+				<Gem enabled="true" skillId="SupportAddedLightningDamage" nameSpec="Added Lightning Damage Support" level="1" quality="0" count="1"/>
+				<Gem enabled="true" skillId="SupportElementalFocus" nameSpec="Elemental Focus Support" level="1" quality="0" count="1"/>
+			</Skill>
+			<Skill slot="Gloves" enabled="false">
+				<Gem enabled="true" skillId="Frostbite" nameSpec="Frostbite" level="1" quality="0" count="1"/>
+			</Skill>
+			<Skill slot="Boots" enabled="true">
+				<Gem enabled="true" skillId="FlameDash" nameSpec="Flame Dash" level="1" quality="0" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Tree activeSpec="1">
+		<Spec title="Level 1-11" treeVersion="3_0">
+			<URL>https://www.pathofexile.com/passive-skill-tree/AAAABgAA</URL>
+		</Spec>
+		<Spec title="Level 12-28" treeVersion="3_0">
+			<URL>https://www.pathofexile.com/passive-skill-tree/AAAABgAB</URL>
+		</Spec>
+	</Tree>
+	<Notes>Example levelling build. Not a real optimised tree.</Notes>
+</PathOfBuilding>
