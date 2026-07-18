@@ -18,6 +18,7 @@ Last updated: 2026-07-18.
 | P5 | Class-aware gem-source engine | ✅ | ✅ | — (data still partial, see below) |
 | P6 | Trials tracker | ✅ | ✅ | auto-check on entering a trial zone |
 | P6 | Packaged Windows release (installer + portable) | ✅ | icon + CI build | double-click launch |
+| — | Visual route/profile editor (separate window) | ✅ | pure edit ops | window opens, edit → save → overlay reloads |
 
 ¹ P0 is overlay/window behaviour that only exists on Windows; there's no headless test,
 only the bundle build. Everything else marked ✅ has real unit/integration tests.
@@ -48,6 +49,9 @@ Then, in Path of Exile (**Windowed Fullscreen**):
    stage's links with colours and flips stages when you level.
 6. **Trials (P6):** entering a trial zone (e.g. The Lower Prison) checks it off on the
    Trials tab; click any trial to correct it.
+7. **Editor:** tray → *Edit routes & profile…* (or the button in Settings) opens a
+   normal window. Add/edit a step on an act, hit **Save** — the Guide tab reflects it
+   without a restart. Same for the Profile tab → the Gems tab.
 
 **Report format:** for anything off, tell me the tab/feature + what you saw vs. expected
 (and for tracking issues, a couple of lines from the 🐞 dev panel).

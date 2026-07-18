@@ -7,6 +7,7 @@ import { LogService } from './log/service.ts'
 import { GuideService } from './guide/service.ts'
 import { ProfileService } from './profile/service.ts'
 import { TrialsService } from './trials/service.ts'
+import { EditorWindow } from './editor-window.ts'
 
 // Set to a number of ms via SMOKE=<ms> to auto-quit after startup — used by the
 // headless launch check in CI/dev to prove the app boots without a display.
@@ -17,6 +18,7 @@ const logService = new LogService(overlay)
 const guideService = new GuideService(overlay, logService)
 const profileService = new ProfileService(overlay, logService)
 const trialsService = new TrialsService(overlay, logService)
+const editorWindow = new EditorWindow()
 let tray: ReturnType<typeof createTray> = null
 
 // Single instance: a second launch just resurfaces the existing overlay.
@@ -33,7 +35,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     overlay.create()
-    registerIpc(overlay, logService, guideService, profileService, trialsService)
+    registerIpc(overlay, logService, guideService, profileService, trialsService, editorWindow)
     logService.start()
     guideService.start()
     profileService.start()
@@ -42,7 +44,7 @@ if (!app.requestSingleInstanceLock()) {
     if (failed.length) {
       console.warn('[hotkeys] failed to register:', failed.join(', '))
     }
-    tray = createTray(overlay)
+    tray = createTray(overlay, () => editorWindow.open())
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) overlay.create()
@@ -62,6 +64,7 @@ app.on('will-quit', () => {
   profileService.stop()
   trialsService.stop()
   logService.stop()
+  editorWindow.destroy()
   tray?.destroy()
 })
 

@@ -199,6 +199,59 @@ interface TrialsSnapshotBridge {
   total: number
 }
 
+// --- Editor (route/profile file editing) ---
+
+interface SocketGroupFileBridge {
+  gems: string[]
+  note?: string
+}
+
+interface StageFileBridge {
+  range: [number, number]
+  label?: string
+  socketGroups: SocketGroupFileBridge[]
+  note?: string
+}
+
+interface GemSourceFileBridge {
+  kind: 'questReward' | 'vendor' | 'drop' | 'unobtainable'
+  questId?: string
+  npc?: string
+  act?: number
+  afterQuest?: string
+  note?: string
+}
+
+interface GemPlanFileBridge {
+  gem: string
+  count?: number
+  source?: GemSourceFileBridge
+}
+
+interface ProfileFileBridge {
+  meta: ProfileMetaBridge
+  stages: StageFileBridge[]
+  gemPlan: GemPlanFileBridge[]
+}
+
+interface EditorRouteEntryBridge {
+  act: number
+  route: RouteBridge | null
+  errors: string[]
+  source: 'override' | 'bundled' | 'missing'
+}
+
+interface EditorLoadBridge {
+  routes: EditorRouteEntryBridge[]
+  profile: { profile: ProfileFileBridge | null; errors: string[]; path: string | null }
+}
+
+interface EditorSaveResultBridge {
+  ok: boolean
+  errors: string[]
+  path?: string
+}
+
 interface OverlayBridge {
   getState(): Promise<OverlayStateBridge>
   onState(cb: (state: OverlayStateBridge) => void): () => void
@@ -228,6 +281,10 @@ interface OverlayBridge {
   resumeHotkeys(): void
   pickClientTxt(): Promise<string | null>
   getAppInfo(): Promise<AppInfoBridge>
+  openEditor(): void
+  editorLoad(): Promise<EditorLoadBridge>
+  editorSaveRoute(act: number, json: unknown): Promise<EditorSaveResultBridge>
+  editorSaveProfile(json: unknown): Promise<EditorSaveResultBridge>
 }
 
 interface Window {

@@ -31,7 +31,10 @@ export default defineConfig({
     build: {
       outDir: 'out/renderer',
       rollupOptions: {
-        input: { index: resolve(__dirname, 'index.html') }
+        input: {
+          index: resolve(__dirname, 'index.html'),
+          editor: resolve(__dirname, 'editor/index.html')
+        }
       }
     }
   }
