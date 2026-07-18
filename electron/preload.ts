@@ -10,7 +10,8 @@ import {
   type PobImportResponse,
   type ProfileSnapshot,
   type SettingsSetResult,
-  type TrialsSnapshot
+  type TrialsSnapshot,
+  type UpdateStatus
 } from './channels'
 
 function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -56,6 +57,12 @@ const api = {
     subscribe(Channels.trialsState, cb),
   trialsToggle: (id: string): void => ipcRenderer.send(Channels.trialsToggle, id),
   trialsReset: (): void => ipcRenderer.send(Channels.trialsReset),
+
+  getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(Channels.updateGet),
+  onUpdateStatus: (cb: (status: UpdateStatus) => void): (() => void) =>
+    subscribe(Channels.updateStatus, cb),
+  checkForUpdates: (): void => ipcRenderer.send(Channels.updateCheck),
+  installUpdate: (): void => ipcRenderer.send(Channels.updateInstall),
 
   openEditor: (): void => ipcRenderer.send(Channels.editorOpen),
   editorLoad: (): Promise<EditorLoad> => ipcRenderer.invoke(Channels.editorLoad),

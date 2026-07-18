@@ -252,6 +252,15 @@ interface EditorSaveResultBridge {
   path?: string
 }
 
+type UpdateStatusBridge =
+  | { state: 'idle' }
+  | { state: 'disabled'; reason: string }
+  | { state: 'checking' }
+  | { state: 'current'; version: string }
+  | { state: 'downloading'; version: string; percent: number }
+  | { state: 'ready'; version: string }
+  | { state: 'error'; message: string }
+
 interface OverlayBridge {
   getState(): Promise<OverlayStateBridge>
   onState(cb: (state: OverlayStateBridge) => void): () => void
@@ -285,6 +294,10 @@ interface OverlayBridge {
   editorLoad(): Promise<EditorLoadBridge>
   editorSaveRoute(act: number, json: unknown): Promise<EditorSaveResultBridge>
   editorSaveProfile(json: unknown): Promise<EditorSaveResultBridge>
+  getUpdateStatus(): Promise<UpdateStatusBridge>
+  onUpdateStatus(cb: (status: UpdateStatusBridge) => void): () => void
+  checkForUpdates(): void
+  installUpdate(): void
 }
 
 interface Window {

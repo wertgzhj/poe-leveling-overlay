@@ -3,6 +3,15 @@ productName: PoE Leveling Overlay
 directories:
   output: dist
   buildResources: build
+# Auto-update feed (electron-updater). Baked into the app as app-update.yml and
+# used to emit latest.yml + blockmaps next to the installer, which the in-app
+# updater reads from this repo's GitHub Releases. NOTE: releases must be publicly
+# downloadable for the updater to reach them without an embedded token — make the
+# repo public, or point `repo` at a separate public releases repo.
+publish:
+  provider: github
+  owner: wertgzhj
+  repo: poe-overlay
 files:
   - out/**/*
   - package.json

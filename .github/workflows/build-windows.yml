@@ -60,9 +60,14 @@ jobs:
             dist/*.exe
           if-no-files-found: error
 
+      # latest.yml + the .blockmap must be on the release for the in-app updater
+      # (electron-updater) to see the new version and download it.
       - name: Publish release (tag builds only)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.exe
+          files: |
+            dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest.yml
           generate_release_notes: true

@@ -48,6 +48,24 @@ The build is **unsigned**, so Windows SmartScreen warns on first run — choose
 To build it yourself on Windows: `npm ci && npm run make-icon && npm run package:win`
 (output in `dist/`). See [Development](#development) for source setup.
 
+## Updating
+
+The **installed** build updates itself — no need to watch GitHub. On launch (and every
+few hours) it checks this repo's GitHub Releases; a newer version downloads in the
+background, then the overlay shows an **Update vX.Y.Z is ready — Restart & update**
+prompt. One click swaps it in and reopens. You can also check on demand in
+**Settings → Updates**. Nothing is installed without that click.
+
+Two things to know:
+
+- **Releases must be publicly downloadable** for the updater to reach them. If this repo
+  is private, either make it public, or point `publish.repo` in `electron-builder.yml` at
+  a separate **public** releases repo. Without a reachable feed the app still runs — it
+  just reports "Couldn't check" in Settings and never nags.
+- Auto-update targets the **installer**; the **portable** exe doesn't self-update
+  (download the new portable exe when you want to move up). Dev/unpackaged runs show
+  updates as *disabled*.
+
 ## Setup
 
 1. Set the path to your `Client.txt` (Settings → Game log). Defaults:
@@ -120,9 +138,18 @@ yourself for now.
 - Socket colours come from `data/gems.json` (gem → attribute); a gem missing there
   shows a neutral pip with a `?`. It covers ~70 common gems for now — add your own.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
-  gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`
-  — but that field is intentionally empty until a verified gem-availability dataset is
-  added (the resolver is built and class-aware; only the data is pending).
+  gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`.
+  That field ships empty; fill it in one command from the Path of Exile Wiki:
+
+  ```bash
+  npm run fetch-gems -- --dry-run   # preview what it would add (writes nothing)
+  npm run fetch-gems                # merge quest/vendor sources into data/gems.json
+  ```
+
+  It reads the wiki's `quest_rewards` / `vendor_rewards` Cargo export and, by default,
+  fills sources only for gems already in `gems.json` (add `--all` to include gems you
+  don't yet curate). The command prints the exact query URLs it uses. Until you run it,
+  sourceless gems still get the Siosa/Lilly broad-vendor fallback in the Gems tab.
 
 **Import from Path of Building** instead of writing stages by hand: in
 **Settings → Build profile → Import from Path of Building**, paste a PoB export

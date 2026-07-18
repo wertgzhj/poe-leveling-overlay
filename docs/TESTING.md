@@ -19,12 +19,14 @@ Last updated: 2026-07-18.
 | P6 | Trials tracker | ✅ | ✅ | auto-check on entering a trial zone |
 | P6 | Packaged Windows release (installer + portable) | ✅ | icon + CI build | double-click launch |
 | — | Visual route/profile editor (separate window) | ✅ | pure edit ops | window opens, edit → save → overlay reloads |
+| — | In-app auto-update (electron-updater) | ✅ | build only | update prompt + one-click Restart on the installed build |
 
 ¹ P0 is overlay/window behaviour that only exists on Windows; there's no headless test,
 only the bundle build. Everything else marked ✅ has real unit/integration tests.
 
-**Automated:** `npm test` (parser, tracker, watcher, guide, profile, PoB, trials),
-`npm run typecheck`, `npm run build`; CI runs all of these on every push/PR (`ci.yml`).
+**Automated:** `npm test` (parser, tracker, watcher, guide, profile, PoB, trials, editor,
+gem-cargo — 89 tests), `npm run typecheck`, `npm run build`; CI runs all of these on every
+push/PR (`ci.yml`).
 
 ## Manual test steps (Windows, with the game)
 
@@ -52,6 +54,16 @@ Then, in Path of Exile (**Windowed Fullscreen**):
 7. **Editor:** tray → *Edit routes & profile…* (or the button in Settings) opens a
    normal window. Add/edit a step on an act, hit **Save** — the Guide tab reflects it
    without a restart. Same for the Profile tab → the Gems tab.
+8. **Auto-update (installed build):** needs a **published GitHub Release** newer than the
+   installed version (releases must be publicly downloadable — see below). Install an
+   older version, launch it: within ~10s Settings → Updates shows it downloading, then
+   the overlay shows *Update ready — Restart & update*; click it → it reinstalls silently
+   and reopens on the new version. Settings → Updates also has a manual **Check** button.
+
+**Auto-update prerequisite:** the updater reads this repo's Releases, so they must be
+publicly downloadable. If the repo is private, make it public **or** point `publish.repo`
+in `electron-builder.yml` at a separate public releases repo. Dev/unpackaged runs show
+updates as *disabled*; an unreachable feed shows *Couldn't check* and never nags.
 
 **Report format:** for anything off, tell me the tab/feature + what you saw vs. expected
 (and for tracking issues, a couple of lines from the 🐞 dev panel).
@@ -60,13 +72,17 @@ Then, in Path of Exile (**Windowed Fullscreen**):
 
 - **Gem source data:** `data/gems.json` `sources` is empty — the class-aware resolver is
   built and tested, but the data (per-class quest/vendor availability) needs a pull from
-  poewiki, which is blocked from the build sandbox. Run on a reachable machine or ask me
-  for a fetch script. Until then, reward/buy hints come from a profile's authored
-  `gemPlan.source` (incl. PoB import).
+  poewiki, which is blocked from the build sandbox. **On your machine**, run
+  `npm run fetch-gems -- --dry-run` to preview, then `npm run fetch-gems` to merge it in
+  (reads the wiki's Cargo export; prints the query URLs). Until then, reward/buy hints
+  come from a profile's authored `gemPlan.source` (incl. PoB import), plus the Siosa/Lilly
+  fallback.
 - **Your route content:** Acts 2–10 ship as fallback skeletons — replace them in
-  `data/campaign/actN.json` (or per-act overrides in the userData `routes/` folder).
-- **Optional GUI editor:** route/profile content is file-based by choice; a visual
-  editor window is available to build if wanted.
+  `data/campaign/actN.json` (or per-act overrides in the userData `routes/` folder), or
+  in the visual editor (tray → *Edit routes & profile…*).
+- **Auto-update needs public releases:** the in-app updater only works if this repo's
+  Releases are publicly downloadable — make the repo public, or repoint `publish.repo`
+  in `electron-builder.yml` at a public releases repo (see the Updating steps above).
 - **Code signing:** the release is unsigned (SmartScreen warning) — a paid cert is the
   fix; backlog.
 
@@ -75,5 +91,7 @@ Then, in Path of Exile (**Windowed Fullscreen**):
 - **Dev build:** Actions → *Build Windows* → *Run workflow*. Artifact only, version stays
   `0.0.0`, no release.
 - **Real release:** push a tag `vX.Y.Z` (e.g. `v0.1.0`). The workflow builds with that
-  version and publishes a GitHub Release with both exes attached. `package.json` is never
-  bumped for dev — the tag is the source of truth for release versions.
+  version and publishes a GitHub Release with both exes plus `latest.yml` + `.blockmap`
+  (the files the in-app updater reads) attached. `package.json` is never bumped for dev —
+  the tag is the source of truth for release versions. Each tagged release is what
+  installed builds auto-update to.
