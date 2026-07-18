@@ -148,6 +148,13 @@ export function SettingsPanel(): React.JSX.Element {
         </header>
 
         <div className="space-y-4 overflow-y-auto px-3 py-3">
+          <button
+            onClick={() => window.overlay?.openEditor()}
+            className="w-full rounded-md border border-overlay-accent/40 bg-overlay-accent/10 px-2 py-1.5 text-xs text-overlay-accent hover:bg-overlay-accent/20"
+          >
+            Open route &amp; profile editor…
+          </button>
+
           <Section title="Hotkeys">
             <div className="space-y-1.5">
               {HOTKEY_FIELDS.map(([field, label]) => {

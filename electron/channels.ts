@@ -4,7 +4,7 @@
 import type { TrackerSnapshot } from './log/tracker.ts'
 import type { WatcherStatus } from './log/watcher.ts'
 import type { Route } from './guide/route.ts'
-import type { ProfileMeta } from './profile/profile.ts'
+import type { ProfileMeta, Profile } from './profile/profile.ts'
 import type { ResolvedStage, Acquisitions } from './profile/engine.ts'
 import type { TrialsSnapshot } from './trials/engine.ts'
 
@@ -59,6 +59,14 @@ export const Channels = {
   profileGet: 'profile:get',
   /** renderer -> main (invoke): import a PoB code/link into an active profile */
   pobImport: 'pob:import',
+  /** renderer -> main: open the editor window */
+  editorOpen: 'editor:open',
+  /** editor -> main (invoke): load all act routes + the active profile for editing */
+  editorLoad: 'editor:load',
+  /** editor -> main (invoke): validate + save one act route to the userData override */
+  editorSaveRoute: 'editor:save-route',
+  /** editor -> main (invoke): validate + save + activate the profile */
+  editorSaveProfile: 'editor:save-profile',
   /** main -> renderer: trials tracker state changed */
   trialsState: 'trials:state',
   /** renderer -> main (invoke): current trials state */
@@ -128,4 +136,23 @@ export interface PobImportResponse {
   path?: string
   warnings: string[]
   errors: string[]
+}
+
+export interface EditorRouteEntry {
+  act: number
+  route: Route | null
+  errors: string[]
+  /** where the loaded file came from — an editable override, the bundled fallback, or none yet. */
+  source: 'override' | 'bundled' | 'missing'
+}
+
+export interface EditorLoad {
+  routes: EditorRouteEntry[]
+  profile: { profile: Profile | null; errors: string[]; path: string | null }
+}
+
+export interface EditorSaveResult {
+  ok: boolean
+  errors: string[]
+  path?: string
 }

@@ -5,7 +5,7 @@ import type { OverlayController } from './overlay'
 // A frameless overlay has no window chrome, so the tray is the only always-on
 // affordance to toggle it and to quit. Icon load is best-effort: if the asset
 // is missing the app still runs, just without a tray.
-export function createTray(overlay: OverlayController): Tray | null {
+export function createTray(overlay: OverlayController, onOpenEditor: () => void): Tray | null {
   // Dev: build/icon.png in the project root. Packaged: copied to resources/
   // via electron-builder extraResources (see electron-builder.yml).
   const iconPath = app.isPackaged
@@ -20,6 +20,7 @@ export function createTray(overlay: OverlayController): Tray | null {
   const menu = Menu.buildFromTemplate([
     { label: 'Show / hide overlay', click: () => overlay.toggleVisibility() },
     { label: 'Settings…', click: () => overlay.setSettingsOpen(true) },
+    { label: 'Edit routes & profile…', click: () => onOpenEditor() },
     { label: 'Move / resize mode', click: () => overlay.toggleMoveMode() },
     { label: 'Click-through', click: () => overlay.toggleClickThrough() },
     { type: 'separator' },

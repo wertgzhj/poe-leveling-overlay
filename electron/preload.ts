@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import {
   Channels,
   type AppInfo,
+  type EditorLoad,
+  type EditorSaveResult,
   type GuideState,
   type LogSnapshot,
   type OverlayState,
@@ -54,6 +56,13 @@ const api = {
     subscribe(Channels.trialsState, cb),
   trialsToggle: (id: string): void => ipcRenderer.send(Channels.trialsToggle, id),
   trialsReset: (): void => ipcRenderer.send(Channels.trialsReset),
+
+  openEditor: (): void => ipcRenderer.send(Channels.editorOpen),
+  editorLoad: (): Promise<EditorLoad> => ipcRenderer.invoke(Channels.editorLoad),
+  editorSaveRoute: (act: number, json: unknown): Promise<EditorSaveResult> =>
+    ipcRenderer.invoke(Channels.editorSaveRoute, { act, json }),
+  editorSaveProfile: (json: unknown): Promise<EditorSaveResult> =>
+    ipcRenderer.invoke(Channels.editorSaveProfile, json),
 
   exitMoveMode: (): void => ipcRenderer.send(Channels.overlayExitMoveMode),
 

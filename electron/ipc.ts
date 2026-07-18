@@ -9,7 +9,9 @@ import type { ProfileService } from './profile/service.ts'
 import type { TrialsService } from './trials/service.ts'
 import { importPobCode, importPobXml } from './profile/pob.ts'
 import { resolvePobInput } from './profile/pobbin.ts'
-import type { PobImportResponse } from './channels'
+import type { EditorSaveResult, PobImportResponse } from './channels'
+import type { EditorWindow } from './editor-window.ts'
+import { loadForEditor, saveRoute as saveRouteFile, saveProfile as saveProfileFile } from './editor/io.ts'
 
 // Allow-listed IPC only (plan §11.1 Electron hardening). Every channel the
 // preload bridge can reach is registered here explicitly.
@@ -18,7 +20,8 @@ export function registerIpc(
   log: LogService,
   guide: GuideService,
   profile: ProfileService,
-  trials: TrialsService
+  trials: TrialsService,
+  editor: EditorWindow
 ): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
 
@@ -94,6 +97,19 @@ export function registerIpc(
   ipcMain.on(Channels.guideReset, () => guide.reset())
 
   ipcMain.handle(Channels.profileGet, () => profile.snapshot())
+
+  ipcMain.on(Channels.editorOpen, () => editor.open())
+  ipcMain.handle(Channels.editorLoad, () => loadForEditor())
+  ipcMain.handle(Channels.editorSaveRoute, (_e, payload: { act: number; json: unknown }): EditorSaveResult => {
+    if (!payload || typeof payload.act !== 'number') return { ok: false, errors: ['bad payload'] }
+    // The guide watches the override path, so writing it hot-reloads the overlay.
+    return saveRouteFile(payload.act, payload.json)
+  })
+  ipcMain.handle(Channels.editorSaveProfile, (_e, json: unknown): EditorSaveResult => {
+    const result = saveProfileFile(json)
+    if (result.ok && result.path) profile.setPath(result.path) // activate + reload
+    return result
+  })
 
   ipcMain.handle(Channels.trialsGet, () => trials.snapshot())
   ipcMain.on(Channels.trialsToggle, (_e, id: unknown) => {

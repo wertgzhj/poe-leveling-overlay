@@ -79,6 +79,11 @@ move mode, click-through, and **Quit**.
 
 ## Author your route
 
+**Editor:** open **Edit routes & profile…** from the tray (or the button in overlay
+Settings) for a visual editor — add/edit/reorder route steps per act and edit the
+build profile's stages/links, with the same validation the app loads with; saves go to
+your editable copies and the overlay hot-reloads. Or edit the JSON directly, as below.
+
 The route content is **yours to write** — the app ships an engine plus **fallback
 skeletons for all ten acts** (`data/campaign/act1.json` … `act10.json`), which the
 guide combines into one campaign that advances across act boundaries. Act 1 covers the
