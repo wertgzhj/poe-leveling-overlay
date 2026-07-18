@@ -120,9 +120,18 @@ yourself for now.
 - Socket colours come from `data/gems.json` (gem → attribute); a gem missing there
   shows a neutral pip with a `?`. It covers ~70 common gems for now — add your own.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
-  gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`
-  — but that field is intentionally empty until a verified gem-availability dataset is
-  added (the resolver is built and class-aware; only the data is pending).
+  gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`.
+  That field ships empty; fill it in one command from the Path of Exile Wiki:
+
+  ```bash
+  npm run fetch-gems -- --dry-run   # preview what it would add (writes nothing)
+  npm run fetch-gems                # merge quest/vendor sources into data/gems.json
+  ```
+
+  It reads the wiki's `quest_rewards` / `vendor_rewards` Cargo export and, by default,
+  fills sources only for gems already in `gems.json` (add `--all` to include gems you
+  don't yet curate). The command prints the exact query URLs it uses. Until you run it,
+  sourceless gems still get the Siosa/Lilly broad-vendor fallback in the Gems tab.
 
 **Import from Path of Building** instead of writing stages by hand: in
 **Settings → Build profile → Import from Path of Building**, paste a PoB export

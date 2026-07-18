@@ -60,9 +60,11 @@ Then, in Path of Exile (**Windowed Fullscreen**):
 
 - **Gem source data:** `data/gems.json` `sources` is empty — the class-aware resolver is
   built and tested, but the data (per-class quest/vendor availability) needs a pull from
-  poewiki, which is blocked from the build sandbox. Run on a reachable machine or ask me
-  for a fetch script. Until then, reward/buy hints come from a profile's authored
-  `gemPlan.source` (incl. PoB import).
+  poewiki, which is blocked from the build sandbox. **On your machine**, run
+  `npm run fetch-gems -- --dry-run` to preview, then `npm run fetch-gems` to merge it in
+  (reads the wiki's Cargo export; prints the query URLs). Until then, reward/buy hints
+  come from a profile's authored `gemPlan.source` (incl. PoB import), plus the Siosa/Lilly
+  fallback.
 - **Your route content:** Acts 2–10 ship as fallback skeletons — replace them in
   `data/campaign/actN.json` (or per-act overrides in the userData `routes/` folder).
 - **Optional GUI editor:** route/profile content is file-based by choice; a visual
