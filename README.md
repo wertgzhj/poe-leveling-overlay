@@ -4,12 +4,17 @@ A **ToS-compliant** desktop overlay that helps you level through the Path of Exi
 campaign — route, quest rewards, vendor purchases and skill-tree stages, generated
 semi-automatically from a Path of Building import.
 
-> **Project status:** early development. Phases **P0–P5** complete; **P6** in
-> progress. Transparent overlay with hotkeys, in-overlay settings, live
-> `Client.txt` tracking (zone, level, restart-safe resume), a **route guide with
-> auto-advance**, a **build-profile gem panel** (computed socket colours +
-> class-aware reward/vendor hints), **Path of Building import**, and a **Trials of
-> Ascendancy tracker**. See [`docs/plan.md`](docs/plan.md).
+> **Project status:** phases **P0–P6** implemented. Transparent overlay with
+> hotkeys and in-overlay settings, live `Client.txt` tracking (zone, level,
+> restart-safe resume), a **route guide** with auto-advance across all ten acts,
+> a **build-profile gem panel** (computed socket colours + class-aware
+> reward/vendor hints), **Path of Building import**, a **Trials of Ascendancy
+> tracker**, and a **packaged Windows release**. Where things stand + what to
+> test: [`docs/TESTING.md`](docs/TESTING.md). Design & changelog:
+> [`docs/plan.md`](docs/plan.md).
+>
+> Version is `0.0.0` during development on purpose — a real version is set only
+> when a `v*` tag is pushed to cut a release (see below).
 
 *Not affiliated with or endorsed by Grinding Gear Games.*
 
@@ -26,9 +31,11 @@ and Exile Leveling. Full guardrails: [`docs/plan.md`](docs/plan.md) §2.
 
 ## Install (Windows)
 
-Two double-clickable options, both produced by the **Build Windows** GitHub Action
-(on the repo's Actions tab → *Build Windows* → *Run workflow*, or automatically when a
-`v*` tag is pushed → attached to the GitHub Release):
+Two double-clickable options, both produced by the **Build Windows** GitHub Action.
+Run it manually (repo → Actions → *Build Windows* → *Run workflow*) for a **dev build**
+— the exes land as a downloadable run **artifact** (version `0.0.0`, no release). To cut
+a **real release**, push a `v*` tag (e.g. `v0.1.0`): the build takes its version from the
+tag and attaches both exes to a **GitHub Release**.
 
 - **Installer** — `PoE Leveling Overlay-<version>-setup.exe`: installs the app and adds
   Start Menu + Desktop shortcuts. Double-click the shortcut to launch.
