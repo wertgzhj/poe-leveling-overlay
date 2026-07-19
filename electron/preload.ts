@@ -79,6 +79,8 @@ const api = {
   resizeBy: (dx: number, dy: number): void =>
     ipcRenderer.send(Channels.overlayResizeBy, { dx, dy }),
 
+  setHoverUi: (over: boolean): void => ipcRenderer.send(Channels.overlayHoverUi, over),
+
   getSettings: () => ipcRenderer.invoke(Channels.settingsGetAll),
 
   setSettings: (patch: unknown): Promise<SettingsSetResult> =>

@@ -90,6 +90,8 @@ export function registerIpc(
     overlay.resizeBy(delta.dx, delta.dy)
   })
 
+  ipcMain.on(Channels.overlayHoverUi, (_e, over: unknown) => overlay.setHoverUi(!!over))
+
   ipcMain.handle(Channels.logGetSnapshot, () => log.getSnapshot())
 
   ipcMain.handle(Channels.guideGet, () => guide.snapshot())

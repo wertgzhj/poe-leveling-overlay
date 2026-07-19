@@ -158,13 +158,21 @@ function buildStages(sets: RawSet[], warnings: string[]): Stage[] {
   }
 
   if (allLabeled) {
-    // Sort by start level, clamp overlaps so the schema stays valid.
+    // Sort by start level, clamp overlaps so the schema stays valid — and SAY
+    // so: PoB sets often overlap ("1-11" then "9-24"), and a silently clamped
+    // range next to the original title reads like a bug (owner feedback).
     const ordered = parsed
-      .map((p) => ({ ...p, range: p.range as [number, number] }))
+      .map((p) => ({ ...p, range: [...(p.range as [number, number])] as [number, number] }))
       .sort((a, b) => a.range[0] - b.range[0])
     for (let i = 1; i < ordered.length; i++) {
       if (ordered[i].range[0] <= ordered[i - 1].range[1]) {
-        ordered[i - 1].range[1] = Math.max(ordered[i - 1].range[0], ordered[i].range[0] - 1)
+        const prev = ordered[i - 1]
+        const clampedEnd = Math.max(prev.range[0], ordered[i].range[0] - 1)
+        warnings.push(
+          `stage "${prev.set.title ?? '?'}" overlaps the next stage — using levels ` +
+            `${prev.range[0]}–${clampedEnd} (the next stage starts at ${ordered[i].range[0]}).`
+        )
+        prev.range[1] = clampedEnd
       }
     }
     return ordered.map((p) => ({ range: p.range, label: p.set.title, socketGroups: p.set.groups }))
@@ -206,20 +214,20 @@ function buildGemPlan(stages: Stage[]): GemPlanEntry[] {
   }))
 }
 
-/** "Level 1-12", "1–12", "Act 2", "Act 1-3" -> [min, max]; null if unreadable. */
+/** "Level 1-12", "Lvl 1-12", "1–12", "Act 2", "Act 1-3", "Leveling 12-24 fire"
+ *  -> [min, max]; null if unreadable. */
 export function parseStageTitle(title: string | undefined): [number, number] | null {
   if (!title) return null
   const t = title.trim()
 
-  const lvl = /level\s*(\d+)\s*(?:[-–—]|to)\s*(\d+)/i.exec(t)
+  // "Level"/"Lvl"/"Lv" + range, anywhere in the title.
+  const lvl = /(?:levels?|lvl|lv)\.?\s*(\d+)\s*(?:[-–—]|to)\s*(\d+)/i.exec(t)
   if (lvl) return [Number(lvl[1]), Number(lvl[2])]
 
-  const bare = /^(\d+)\s*[-–—]\s*(\d+)$/.exec(t)
-  if (bare) return [Number(bare[1]), Number(bare[2])]
-
-  const singleLvl = /level\s*(\d+)\s*\+?$/i.exec(t)
+  const singleLvl = /(?:levels?|lvl|lv)\.?\s*(\d+)\s*\+?$/i.exec(t)
   if (singleLvl) return [Number(singleLvl[1]), CAMPAIGN_END]
 
+  // Acts before the loose range, so "Act 1-3" is act-based, not levels 1–3.
   const act = /act\s*(\d+)(?:\s*[-–—]\s*(\d+))?/i.exec(t)
   if (act) {
     const a1 = Number(act[1])
@@ -227,6 +235,15 @@ export function parseStageTitle(title: string | undefined): [number, number] | n
     const min = ACT_START_LEVEL[a1] ?? 1
     const max = a2 >= 10 ? CAMPAIGN_END : (ACT_START_LEVEL[a2 + 1] ?? CAMPAIGN_END) - 1
     return [min, Math.max(min, max)]
+  }
+
+  // A bare/loose range anywhere ("1-11", "12-24 fire"), sanity-bounded so
+  // random numbers ("4-link setup") don't become level ranges.
+  const loose = /(?<!\d)(\d{1,2})\s*[-–—]\s*(\d{1,2})(?!\d)/.exec(t)
+  if (loose) {
+    const min = Number(loose[1])
+    const max = Number(loose[2])
+    if (min >= 1 && max > min && max <= 100) return [min, max]
   }
   return null
 }

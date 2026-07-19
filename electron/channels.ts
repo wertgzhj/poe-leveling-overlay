@@ -21,6 +21,8 @@ export const Channels = {
   overlaySetSettingsOpen: 'overlay:set-settings-open',
   /** renderer -> main: resize the overlay window by a pixel delta (resize grip) */
   overlayResizeBy: 'overlay:resize-by',
+  /** renderer -> main: cursor is over visible UI (drives empty-area passthrough) */
+  overlayHoverUi: 'overlay:hover-ui',
   /** renderer -> main (invoke): read persisted settings */
   settingsGetAll: 'settings:get-all',
   /** renderer -> main (invoke): patch settings; returns hotkeys that failed to bind */

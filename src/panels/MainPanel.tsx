@@ -93,6 +93,7 @@ export function MainPanel(): React.JSX.Element {
   return (
     <div className="flex h-screen w-screen items-start justify-center p-2">
       <div
+        data-interactive
         className={
           'relative flex max-h-full w-full flex-col overflow-hidden rounded-[10px] border bg-overlay-panel/95 shadow-lg backdrop-blur-sm ' +
           (moveMode ? 'border-overlay-accent' : 'border-overlay-border')
@@ -156,16 +157,17 @@ export function MainPanel(): React.JSX.Element {
           <span className="truncate">{trackerLine(logStatus, tracked)}</span>
         </div>
 
+        <TrialHint />
+
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
           {tab === 'guide' && <GuideBody />}
           {tab === 'gems' && <GemBody />}
           {tab === 'trials' && <TrialsBody />}
         </div>
 
+        <VersionBadge />
         {moveMode && <ResizeGrip />}
       </div>
-
-      <VersionBadge />
     </div>
   )
 }
@@ -198,6 +200,30 @@ function Tab({
   )
 }
 
+// Shown on every tab while the player stands in a zone that contains an
+// uncompleted Trial of Ascendancy — the trial is NOT auto-checked (you can walk
+// a zone without doing it); completing is one click here or on the Trials tab.
+function TrialHint(): React.JSX.Element | null {
+  const trials = useOverlayStore((s) => s.trials)
+  const trial = trials?.trials.find((t) => t.id === trials.currentZoneTrialId)
+  if (!trial || trial.seen) return null
+  return (
+    <div className="flex items-center gap-2 border-b border-amber-400/40 bg-amber-400/10 px-3 py-1.5">
+      <span className="text-amber-300">△</span>
+      <span className="min-w-0 flex-1 truncate text-[11px] text-amber-200">
+        Trial of Ascendancy in this zone — don&apos;t leave without it.
+      </span>
+      <button
+        className="shrink-0 rounded bg-amber-400/20 px-2 py-0.5 text-[10px] font-medium text-amber-200 hover:bg-amber-400/30"
+        title="Mark this trial as completed"
+        onClick={() => window.overlay?.trialsToggle(trial.id)}
+      >
+        Done ✓
+      </button>
+    </div>
+  )
+}
+
 function TrialsBody(): React.JSX.Element {
   const { trials } = useOverlayStore()
   if (!trials) return <p className="px-1 text-xs text-overlay-muted">Loading…</p>
@@ -216,28 +242,39 @@ function TrialsBody(): React.JSX.Element {
           reset
         </button>
       </div>
-      {trials.trials.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => window.overlay?.trialsToggle(t.id)}
-          className={
-            'mb-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left ' +
-            (t.seen ? 'opacity-50' : 'bg-black/20')
-          }
-        >
-          <span className={'shrink-0 text-xs ' + (t.seen ? 'text-overlay-accent' : 'text-overlay-muted')}>
-            {t.seen ? '✓' : '△'}
-          </span>
-          <div className="min-w-0">
-            <div className={'text-xs ' + (t.seen ? 'text-overlay-muted line-through' : 'text-overlay-text')}>
-              {t.zone}
+      {trials.trials.map((t) => {
+        const here = t.id === trials.currentZoneTrialId
+        return (
+          <button
+            key={t.id}
+            onClick={() => window.overlay?.trialsToggle(t.id)}
+            className={
+              'mb-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left ' +
+              (t.seen ? 'opacity-50' : 'bg-black/20') +
+              (here && !t.seen ? ' ring-1 ring-amber-400/50' : '')
+            }
+          >
+            <span
+              className={
+                'shrink-0 text-xs ' +
+                (t.seen ? 'text-overlay-accent' : here ? 'text-amber-300' : 'text-overlay-muted')
+              }
+            >
+              {t.seen ? '✓' : '△'}
+            </span>
+            <div className="min-w-0">
+              <div className={'text-xs ' + (t.seen ? 'text-overlay-muted line-through' : 'text-overlay-text')}>
+                {t.zone}
+                {here && !t.seen && <span className="ml-1.5 text-[9px] text-amber-300">you are here</span>}
+              </div>
+              <div className="text-[10px] text-overlay-muted">Act {t.act}</div>
             </div>
-            <div className="text-[10px] text-overlay-muted">Act {t.act}</div>
-          </div>
-        </button>
-      ))}
+          </button>
+        )
+      })}
       <p className="mt-1 px-1 text-[10px] text-overlay-muted">
-        Auto-checks when you enter the zone; click to correct. All six unlock the Labyrinth.
+        Entering a trial&apos;s zone shows a hint — click the trial (or the hint&apos;s Done button)
+        once you actually complete it. All six unlock the Labyrinth.
       </p>
     </>
   )
@@ -340,18 +377,37 @@ function GuideBody(): React.JSX.Element {
   )
 }
 
-function SocketGroup({ group }: { group: ColoredSocketGroupBridge }): React.JSX.Element {
+/** Short "where it comes from" tag for a gem line (owner feedback: sources
+ *  visible right at the links, not only in the lists). */
+function sourceTag(e: AcquisitionEntryBridge | undefined): string | null {
+  if (!e) return null
+  if (e.bucket === 'reward') return `🎁 ${e.quest ?? 'quest'}`
+  if (e.bucket === 'purchase') return `${e.npc ?? 'vendor'}${e.act ? ` A${e.act}` : ''}${e.fallback ? ' ≈' : ''}`
+  return e.note ?? 'drop/trade'
+}
+
+function SocketGroup({
+  group,
+  acq
+}: {
+  group: ColoredSocketGroupBridge
+  acq: Map<string, AcquisitionEntryBridge>
+}): React.JSX.Element {
   return (
     <div className="mb-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
-      {group.gems.map((gem, i) => (
-        <div key={i} className="flex items-center gap-1.5 text-xs">
-          <span className={'inline-block h-2.5 w-2.5 shrink-0 rounded-full ' + PIP_CLASS[gem.color]} />
-          <span className="text-overlay-text">{gem.name}</span>
-          {gem.unknown && (
-            <span className="text-[9px] text-amber-400/80" title="not in gems.json — colour guessed">?</span>
-          )}
-        </div>
-      ))}
+      {group.gems.map((gem, i) => {
+        const tag = sourceTag(acq.get(gem.name.toLowerCase()))
+        return (
+          <div key={i} className="flex items-center gap-1.5 text-xs">
+            <span className={'inline-block h-2.5 w-2.5 shrink-0 rounded-full ' + PIP_CLASS[gem.color]} />
+            <span className="min-w-0 truncate text-overlay-text">{gem.name}</span>
+            {gem.unknown && (
+              <span className="text-[9px] text-amber-400/80" title="not in gems.json — colour guessed">?</span>
+            )}
+            {tag && <span className="ml-auto shrink-0 pl-2 text-[9px] text-overlay-muted">{tag}</span>}
+          </div>
+        )
+      })}
       {group.note && <div className="mt-0.5 pl-4 text-[10px] text-overlay-muted">{group.note}</div>}
     </div>
   )
@@ -372,6 +428,12 @@ function GemBody(): React.JSX.Element {
   const atReward = cursorStep?.rewardHint === true
   const rewards = profile.acquisitions?.rewards ?? []
   const purchases = profile.acquisitions?.purchases ?? []
+  const upcoming = profile.acquisitions?.upcoming ?? []
+  // gem (lowercased) -> its acquisition entry, for the inline tags on link rows.
+  const acqByGem = new Map<string, AcquisitionEntryBridge>()
+  for (const e of [...rewards, ...purchases, ...(profile.acquisitions?.other ?? [])]) {
+    acqByGem.set(e.gem.toLowerCase(), e)
+  }
 
   return (
     <>
@@ -398,27 +460,14 @@ function GemBody(): React.JSX.Element {
           {rewards.map((e) => (
             <div key={e.gem} className="text-xs text-overlay-text">
               {e.gem}
+              {e.quest && <span className="text-overlay-muted"> · {e.quest}</span>}
             </div>
           ))}
         </div>
       )}
 
-      {stage ? (
-        <>
-          <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
-            {stage.label}
-          </div>
-          {stage.groups.map((group, i) => (
-            <SocketGroup key={i} group={group} />
-          ))}
-          {stage.note && <div className="mb-2 px-1 text-[10px] text-overlay-muted">{stage.note}</div>}
-        </>
-      ) : (
-        <p className="px-1 text-xs text-overlay-muted">No stage for the current level.</p>
-      )}
-
       {purchases.length > 0 && (
-        <div className="mt-1 rounded-md bg-black/25 p-2">
+        <div className="mb-2 rounded-md bg-black/25 p-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-muted">
             Buy (this stage)
           </div>
@@ -438,6 +487,37 @@ function GemBody(): React.JSX.Element {
               gems; you may find it earlier as a quest reward.
             </p>
           )}
+        </div>
+      )}
+
+      {stage ? (
+        <>
+          <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+            {stage.label}
+          </div>
+          {stage.groups.map((group, i) => (
+            <SocketGroup key={i} group={group} acq={acqByGem} />
+          ))}
+          {stage.note && <div className="mb-2 px-1 text-[10px] text-overlay-muted">{stage.note}</div>}
+        </>
+      ) : (
+        <p className="px-1 text-xs text-overlay-muted">No stage for the current level.</p>
+      )}
+
+      {upcoming.length > 0 && (
+        <div className="mt-1 rounded-md border border-overlay-border/60 bg-black/20 p-2">
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-muted">
+            Take when a quest offers it (for later)
+          </div>
+          {upcoming.map((e) => (
+            <div key={e.gem} className="text-xs text-overlay-text">
+              {e.gem}
+              <span className="text-overlay-muted">
+                {e.quest ? ` · ${e.quest}` : ''}
+                {e.fromLevel ? ` — used from lvl ${e.fromLevel}` : ''}
+              </span>
+            </div>
+          ))}
         </div>
       )}
 

@@ -153,12 +153,14 @@ interface AcquisitionEntryBridge {
   quest?: string
   note?: string
   fallback?: boolean
+  fromLevel?: number
 }
 
 interface AcquisitionsBridge {
   rewards: AcquisitionEntryBridge[]
   purchases: AcquisitionEntryBridge[]
   other: AcquisitionEntryBridge[]
+  upcoming: AcquisitionEntryBridge[]
 }
 
 interface ProfileMetaBridge {
@@ -197,6 +199,7 @@ interface TrialsSnapshotBridge {
   trials: TrialStateBridge[]
   seenCount: number
   total: number
+  currentZoneTrialId: string | null
 }
 
 // --- Editor (route/profile file editing) ---
@@ -284,6 +287,7 @@ interface OverlayBridge {
   exitMoveMode(): void
   setSettingsOpen(open: boolean): void
   resizeBy(dx: number, dy: number): void
+  setHoverUi(over: boolean): void
   getSettings(): Promise<AppSettingsBridge>
   setSettings(patch: SettingsPatchBridge): Promise<SettingsSetResultBridge>
   pauseHotkeys(): void

@@ -10,34 +10,43 @@ test('there are six normal trials across acts 1–3', () => {
   )
 })
 
-test('entering a trial zone marks that trial (and only it)', () => {
+test('entering a trial zone hints it — it is NOT auto-completed', () => {
   const e = new TrialsEngine()
-  assert.equal(e.snapshot().seenCount, 0)
   assert.equal(e.applyZone('The Lower Prison'), true)
   const snap = e.snapshot()
-  assert.equal(snap.seenCount, 1)
-  assert.equal(snap.trials.find((t) => t.id === 't-a1-lower-prison')?.seen, true)
-  assert.equal(snap.trials.find((t) => t.id === 't-a3-catacombs')?.seen, false)
+  assert.equal(snap.currentZoneTrialId, 't-a1-lower-prison')
+  // Owner feedback: walking the zone must not check the trial off.
+  assert.equal(snap.seenCount, 0)
+  assert.equal(snap.trials.find((t) => t.id === 't-a1-lower-prison')?.seen, false)
 })
 
 test('zone matching is case-insensitive and prefix-tolerant', () => {
   const e = new TrialsEngine()
-  // "The Crypt Level 1" trial zone should match an entered "The Crypt Level 1".
-  assert.equal(e.applyZone('the crypt level 1'), true)
-  assert.equal(e.snapshot().trials.find((t) => t.id === 't-a2-crypt')?.seen, true)
+  assert.equal(e.matchZone('the crypt level 1')?.id, 't-a2-crypt')
+  assert.equal(e.matchZone('The Crypt Level 1 (some suffix)')?.id, 't-a2-crypt')
+  assert.equal(e.matchZone('The Coast'), null)
 })
 
-test('a non-trial zone changes nothing', () => {
+test('leaving for a non-trial zone clears the hint', () => {
   const e = new TrialsEngine()
-  assert.equal(e.applyZone("Lioneye's Watch"), false)
-  assert.equal(e.applyZone('The Coast'), false)
-  assert.equal(e.snapshot().seenCount, 0)
+  assert.equal(e.applyZone("Lioneye's Watch"), false) // nothing -> nothing
+  assert.equal(e.applyZone('The Crematorium'), true) // hint on
+  assert.equal(e.snapshot().currentZoneTrialId, 't-a3-crematorium')
+  assert.equal(e.applyZone('The Coast'), true) // hint off
+  assert.equal(e.snapshot().currentZoneTrialId, null)
 })
 
-test('re-entering an already-seen trial zone is not a change', () => {
+test('re-entering the same trial zone is not a change', () => {
   const e = new TrialsEngine()
   assert.equal(e.applyZone('The Crematorium'), true)
   assert.equal(e.applyZone('The Crematorium'), false)
+})
+
+test('the hint still shows for an already-completed trial zone', () => {
+  const e = new TrialsEngine(['t-a3-crematorium'])
+  assert.equal(e.applyZone('The Crematorium'), true)
+  // The UI decides to hide it when seen; the engine just reports location.
+  assert.equal(e.snapshot().currentZoneTrialId, 't-a3-crematorium')
 })
 
 test('manual toggle corrects both directions; reset clears', () => {
@@ -48,7 +57,7 @@ test('manual toggle corrects both directions; reset clears', () => {
   assert.equal(e.snapshot().seenCount, 0)
   assert.equal(e.toggle('not-a-trial'), false)
 
-  e.applyZone('The Lower Prison')
+  e.toggle('t-a1-lower-prison')
   e.reset()
   assert.equal(e.snapshot().seenCount, 0)
 })

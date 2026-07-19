@@ -28,6 +28,8 @@ export interface AcquisitionEntry {
   note?: string
   /** true when the source is the broad-vendor fallback (Siosa/Lilly), not gem-specific. */
   fallback?: boolean
+  /** upcoming entries: the level the gem's stage starts at. */
+  fromLevel?: number
 }
 
 export interface Acquisitions {
@@ -37,6 +39,9 @@ export interface Acquisitions {
   purchases: AcquisitionEntry[]
   /** drop-only, unobtainable en route, or source unknown. */
   other: AcquisitionEntry[]
+  /** quest-reward gems that LATER stages need — take them when a quest offers
+   *  them now instead of paying a vendor later (owner feedback). */
+  upcoming: AcquisitionEntry[]
 }
 
 /** Index of the stage whose range contains `level`; clamps below the first and
@@ -92,7 +97,33 @@ export function acquisitionsForStage(profile: Profile, stageIndex: number, gems?
     else if (acq.bucket === 'purchase') purchases.push(acq)
     else other.push(acq)
   }
-  return { rewards, purchases, other }
+  return { rewards, purchases, other, upcoming: upcomingRewards(profile, stageIndex, used, gems) }
+}
+
+/** Gems first used in LATER stages that a quest rewards this class — worth
+ *  grabbing the moment the quest offers them (free beats buying later). */
+function upcomingRewards(
+  profile: Profile,
+  stageIndex: number,
+  activeGems: Set<string>,
+  gems?: GemData
+): AcquisitionEntry[] {
+  const seen = new Set<string>()
+  const out: AcquisitionEntry[] = []
+  for (let i = stageIndex + 1; i < profile.stages.length; i++) {
+    const st = profile.stages[i]
+    for (const group of st.socketGroups) {
+      for (const gem of group.gems) {
+        const key = gem.toLowerCase()
+        if (activeGems.has(key) || seen.has(key)) continue
+        seen.add(key)
+        const planned = profile.gemPlan.find((p) => p.gem.toLowerCase() === key)
+        const acq = classify(planned ?? { gem }, profile.meta.class, gems)
+        if (acq.bucket === 'reward') out.push({ ...acq, fromLevel: st.range[0] })
+      }
+    }
+  }
+  return out
 }
 
 function classify(
