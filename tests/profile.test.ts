@@ -193,8 +193,11 @@ test('acquisitions resolve sources live from gem data when the plan omits them',
 })
 
 test('known gems with no specific source fall back to the broad vendor (Siosa)', () => {
-  const gems = exampleGems() // shipped gems.json: attributes only, no sources
-  const src = gems.earliestSource('Fireball', 'Witch')
+  // Controlled data: a curated gem with NO sources. (Not the shipped gems.json —
+  // the "Fetch gem data" workflow fills that with real sources, which is exactly
+  // when this fallback stops applying to real gems.)
+  const gems = new GemData({ 'Sourceless Strike': { attr: 'str' } })
+  const src = gems.earliestSource('Sourceless Strike', 'Witch')
   assert.equal(src?.npc, 'Siosa')
   assert.equal(src?.act, 3)
   assert.equal(src?.fallback, true)
