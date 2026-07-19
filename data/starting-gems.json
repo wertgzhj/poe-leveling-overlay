@@ -1,0 +1,12 @@
+{
+  "_note": "STARTING gems per class — the skill + support gem each class already has in inventory at level 1. The overlay marks these 'you start with it' and never puts them on the buy or quest-reward list (you already own them). PROVISIONAL game data: verify in game and correct the blanks, then rebuild. Names must match the gem exactly (support gems keep the ' Support' suffix). Not touched by the gem-data fetch.",
+  "classes": {
+    "Marauder": ["Heavy Strike"],
+    "Ranger": ["Burning Arrow"],
+    "Witch": ["Fireball", "Arcane Surge Support"],
+    "Duelist": ["Double Strike"],
+    "Templar": ["Glacial Hammer"],
+    "Shadow": [],
+    "Scion": ["Spectral Throw"]
+  }
+}

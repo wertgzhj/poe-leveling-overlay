@@ -155,6 +155,7 @@ interface AcquisitionEntryBridge {
   fallback?: boolean
   fromLevel?: number
   cost?: string
+  starting?: boolean
 }
 
 interface RewardGroupBridge {

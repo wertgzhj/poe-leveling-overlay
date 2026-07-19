@@ -7,13 +7,14 @@ import { app } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
 import { parseProfile, type Profile } from './profile.ts'
-import { GemData, type GemInfo } from './gems.ts'
+import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
 import { actFromAreaId, activeStageIndex, resolveStage, acquisitionsForStage } from './engine.ts'
 import { store } from '../settings.ts'
 import { Channels, type ProfileSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
 import type { LogService } from '../log/service.ts'
 import gemsJson from '../../data/gems.json'
+import startingGemsJson from '../../data/starting-gems.json'
 
 export class ProfileService {
   private readonly overlay: OverlayController
@@ -26,10 +27,16 @@ export class ProfileService {
   private act: number | null = null
   private watchedPath: string | null = null
 
+  /** class -> normalized set of its starting gems (already in inventory). */
+  private readonly startingByClass = new Map<string, Set<string>>()
+
   constructor(overlay: OverlayController, log: LogService) {
     this.overlay = overlay
     this.log = log
     this.gems = new GemData(gemsJson.gems as Record<string, GemInfo>)
+    for (const [cls, names] of Object.entries(startingGemsJson.classes as Record<string, string[]>)) {
+      this.startingByClass.set(cls, new Set(names.map(normalizeGemName)))
+    }
     log.addLevelListener((level) => {
       this.level = level
       this.push()
@@ -87,7 +94,9 @@ export class ProfileService {
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
           : null,
-      acquisitions: profile ? acquisitionsForStage(profile, stageIndex, this.gems, this.act) : null
+      acquisitions: profile
+        ? acquisitionsForStage(profile, stageIndex, this.gems, this.act, this.startingByClass.get(profile.meta.class))
+        : null
     }
   }
 
