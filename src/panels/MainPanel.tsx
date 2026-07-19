@@ -1,6 +1,7 @@
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
 import { UpdateBanner } from './UpdateBanner'
+import { VersionBadge } from './VersionBadge'
 
 // Main overlay panel (P2 guide + P3 gems) with a shared chrome and a tab switch.
 // Steps/stage auto-advance from the log; interacting needs interactive mode
@@ -60,7 +61,6 @@ export function MainPanel(): React.JSX.Element {
   const {
     visible,
     moveMode,
-    appVersion,
     opacity,
     isDev,
     logStatus,
@@ -165,11 +165,7 @@ export function MainPanel(): React.JSX.Element {
         {moveMode && <ResizeGrip />}
       </div>
 
-      {appVersion && (
-        <span className="pointer-events-none fixed bottom-1 right-2 text-[10px] text-overlay-muted/70">
-          v{appVersion}
-        </span>
-      )}
+      <VersionBadge />
     </div>
   )
 }
