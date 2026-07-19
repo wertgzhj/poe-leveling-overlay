@@ -46,6 +46,16 @@ export interface Acquisitions {
   upcoming: AcquisitionEntry[]
 }
 
+/** Campaign act from a numeric area id ("2_1_3" -> 2). Word ids (hideouts,
+ *  maps) and unknown shapes give null — keep the last known act instead. */
+export function actFromAreaId(areaId: string | null | undefined): number | null {
+  if (!areaId) return null
+  const m = /^(\d+)_/.exec(areaId)
+  if (!m) return null
+  const act = Number(m[1])
+  return act >= 1 && act <= 10 ? act : null
+}
+
 /** Index of the stage whose range contains `level`; clamps below the first and
  *  above the last so there is always an active stage. */
 export function activeStageIndex(profile: Profile, level: number | null): number {
@@ -84,7 +94,12 @@ export function resolveStage(stage: Stage, index: number, gems: GemData): Resolv
  * or imported plan without sources still gets buy/reward hints where the data
  * exists.
  */
-export function acquisitionsForStage(profile: Profile, stageIndex: number, gems?: GemData): Acquisitions {
+export function acquisitionsForStage(
+  profile: Profile,
+  stageIndex: number,
+  gems?: GemData,
+  currentAct?: number | null
+): Acquisitions {
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
   if (stage) for (const g of stage.socketGroups) for (const gem of g.gems) used.add(gem.toLowerCase())
@@ -99,16 +114,33 @@ export function acquisitionsForStage(profile: Profile, stageIndex: number, gems?
     else if (acq.bucket === 'purchase') purchases.push(acq)
     else other.push(acq)
   }
-  return { rewards, purchases, other, upcoming: upcomingRewards(profile, stageIndex, used, gems) }
+  // Progression order, not alphabet (owner feedback): by the gem's level
+  // requirement, name as the tiebreak.
+  const byLevel = levelOrder(gems)
+  rewards.sort(byLevel)
+  purchases.sort(byLevel)
+  other.sort(byLevel)
+  const upcoming = upcomingRewards(profile, stageIndex, used, gems, currentAct)
+  upcoming.sort((a, b) => (a.fromLevel ?? 0) - (b.fromLevel ?? 0) || byLevel(a, b))
+  return { rewards, purchases, other, upcoming }
+}
+
+/** Sort by gem level requirement, then name — the order you meet them in. */
+function levelOrder(gems?: GemData): (a: AcquisitionEntry, b: AcquisitionEntry) => number {
+  const lvl = (g: string): number => gems?.info(g)?.requiredLevel ?? 1
+  return (a, b) => lvl(a.gem) - lvl(b.gem) || a.gem.localeCompare(b.gem)
 }
 
 /** Gems first used in LATER stages that a quest rewards this class — worth
- *  grabbing the moment the quest offers them (free beats buying later). */
+ *  grabbing the moment the quest offers them (free beats buying later). Only
+ *  quests up to the CURRENT act are listed (an Act 3 reward is noise while you
+ *  stand in Act 1 — owner feedback); unknown act = no filter. */
 function upcomingRewards(
   profile: Profile,
   stageIndex: number,
   activeGems: Set<string>,
-  gems?: GemData
+  gems?: GemData,
+  currentAct?: number | null
 ): AcquisitionEntry[] {
   const seen = new Set<string>()
   const out: AcquisitionEntry[] = []
@@ -121,7 +153,9 @@ function upcomingRewards(
         seen.add(key)
         const planned = profile.gemPlan.find((p) => p.gem.toLowerCase() === key)
         const acq = classify(planned ?? { gem }, profile.meta.class, gems)
-        if (acq.bucket === 'reward') out.push({ ...acq, fromLevel: st.range[0] })
+        if (acq.bucket !== 'reward') continue
+        if (currentAct != null && acq.act != null && acq.act > currentAct) continue
+        out.push({ ...acq, fromLevel: st.range[0] })
       }
     }
   }

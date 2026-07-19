@@ -107,6 +107,13 @@ export class LogService {
     if (persisted) this.tracker.hydrate(persisted)
     this.persistSoon()
     this.pushSnapshot()
+    // The backscan replays silently (no per-line events), so consumers that
+    // registered before it finished would otherwise sit on stale state until
+    // the next LIVE event — the gem panel stuck on stage 1 after a restart
+    // until you happened to level. Push the resumed end state to them once.
+    const state = this.tracker.snapshot()
+    if (state.level != null) for (const listener of this.levelListeners) listener(state.level)
+    if (state.area) for (const listener of this.areaListeners) listener(state.area)
   }
 
   private onLines(lines: string[]): void {

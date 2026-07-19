@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { parseProfile, type Profile } from '../electron/profile/profile.ts'
 import { GemData, vendorCostFor } from '../electron/profile/gems.ts'
 import {
+  actFromAreaId,
   activeStageIndex,
   resolveStage,
   acquisitionsForStage
@@ -184,9 +185,10 @@ test('acquisitions resolve sources live from gem data when the plan omits them',
   assert.deepEqual(acq.rewards.map((e) => e.gem), ['Frostbolt']) // Witch quest reward
   // Onslaught has a specific vendor; Ground Slam has no Witch source, so it
   // falls back to Siosa (the broad vendor) rather than being misattributed.
+  // Level order: Ground Slam (lvl 1) before Onslaught Support (lvl 12).
   assert.deepEqual(
     acq.purchases.map((e) => `${e.gem}@${e.npc}`),
-    ['Onslaught Support@Yeena', 'Ground Slam@Siosa']
+    ['Ground Slam@Siosa', 'Onslaught Support@Yeena']
   )
   assert.equal(acq.other.length, 0)
   assert.equal(acq.purchases.find((e) => e.gem === 'Ground Slam')?.fallback, true)
@@ -261,6 +263,61 @@ test('upcoming lists later-stage quest-reward gems with their start level', () =
     acq2.upcoming.map((e) => `${e.gem}@${e.fromLevel}`),
     ['Ground Slam@12'] // Marauder quest reward, first used in the level-12 stage
   )
+})
+
+test('actFromAreaId reads the act from numeric ids and ignores word ids', () => {
+  assert.equal(actFromAreaId('1_1_2'), 1)
+  assert.equal(actFromAreaId('2_6_town'), 2)
+  assert.equal(actFromAreaId('10_1_1'), 10)
+  assert.equal(actFromAreaId('HideoutWorldTurtle'), null)
+  assert.equal(actFromAreaId('MapWorldsCitySquare'), null)
+  assert.equal(actFromAreaId(null), null)
+  assert.equal(actFromAreaId('99_1'), null)
+})
+
+test('rewards and purchases sort by gem level requirement, then name', () => {
+  const gems = new GemData({
+    'Zealotry Late': { attr: 'int', requiredLevel: 12, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] },
+    'Alpha Early': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] },
+    'Beta Early': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'sort', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Zealotry Late', 'Beta Early', 'Alpha Early'] }] }],
+      gemPlan: [{ gem: 'Zealotry Late' }, { gem: 'Beta Early' }, { gem: 'Alpha Early' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems)
+  // Level 1 gems first (alphabetical between equals), the level-12 gem last.
+  assert.deepEqual(acq.purchases.map((e) => e.gem), ['Alpha Early', 'Beta Early', 'Zealotry Late'])
+})
+
+test('upcoming is scoped to the current act', () => {
+  const gems = new GemData({
+    'Act One Gift': { attr: 'str', sources: [{ kind: 'quest', act: 1, quest: 'q1' }] },
+    'Act Three Gift': { attr: 'str', sources: [{ kind: 'quest', act: 3, quest: 'q3' }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'acts', class: 'Marauder' },
+      stages: [
+        { range: [1, 11], socketGroups: [{ gems: ['Ground Slam'] }] },
+        { range: [12, 40], socketGroups: [{ gems: ['Act One Gift', 'Act Three Gift'] }] }
+      ],
+      gemPlan: [{ gem: 'Ground Slam' }, { gem: 'Act One Gift' }, { gem: 'Act Three Gift' }]
+    })
+  ).profile!
+
+  // Standing in Act 1: only the Act 1 quest reward is worth showing.
+  const inAct1 = acquisitionsForStage(profile, 0, gems, 1)
+  assert.deepEqual(inAct1.upcoming.map((e) => e.gem), ['Act One Gift'])
+  // Act 3 (or later): both.
+  const inAct3 = acquisitionsForStage(profile, 0, gems, 3)
+  assert.deepEqual(inAct3.upcoming.map((e) => e.gem), ['Act One Gift', 'Act Three Gift'])
+  // Unknown act: no filter (each row shows its own context).
+  const unknown = acquisitionsForStage(profile, 0, gems)
+  assert.equal(unknown.upcoming.length, 2)
 })
 
 test('an authored source overrides the live lookup', () => {

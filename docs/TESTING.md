@@ -51,7 +51,11 @@ Then, in Path of Exile (**Windowed Fullscreen**):
    Act 2's skeleton. (Acts 2–10 are placeholders to replace — see the README.)
 5. **Gems (P3/P4):** point Settings → Build profile at a profile, or paste a PoB
    code/link into *Import from Path of Building*; the Gems tab shows the current
-   stage's links with colours and flips stages when you level.
+   stage's links with colours and flips stages when you level. The stage is bound
+   to your **tracked level** (level-up lines in Client.txt): it switches the moment
+   your level enters the next stage's range. **Restart check:** close and reopen the
+   overlay mid-session — the Gems tab must show the correct stage immediately (not
+   stage 1 until the next level-up).
 6. **Trials (P6):** entering a trial zone (e.g. The Lower Prison) shows an amber
    **"Trial of Ascendancy in this zone"** hint (on every tab) — it is **not**
    auto-checked; click the hint's *Done ✓* (or the trial row) when you complete it.
