@@ -420,6 +420,7 @@ function RewardGroupRow({ group }: { group: RewardGroupBridge }): React.JSX.Elem
  *  visible right at the links, not only in the lists). */
 function sourceTag(e: AcquisitionEntryBridge | undefined): string | null {
   if (!e) return null
+  if (e.starting) return '✓ start'
   if (e.bucket === 'reward') return `🎁${e.act ? ` A${e.act}` : ''} ${e.quest ?? 'quest'}`
   if (e.bucket === 'purchase') return `${e.npc ?? 'vendor'}${e.act ? ` A${e.act}` : ''}${e.fallback ? ' ≈' : ''}`
   return e.note ?? 'drop/trade'
@@ -435,7 +436,8 @@ function SocketGroup({
   return (
     <div className="mb-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
       {group.gems.map((gem, i) => {
-        const tag = sourceTag(acq.get(gem.name.toLowerCase()))
+        const entry = acq.get(gem.name.toLowerCase())
+        const tag = sourceTag(entry)
         return (
           <div key={i} className="flex items-center gap-1.5 text-xs">
             <span
@@ -450,7 +452,16 @@ function SocketGroup({
             {gem.unknown && (
               <span className="text-[9px] text-amber-400/80" title="not in gems.json — colour guessed">?</span>
             )}
-            {tag && <span className="ml-auto shrink-0 pl-2 text-[9px] text-overlay-muted">{tag}</span>}
+            {tag && (
+              <span
+                className={
+                  'ml-auto shrink-0 pl-2 text-[9px] ' +
+                  (entry?.starting ? 'text-emerald-400/90' : 'text-overlay-muted')
+                }
+              >
+                {tag}
+              </span>
+            )}
           </div>
         )
       })}

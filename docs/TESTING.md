@@ -102,6 +102,11 @@ updates as *disabled*; an unreachable feed shows *Couldn't check* and never nags
   (Wisdom / Transmutation / Alteration / Chance / Alchemy) derived from the gem's
   level requirement. Verify the tier boundaries in game and report — they live in
   `COST_TIERS` (`electron/profile/gems.ts`).
+- **Starting gems are provisional — please confirm/fill:** `data/starting-gems.json`
+  lists the skill + support gem each class begins with (so the overlay marks them
+  "✓ start" and never tells you to buy/quest them). Only **Witch** (Fireball + Arcane
+  Surge Support) is confirmed; the other classes have a best-effort skill gem and no
+  support yet. Correct the file and rebuild — names must match the gem exactly.
 - **Trial completion line:** when you finish a trial plaque, capture the exact
   `Client.txt` line (Select-String `Trial` / `Ascendancy`) so auto-complete can be
   wired; until then completion is the one-click hint/manual toggle.

@@ -3,7 +3,7 @@
 // acquisition views (reward picks / vendor shopping list) from the gemPlan.
 
 import type { Profile, Stage, CharClass, GemSource } from './profile.ts'
-import { GemData, vendorCostFor, costRank, type ColoredGem } from './gems.ts'
+import { GemData, vendorCostFor, costRank, normalizeGemName, type ColoredGem } from './gems.ts'
 
 export interface ColoredSocketGroup {
   gems: ColoredGem[]
@@ -32,6 +32,8 @@ export interface AcquisitionEntry {
   fromLevel?: number
   /** vendor price tier ("Wisdom", "Alteration", …) — provisional, by gem level req. */
   cost?: string
+  /** the class's starting gem — already in inventory, so don't buy/quest it. */
+  starting?: boolean
 }
 
 export interface Acquisitions {
@@ -109,7 +111,8 @@ export function acquisitionsForStage(
   profile: Profile,
   stageIndex: number,
   gems?: GemData,
-  currentAct?: number | null
+  currentAct?: number | null,
+  startingGems?: ReadonlySet<string>
 ): Acquisitions {
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
@@ -120,7 +123,7 @@ export function acquisitionsForStage(
   const other: AcquisitionEntry[] = []
   for (const entry of profile.gemPlan) {
     if (used.size > 0 && !used.has(entry.gem.toLowerCase())) continue
-    const acq = classify(entry, profile.meta.class, gems)
+    const acq = classify(entry, profile.meta.class, gems, startingGems)
     if (acq.bucket === 'reward') rewards.push(acq)
     else if (acq.bucket === 'purchase') purchases.push(acq)
     else other.push(acq)
@@ -129,7 +132,7 @@ export function acquisitionsForStage(
   rewards.sort(acquisitionOrder)
   purchases.sort(acquisitionOrder)
   other.sort(acquisitionOrder)
-  const upcoming = upcomingRewards(profile, stageIndex, used, gems, currentAct)
+  const upcoming = upcomingRewards(profile, stageIndex, used, gems, currentAct, startingGems)
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming)
   return { rewards, purchases, other, upcoming, rewardGroups }
@@ -182,7 +185,8 @@ function upcomingRewards(
   stageIndex: number,
   activeGems: Set<string>,
   gems?: GemData,
-  currentAct?: number | null
+  currentAct?: number | null,
+  startingGems?: ReadonlySet<string>
 ): AcquisitionEntry[] {
   const seen = new Set<string>()
   const out: AcquisitionEntry[] = []
@@ -194,7 +198,7 @@ function upcomingRewards(
         if (activeGems.has(key) || seen.has(key)) continue
         seen.add(key)
         const planned = profile.gemPlan.find((p) => p.gem.toLowerCase() === key)
-        const acq = classify(planned ?? { gem }, profile.meta.class, gems)
+        const acq = classify(planned ?? { gem }, profile.meta.class, gems, startingGems)
         if (acq.bucket !== 'reward') continue
         if (currentAct != null && acq.act != null && acq.act > currentAct) continue
         out.push({ ...acq, fromLevel: st.range[0] })
@@ -207,8 +211,13 @@ function upcomingRewards(
 function classify(
   entry: { gem: string; count?: number; source?: GemSource },
   cls: CharClass,
-  gems?: GemData
+  gems?: GemData,
+  startingGems?: ReadonlySet<string>
 ): AcquisitionEntry {
+  // Starting gems are already in inventory — never buy or quest them.
+  if (startingGems?.has(normalizeGemName(entry.gem))) {
+    return { gem: entry.gem, count: entry.count, bucket: 'other', starting: true, note: 'you start with it' }
+  }
   const cost = vendorCostFor(gems?.info(entry.gem)?.requiredLevel)
   const authored = entry.source
   if (authored) {

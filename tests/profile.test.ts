@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { parseProfile, type Profile } from '../electron/profile/profile.ts'
-import { GemData, vendorCostFor } from '../electron/profile/gems.ts'
+import { GemData, vendorCostFor, normalizeGemName } from '../electron/profile/gems.ts'
 import {
   actFromAreaId,
   activeStageIndex,
@@ -364,6 +364,29 @@ test('purchases sort by cost tier, then act, then name', () => {
     acq.purchases.map((e) => `${e.gem}/${e.cost}`),
     ['Cheap A1/Wisdom', 'Cheap A2/Wisdom', 'Pricey A1/Alchemy']
   )
+})
+
+test('a class starting gem is marked and kept off the buy/reward lists', () => {
+  const gems = new GemData({
+    'Arcane Surge Support': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    'Frost Bomb': { attr: 'int', sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
+  })
+  const starting = new Set(['Arcane Surge Support'].map(normalizeGemName)) // Witch starter
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'start', class: 'Witch' },
+      stages: [{ range: [1, 12], socketGroups: [{ gems: ['Arcane Surge Support', 'Frost Bomb'] }] }],
+      gemPlan: [{ gem: 'Arcane Surge Support' }, { gem: 'Frost Bomb' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems, null, starting)
+
+  // Arcane Surge would resolve to Nessa, but you already start with it.
+  const start = acq.other.find((e) => e.gem === 'Arcane Surge Support')
+  assert.equal(start?.starting, true)
+  assert.deepEqual(acq.purchases.map((e) => e.gem), ['Frost Bomb'])
+  assert.equal(acq.rewards.length, 0)
+  assert.equal(acq.rewardGroups.length, 0)
 })
 
 test('an authored source overrides the live lookup', () => {
