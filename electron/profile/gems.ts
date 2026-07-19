@@ -56,6 +56,20 @@ export function vendorCostFor(requiredLevel: number | undefined): string | undef
   return undefined
 }
 
+// Cheap -> expensive, for sorting. Unknown/free (quest rewards) rank first.
+const COST_RANK = new Map<string, number>([
+  ['Wisdom', 1],
+  ['Transmutation', 2],
+  ['Alteration', 3],
+  ['Chance', 4],
+  ['Alchemy', 5]
+])
+
+/** Sort rank for a cost tier (lower = cheaper/earlier); 0 for none/free. */
+export function costRank(cost: string | undefined): number {
+  return cost ? (COST_RANK.get(cost) ?? 0) : 0
+}
+
 const ATTR_COLOR: Record<Attr, SocketColor> = { str: 'R', dex: 'G', int: 'B' }
 
 export interface ColoredGem {

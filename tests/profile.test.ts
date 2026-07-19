@@ -320,6 +320,52 @@ test('upcoming is scoped to the current act', () => {
   assert.equal(unknown.upcoming.length, 2)
 })
 
+test('reward groups flag same-quest gems as a pick-one choice', () => {
+  const gems = new GemData({
+    'Freezing Pulse': { attr: 'int', sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    Frostbolt: { attr: 'int', sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    Fireball: { attr: 'int', sources: [{ kind: 'quest', act: 2, quest: 'Intruders in Black', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'grp', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Freezing Pulse', 'Frostbolt', 'Fireball'] }] }],
+      gemPlan: [{ gem: 'Freezing Pulse' }, { gem: 'Frostbolt' }, { gem: 'Fireball' }]
+    })
+  ).profile!
+  const g = acquisitionsForStage(profile, 0, gems).rewardGroups
+
+  // Two gems share "Enemy at the Gate" -> one pick-one group (choices first).
+  assert.equal(g[0].pickOne, true)
+  assert.equal(g[0].quest, 'Enemy at the Gate')
+  assert.equal(g[0].act, 1)
+  assert.deepEqual(g[0].gems.map((e) => e.gem), ['Freezing Pulse', 'Frostbolt'])
+  // The lone Act 2 reward is its own take-it group.
+  assert.equal(g[1].pickOne, false)
+  assert.deepEqual(g[1].gems.map((e) => e.gem), ['Fireball'])
+})
+
+test('purchases sort by cost tier, then act, then name', () => {
+  const gems = new GemData({
+    'Cheap A2': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] },
+    'Cheap A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] },
+    'Pricey A1': { attr: 'int', requiredLevel: 28, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'cost-sort', class: 'Witch' },
+      stages: [{ range: [1, 40], socketGroups: [{ gems: ['Pricey A1', 'Cheap A2', 'Cheap A1'] }] }],
+      gemPlan: [{ gem: 'Pricey A1' }, { gem: 'Cheap A2' }, { gem: 'Cheap A1' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems)
+  // Wisdom (lvl 1) before Alchemy (lvl 28); within Wisdom, Act 1 before Act 2.
+  assert.deepEqual(
+    acq.purchases.map((e) => `${e.gem}/${e.cost}`),
+    ['Cheap A1/Wisdom', 'Cheap A2/Wisdom', 'Pricey A1/Alchemy']
+  )
+})
+
 test('an authored source overrides the live lookup', () => {
   const profile = parseProfile(
     JSON.stringify({

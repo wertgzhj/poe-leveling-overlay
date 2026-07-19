@@ -45,7 +45,10 @@ Then, in Path of Exile (**Windowed Fullscreen**):
 2. **Settings (P0.5):** ⚙ → set the `Client.txt` path (Browse), rebind a hotkey
    (click it, press a combo), adjust opacity. Changes take effect immediately.
 3. **Tracking (P1):** the tracker strip shows your current zone and level as you play;
-   restart the overlay mid-session — it resumes zone + level.
+   restart the overlay mid-session — it resumes zone + level. **New character:** with no
+   character name pinned in Settings, starting a fresh character (entering the Twilight
+   Strand) should switch tracking to it on its first level-up. (Pin a name in Settings →
+   Game log only if you play in a party.)
 4. **Guide (P2):** the Guide tab auto-advances as you enter zones; a portal to town
    and back does **not** skip steps; `Ctrl+Shift+N/P` correct the step; it crosses into
    Act 2's skeleton. (Acts 2–10 are placeholders to replace — see the README.)

@@ -5,6 +5,12 @@
 
 import type { LogParser, ParsedLogEvent } from './parser.ts'
 
+// The Twilight Strand (Act 1 opening zone) is only ever entered by a brand-new
+// character — you can't go back. So entering it in auto-detect mode is an
+// unambiguous "different character now" signal: re-arm adoption so the new
+// character's first level-up binds instead of staying stuck on the old one.
+const TWILIGHT_STRAND_ID = '1_1_1'
+
 export interface AreaState {
   /** Canonical act-scoped id ("1_1_town"); null when only a name was seen and it couldn't be resolved. */
   areaId: string | null
@@ -140,6 +146,13 @@ export class ProgressTracker {
   private apply(ev: ParsedLogEvent, emit: boolean): void {
     switch (ev.kind) {
       case 'areaGenerated': {
+        // New character (auto mode only): forget the adopted binding so the
+        // next level-up adopts whoever is now playing. Explicit bindings and
+        // the backscan (which adopts by frequency at the end) are untouched.
+        if (emit && ev.areaId === TWILIGHT_STRAND_ID && !this.explicitBinding && this.adoptedBinding) {
+          this.adoptedBinding = null
+          this.levelUpCounts.clear()
+        }
         this.area = {
           areaId: ev.areaId,
           name: this.areaNames[ev.areaId] ?? ev.areaId,
