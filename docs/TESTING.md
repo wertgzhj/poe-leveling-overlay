@@ -3,7 +3,7 @@
 Where the project stands, what's covered by automated tests, and the manual checks
 that still need a real Windows machine + a running game.
 
-Last updated: 2026-07-18.
+Last updated: 2026-07-19.
 
 ## At a glance
 
@@ -20,12 +20,13 @@ Last updated: 2026-07-18.
 | P6 | Packaged Windows release (installer + portable) | ✅ | icon + CI build | double-click launch |
 | — | Visual route/profile editor (separate window) | ✅ | pure edit ops | window opens, edit → save → overlay reloads |
 | — | In-app auto-update (electron-updater) | ✅ | build only | update prompt + one-click Restart on the installed build |
+| — | Gems tab polish: prices, "pick one", starting gems, cost/act order | ✅ | ✅ engine | hints read right; never buy what you own/start with |
 
 ¹ P0 is overlay/window behaviour that only exists on Windows; there's no headless test,
 only the bundle build. Everything else marked ✅ has real unit/integration tests.
 
 **Automated:** `npm test` (parser, tracker, watcher, guide, profile, PoB, trials, editor,
-gem-cargo — 89 tests), `npm run typecheck`, `npm run build`; CI runs all of these on every
+gem-cargo — 108 tests), `npm run typecheck`, `npm run build`; CI runs all of these on every
 push/PR (`ci.yml`).
 
 ## Manual test steps (Windows, with the game)
