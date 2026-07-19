@@ -33,7 +33,9 @@ import {
   type GemsFile
 } from './gem-cargo.ts'
 
-const API = 'https://www.poewiki.net/w/api.php'
+const WIKI = 'https://www.poewiki.net'
+const API = `${WIKI}/w/api.php`
+const UA = { 'user-agent': 'poe-overlay gem-data fetch' }
 // Cargo tables + the fields we read. Keep the list minimal (a nonexistent
 // column fails the whole query) and let gem-cargo.ts read rows defensively.
 // A bad query comes back as a JSON `error` object naming the problem — printed
@@ -79,10 +81,41 @@ function queryUrl(table: string, fields: string[], offset: number): string {
   return `${API}?${p.toString()}`
 }
 
-/** First ~400 chars of a response body with HTML stripped, for error output. */
-function bodySnippet(body: string): string {
+/** Response body with HTML stripped and clipped, for error/diagnosis output. */
+function bodySnippet(body: string, max = 400): string {
   const text = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-  return text.slice(0, 400)
+  return text.slice(0, max)
+}
+
+async function fetchText(url: string): Promise<string> {
+  const res = await fetch(url, { headers: UA })
+  return await res.text()
+}
+
+/** Failure aid: an MWException from cargoquery means a table or column in the
+ *  query doesn't exist, without saying which. Print what actually exists —
+ *  reward-ish table names from the Special:CargoTables index plus the declared
+ *  schema of the tables we query — so the next edit of QUEST/VENDOR is
+ *  informed, not guessed. */
+async function printDiscovery(): Promise<void> {
+  try {
+    const index = bodySnippet(await fetchText(`${WIKI}/index.php?title=Special:CargoTables`), 40000)
+    const words = [...new Set(index.split(/\s+/).filter((w) => /reward|vendor|quest/i.test(w)))]
+    console.error('\nCargo tables/words mentioning reward|vendor|quest:')
+    console.error('  ' + (words.slice(0, 50).join(' ') || '(none found)'))
+  } catch (e) {
+    console.error('\n(could not list Cargo tables:', e instanceof Error ? e.message : e, ')')
+  }
+  for (const table of [QUEST.table, VENDOR.table]) {
+    try {
+      console.error(`\nSchema of "${table}" (Special:CargoTables/${table}):`)
+      console.error(
+        '  ' + bodySnippet(await fetchText(`${WIKI}/index.php?title=Special:CargoTables/${table}`), 1500)
+      )
+    } catch (e) {
+      console.error(`  (could not fetch: ${e instanceof Error ? e.message : e})`)
+    }
+  }
 }
 
 async function fetchTable(table: string, fields: string[]): Promise<CargoRow[]> {
@@ -90,7 +123,7 @@ async function fetchTable(table: string, fields: string[]): Promise<CargoRow[]> 
   for (let offset = 0; ; offset += PAGE) {
     const url = queryUrl(table, fields, offset)
     if (offset === 0) console.log(`  ${table}: ${url}`)
-    const res = await fetch(url, { headers: { 'user-agent': 'poe-overlay gem-data fetch' } })
+    const res = await fetch(url, { headers: UA })
     const body = await res.text()
     if (!res.ok) {
       throw new Error(
@@ -173,11 +206,12 @@ async function main(): Promise<void> {
   console.log(`\nWrote ${args.out}.`)
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error('\nFailed:', err instanceof Error ? err.message : err)
   console.error(
-    'If the URLs above return empty JSON, the wiki table/field names likely changed.\n' +
-      'Open one in a browser to check, then adjust QUEST/VENDOR at the top of this script.'
+    'An MWException means a table/column in the query does not exist on the wiki.\n' +
+      'The discovery below shows what does — adjust QUEST/VENDOR at the top of this script.'
   )
+  await printDiscovery()
   process.exit(1)
 })
