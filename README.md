@@ -4,14 +4,19 @@ A **ToS-compliant** desktop overlay that helps you level through the Path of Exi
 campaign — route, quest rewards, vendor purchases and skill-tree stages, generated
 semi-automatically from a Path of Building import.
 
-> **Project status:** phases **P0–P6** implemented. Transparent overlay with
-> hotkeys and in-overlay settings, live `Client.txt` tracking (zone, level,
-> restart-safe resume), a **route guide** with auto-advance across all ten acts,
-> a **build-profile gem panel** (computed socket colours + class-aware
-> reward/vendor hints), **Path of Building import**, a **Trials of Ascendancy
-> tracker**, and a **packaged Windows release**. Where things stand + what to
-> test: [`docs/TESTING.md`](docs/TESTING.md). Design & changelog:
-> [`docs/plan.md`](docs/plan.md).
+> **Project status:** phases **P0–P6** implemented, plus post-P6 follow-ups.
+> Transparent overlay with hotkeys and in-overlay settings; live `Client.txt`
+> tracking (zone, level, restart-safe resume, auto-detects a newly-rolled
+> character); a **route guide** with auto-advance across all ten acts; a
+> **build-profile Gems tab** — computed socket colours, class-aware quest-reward
+> and vendor hints with prices, "pick one" quest choices, and class **starting
+> gems** already accounted for; **Path of Building import**; a **Trials of
+> Ascendancy** tracker; a **visual route/profile editor**; and a **packaged
+> Windows release that auto-updates itself**. Gem data (attributes, level
+> requirements, per-class quest/vendor sources) is pulled from the Path of Exile
+> Wiki in one command — `npm run fetch-gems`, also the *Fetch gem data* GitHub
+> Action. Where things stand + what to test: [`docs/TESTING.md`](docs/TESTING.md).
+> Design & changelog: [`docs/plan.md`](docs/plan.md).
 >
 > Version is `0.0.0` during development on purpose — a real version is set only
 > when a `v*` tag is pushed to cut a release (see below).
