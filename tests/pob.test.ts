@@ -90,6 +90,33 @@ test('parseStageTitle reads level ranges, bare ranges, acts, and open ranges', (
   assert.equal(parseStageTitle('Endgame'), null)
 })
 
+test('parseStageTitle tolerates Lvl/Lv shorthand and ranges inside longer titles', () => {
+  assert.deepEqual(parseStageTitle('Lvl 1-11'), [1, 11])
+  assert.deepEqual(parseStageTitle('Lv. 12 to 24'), [12, 24])
+  assert.deepEqual(parseStageTitle('Leveling 12-24 (fire)'), [12, 24])
+  assert.deepEqual(parseStageTitle('1-11 Freezing Pulse'), [1, 11])
+  // Not level ranges: link counts and acts.
+  assert.equal(parseStageTitle('4-link setup'), null)
+  assert.deepEqual(parseStageTitle('Act 1-3 gems'), [1, 31])
+})
+
+test('overlapping labelled stages are clamped WITH a warning naming the stage', () => {
+  // The owner's real case: sets "1-11" and "9-24" -> first becomes 1–8.
+  const xml = `<PathOfBuilding><Build className="Witch"/><Skills>
+    <SkillSet title="1-11"><Skill enabled="true"><Gem nameSpec="Fireball" level="1"/></Skill></SkillSet>
+    <SkillSet title="9-24"><Skill enabled="true"><Gem nameSpec="Firestorm" level="1"/></Skill></SkillSet>
+  </Skills></PathOfBuilding>`
+  const r = importPobXml(xml)
+  assert.ok(r.profile)
+  assert.deepEqual(r.profile.stages[0].range, [1, 8])
+  assert.deepEqual(r.profile.stages[1].range, [9, 24])
+  assert.ok(
+    r.warnings.some((w) => w.includes('"1-11"') && w.includes('1–8')),
+    `expected an overlap warning, got: ${r.warnings.join(' | ')}`
+  )
+  assert.deepEqual(validateProfile(r.profile).errors, [])
+})
+
 test('unlabelled multi-stage builds get guessed ranges + a loud warning', () => {
   const xml = `<PathOfBuilding><Build className="Shadow"/><Skills>
     <SkillSet title="Early"><Skill enabled="true"><Gem nameSpec="Caustic Arrow" level="1"/></Skill></SkillSet>

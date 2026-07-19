@@ -1,8 +1,10 @@
 // Ascendancy trials tracker (pure, no Electron imports — unit-tested).
 // The six normal-Labyrinth Trials of Ascendancy (Acts 1–3) that gate the first
-// Labyrinth. Completion isn't logged, so this auto-marks a trial when you enter
-// its zone (a good proxy) and always allows a manual toggle as correction —
-// same philosophy as the route guide.
+// Labyrinth. Entering a trial's zone does NOT auto-complete it (you can walk a
+// zone without doing its trial — owner feedback); instead the tracker surfaces
+// a prominent "trial in this zone" hint and completion is a manual click.
+// (If a completion line exists in Client.txt, auto-complete can be wired later —
+// capture it via the 🐞 panel / Select-String when finishing a trial.)
 
 export interface TrialDef {
   id: string
@@ -35,11 +37,14 @@ export interface TrialsSnapshot {
   trials: TrialState[]
   seenCount: number
   total: number
+  /** Trial located in the zone the player is currently in (hint), else null. */
+  currentZoneTrialId: string | null
 }
 
 export class TrialsEngine {
   private readonly trials: readonly TrialDef[]
   private seen = new Set<string>()
+  private currentZoneTrial: string | null = null
 
   constructor(seenIds: string[] = [], trials: readonly TrialDef[] = NORMAL_TRIALS) {
     this.trials = trials
@@ -49,23 +54,32 @@ export class TrialsEngine {
 
   snapshot(): TrialsSnapshot {
     const trials = this.trials.map((t) => ({ id: t.id, act: t.act, zone: t.zone, seen: this.seen.has(t.id) }))
-    return { trials, seenCount: this.seen.size, total: this.trials.length }
+    return {
+      trials,
+      seenCount: this.seen.size,
+      total: this.trials.length,
+      currentZoneTrialId: this.currentZoneTrial
+    }
   }
 
-  /** Mark any trial whose zone matches the entered zone name. Returns true if
-   *  something changed. */
+  /** Note the zone the player entered. Marks nothing — only tracks whether the
+   *  current zone contains a trial (the hint). Returns true if that changed. */
   applyZone(zoneName: string): boolean {
-    if (!zoneName) return false
+    const next = this.matchZone(zoneName)?.id ?? null
+    if (next === this.currentZoneTrial) return false
+    this.currentZoneTrial = next
+    return true
+  }
+
+  /** The trial located in a zone (exact or prefix name match), else null. */
+  matchZone(zoneName: string): TrialDef | null {
+    if (!zoneName) return null
     const entered = zoneName.trim().toLowerCase()
-    let changed = false
     for (const t of this.trials) {
       const z = t.zone.toLowerCase()
-      if ((entered === z || entered.startsWith(z)) && !this.seen.has(t.id)) {
-        this.seen.add(t.id)
-        changed = true
-      }
+      if (entered === z || entered.startsWith(z)) return t
     }
-    return changed
+    return null
   }
 
   toggle(id: string): boolean {

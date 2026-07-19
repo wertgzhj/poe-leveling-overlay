@@ -73,6 +73,45 @@ export function App(): React.JSX.Element {
     return () => subs.forEach((unsub) => unsub())
   }, [patch, applyLogSnapshot, pushEvent])
 
+  // Tell the main process whether the cursor is over visible UI, so in
+  // interactive mode the transparent rest of the window forwards clicks to the
+  // game instead of swallowing them (elements opt in via data-interactive).
+  useEffect(() => {
+    const api = window.overlay
+    if (!api) return
+    let over = false
+    let dragging = false
+    const send = (v: boolean): void => {
+      if (v !== over) {
+        over = v
+        api.setHoverUi(v)
+      }
+    }
+    const overUi = (e: Event): boolean =>
+      !!(e.target as Element | null)?.closest?.('[data-interactive]')
+    const onOver = (e: Event): void => {
+      // Never drop interactivity mid-drag (slider/resize would cut itself off).
+      if (dragging && !overUi(e)) return
+      send(overUi(e))
+    }
+    const onDown = (e: Event): void => {
+      dragging = true
+      if (overUi(e)) send(true)
+    }
+    const onUp = (e: Event): void => {
+      dragging = false
+      send(overUi(e))
+    }
+    window.addEventListener('pointerover', onOver, true)
+    window.addEventListener('pointerdown', onDown, true)
+    window.addEventListener('pointerup', onUp, true)
+    return () => {
+      window.removeEventListener('pointerover', onOver, true)
+      window.removeEventListener('pointerdown', onDown, true)
+      window.removeEventListener('pointerup', onUp, true)
+    }
+  }, [])
+
   if (settingsOpen) return <SettingsPanel />
   if (debugOpen) return <DebugPanel />
   return <MainPanel />

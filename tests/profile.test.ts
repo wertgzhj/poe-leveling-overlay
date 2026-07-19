@@ -205,6 +205,42 @@ test('known gems with no specific source fall back to the broad vendor (Siosa)',
   assert.equal(gems.earliestSource('Totally Fake Gem', 'Witch'), null)
 })
 
+test('upcoming lists later-stage quest-reward gems with their start level', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'up', class: 'Witch' },
+      stages: [
+        { range: [1, 11], socketGroups: [{ gems: ['Frostbolt'] }] },
+        // Ground Slam has no Witch quest source -> not "take when offered".
+        { range: [12, 24], socketGroups: [{ gems: ['Frostbolt', 'Onslaught Support', 'Ground Slam'] }] }
+      ],
+      gemPlan: [{ gem: 'Frostbolt' }, { gem: 'Onslaught Support' }, { gem: 'Ground Slam' }]
+    })
+  ).profile!
+
+  const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
+  // Frostbolt is already in the active stage; Onslaught is vendor-only;
+  // upcoming only lists NEW gems a quest actually rewards this class... none
+  // here except via a quest — Onslaught is vendor, Ground Slam not for Witch.
+  assert.deepEqual(acq.upcoming, [])
+
+  const marauder = parseProfile(
+    JSON.stringify({
+      meta: { name: 'up2', class: 'Marauder' },
+      stages: [
+        { range: [1, 11], socketGroups: [{ gems: ['Onslaught Support'] }] },
+        { range: [12, 24], socketGroups: [{ gems: ['Ground Slam'] }] }
+      ],
+      gemPlan: [{ gem: 'Onslaught Support' }, { gem: 'Ground Slam' }]
+    })
+  ).profile!
+  const acq2 = acquisitionsForStage(marauder, 0, SOURCED_GEMS)
+  assert.deepEqual(
+    acq2.upcoming.map((e) => `${e.gem}@${e.fromLevel}`),
+    ['Ground Slam@12'] // Marauder quest reward, first used in the level-12 stage
+  )
+})
+
 test('an authored source overrides the live lookup', () => {
   const profile = parseProfile(
     JSON.stringify({

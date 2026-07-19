@@ -131,6 +131,7 @@ export function SettingsPanel(): React.JSX.Element {
   return (
     <div className="flex h-screen w-screen items-start justify-center p-2">
       <div
+        data-interactive
         className="flex max-h-full w-full flex-col overflow-hidden rounded-[10px] border border-overlay-border bg-overlay-panel/95 shadow-lg backdrop-blur-sm"
         style={{ opacity }}
       >

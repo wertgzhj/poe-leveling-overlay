@@ -38,7 +38,10 @@ Then, in Path of Exile (**Windowed Fullscreen**):
 
 1. **Overlay (P0):** it stays on top of the game; `Ctrl+Shift+O/C/M` toggle
    visibility / click-through / move mode; drag to reposition (move mode); check it
-   still behaves at non-100% DPI and on a second monitor.
+   still behaves at non-100% DPI and on a second monitor. In **interactive** mode,
+   clicks on the empty/transparent area around the panel now reach the game — only
+   the visible panel captures the mouse (the version badge sits on the panel's
+   corner, not the window's).
 2. **Settings (P0.5):** ⚙ → set the `Client.txt` path (Browse), rebind a hotkey
    (click it, press a combo), adjust opacity. Changes take effect immediately.
 3. **Tracking (P1):** the tracker strip shows your current zone and level as you play;
@@ -49,8 +52,12 @@ Then, in Path of Exile (**Windowed Fullscreen**):
 5. **Gems (P3/P4):** point Settings → Build profile at a profile, or paste a PoB
    code/link into *Import from Path of Building*; the Gems tab shows the current
    stage's links with colours and flips stages when you level.
-6. **Trials (P6):** entering a trial zone (e.g. The Lower Prison) checks it off on the
-   Trials tab; click any trial to correct it.
+6. **Trials (P6):** entering a trial zone (e.g. The Lower Prison) shows an amber
+   **"Trial of Ascendancy in this zone"** hint (on every tab) — it is **not**
+   auto-checked; click the hint's *Done ✓* (or the trial row) when you complete it.
+   **Bonus capture:** when you finish a trial plaque, grab the exact `Client.txt`
+   line (Select-String on `Trial` / `Ascendancy`) — with it, auto-complete can be
+   wired properly.
 7. **Editor:** tray → *Edit routes & profile…* (or the button in Settings) opens a
    normal window. Add/edit a step on an act, hit **Save** — the Guide tab reflects it
    without a restart. Same for the Profile tab → the Gems tab.

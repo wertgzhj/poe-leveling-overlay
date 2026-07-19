@@ -15,6 +15,7 @@ export class OverlayController {
   private clickThrough: boolean
   private moveMode = false
   private settingsOpen = false
+  private hoverUi = false
   private saveTimer: NodeJS.Timeout | null = null
 
   constructor() {
@@ -136,12 +137,25 @@ export class OverlayController {
     }
   }
 
+  /** Renderer-reported hover state: cursor is over visible UI (the panel). */
+  setHoverUi(over: boolean): void {
+    if (this.hoverUi === over) return
+    this.hoverUi = over
+    this.applyMouseEvents()
+  }
+
   private applyMouseEvents(): void {
     if (!this.win) return
-    // Pass clicks through to the game unless the user is interacting, moving,
-    // or editing settings.
-    const passthrough = this.clickThrough && !this.moveMode && !this.settingsOpen
-    this.win.setIgnoreMouseEvents(passthrough, { forward: true })
+    // Move mode / settings: the whole window must be grabbable. Click-through
+    // on: everything passes to the game. Otherwise (interactive mode) only the
+    // visible panel captures the mouse — the transparent rest of the window
+    // forwards clicks to the game, driven by hover reports from the renderer
+    // (forward:true keeps mousemove flowing so hover detection still works).
+    let ignore: boolean
+    if (this.moveMode || this.settingsOpen) ignore = false
+    else if (this.clickThrough) ignore = true
+    else ignore = !this.hoverUi
+    this.win.setIgnoreMouseEvents(ignore, { forward: true })
   }
 
   private pushState(): void {
