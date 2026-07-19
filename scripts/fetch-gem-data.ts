@@ -28,6 +28,7 @@ import { dirname, join } from 'node:path'
 import {
   buildGemBasics,
   buildSources,
+  gemName,
   mergeGemData,
   type CargoRow,
   type GemSourceInfo,
@@ -50,12 +51,20 @@ const VENDOR = {
   table: 'vendor_rewards',
   fields: ['_pageName=reward', 'act=act', 'quest=quest', 'npc=npc', 'classes=classes']
 }
-// Every gem's attribute (socket colour) + level requirement — full colour
-// coverage instead of the hand-curated subset, and the level drives the vendor
-// cost tier shown on the buy list.
+// Every gem's attribute (socket colour) — full colour coverage instead of the
+// hand-curated subset. (probe run #8: skill_gems has primary_attribute but NOT
+// required_level — that lives on the items table, fetched separately below.)
 const SKILL = {
   table: 'skill_gems',
-  fields: ['_pageName=reward', 'primary_attribute=attr', 'required_level=required_level']
+  fields: ['_pageName=reward', 'primary_attribute=attr']
+}
+// Level requirements come from the items rows attached to the same gem pages,
+// via a join. Best-effort: if this query breaks, attrs still land and the
+// vendor cost tier is simply omitted.
+const LEVELS = {
+  tables: 'skill_gems,items',
+  joinOn: 'skill_gems._pageID=items._pageID',
+  fields: ['skill_gems._pageName=reward', 'items.required_level=required_level']
 }
 const PAGE = 500 // cargoquery's anonymous cap; page through with offset.
 
@@ -138,6 +147,44 @@ async function printDiscovery(): Promise<void> {
   }
 }
 
+/** Paged fetch of the LEVELS join. Failures are non-fatal by design. */
+async function fetchLevels(): Promise<Map<string, number>> {
+  const levels = new Map<string, number>()
+  try {
+    for (let offset = 0; ; offset += PAGE) {
+      const p = new URLSearchParams({
+        action: 'cargoquery',
+        format: 'json',
+        tables: LEVELS.tables,
+        'join on': LEVELS.joinOn,
+        fields: LEVELS.fields.join(','),
+        limit: String(PAGE),
+        offset: String(offset)
+      })
+      const url = `${API}?${p.toString()}`
+      if (offset === 0) console.log(`  gem levels (join): ${url}`)
+      const res = await fetch(url, { headers: UA })
+      const body = await res.text()
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${bodySnippet(body)}`)
+      const data = JSON.parse(body) as { error?: unknown; cargoquery?: unknown }
+      if (data.error) throw new Error(JSON.stringify(data.error).slice(0, 300))
+      if (!Array.isArray(data.cargoquery)) throw new Error('no cargoquery array')
+      const page = data.cargoquery.map((r) => ((r as { title?: CargoRow }).title ?? {}) as CargoRow)
+      for (const row of page) {
+        const gem = gemName(row)
+        const n = Number(row['required_level'])
+        if (gem && Number.isInteger(n) && n >= 1 && n <= 100 && !levels.has(gem)) levels.set(gem, n)
+      }
+      if (page.length < PAGE) break
+    }
+  } catch (e) {
+    console.warn(
+      `  (gem level join failed — continuing without vendor cost tiers: ${e instanceof Error ? e.message : e})`
+    )
+  }
+  return levels
+}
+
 async function fetchTable(table: string, fields: string[]): Promise<CargoRow[]> {
   const rows: CargoRow[] = []
   for (let offset = 0; ; offset += PAGE) {
@@ -180,17 +227,22 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2))
 
   console.log('Querying the Path of Exile Wiki Cargo export:')
-  const [questRows, vendorRows, skillRows] = await Promise.all([
+  const [questRows, vendorRows, skillRows, levels] = await Promise.all([
     fetchTable(QUEST.table, QUEST.fields),
     fetchTable(VENDOR.table, VENDOR.fields),
-    fetchTable(SKILL.table, SKILL.fields)
+    fetchTable(SKILL.table, SKILL.fields),
+    fetchLevels()
   ])
   console.log(
-    `  fetched ${questRows.length} quest rows, ${vendorRows.length} vendor rows, ${skillRows.length} skill-gem rows`
+    `  fetched ${questRows.length} quest rows, ${vendorRows.length} vendor rows, ` +
+      `${skillRows.length} skill-gem rows, ${levels.size} gem levels`
   )
 
   const allSources = buildSources(questRows, vendorRows)
   const basics = buildGemBasics(skillRows)
+  for (const [gem, lvl] of levels) {
+    basics[gem] = { ...(basics[gem] ?? {}), requiredLevel: lvl }
+  }
 
   const existing = JSON.parse(await readFile(args.out, 'utf8')) as GemsFile
   // "Known" = curated in gems.json OR a real skill gem per the wiki — sources
