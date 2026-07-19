@@ -56,6 +56,11 @@ background, then the overlay shows an **Update vX.Y.Z is ready — Restart & upd
 prompt. One click swaps it in and reopens. You can also check on demand in
 **Settings → Updates**. Nothing is installed without that click.
 
+The running version is always visible bottom-right of the overlay (`vX.Y.Z`). While an
+update downloads it shows live progress (`v0.1.0 · ⬇ 42%`), and once ready it becomes a
+clickable **`v0.1.0 → v0.2.0 ⬆`** pill — clicking it updates and restarts immediately.
+(If click-through is on, toggle interactive mode first — default `Ctrl+Shift+C`.)
+
 Two things to know:
 
 - **Releases must be publicly downloadable** for the updater to reach them. If this repo
@@ -138,18 +143,20 @@ yourself for now.
 - Socket colours come from `data/gems.json` (gem → attribute); a gem missing there
   shows a neutral pip with a `?`. It covers ~70 common gems for now — add your own.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
-  gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`.
-  That field ships empty; fill it in one command from the Path of Exile Wiki:
+  gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`,
+  filled from the Path of Exile Wiki. **Easiest way to (re)fill it:** repo → Actions →
+  **Fetch gem data** → *Run workflow* — it pulls the wiki's `quest_rewards` /
+  `vendor_rewards` Cargo export, verifies the tests still pass, and commits the updated
+  `data/gems.json` to `main`. Local equivalent:
 
   ```bash
   npm run fetch-gems -- --dry-run   # preview what it would add (writes nothing)
   npm run fetch-gems                # merge quest/vendor sources into data/gems.json
   ```
 
-  It reads the wiki's `quest_rewards` / `vendor_rewards` Cargo export and, by default,
-  fills sources only for gems already in `gems.json` (add `--all` to include gems you
-  don't yet curate). The command prints the exact query URLs it uses. Until you run it,
-  sourceless gems still get the Siosa/Lilly broad-vendor fallback in the Gems tab.
+  By default only gems already curated in `gems.json` get sources (add `--all` /
+  tick *include uncurated* to take everything); the exact query URLs are printed.
+  Sourceless gems still get the Siosa/Lilly broad-vendor fallback in the Gems tab.
 
 **Import from Path of Building** instead of writing stages by hand: in
 **Settings → Build profile → Import from Path of Building**, paste a PoB export

@@ -59,6 +59,9 @@ Then, in Path of Exile (**Windowed Fullscreen**):
    older version, launch it: within ~10s Settings → Updates shows it downloading, then
    the overlay shows *Update ready — Restart & update*; click it → it reinstalls silently
    and reopens on the new version. Settings → Updates also has a manual **Check** button.
+   The bottom-right **version badge** should track the same flow: `vX.Y.Z` → download
+   percentage → clickable `vOld → vNew ⬆` pill (click = instant update; needs
+   interactive mode if click-through is on).
 
 **Auto-update prerequisite:** the updater reads this repo's Releases, so they must be
 publicly downloadable. If the repo is private, make it public **or** point `publish.repo`
@@ -70,13 +73,11 @@ updates as *disabled*; an unreachable feed shows *Couldn't check* and never nags
 
 ## Open follow-ups (not blocking)
 
-- **Gem source data:** `data/gems.json` `sources` is empty — the class-aware resolver is
-  built and tested, but the data (per-class quest/vendor availability) needs a pull from
-  poewiki, which is blocked from the build sandbox. **On your machine**, run
-  `npm run fetch-gems -- --dry-run` to preview, then `npm run fetch-gems` to merge it in
-  (reads the wiki's Cargo export; prints the query URLs). Until then, reward/buy hints
-  come from a profile's authored `gemPlan.source` (incl. PoB import), plus the Siosa/Lilly
-  fallback.
+- **Gem source data:** fill/refresh `data/gems.json` `sources` with one click:
+  **Actions → Fetch gem data → Run workflow** (pulls the wiki's Cargo export, runs the
+  tests as a guard, commits to main). Local alternative: `npm run fetch-gems`
+  (`-- --dry-run` to preview). Until filled, reward/buy hints come from a profile's
+  authored `gemPlan.source` (incl. PoB import), plus the Siosa/Lilly fallback.
 - **Your route content:** Acts 2–10 ship as fallback skeletons — replace them in
   `data/campaign/actN.json` (or per-act overrides in the userData `routes/` folder), or
   in the visual editor (tray → *Edit routes & profile…*).
