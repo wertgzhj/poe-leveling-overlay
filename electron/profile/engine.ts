@@ -3,7 +3,7 @@
 // acquisition views (reward picks / vendor shopping list) from the gemPlan.
 
 import type { Profile, Stage, CharClass, GemSource } from './profile.ts'
-import { GemData, vendorCostFor, type ColoredGem } from './gems.ts'
+import { GemData, vendorCostFor, costRank, type ColoredGem } from './gems.ts'
 
 export interface ColoredSocketGroup {
   gems: ColoredGem[]
@@ -44,6 +44,17 @@ export interface Acquisitions {
   /** quest-reward gems that LATER stages need — take them when a quest offers
    *  them now instead of paying a vendor later (owner feedback). */
   upcoming: AcquisitionEntry[]
+  /** rewards + upcoming grouped by quest. A quest reward is ONE pick in game —
+   *  a group with several gems is a player choice (take one, buy the rest). */
+  rewardGroups: RewardGroup[]
+}
+
+export interface RewardGroup {
+  quest?: string
+  act?: number
+  /** several gems from the same quest reward — the player must choose one. */
+  pickOne: boolean
+  gems: AcquisitionEntry[]
 }
 
 /** Campaign act from a numeric area id ("2_1_3" -> 2). Word ids (hideouts,
@@ -114,21 +125,52 @@ export function acquisitionsForStage(
     else if (acq.bucket === 'purchase') purchases.push(acq)
     else other.push(acq)
   }
-  // Progression order, not alphabet (owner feedback): by the gem's level
-  // requirement, name as the tiebreak.
-  const byLevel = levelOrder(gems)
-  rewards.sort(byLevel)
-  purchases.sort(byLevel)
-  other.sort(byLevel)
+  // Owner-specified priority: cost tier, then act (1→10), then alphabet.
+  rewards.sort(acquisitionOrder)
+  purchases.sort(acquisitionOrder)
+  other.sort(acquisitionOrder)
   const upcoming = upcomingRewards(profile, stageIndex, used, gems, currentAct)
-  upcoming.sort((a, b) => (a.fromLevel ?? 0) - (b.fromLevel ?? 0) || byLevel(a, b))
-  return { rewards, purchases, other, upcoming }
+  upcoming.sort(acquisitionOrder)
+  const rewardGroups = buildRewardGroups(rewards, upcoming)
+  return { rewards, purchases, other, upcoming, rewardGroups }
 }
 
-/** Sort by gem level requirement, then name — the order you meet them in. */
-function levelOrder(gems?: GemData): (a: AcquisitionEntry, b: AcquisitionEntry) => number {
-  const lvl = (g: string): number => gems?.info(g)?.requiredLevel ?? 1
-  return (a, b) => lvl(a.gem) - lvl(b.gem) || a.gem.localeCompare(b.gem)
+/** Cheapest first, then earliest act, then alphabetical (owner priority).
+ *  Quest rewards have no cost so they order by act — the order you meet them. */
+function acquisitionOrder(a: AcquisitionEntry, b: AcquisitionEntry): number {
+  return (
+    costRank(a.cost) - costRank(b.cost) ||
+    (a.act ?? 99) - (b.act ?? 99) ||
+    a.gem.localeCompare(b.gem)
+  )
+}
+
+/** Group reward + upcoming gems by the quest that offers them. A quest reward
+ *  is ONE pick in game, so a group with several of your gems is a choice —
+ *  take one, buy the rest (owner feedback). Singleton groups are plain "take it". */
+function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEntry[]): RewardGroup[] {
+  const byQuest = new Map<string, AcquisitionEntry[]>()
+  const order: string[] = []
+  for (const e of [...rewards, ...upcoming]) {
+    // Rewards without a quest name can't be a shared choice — keep them separate.
+    const key = e.quest ? `${e.act ?? '?'}|${e.quest.toLowerCase()}` : `__solo__${e.gem.toLowerCase()}`
+    if (!byQuest.has(key)) {
+      byQuest.set(key, [])
+      order.push(key)
+    }
+    byQuest.get(key)!.push(e)
+  }
+  const groups = order.map((key): RewardGroup => {
+    const gems = byQuest.get(key)!.slice().sort(acquisitionOrder)
+    return { quest: gems[0].quest, act: gems[0].act, pickOne: gems.length > 1, gems }
+  })
+  // Choices first (they need a decision), then by act, then quest name.
+  return groups.sort(
+    (a, b) =>
+      Number(b.pickOne) - Number(a.pickOne) ||
+      (a.act ?? 99) - (b.act ?? 99) ||
+      (a.quest ?? '').localeCompare(b.quest ?? '')
+  )
 }
 
 /** Gems first used in LATER stages that a quest rewards this class — worth

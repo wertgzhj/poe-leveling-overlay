@@ -25,6 +25,28 @@ function feed(tracker: ProgressTracker, line: string): void {
   if (ev) tracker.handle(ev)
 }
 
+test('a new character (entering the Twilight Strand) rebinds in auto mode', () => {
+  const { tracker, levels } = makeTracker() // no explicit binding
+  feed(tracker, '… [INFO Client 1] : OldChar (Witch) is now level 20')
+  assert.equal(tracker.snapshot().character, 'OldChar')
+
+  // Start a fresh character: entering the Twilight Strand re-arms adoption...
+  feed(tracker, '… [DEBUG Client 1] Generating level 1 area "1_1_1" with seed 5')
+  assert.equal(tracker.snapshot().character, null) // binding released
+  // ...and the new character's first level-up binds.
+  feed(tracker, '… [INFO Client 1] : NewChar (Marauder) is now level 2')
+  assert.equal(tracker.snapshot().character, 'NewChar')
+  assert.equal(tracker.snapshot().level, 2)
+  assert.equal(levels.at(-1)?.isBound, true)
+})
+
+test('an explicit binding is NOT overridden by entering the Twilight Strand', () => {
+  const { tracker } = makeTracker('MyMain')
+  feed(tracker, '… [DEBUG Client 1] Generating level 1 area "1_1_1" with seed 5')
+  feed(tracker, '… [INFO Client 1] : SomeoneElse (Duelist) is now level 2')
+  assert.equal(tracker.snapshot().character, 'MyMain') // still pinned
+})
+
 test('areaGenerated drives the area with mapped display name + monster level', () => {
   const { tracker, areas } = makeTracker()
   feed(tracker, '… [DEBUG Client 1] Generating level 1 area "1_1_town" with seed 7')

@@ -157,11 +157,19 @@ interface AcquisitionEntryBridge {
   cost?: string
 }
 
+interface RewardGroupBridge {
+  quest?: string
+  act?: number
+  pickOne: boolean
+  gems: AcquisitionEntryBridge[]
+}
+
 interface AcquisitionsBridge {
   rewards: AcquisitionEntryBridge[]
   purchases: AcquisitionEntryBridge[]
   other: AcquisitionEntryBridge[]
   upcoming: AcquisitionEntryBridge[]
+  rewardGroups: RewardGroupBridge[]
 }
 
 interface ProfileMetaBridge {

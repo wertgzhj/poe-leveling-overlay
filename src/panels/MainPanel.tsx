@@ -18,10 +18,13 @@ const TYPE_ICONS: Record<StepTypeBridge, string> = {
   hint: '✎'
 }
 
+// Distinct hues + the attribute letter inside each pip, so red/green/blue are
+// unambiguous even when the green/blue are hard to tell apart (owner feedback,
+// and colour-blind friendly). Green = true green (not emerald), blue = deep blue.
 const PIP_CLASS: Record<SocketColorBridge, string> = {
   R: 'bg-red-500',
-  G: 'bg-emerald-500',
-  B: 'bg-sky-500',
+  G: 'bg-green-500',
+  B: 'bg-blue-600',
   W: 'bg-white/30'
 }
 
@@ -377,11 +380,47 @@ function GuideBody(): React.JSX.Element {
   )
 }
 
+// One quest's reward gems. When several of your build's gems come from the same
+// quest you can only pick ONE — the rest must be bought — so that's flagged
+// loudly. Act + quest are shown once per group (owner feedback).
+function RewardGroupRow({ group }: { group: RewardGroupBridge }): React.JSX.Element {
+  const context = (e: AcquisitionEntryBridge): string =>
+    e.fromLevel ? ` — for later (lvl ${e.fromLevel}+)` : ''
+  const where = [group.act ? `Act ${group.act}` : null, group.quest].filter(Boolean).join(' · ')
+
+  if (!group.pickOne) {
+    const e = group.gems[0]
+    return (
+      <div className={'text-xs ' + (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')}>
+        {e.gem}
+        {where && <span className="text-overlay-muted"> · {where}</span>}
+        {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+      </div>
+    )
+  }
+  return (
+    <div className="rounded border border-amber-400/30 bg-amber-400/5 p-1.5">
+      <div className="mb-0.5 flex items-center gap-1.5">
+        <span className="rounded bg-amber-400/20 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-300">
+          Pick one
+        </span>
+        <span className="text-[10px] text-overlay-muted">{where} — take one, buy the rest</span>
+      </div>
+      {group.gems.map((e) => (
+        <div key={e.gem} className={'pl-1 text-xs ' + (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')}>
+          • {e.gem}
+          {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /** Short "where it comes from" tag for a gem line (owner feedback: sources
  *  visible right at the links, not only in the lists). */
 function sourceTag(e: AcquisitionEntryBridge | undefined): string | null {
   if (!e) return null
-  if (e.bucket === 'reward') return `🎁 ${e.quest ?? 'quest'}`
+  if (e.bucket === 'reward') return `🎁${e.act ? ` A${e.act}` : ''} ${e.quest ?? 'quest'}`
   if (e.bucket === 'purchase') return `${e.npc ?? 'vendor'}${e.act ? ` A${e.act}` : ''}${e.fallback ? ' ≈' : ''}`
   return e.note ?? 'drop/trade'
 }
@@ -399,7 +438,14 @@ function SocketGroup({
         const tag = sourceTag(acq.get(gem.name.toLowerCase()))
         return (
           <div key={i} className="flex items-center gap-1.5 text-xs">
-            <span className={'inline-block h-2.5 w-2.5 shrink-0 rounded-full ' + PIP_CLASS[gem.color]} />
+            <span
+              className={
+                'inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-black/80 ' +
+                PIP_CLASS[gem.color]
+              }
+            >
+              {gem.color === 'W' ? '' : gem.color}
+            </span>
             <span className="min-w-0 truncate text-overlay-text">{gem.name}</span>
             {gem.unknown && (
               <span className="text-[9px] text-amber-400/80" title="not in gems.json — colour guessed">?</span>
@@ -428,7 +474,7 @@ function GemBody(): React.JSX.Element {
   const atReward = cursorStep?.rewardHint === true
   const rewards = profile.acquisitions?.rewards ?? []
   const purchases = profile.acquisitions?.purchases ?? []
-  const upcoming = profile.acquisitions?.upcoming ?? []
+  const rewardGroups = profile.acquisitions?.rewardGroups ?? []
   // gem (lowercased) -> its acquisition entry, for the inline tags on link rows.
   const acqByGem = new Map<string, AcquisitionEntryBridge>()
   for (const e of [...rewards, ...purchases, ...(profile.acquisitions?.other ?? [])]) {
@@ -452,7 +498,7 @@ function GemBody(): React.JSX.Element {
         </div>
       )}
 
-      {(rewards.length > 0 || upcoming.length > 0) && (
+      {rewardGroups.length > 0 && (
         <div
           className={
             'mb-2 rounded-md border p-2 ' +
@@ -467,22 +513,11 @@ function GemBody(): React.JSX.Element {
           >
             Quest rewards{atReward ? ' — take now' : ''}
           </div>
-          {rewards.map((e) => (
-            <div key={e.gem} className="text-xs text-overlay-text">
-              {e.gem}
-              {e.quest && <span className="text-overlay-muted"> · {e.quest}</span>}
-            </div>
-          ))}
-          {upcoming.map((e) => (
-            <div key={e.gem} className="text-xs text-overlay-muted">
-              {e.gem}
-              {e.quest ? ` · ${e.quest}` : ''}
-              <span className="text-overlay-muted/80">
-                {' '}
-                — for later{e.fromLevel ? ` (lvl ${e.fromLevel}+)` : ''}
-              </span>
-            </div>
-          ))}
+          <div className="flex flex-col gap-1.5">
+            {rewardGroups.map((g, i) => (
+              <RewardGroupRow key={i} group={g} />
+            ))}
+          </div>
         </div>
       )}
 
