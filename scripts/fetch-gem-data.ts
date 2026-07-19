@@ -36,12 +36,19 @@ import {
 const WIKI = 'https://www.poewiki.net'
 const API = `${WIKI}/w/api.php`
 const UA = { 'user-agent': 'poe-overlay gem-data fetch' }
-// Cargo tables + the fields we read. Keep the list minimal (a nonexistent
-// column fails the whole query) and let gem-cargo.ts read rows defensively.
-// A bad query comes back as a JSON `error` object naming the problem — printed
-// verbatim; adjust here if the wiki schema drifts.
-const QUEST = { table: 'quest_rewards', fields: ['reward', 'act', 'quest', 'classes'] }
-const VENDOR = { table: 'vendor_rewards', fields: ['reward', 'act', 'quest', 'npc', 'classes'] }
+// Cargo tables + the fields we read (as "field=alias" expressions). These
+// tables attach to each gem's wiki page, so the gem name is _pageName — there
+// is no reward column (probe run: `reward` errors, everything else ok). Alias
+// it to `reward` so the tested transform reads a stable key. Keep the list
+// minimal: one nonexistent column fails the whole query.
+const QUEST = {
+  table: 'quest_rewards',
+  fields: ['_pageName=reward', 'act=act', 'quest=quest', 'classes=classes']
+}
+const VENDOR = {
+  table: 'vendor_rewards',
+  fields: ['_pageName=reward', 'act=act', 'quest=quest', 'npc=npc', 'classes=classes']
+}
 const PAGE = 500 // cargoquery's anonymous cap; page through with offset.
 
 interface Args {
@@ -67,14 +74,14 @@ function parseArgs(argv: string[]): Args {
 }
 
 function queryUrl(table: string, fields: string[], offset: number): string {
-  // No "order by": we don't need it (buildSources sorts). Fields are aliased
-  // ("table.field=field") so the returned keys are exactly what gem-cargo.ts
-  // reads, table prefix stripped.
+  // No "order by": we don't need it (buildSources sorts). Field expressions
+  // already carry their alias, so the returned keys are exactly what
+  // gem-cargo.ts reads.
   const p = new URLSearchParams({
     action: 'cargoquery',
     format: 'json',
     tables: table,
-    fields: fields.map((f) => `${table}.${f}=${f}`).join(','),
+    fields: fields.map((f) => `${table}.${f}`).join(','),
     limit: String(PAGE),
     offset: String(offset)
   })
@@ -118,7 +125,7 @@ async function printDiscovery(): Promise<void> {
     console.error(`  ${table}:`)
     console.error(`    _pageName: ${await probeField(table, `${table}._pageName=p`)}`)
     for (const f of fields) {
-      console.error(`    ${f}: ${await probeField(table, `${table}.${f}=${f}`)}`)
+      console.error(`    ${f}: ${await probeField(table, `${table}.${f}`)}`)
     }
   }
 }

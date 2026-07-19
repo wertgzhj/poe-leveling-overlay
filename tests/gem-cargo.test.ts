@@ -43,6 +43,14 @@ test('gemName prefers reward, then page name, then reward_id', () => {
   assert.equal(gemName({}), undefined)
 })
 
+test('gemName strips wiki disambiguation suffixes', () => {
+  // poewiki rows carry the page name; ambiguous gems get a "(gem)" suffix.
+  assert.equal(gemName({ reward: 'Blight (gem)' }), 'Blight')
+  assert.equal(gemName({ reward: 'Portal (skill gem)' }), 'Portal')
+  // ...but only as a suffix — parenthesised words elsewhere survive.
+  assert.equal(gemName({ reward: 'Vaal Fireball' }), 'Vaal Fireball')
+})
+
 test('questRowToSource maps a valid row and rejects an invalid one', () => {
   const row: CargoRow = { reward: 'Fireball', act: '1', quest: 'Enemy at the Gate', classes: 'Witch' }
   assert.deepEqual(questRowToSource(row), {

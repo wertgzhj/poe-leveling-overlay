@@ -45,9 +45,12 @@ export function parseClasses(raw: unknown): CharClass[] | undefined {
   return unique
 }
 
-/** The gem name for a rewards row — the reward field, else the wiki page name. */
+/** The gem name for a rewards row — the reward field (on poewiki an aliased
+ *  _pageName: the tables attach to each gem's page), else the raw page name.
+ *  Wiki disambiguation suffixes like "Blight (gem)" are stripped. */
 export function gemName(row: CargoRow): string | undefined {
-  return str(row['reward']) ?? str(row['_pageName']) ?? str(row['reward_id'])
+  const raw = str(row['reward']) ?? str(row['_pageName']) ?? str(row['reward_id'])
+  return raw?.replace(/\s*\((?:skill )?gem\)$/i, '')
 }
 
 function actNumber(row: CargoRow): number | undefined {
