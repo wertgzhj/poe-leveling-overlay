@@ -1,77 +1,2442 @@
 {
   "_note": "gem -> { attr, sources }. attr computes the socket colour (str=red, dex=green, int=blue); a gem missing here renders a neutral pip with '?'. Attributes below are a confident curated set — spot-check against the game, a wrong attr = a wrong colour (harmless, editable). SOURCES are intentionally empty: accurate per-class quest/vendor availability is a large dataset that must come from a verified source (a maintained gem-data export or careful curation), not guesswork. The engine already reads sources with this shape and resolves them per class — { \"kind\": \"quest\"|\"vendor\", \"act\": 1, \"quest\": \"...\", \"npc\": \"Nessa\", \"classes\": [\"Witch\"] } (classes omitted = all) — so filling this in is a pure data task. Until then, gemPlan.source in a profile (authored, or from PoB import) drives the reward/buy hints.",
   "gems": {
-    "Ground Slam": { "attr": "str" },
-    "Heavy Strike": { "attr": "str" },
-    "Cleave": { "attr": "str" },
-    "Sunder": { "attr": "str" },
-    "Perforate": { "attr": "str" },
-    "Earthquake": { "attr": "str" },
-    "Boneshatter": { "attr": "str" },
-    "Ancestral Warchief": { "attr": "str" },
-    "Leap Slam": { "attr": "str" },
-    "Melee Physical Damage Support": { "attr": "str" },
-    "Added Fire Damage Support": { "attr": "str" },
-    "Ruthless Support": { "attr": "str" },
-    "Fortify Support": { "attr": "str" },
-    "Brutality Support": { "attr": "str" },
-    "Chance to Bleed Support": { "attr": "str" },
-    "Ancestral Call Support": { "attr": "str" },
-    "Multistrike Support": { "attr": "str" },
-    "Melee Splash Support": { "attr": "str" },
-
-    "Split Arrow": { "attr": "dex" },
-    "Caustic Arrow": { "attr": "dex" },
-    "Toxic Rain": { "attr": "dex" },
-    "Galvanic Arrow": { "attr": "dex" },
-    "Ice Shot": { "attr": "dex" },
-    "Lightning Arrow": { "attr": "dex" },
-    "Rain of Arrows": { "attr": "dex" },
-    "Tornado Shot": { "attr": "dex" },
-    "Frost Blades": { "attr": "dex" },
-    "Cobra Lash": { "attr": "dex" },
-    "Puncture": { "attr": "dex" },
-    "Dash": { "attr": "dex" },
-    "Blink Arrow": { "attr": "dex" },
-    "Mirror Arrow": { "attr": "dex" },
-    "Pierce Support": { "attr": "dex" },
-    "Added Cold Damage Support": { "attr": "dex" },
-    "Mirage Archer Support": { "attr": "dex" },
-    "Onslaught Support": { "attr": "dex" },
-    "Faster Attacks Support": { "attr": "dex" },
-    "Greater Multiple Projectiles Support": { "attr": "dex" },
-    "Lesser Multiple Projectiles Support": { "attr": "dex" },
-    "Vicious Projectiles Support": { "attr": "dex" },
-    "Faster Projectiles Support": { "attr": "dex" },
-
-    "Fireball": { "attr": "int" },
-    "Frostbolt": { "attr": "int" },
-    "Freezing Pulse": { "attr": "int" },
-    "Spark": { "attr": "int" },
-    "Arc": { "attr": "int" },
-    "Flame Dash": { "attr": "int" },
-    "Frost Bomb": { "attr": "int" },
-    "Rolling Magma": { "attr": "int" },
-    "Storm Brand": { "attr": "int" },
-    "Armageddon Brand": { "attr": "int" },
-    "Contagion": { "attr": "int" },
-    "Essence Drain": { "attr": "int" },
-    "Raise Zombie": { "attr": "int" },
-    "Summon Raging Spirit": { "attr": "int" },
-    "Summon Skeletons": { "attr": "int" },
-    "Orb of Storms": { "attr": "int" },
-    "Cold Snap": { "attr": "int" },
-    "Vortex": { "attr": "int" },
-    "Arcane Surge Support": { "attr": "int" },
-    "Added Lightning Damage Support": { "attr": "int" },
-    "Elemental Focus Support": { "attr": "int" },
-    "Controlled Destruction Support": { "attr": "int" },
-    "Spell Echo Support": { "attr": "int" },
-    "Concentrated Effect Support": { "attr": "int" },
-    "Efficacy Support": { "attr": "int" },
-    "Minion Damage Support": { "attr": "int" },
-    "Cold Penetration Support": { "attr": "int" },
-    "Fire Penetration Support": { "attr": "int" },
-    "Lightning Penetration Support": { "attr": "int" }
+    "Ground Slam": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Heavy Strike": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Cleave": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Sunder": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Perforate": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Earthquake": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 3,
+          "quest": "Sever the Right Hand",
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "Sever the Right Hand",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Boneshatter": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "Sever the Right Hand",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Ancestral Warchief": {
+      "attr": "str"
+    },
+    "Leap Slam": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Templar",
+            "Marauder",
+            "Duelist",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Melee Physical Damage Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 2,
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Templar",
+            "Marauder",
+            "Duelist",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 2,
+          "npc": "Yeena",
+          "quest": "Sharp and Cruel"
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Added Fire Damage Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Templar",
+            "Marauder",
+            "Duelist",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Ruthless Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Mercy Mission",
+          "classes": [
+            "Templar",
+            "Duelist",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Mercy Mission",
+          "classes": [
+            "Duelist",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        }
+      ]
+    },
+    "Fortify Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 3,
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Templar",
+            "Marauder",
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Brutality Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 4,
+          "quest": "The Eternal Nightmare",
+          "classes": [
+            "Marauder"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 4,
+          "npc": "Petarus and Vanja",
+          "quest": "The Eternal Nightmare",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Chance to Bleed Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Mercy Mission",
+          "classes": [
+            "Templar",
+            "Marauder",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Mercy Mission",
+          "classes": [
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        }
+      ]
+    },
+    "Ancestral Call Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Mercy Mission",
+          "classes": [
+            "Templar",
+            "Marauder",
+            "Duelist",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Mercy Mission",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Scion",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Multistrike Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 4,
+          "quest": "The Eternal Nightmare"
+        },
+        {
+          "kind": "vendor",
+          "act": 4,
+          "npc": "Petarus and Vanja",
+          "quest": "The Eternal Nightmare"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Melee Splash Support": {
+      "attr": "str",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Templar",
+            "Marauder",
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute"
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Split Arrow": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Caustic Arrow": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Toxic Rain": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Galvanic Arrow": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Ice Shot": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Lightning Arrow": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Rain of Arrows": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Tornado Shot": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 3,
+          "quest": "Sever the Right Hand",
+          "classes": [
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "Sever the Right Hand",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Frost Blades": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Cobra Lash": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Puncture": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Dash": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Breaking Some Eggs"
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Blink Arrow": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Mirror Arrow": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Pierce Support": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Mercy Mission",
+          "classes": [
+            "Duelist",
+            "Shadow",
+            "Scion",
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Mercy Mission",
+          "classes": [
+            "Duelist",
+            "Scion",
+            "Shadow",
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Added Cold Damage Support": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Ranger",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Mirage Archer Support": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Mercy Mission",
+          "classes": [
+            "Duelist",
+            "Ranger"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Mercy Mission",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Onslaught Support": {
+      "attr": "dex"
+    },
+    "Faster Attacks Support": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Marauder",
+            "Duelist",
+            "Ranger",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Duelist",
+            "Marauder",
+            "Ranger",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        }
+      ]
+    },
+    "Greater Multiple Projectiles Support": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 4,
+          "quest": "The Eternal Nightmare"
+        },
+        {
+          "kind": "vendor",
+          "act": 4,
+          "npc": "Petarus and Vanja",
+          "quest": "The Eternal Nightmare"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Lesser Multiple Projectiles Support": {
+      "attr": "dex"
+    },
+    "Vicious Projectiles Support": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 2,
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 2,
+          "npc": "Yeena",
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Duelist",
+            "Ranger",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Faster Projectiles Support": {
+      "attr": "dex",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 3,
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Fireball": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Marauder",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Frostbolt": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Freezing Pulse": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Witch",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Spark": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Arc": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Flame Dash": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Witch",
+            "Templar",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Frost Bomb": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Witch",
+            "Templar",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Rolling Magma": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Witch",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Storm Brand": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Armageddon Brand": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 3,
+          "quest": "Sever the Right Hand",
+          "classes": [
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "Sever the Right Hand",
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Contagion": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Witch",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Essence Drain": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Witch",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Siren's Cadence",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Raise Zombie": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Summon Raging Spirit": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Summon Skeletons": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Orb of Storms": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Witch",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Breaking Some Eggs",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Cold Snap": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 2,
+          "quest": "Intruders in Black",
+          "classes": [
+            "Witch",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 2,
+          "npc": "Yeena",
+          "quest": "Intruders in Black",
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Vortex": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "Sever the Right Hand",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Arcane Surge Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "Mercy Mission",
+          "classes": [
+            "Templar",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Enemy at the Gate",
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "Mercy Mission",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        }
+      ]
+    },
+    "Added Lightning Damage Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Witch",
+            "Templar",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Elemental Focus Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 2,
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Witch",
+            "Templar",
+            "Shadow"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 2,
+          "npc": "Yeena",
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Controlled Destruction Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 2,
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Witch",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 2,
+          "npc": "Yeena",
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 2,
+          "npc": "Yeena",
+          "quest": "The Root of the Problem",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        }
+      ]
+    },
+    "Spell Echo Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 4,
+          "quest": "The Eternal Nightmare"
+        },
+        {
+          "kind": "vendor",
+          "act": 4,
+          "npc": "Petarus and Vanja",
+          "quest": "The Eternal Nightmare"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Concentrated Effect Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 2,
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Witch",
+            "Templar",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 2,
+          "npc": "Yeena",
+          "quest": "Sharp and Cruel",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Efficacy Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Minion Damage Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 1,
+          "quest": "The Caged Brute",
+          "classes": [
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 1,
+          "npc": "Nessa",
+          "quest": "The Caged Brute",
+          "classes": [
+            "Scion",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Cold Penetration Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 3,
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Witch",
+            "Templar",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Ranger",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Fire Penetration Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 3,
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Witch",
+            "Templar",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Marauder",
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Lightning Penetration Support": {
+      "attr": "int",
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 3,
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Witch",
+            "Templar",
+            "Shadow",
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Clarissa",
+          "quest": "A Fixture of Fate",
+          "classes": [
+            "Scion",
+            "Shadow",
+            "Templar",
+            "Witch"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 3,
+          "npc": "Siosa",
+          "quest": "A Fixture of Fate"
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    }
   }
 }
