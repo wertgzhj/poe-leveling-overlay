@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { parseProfile, type Profile } from '../electron/profile/profile.ts'
-import { GemData } from '../electron/profile/gems.ts'
+import { GemData, vendorCostFor } from '../electron/profile/gems.ts'
 import {
   activeStageIndex,
   resolveStage,
@@ -143,6 +143,7 @@ const SOURCED_GEMS = new GemData({
   },
   'Onslaught Support': {
     attr: 'dex',
+    requiredLevel: 12,
     sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] // all classes
   },
   'Ground Slam': {
@@ -203,6 +204,27 @@ test('known gems with no specific source fall back to the broad vendor (Siosa)',
   assert.equal(src?.fallback, true)
   // An unknown name is not claimed to be sold by Siosa.
   assert.equal(gems.earliestSource('Totally Fake Gem', 'Witch'), null)
+})
+
+test('vendor cost tier follows the gem level requirement (provisional table)', () => {
+  assert.equal(vendorCostFor(1), 'Wisdom')
+  assert.equal(vendorCostFor(8), 'Transmutation')
+  assert.equal(vendorCostFor(12), 'Alteration')
+  assert.equal(vendorCostFor(16), 'Chance')
+  assert.equal(vendorCostFor(31), 'Alchemy')
+  assert.equal(vendorCostFor(undefined), undefined)
+})
+
+test('purchase entries carry the cost tier when the gem level is known', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'cost', class: 'Marauder' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Onslaught Support'] }] }],
+      gemPlan: [{ gem: 'Onslaught Support' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
+  assert.equal(acq.purchases[0]?.cost, 'Alteration') // requiredLevel 12
 })
 
 test('upcoming lists later-stage quest-reward gems with their start level', () => {

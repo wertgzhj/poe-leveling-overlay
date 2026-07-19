@@ -91,6 +91,13 @@ updates as *disabled*; an unreachable feed shows *Couldn't check* and never nags
 - **Auto-update needs public releases:** the in-app updater only works if this repo's
   Releases are publicly downloadable — make the repo public, or repoint `publish.repo`
   in `electron-builder.yml` at a public releases repo (see the Updating steps above).
+- **Vendor gem cost tiers are provisional:** the buy list shows a price per gem
+  (Wisdom / Transmutation / Alteration / Chance / Alchemy) derived from the gem's
+  level requirement. Verify the tier boundaries in game and report — they live in
+  `COST_TIERS` (`electron/profile/gems.ts`).
+- **Trial completion line:** when you finish a trial plaque, capture the exact
+  `Client.txt` line (Select-String `Trial` / `Ascendancy`) so auto-complete can be
+  wired; until then completion is the one-click hint/manual toggle.
 - **Code signing:** the release is unsigned (SmartScreen warning) — a paid cert is the
   fix; backlog.
 

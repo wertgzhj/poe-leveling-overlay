@@ -154,6 +154,7 @@ interface AcquisitionEntryBridge {
   note?: string
   fallback?: boolean
   fromLevel?: number
+  cost?: string
 }
 
 interface AcquisitionsBridge {

@@ -2,7 +2,10 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   parseClasses,
+  parseAttr,
   gemName,
+  gemBasicsRow,
+  buildGemBasics,
   questRowToSource,
   vendorRowToSource,
   buildSources,
@@ -137,4 +140,55 @@ test('mergeGemData adds a gem that is only in the fetched data', () => {
     Fireball: [{ kind: 'quest' as const, act: 1 }]
   })
   assert.deepEqual(merged.gems.Fireball, { sources: [{ kind: 'quest', act: 1 }] })
+})
+
+test('parseAttr maps wiki attribute names, tolerating case and short forms', () => {
+  assert.equal(parseAttr('strength'), 'str')
+  assert.equal(parseAttr('Dexterity'), 'dex')
+  assert.equal(parseAttr('int'), 'int')
+  assert.equal(parseAttr('none'), undefined) // white gems (Portal)
+  assert.equal(parseAttr(''), undefined)
+  assert.equal(parseAttr(null), undefined)
+})
+
+test('gemBasicsRow reads attribute + level requirement defensively', () => {
+  assert.deepEqual(gemBasicsRow({ reward: 'Fireball', attr: 'intelligence', required_level: '1' }), {
+    gem: 'Fireball',
+    basics: { attr: 'int', requiredLevel: 1 }
+  })
+  // Nonsense level is dropped, gem kept.
+  assert.deepEqual(gemBasicsRow({ reward: 'Odd', attr: 'strength', required_level: '999' }), {
+    gem: 'Odd',
+    basics: { attr: 'str', requiredLevel: undefined }
+  })
+  assert.equal(gemBasicsRow({ attr: 'strength' }), null)
+})
+
+test('buildGemBasics keeps the first row per gem (alt-quality dupes)', () => {
+  const basics = buildGemBasics([
+    { reward: 'Fireball', attr: 'intelligence', required_level: '1' },
+    { reward: 'Fireball', attr: 'strength', required_level: '50' } // dupe ignored
+  ])
+  assert.deepEqual(basics, { Fireball: { attr: 'int', requiredLevel: 1 } })
+})
+
+test('mergeGemData applies wiki basics (wiki wins) while keeping curated extras', () => {
+  const existing: GemsFile = {
+    gems: {
+      Fireball: { attr: 'str' }, // wrong curated attr -> corrected by the wiki
+      'Custom Gem': { attr: 'dex' } // unknown to the wiki -> preserved
+    }
+  }
+  const merged = mergeGemData(
+    existing,
+    { Fireball: [{ kind: 'quest' as const, act: 1 }] },
+    { Fireball: { attr: 'int', requiredLevel: 1 }, Frostblink: { attr: 'int', requiredLevel: 4 } }
+  )
+  assert.deepEqual(merged.gems.Fireball, {
+    attr: 'int',
+    requiredLevel: 1,
+    sources: [{ kind: 'quest', act: 1 }]
+  })
+  assert.deepEqual(merged.gems.Frostblink, { attr: 'int', requiredLevel: 4 }) // new gem added
+  assert.deepEqual(merged.gems['Custom Gem'], { attr: 'dex' })
 })

@@ -26,6 +26,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import {
+  buildGemBasics,
   buildSources,
   mergeGemData,
   type CargoRow,
@@ -48,6 +49,13 @@ const QUEST = {
 const VENDOR = {
   table: 'vendor_rewards',
   fields: ['_pageName=reward', 'act=act', 'quest=quest', 'npc=npc', 'classes=classes']
+}
+// Every gem's attribute (socket colour) + level requirement — full colour
+// coverage instead of the hand-curated subset, and the level drives the vendor
+// cost tier shown on the buy list.
+const SKILL = {
+  table: 'skill_gems',
+  fields: ['_pageName=reward', 'primary_attribute=attr', 'required_level=required_level']
 }
 const PAGE = 500 // cargoquery's anonymous cap; page through with offset.
 
@@ -121,7 +129,7 @@ async function probeField(table: string, fieldExpr: string): Promise<string> {
  *  table itself is the problem. */
 async function printDiscovery(): Promise<void> {
   console.error('\nProbing tables/columns with 1-row queries:')
-  for (const { table, fields } of [QUEST, VENDOR]) {
+  for (const { table, fields } of [QUEST, VENDOR, SKILL]) {
     console.error(`  ${table}:`)
     console.error(`    _pageName: ${await probeField(table, `${table}._pageName=p`)}`)
     for (const f of fields) {
@@ -172,19 +180,23 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2))
 
   console.log('Querying the Path of Exile Wiki Cargo export:')
-  const [questRows, vendorRows] = await Promise.all([
+  const [questRows, vendorRows, skillRows] = await Promise.all([
     fetchTable(QUEST.table, QUEST.fields),
-    fetchTable(VENDOR.table, VENDOR.fields)
+    fetchTable(VENDOR.table, VENDOR.fields),
+    fetchTable(SKILL.table, SKILL.fields)
   ])
-  console.log(`  fetched ${questRows.length} quest rows, ${vendorRows.length} vendor rows`)
+  console.log(
+    `  fetched ${questRows.length} quest rows, ${vendorRows.length} vendor rows, ${skillRows.length} skill-gem rows`
+  )
 
   const allSources = buildSources(questRows, vendorRows)
+  const basics = buildGemBasics(skillRows)
 
   const existing = JSON.parse(await readFile(args.out, 'utf8')) as GemsFile
-  const known = new Set(Object.keys(existing.gems).map(normalize))
+  // "Known" = curated in gems.json OR a real skill gem per the wiki — sources
+  // for anything else (books, non-gem rewards) stay excluded unless --all.
+  const known = new Set([...Object.keys(existing.gems), ...Object.keys(basics)].map(normalize))
 
-  // Default: only fill sources for gems we already curate (guarantees we never
-  // pull non-gem quest rewards into gems.json). --all takes everything.
   const sources: Record<string, GemSourceInfo[]> = {}
   const unknown: string[] = []
   for (const [gem, srcs] of Object.entries(allSources)) {
@@ -193,11 +205,12 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `\nMatched ${Object.keys(sources).length} gems with sources` +
-      (args.all ? ' (--all: including uncurated)' : ` (${unknown.length} wiki gems not in gems.json)`)
+    `\nGem basics (attr/level) for ${Object.keys(basics).length} gems; ` +
+      `sources for ${Object.keys(sources).length} ` +
+      (args.all ? '(--all: including non-gems)' : `(${unknown.length} non-gem rewards excluded)`)
   )
   if (!args.all && unknown.length) {
-    console.log('  Not in gems.json (add an attr there to include them):')
+    console.log('  Excluded (not skill gems per the wiki):')
     console.log('  ' + unknown.sort().join(', '))
   }
 
@@ -213,7 +226,7 @@ async function main(): Promise<void> {
     return
   }
 
-  const merged = mergeGemData(existing, sources)
+  const merged = mergeGemData(existing, sources, basics)
   await writeFile(args.out, JSON.stringify(merged, null, 2) + '\n')
   console.log(`\nWrote ${args.out}.`)
 }

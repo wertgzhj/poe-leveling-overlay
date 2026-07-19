@@ -3,7 +3,7 @@
 // acquisition views (reward picks / vendor shopping list) from the gemPlan.
 
 import type { Profile, Stage, CharClass, GemSource } from './profile.ts'
-import { GemData, type ColoredGem } from './gems.ts'
+import { GemData, vendorCostFor, type ColoredGem } from './gems.ts'
 
 export interface ColoredSocketGroup {
   gems: ColoredGem[]
@@ -30,6 +30,8 @@ export interface AcquisitionEntry {
   fallback?: boolean
   /** upcoming entries: the level the gem's stage starts at. */
   fromLevel?: number
+  /** vendor price tier ("Wisdom", "Alteration", …) — provisional, by gem level req. */
+  cost?: string
 }
 
 export interface Acquisitions {
@@ -131,6 +133,7 @@ function classify(
   cls: CharClass,
   gems?: GemData
 ): AcquisitionEntry {
+  const cost = vendorCostFor(gems?.info(entry.gem)?.requiredLevel)
   const authored = entry.source
   if (authored) {
     const bucket = authored.kind === 'questReward' ? 'reward' : authored.kind === 'vendor' ? 'purchase' : 'other'
@@ -141,7 +144,8 @@ function classify(
       act: authored.act,
       npc: authored.npc,
       quest: authored.questId,
-      note: authored.note
+      note: authored.note,
+      cost: bucket === 'purchase' ? cost : undefined
     }
   }
   const src = gems?.earliestSource(entry.gem, cls)
@@ -154,7 +158,8 @@ function classify(
       npc: src.npc,
       quest: src.quest,
       note: src.note,
-      fallback: src.fallback
+      fallback: src.fallback,
+      cost: src.kind === 'vendor' ? cost : undefined
     }
   }
   return { gem: entry.gem, count: entry.count, bucket: 'other' }

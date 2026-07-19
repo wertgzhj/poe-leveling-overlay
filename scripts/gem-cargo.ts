@@ -108,14 +108,63 @@ export function buildSources(questRows: CargoRow[], vendorRows: CargoRow[]): Rec
 
 export interface GemsFile {
   _note?: string
-  gems: Record<string, { attr?: string; sources?: GemSourceInfo[] }>
+  gems: Record<string, { attr?: string; requiredLevel?: number; sources?: GemSourceInfo[] }>
 }
 
-/** Merge fetched sources into an existing gems.json, preserving attributes and
- *  any gems not present in the wiki data. Returns a new object. */
-export function mergeGemData(existing: GemsFile, sources: Record<string, GemSourceInfo[]>): GemsFile {
+/** Wiki primary attribute -> our socket-colour attr; undefined for none/white. */
+export function parseAttr(raw: unknown): 'str' | 'dex' | 'int' | undefined {
+  const s = str(raw)?.toLowerCase()
+  if (!s) return undefined
+  if (s.startsWith('str')) return 'str'
+  if (s.startsWith('dex')) return 'dex'
+  if (s.startsWith('int')) return 'int'
+  return undefined
+}
+
+export interface GemBasics {
+  attr?: 'str' | 'dex' | 'int'
+  requiredLevel?: number
+}
+
+/** A skill_gems row -> the gem's basics (attribute + level requirement). */
+export function gemBasicsRow(row: CargoRow): { gem: string; basics: GemBasics } | null {
+  const gem = gemName(row)
+  if (!gem) return null
+  const lvlRaw = Number(str(row['required_level']))
+  const requiredLevel = Number.isInteger(lvlRaw) && lvlRaw >= 1 && lvlRaw <= 100 ? lvlRaw : undefined
+  return { gem, basics: { attr: parseAttr(row['attr']), requiredLevel } }
+}
+
+export function buildGemBasics(rows: CargoRow[]): Record<string, GemBasics> {
+  const out: Record<string, GemBasics> = {}
+  for (const row of rows) {
+    const r = gemBasicsRow(row)
+    if (!r) continue
+    // First row wins per gem (duplicates come from alt-quality/transfigured pages).
+    if (!(r.gem in out)) out[r.gem] = r.basics
+  }
+  return out
+}
+
+/** Merge fetched sources (and optionally gem basics from the wiki) into an
+ *  existing gems.json. Wiki basics win over curated values (the wiki is the
+ *  authority on attribute/level); gems unknown to the wiki are preserved.
+ *  Returns a new object. */
+export function mergeGemData(
+  existing: GemsFile,
+  sources: Record<string, GemSourceInfo[]>,
+  basics?: Record<string, GemBasics>
+): GemsFile {
   const gems: GemsFile['gems'] = {}
   for (const [name, info] of Object.entries(existing.gems)) gems[name] = { ...info }
+  for (const [name, b] of Object.entries(basics ?? {})) {
+    const prev = gems[name] ?? {}
+    gems[name] = {
+      ...prev,
+      attr: b.attr ?? prev.attr,
+      requiredLevel: b.requiredLevel ?? prev.requiredLevel
+    }
+  }
   for (const [name, srcs] of Object.entries(sources)) {
     gems[name] = { ...(gems[name] ?? {}), sources: srcs }
   }
