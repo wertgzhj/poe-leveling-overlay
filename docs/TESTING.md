@@ -15,7 +15,7 @@ Last updated: 2026-07-18.
 | P2 | Route guide, auto-advance, multi-act, fallback Acts 2–10 | ✅ | ✅ engine + all 10 act files | auto-advance while playing, town round-trip |
 | P3 | Build-profile gem panel (computed colours, stage switch) | ✅ | ✅ engine | panel on screen, stage switch on level-up |
 | P4 | Path of Building import (code / pobb.in link) | ✅ | ✅ + CLI end-to-end | in-app import button, pobb.in fetch |
-| P5 | Class-aware gem-source engine | ✅ | ✅ | — (data still partial, see below) |
+| P5 | Class-aware gem sources (engine + poewiki data) | ✅ | ✅ | reward/buy hints in the Gems tab look right |
 | P6 | Trials tracker | ✅ | ✅ | auto-check on entering a trial zone |
 | P6 | Packaged Windows release (installer + portable) | ✅ | icon + CI build | double-click launch |
 | — | Visual route/profile editor (separate window) | ✅ | pure edit ops | window opens, edit → save → overlay reloads |
@@ -73,11 +73,11 @@ updates as *disabled*; an unreachable feed shows *Couldn't check* and never nags
 
 ## Open follow-ups (not blocking)
 
-- **Gem source data:** fill/refresh `data/gems.json` `sources` with one click:
-  **Actions → Fetch gem data → Run workflow** (pulls the wiki's Cargo export, runs the
+- **Gem source data: FILLED** (2026-07-19, 67/70 curated gems with per-class
+  quest/vendor sources from poewiki). Refresh after a game patch with one click:
+  **Actions → Fetch gem data → Run workflow** (pulls the wiki's Cargo data, runs the
   tests as a guard, commits to main). Local alternative: `npm run fetch-gems`
-  (`-- --dry-run` to preview). Until filled, reward/buy hints come from a profile's
-  authored `gemPlan.source` (incl. PoB import), plus the Siosa/Lilly fallback.
+  (`-- --dry-run` to preview). Authored `gemPlan.source` still overrides per profile.
 - **Your route content:** Acts 2–10 ship as fallback skeletons — replace them in
   `data/campaign/actN.json` (or per-act overrides in the userData `routes/` folder), or
   in the visual editor (tray → *Edit routes & profile…*).
