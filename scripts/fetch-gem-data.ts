@@ -32,24 +32,12 @@ import {
 } from './gem-cargo.ts'
 
 const WIKI = 'https://www.poewiki.net'
-// Cargo tables + the fields we read. If a fetch comes back empty, open the
-// printed URL: a renamed table/field is the usual cause. Field aliases (`=name`)
-// make the returned JSON keys match what gem-cargo.ts reads.
-const QUEST = {
-  table: 'quest_rewards',
-  fields: ['reward=reward', 'reward_id=reward_id', 'act=act', 'quest=quest', 'classes=classes']
-}
-const VENDOR = {
-  table: 'vendor_rewards',
-  fields: [
-    'reward=reward',
-    'reward_id=reward_id',
-    'act=act',
-    'quest=quest',
-    'npc=npc',
-    'classes=classes'
-  ]
-}
+// Cargo tables + the fields we read. Requesting a column that doesn't exist
+// makes the whole export 500 — keep this list minimal and let gem-cargo.ts read
+// rows defensively. On errors we print the server's message, which names the
+// offending column; adjust here if the wiki schema drifts.
+const QUEST = { table: 'quest_rewards', fields: ['reward', 'act', 'quest', 'classes'] }
+const VENDOR = { table: 'vendor_rewards', fields: ['reward', 'act', 'quest', 'npc', 'classes'] }
 const PAGE = 500 // Cargo caps a single export; page through with offset.
 
 interface Args {
@@ -75,18 +63,24 @@ function parseArgs(argv: string[]): Args {
 }
 
 function exportUrl(table: string, fields: string[], offset: number): string {
+  // No "order by": we don't need it (buildSources sorts), and it's one more
+  // thing that can 500. Cargo's default row order is stable enough for paging.
   const p = new URLSearchParams({
     title: 'Special:CargoExport',
     tables: table,
     fields: fields.join(','),
-    order_by: `${table}.act`,
     format: 'json',
     limit: String(PAGE),
     offset: String(offset)
   })
-  // Cargo wants "order by" with a space; URLSearchParams encodes it as order_by.
-  // The API accepts either, but be explicit to avoid surprises.
-  return `${WIKI}/index.php?${p.toString().replace('order_by=', 'order+by=')}`
+  return `${WIKI}/index.php?${p.toString()}`
+}
+
+/** First ~400 chars of a response body with HTML stripped — MediaWiki error
+ *  pages bury the actual database error (e.g. an unknown column) in there. */
+function bodySnippet(body: string): string {
+  const text = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  return text.slice(0, 400)
 }
 
 async function fetchTable(table: string, fields: string[]): Promise<CargoRow[]> {
@@ -95,10 +89,22 @@ async function fetchTable(table: string, fields: string[]): Promise<CargoRow[]> 
     const url = exportUrl(table, fields, offset)
     if (offset === 0) console.log(`  ${table}: ${url}`)
     const res = await fetch(url, { headers: { 'user-agent': 'poe-overlay gem-data fetch' } })
-    if (!res.ok) throw new Error(`${table} export failed: HTTP ${res.status} ${res.statusText}`)
-    const page = (await res.json()) as CargoRow[]
-    if (!Array.isArray(page)) throw new Error(`${table} export was not a JSON array`)
-    rows.push(...page)
+    const body = await res.text()
+    if (!res.ok) {
+      throw new Error(
+        `${table} export failed: HTTP ${res.status} ${res.statusText}\n  server says: ${bodySnippet(body)}`
+      )
+    }
+    let page: unknown
+    try {
+      page = JSON.parse(body)
+    } catch {
+      throw new Error(`${table} export was not JSON\n  server says: ${bodySnippet(body)}`)
+    }
+    if (!Array.isArray(page)) {
+      throw new Error(`${table} export was not a JSON array\n  server says: ${bodySnippet(body)}`)
+    }
+    rows.push(...(page as CargoRow[]))
     if (page.length < PAGE) break
   }
   return rows
