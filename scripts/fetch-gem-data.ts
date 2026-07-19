@@ -87,33 +87,38 @@ function bodySnippet(body: string, max = 400): string {
   return text.slice(0, max)
 }
 
-async function fetchText(url: string): Promise<string> {
-  const res = await fetch(url, { headers: UA })
-  return await res.text()
+/** One tiny cargoquery for a single field: "ok" or the error it produced. */
+async function probeField(table: string, fieldExpr: string): Promise<string> {
+  const p = new URLSearchParams({
+    action: 'cargoquery',
+    format: 'json',
+    tables: table,
+    fields: fieldExpr,
+    limit: '1'
+  })
+  try {
+    const res = await fetch(`${API}?${p.toString()}`, { headers: UA })
+    const body = await res.text()
+    if (!res.ok) return `HTTP ${res.status}`
+    const data = JSON.parse(body) as { error?: { code?: string }; cargoquery?: unknown }
+    if (data.error) return `ERROR ${data.error.code ?? 'unknown'}`
+    return Array.isArray(data.cargoquery) ? 'ok' : 'unexpected response shape'
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e)
+  }
 }
 
 /** Failure aid: an MWException from cargoquery means a table or column in the
- *  query doesn't exist, without saying which. Print what actually exists —
- *  reward-ish table names from the Special:CargoTables index plus the declared
- *  schema of the tables we query — so the next edit of QUEST/VENDOR is
- *  informed, not guessed. */
+ *  query doesn't exist — without saying which. Probe each column with its own
+ *  1-row query and print a per-column verdict; a failing _pageName means the
+ *  table itself is the problem. */
 async function printDiscovery(): Promise<void> {
-  try {
-    const index = bodySnippet(await fetchText(`${WIKI}/index.php?title=Special:CargoTables`), 40000)
-    const words = [...new Set(index.split(/\s+/).filter((w) => /reward|vendor|quest/i.test(w)))]
-    console.error('\nCargo tables/words mentioning reward|vendor|quest:')
-    console.error('  ' + (words.slice(0, 50).join(' ') || '(none found)'))
-  } catch (e) {
-    console.error('\n(could not list Cargo tables:', e instanceof Error ? e.message : e, ')')
-  }
-  for (const table of [QUEST.table, VENDOR.table]) {
-    try {
-      console.error(`\nSchema of "${table}" (Special:CargoTables/${table}):`)
-      console.error(
-        '  ' + bodySnippet(await fetchText(`${WIKI}/index.php?title=Special:CargoTables/${table}`), 1500)
-      )
-    } catch (e) {
-      console.error(`  (could not fetch: ${e instanceof Error ? e.message : e})`)
+  console.error('\nProbing tables/columns with 1-row queries:')
+  for (const { table, fields } of [QUEST, VENDOR]) {
+    console.error(`  ${table}:`)
+    console.error(`    _pageName: ${await probeField(table, `${table}._pageName=p`)}`)
+    for (const f of fields) {
+      console.error(`    ${f}: ${await probeField(table, `${table}.${f}=${f}`)}`)
     }
   }
 }
