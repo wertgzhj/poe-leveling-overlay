@@ -34,7 +34,26 @@ export const BROAD_VENDORS: readonly GemSourceInfo[] = [
 
 export interface GemInfo {
   attr?: Attr
+  /** the gem's level requirement (from the wiki) — drives the vendor cost tier. */
+  requiredLevel?: number
   sources?: GemSourceInfo[]
+}
+
+// PROVISIONAL vendor gem prices by the gem's level requirement — the community
+// tier list; verify in game and adjust here (TESTING has the checklist item).
+const COST_TIERS: ReadonlyArray<[minLevel: number, cost: string]> = [
+  [28, 'Alchemy'],
+  [16, 'Chance'],
+  [12, 'Alteration'],
+  [8, 'Transmutation'],
+  [1, 'Wisdom']
+]
+
+/** Vendor price ("Wisdom", "Alteration", …) for a gem by level requirement. */
+export function vendorCostFor(requiredLevel: number | undefined): string | undefined {
+  if (requiredLevel === undefined) return undefined
+  for (const [min, cost] of COST_TIERS) if (requiredLevel >= min) return cost
+  return undefined
 }
 
 const ATTR_COLOR: Record<Attr, SocketColor> = { str: 'R', dex: 'G', int: 'B' }

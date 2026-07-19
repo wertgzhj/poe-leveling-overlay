@@ -477,6 +477,7 @@ function GemBody(): React.JSX.Element {
               <span className="text-overlay-muted">
                 {e.npc ? ` · ${e.npc}` : ''}
                 {e.act ? ` (Act ${e.act})` : ''}
+                {e.cost ? ` · ${e.cost}` : ''}
                 {e.fallback && <span title="general vendor — may be available earlier"> ≈</span>}
               </span>
             </div>
