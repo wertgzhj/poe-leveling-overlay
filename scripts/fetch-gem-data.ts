@@ -1,14 +1,16 @@
 // Fetch per-class gem acquisition (quest + vendor) from the Path of Exile Wiki
 // and merge it into data/gems.json, filling the intentionally-empty `sources`.
 //
-// The wiki exposes its data through the MediaWiki **Cargo** export API, which
-// returns plain JSON — no scraping. We read two tables:
+// Uses the MediaWiki Action API's **cargoquery** (api.php?action=cargoquery) —
+// plain JSON in and out, structured error objects on a bad query. (The older
+// Special:CargoExport page 500s with an empty body on these tables, so it's
+// useless for diagnosis — don't switch back.) Two tables:
 //   - quest_rewards : gems given as a quest reward
 //   - vendor_rewards: gems a vendor sells after a quest
 // The row -> source transform lives in ./gem-cargo.ts (pure, unit-tested); this
 // file only does I/O. It always prints the query URLs so a wrong table/field
-// name (the wiki schema can drift) shows up as an inspectable empty result
-// rather than a silent one.
+// name (the wiki schema can drift) shows up as an inspectable error, not a
+// silent empty result.
 //
 // Usage:
 //   npm run fetch-gems            # fetch + merge into data/gems.json
@@ -31,14 +33,14 @@ import {
   type GemsFile
 } from './gem-cargo.ts'
 
-const WIKI = 'https://www.poewiki.net'
-// Cargo tables + the fields we read. Requesting a column that doesn't exist
-// makes the whole export 500 — keep this list minimal and let gem-cargo.ts read
-// rows defensively. On errors we print the server's message, which names the
-// offending column; adjust here if the wiki schema drifts.
+const API = 'https://www.poewiki.net/w/api.php'
+// Cargo tables + the fields we read. Keep the list minimal (a nonexistent
+// column fails the whole query) and let gem-cargo.ts read rows defensively.
+// A bad query comes back as a JSON `error` object naming the problem — printed
+// verbatim; adjust here if the wiki schema drifts.
 const QUEST = { table: 'quest_rewards', fields: ['reward', 'act', 'quest', 'classes'] }
 const VENDOR = { table: 'vendor_rewards', fields: ['reward', 'act', 'quest', 'npc', 'classes'] }
-const PAGE = 500 // Cargo caps a single export; page through with offset.
+const PAGE = 500 // cargoquery's anonymous cap; page through with offset.
 
 interface Args {
   dryRun: boolean
@@ -62,22 +64,22 @@ function parseArgs(argv: string[]): Args {
   return args
 }
 
-function exportUrl(table: string, fields: string[], offset: number): string {
-  // No "order by": we don't need it (buildSources sorts), and it's one more
-  // thing that can 500. Cargo's default row order is stable enough for paging.
+function queryUrl(table: string, fields: string[], offset: number): string {
+  // No "order by": we don't need it (buildSources sorts). Fields are aliased
+  // ("table.field=field") so the returned keys are exactly what gem-cargo.ts
+  // reads, table prefix stripped.
   const p = new URLSearchParams({
-    title: 'Special:CargoExport',
-    tables: table,
-    fields: fields.join(','),
+    action: 'cargoquery',
     format: 'json',
+    tables: table,
+    fields: fields.map((f) => `${table}.${f}=${f}`).join(','),
     limit: String(PAGE),
     offset: String(offset)
   })
-  return `${WIKI}/index.php?${p.toString()}`
+  return `${API}?${p.toString()}`
 }
 
-/** First ~400 chars of a response body with HTML stripped — MediaWiki error
- *  pages bury the actual database error (e.g. an unknown column) in there. */
+/** First ~400 chars of a response body with HTML stripped, for error output. */
 function bodySnippet(body: string): string {
   const text = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
   return text.slice(0, 400)
@@ -86,25 +88,32 @@ function bodySnippet(body: string): string {
 async function fetchTable(table: string, fields: string[]): Promise<CargoRow[]> {
   const rows: CargoRow[] = []
   for (let offset = 0; ; offset += PAGE) {
-    const url = exportUrl(table, fields, offset)
+    const url = queryUrl(table, fields, offset)
     if (offset === 0) console.log(`  ${table}: ${url}`)
     const res = await fetch(url, { headers: { 'user-agent': 'poe-overlay gem-data fetch' } })
     const body = await res.text()
     if (!res.ok) {
       throw new Error(
-        `${table} export failed: HTTP ${res.status} ${res.statusText}\n  server says: ${bodySnippet(body)}`
+        `${table} query failed: HTTP ${res.status} ${res.statusText}\n  server says: ${bodySnippet(body)}`
       )
     }
-    let page: unknown
+    let data: unknown
     try {
-      page = JSON.parse(body)
+      data = JSON.parse(body)
     } catch {
-      throw new Error(`${table} export was not JSON\n  server says: ${bodySnippet(body)}`)
+      throw new Error(`${table} query was not JSON\n  server says: ${bodySnippet(body)}`)
     }
-    if (!Array.isArray(page)) {
-      throw new Error(`${table} export was not a JSON array\n  server says: ${bodySnippet(body)}`)
+    // The API reports bad queries as a structured error object — surface it.
+    const obj = data as { error?: unknown; cargoquery?: unknown }
+    if (obj.error) {
+      throw new Error(`${table} query error: ${JSON.stringify(obj.error).slice(0, 400)}`)
     }
-    rows.push(...(page as CargoRow[]))
+    if (!Array.isArray(obj.cargoquery)) {
+      throw new Error(`${table} query: no cargoquery array\n  server says: ${bodySnippet(body)}`)
+    }
+    // Each result is wrapped as { title: { field: value } }.
+    const page = obj.cargoquery.map((r) => ((r as { title?: CargoRow }).title ?? {}) as CargoRow)
+    rows.push(...page)
     if (page.length < PAGE) break
   }
   return rows
