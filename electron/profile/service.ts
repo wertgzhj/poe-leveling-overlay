@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchF
 import { join } from 'node:path'
 import { parseProfile, type Profile } from './profile.ts'
 import { GemData, type GemInfo } from './gems.ts'
-import { activeStageIndex, resolveStage, acquisitionsForStage } from './engine.ts'
+import { actFromAreaId, activeStageIndex, resolveStage, acquisitionsForStage } from './engine.ts'
 import { store } from '../settings.ts'
 import { Channels, type ProfileSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
@@ -22,6 +22,8 @@ export class ProfileService {
   private profile: Profile | null = null
   private errors: string[] = []
   private level: number | null = null
+  /** Campaign act the player is in (from area ids) — scopes the upcoming-rewards list. */
+  private act: number | null = null
   private watchedPath: string | null = null
 
   constructor(overlay: OverlayController, log: LogService) {
@@ -32,10 +34,19 @@ export class ProfileService {
       this.level = level
       this.push()
     })
+    log.addAreaListener((area) => {
+      const act = actFromAreaId(area.areaId)
+      if (act !== null && act !== this.act) {
+        this.act = act
+        this.push()
+      }
+    })
   }
 
   start(): void {
-    this.level = this.log.getSnapshot().state.level
+    const state = this.log.getSnapshot().state
+    this.level = state.level
+    this.act = actFromAreaId(state.area?.areaId)
     this.reload()
   }
 
@@ -76,7 +87,7 @@ export class ProfileService {
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
           : null,
-      acquisitions: profile ? acquisitionsForStage(profile, stageIndex, this.gems) : null
+      acquisitions: profile ? acquisitionsForStage(profile, stageIndex, this.gems, this.act) : null
     }
   }
 

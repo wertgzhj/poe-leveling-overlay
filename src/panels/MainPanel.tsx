@@ -452,15 +452,35 @@ function GemBody(): React.JSX.Element {
         </div>
       )}
 
-      {atReward && rewards.length > 0 && (
-        <div className="mb-2 rounded-md border border-overlay-accent/50 bg-overlay-accent/10 p-2">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-accent">
-            Quest reward — take
+      {(rewards.length > 0 || upcoming.length > 0) && (
+        <div
+          className={
+            'mb-2 rounded-md border p-2 ' +
+            (atReward ? 'border-overlay-accent/50 bg-overlay-accent/10' : 'border-overlay-border/60 bg-black/20')
+          }
+        >
+          <div
+            className={
+              'mb-1 text-[10px] font-semibold uppercase tracking-wider ' +
+              (atReward ? 'text-overlay-accent' : 'text-overlay-muted')
+            }
+          >
+            Quest rewards{atReward ? ' — take now' : ''}
           </div>
           {rewards.map((e) => (
             <div key={e.gem} className="text-xs text-overlay-text">
               {e.gem}
               {e.quest && <span className="text-overlay-muted"> · {e.quest}</span>}
+            </div>
+          ))}
+          {upcoming.map((e) => (
+            <div key={e.gem} className="text-xs text-overlay-muted">
+              {e.gem}
+              {e.quest ? ` · ${e.quest}` : ''}
+              <span className="text-overlay-muted/80">
+                {' '}
+                — for later{e.fromLevel ? ` (lvl ${e.fromLevel}+)` : ''}
+              </span>
             </div>
           ))}
         </div>
@@ -503,23 +523,6 @@ function GemBody(): React.JSX.Element {
         </>
       ) : (
         <p className="px-1 text-xs text-overlay-muted">No stage for the current level.</p>
-      )}
-
-      {upcoming.length > 0 && (
-        <div className="mt-1 rounded-md border border-overlay-border/60 bg-black/20 p-2">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-muted">
-            Take when a quest offers it (for later)
-          </div>
-          {upcoming.map((e) => (
-            <div key={e.gem} className="text-xs text-overlay-text">
-              {e.gem}
-              <span className="text-overlay-muted">
-                {e.quest ? ` · ${e.quest}` : ''}
-                {e.fromLevel ? ` — used from lvl ${e.fromLevel}` : ''}
-              </span>
-            </div>
-          ))}
-        </div>
       )}
 
       {profile.nextStage && (
