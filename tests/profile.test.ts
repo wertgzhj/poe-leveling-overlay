@@ -366,6 +366,30 @@ test('purchases sort by cost tier, then act, then name', () => {
   )
 })
 
+test('acquisition plan interleaves rewards and buys by act, rewards first on ties', () => {
+  const gems = new GemData({
+    'Reward A1': { attr: 'int', sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    'Buy A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    'Reward A2': { attr: 'int', sources: [{ kind: 'quest', act: 2, quest: 'Intruders in Black', classes: ['Witch'] }] },
+    'Buy A2': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'plan', class: 'Witch' },
+      // deliberately scrambled so the ordering has to do real work.
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Buy A2', 'Reward A2', 'Buy A1', 'Reward A1'] }] }],
+      gemPlan: [{ gem: 'Buy A2' }, { gem: 'Reward A2' }, { gem: 'Buy A1' }, { gem: 'Reward A1' }]
+    })
+  ).profile!
+  const plan = acquisitionsForStage(profile, 0, gems).plan
+
+  // Chronological by act; within an act the free reward comes before the buy.
+  const labels = plan.map((it) =>
+    it.kind === 'reward' ? `take:${it.group.gems.map((g) => g.gem).join('+')}` : `buy:${it.entry.gem}`
+  )
+  assert.deepEqual(labels, ['take:Reward A1', 'buy:Buy A1', 'take:Reward A2', 'buy:Buy A2'])
+})
+
 test('a class starting gem is marked and kept off the buy/reward lists', () => {
   const gems = new GemData({
     'Arcane Surge Support': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
