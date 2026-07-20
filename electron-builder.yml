@@ -29,7 +29,12 @@ win:
     - nsis
     - portable
   icon: build/icon.ico
-  artifactName: ${productName}-${version}-setup.${ext}
+  # NO SPACES in artifact file names. electron-builder writes latest.yml with
+  # spaces collapsed to hyphens, but GitHub stores uploaded release assets with
+  # spaces collapsed to dots — the mismatch makes the auto-updater 404 on the
+  # download. A hyphenated literal (not ${productName}, which has spaces) keeps
+  # the built file, latest.yml, and the GitHub asset name identical.
+  artifactName: PoE-Leveling-Overlay-${version}-setup.${ext}
 nsis:
   oneClick: false
   perMachine: false
@@ -38,7 +43,8 @@ nsis:
   createStartMenuShortcut: true
   shortcutName: PoE Leveling Overlay
 portable:
-  artifactName: ${productName}-${version}-portable.exe
+  # NO SPACES — same GitHub/electron-updater naming mismatch as the installer above.
+  artifactName: PoE-Leveling-Overlay-${version}-portable.exe
 # The build is unsigned (no code-signing certificate), so Windows SmartScreen
 # will warn on first run — "More info -> Run anyway". Building the .exe requires
 # a Windows host (see .github/workflows/build-windows.yml, which runs it on a
