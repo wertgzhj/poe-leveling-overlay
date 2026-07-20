@@ -165,12 +165,17 @@ interface RewardGroupBridge {
   gems: AcquisitionEntryBridge[]
 }
 
+type AcquisitionItemBridge =
+  | { kind: 'reward'; group: RewardGroupBridge }
+  | { kind: 'buy'; entry: AcquisitionEntryBridge }
+
 interface AcquisitionsBridge {
   rewards: AcquisitionEntryBridge[]
   purchases: AcquisitionEntryBridge[]
   other: AcquisitionEntryBridge[]
   upcoming: AcquisitionEntryBridge[]
   rewardGroups: RewardGroupBridge[]
+  plan: AcquisitionItemBridge[]
 }
 
 interface ProfileMetaBridge {

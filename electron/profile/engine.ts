@@ -49,6 +49,10 @@ export interface Acquisitions {
   /** rewards + upcoming grouped by quest. A quest reward is ONE pick in game —
    *  a group with several gems is a player choice (take one, buy the rest). */
   rewardGroups: RewardGroup[]
+  /** one chronological to-do list: reward-picks and vendor-buys interleaved by
+   *  the act you reach them in, rewards first on ties so you never pay for a
+   *  gem you could take free (owner feedback — the merged Gems-tab box). */
+  plan: AcquisitionItem[]
 }
 
 export interface RewardGroup {
@@ -58,6 +62,13 @@ export interface RewardGroup {
   pickOne: boolean
   gems: AcquisitionEntry[]
 }
+
+/** A single line in the acquisition to-do list — either a quest-reward group
+ *  (one in-game pick, possibly a choice between several of your gems) or a
+ *  single vendor purchase. */
+export type AcquisitionItem =
+  | { kind: 'reward'; group: RewardGroup }
+  | { kind: 'buy'; entry: AcquisitionEntry }
 
 /** Campaign act from a numeric area id ("2_1_3" -> 2). Word ids (hideouts,
  *  maps) and unknown shapes give null — keep the last known act instead. */
@@ -135,7 +146,25 @@ export function acquisitionsForStage(
   const upcoming = upcomingRewards(profile, stageIndex, used, gems, currentAct, startingGems)
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming)
-  return { rewards, purchases, other, upcoming, rewardGroups }
+  const plan = buildPlan(rewardGroups, purchases)
+  return { rewards, purchases, other, upcoming, rewardGroups, plan }
+}
+
+/** Merge the reward groups and vendor buys into one ordered to-do list. Ordered
+ *  by the act you reach each in (the order you play through them); when a reward
+ *  and a buy land in the same act the reward comes first, so you take the free
+ *  gem before spending on the vendor one (owner feedback). Relies on a stable
+ *  sort to keep the reward groups' choices-first order and the buys'
+ *  cheapest-first order intact within a single act. */
+function buildPlan(rewardGroups: RewardGroup[], purchases: AcquisitionEntry[]): AcquisitionItem[] {
+  const items: AcquisitionItem[] = [
+    ...rewardGroups.map((group): AcquisitionItem => ({ kind: 'reward', group })),
+    ...purchases.map((entry): AcquisitionItem => ({ kind: 'buy', entry }))
+  ]
+  const actOf = (it: AcquisitionItem): number =>
+    (it.kind === 'reward' ? it.group.act : it.entry.act) ?? 99
+  const rewardFirst = (it: AcquisitionItem): number => (it.kind === 'reward' ? 0 : 1)
+  return items.sort((a, b) => actOf(a) - actOf(b) || rewardFirst(a) - rewardFirst(b))
 }
 
 /** Cheapest first, then earliest act, then alphabetical (owner priority).

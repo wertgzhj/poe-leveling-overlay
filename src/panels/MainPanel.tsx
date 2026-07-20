@@ -391,10 +391,18 @@ function RewardGroupRow({ group }: { group: RewardGroupBridge }): React.JSX.Elem
   if (!group.pickOne) {
     const e = group.gems[0]
     return (
-      <div className={'text-xs ' + (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')}>
-        {e.gem}
-        {where && <span className="text-overlay-muted"> · {where}</span>}
-        {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+      <div className="flex items-baseline gap-1.5 text-xs">
+        <span className="shrink-0 rounded bg-emerald-400/15 px-1 py-px text-[9px] font-medium text-emerald-300">
+          take
+        </span>
+        <span className={'min-w-0 flex-1 ' + (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')}>
+          {e.gem}
+          {where && <span className="text-overlay-muted"> · {where}</span>}
+          {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+        </span>
+        <span className="shrink-0 text-[10px] text-emerald-400/80" title="free quest reward">
+          free
+        </span>
       </div>
     )
   }
@@ -416,13 +424,37 @@ function RewardGroupRow({ group }: { group: RewardGroupBridge }): React.JSX.Elem
   )
 }
 
+// A single vendor purchase in the merged acquisition box. The cost sits on the
+// right in gold, mirroring the "free" tag on reward lines, so the take-it-free
+// vs. pay-for-it trade-off reads at a glance (owner: cost matters a lot).
+function BuyRow({ entry: e }: { entry: AcquisitionEntryBridge }): React.JSX.Element {
+  const where = [e.npc ?? 'vendor', e.act ? `Act ${e.act}` : null].filter(Boolean).join(' · ')
+  return (
+    <div className="flex items-baseline gap-1.5 text-xs">
+      <span className="shrink-0 rounded bg-amber-400/15 px-1 py-px text-[9px] font-medium text-amber-300">
+        buy
+      </span>
+      <span className="min-w-0 flex-1 text-overlay-text">
+        {e.gem}
+        <span className="text-overlay-muted">
+          {' · '}
+          {where}
+          {e.fallback && <span title="general vendor — may be available earlier"> ≈</span>}
+        </span>
+      </span>
+      {e.cost && <span className="shrink-0 text-[10px] font-medium text-overlay-accent">{e.cost}</span>}
+    </div>
+  )
+}
+
 /** Short "where it comes from" tag for a gem line (owner feedback: sources
  *  visible right at the links, not only in the lists). */
 function sourceTag(e: AcquisitionEntryBridge | undefined): string | null {
   if (!e) return null
   if (e.starting) return '✓ start'
   if (e.bucket === 'reward') return `🎁${e.act ? ` A${e.act}` : ''} ${e.quest ?? 'quest'}`
-  if (e.bucket === 'purchase') return `${e.npc ?? 'vendor'}${e.act ? ` A${e.act}` : ''}${e.fallback ? ' ≈' : ''}`
+  if (e.bucket === 'purchase')
+    return `${e.npc ?? 'vendor'}${e.act ? ` A${e.act}` : ''}${e.cost ? ` · ${e.cost}` : ''}${e.fallback ? ' ≈' : ''}`
   return e.note ?? 'drop/trade'
 }
 
@@ -483,12 +515,16 @@ function GemBody(): React.JSX.Element {
   const stage = profile.activeStage
   const cursorStep = guide?.route?.steps.find((s) => s.id === guide.cursorStepId)
   const atReward = cursorStep?.rewardHint === true
-  const rewards = profile.acquisitions?.rewards ?? []
-  const purchases = profile.acquisitions?.purchases ?? []
-  const rewardGroups = profile.acquisitions?.rewardGroups ?? []
+  // One merged, chronologically-ordered acquisition list (rewards + buys),
+  // reward-first on ties (owner: don't buy what you can take free).
+  const plan = profile.acquisitions?.plan ?? []
   // gem (lowercased) -> its acquisition entry, for the inline tags on link rows.
   const acqByGem = new Map<string, AcquisitionEntryBridge>()
-  for (const e of [...rewards, ...purchases, ...(profile.acquisitions?.other ?? [])]) {
+  for (const e of [
+    ...(profile.acquisitions?.rewards ?? []),
+    ...(profile.acquisitions?.purchases ?? []),
+    ...(profile.acquisitions?.other ?? [])
+  ]) {
     acqByGem.set(e.gem.toLowerCase(), e)
   }
 
@@ -509,7 +545,7 @@ function GemBody(): React.JSX.Element {
         </div>
       )}
 
-      {rewardGroups.length > 0 && (
+      {plan.length > 0 && (
         <div
           className={
             'mb-2 rounded-md border p-2 ' +
@@ -518,38 +554,23 @@ function GemBody(): React.JSX.Element {
         >
           <div
             className={
-              'mb-1 text-[10px] font-semibold uppercase tracking-wider ' +
+              'mb-1.5 text-[10px] font-semibold uppercase tracking-wider ' +
               (atReward ? 'text-overlay-accent' : 'text-overlay-muted')
             }
           >
-            Quest rewards{atReward ? ' — take now' : ''}
+            Get these gems{atReward ? ' — take rewards now' : ''}
           </div>
           <div className="flex flex-col gap-1.5">
-            {rewardGroups.map((g, i) => (
-              <RewardGroupRow key={i} group={g} />
-            ))}
+            {plan.map((item, i) =>
+              item.kind === 'reward' ? (
+                <RewardGroupRow key={i} group={item.group} />
+              ) : (
+                <BuyRow key={i} entry={item.entry} />
+              )
+            )}
           </div>
-        </div>
-      )}
-
-      {purchases.length > 0 && (
-        <div className="mb-2 rounded-md bg-black/25 p-2">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-muted">
-            Buy (this stage)
-          </div>
-          {purchases.map((e) => (
-            <div key={e.gem} className="text-xs text-overlay-text">
-              {e.gem}
-              <span className="text-overlay-muted">
-                {e.npc ? ` · ${e.npc}` : ''}
-                {e.act ? ` (Act ${e.act})` : ''}
-                {e.cost ? ` · ${e.cost}` : ''}
-                {e.fallback && <span title="general vendor — may be available earlier"> ≈</span>}
-              </span>
-            </div>
-          ))}
-          {purchases.some((e) => e.fallback) && (
-            <p className="mt-1 text-[10px] text-overlay-muted">
+          {plan.some((it) => it.kind === 'buy' && it.entry.fallback) && (
+            <p className="mt-1.5 text-[10px] text-overlay-muted">
               ≈ general vendor: Siosa (Act 3, after the Library) / Lilly Roth (Act 6+) sell most
               gems; you may find it earlier as a quest reward.
             </p>
