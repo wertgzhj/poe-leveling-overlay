@@ -11,7 +11,7 @@ directories:
 publish:
   provider: github
   owner: wertgzhj
-  repo: poe-overlay
+  repo: poe-leveling-overlay
 files:
   - out/**/*
   - package.json

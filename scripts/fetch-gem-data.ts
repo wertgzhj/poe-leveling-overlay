@@ -37,7 +37,7 @@ import {
 
 const WIKI = 'https://www.poewiki.net'
 const API = `${WIKI}/w/api.php`
-const UA = { 'user-agent': 'poe-overlay gem-data fetch' }
+const UA = { 'user-agent': 'poe-leveling-overlay gem-data fetch' }
 // Cargo tables + the fields we read (as "field=alias" expressions). These
 // tables attach to each gem's wiki page, so the gem name is _pageName — there
 // is no reward column (probe run: `reward` errors, everything else ok). Alias
