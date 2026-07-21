@@ -10,6 +10,32 @@ test('there are six normal trials across acts 1–3', () => {
   )
 })
 
+test("each Izaro plaque line completes its own trial; his other chatter doesn't", () => {
+  const engine = new TrialsEngine()
+
+  // A non-plaque line (intro / Labyrinth-fight chatter) matches nothing.
+  assert.equal(engine.completeByIzaro('You have done well to come this far.'), false)
+  assert.equal(engine.snapshot().seenCount, 0)
+
+  // The Lower Prison plaque line completes exactly that trial (and is idempotent).
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
+  assert.equal(engine.snapshot().trials.find((t) => t.id === 't-a1-lower-prison')?.seen, true)
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), false)
+  assert.equal(engine.snapshot().seenCount, 1)
+
+  // The other five plaque lines each check off their own trial — all six seen.
+  for (const line of [
+    'Shine boldly so that all might find you when the night falls.',
+    'There is a fine line between consideration and hesitation. The former is wisdom, the latter is fear.',
+    'Allow your wisdom to be tempered by the flames of the past.',
+    'An emperor must bear two blades. Hope in the left hand. Surety in the right.',
+    'An emperor must know precisely where he stands.'
+  ]) {
+    engine.completeByIzaro(line)
+  }
+  assert.equal(engine.snapshot().seenCount, 6)
+})
+
 test('entering a trial zone hints it — it is NOT auto-completed', () => {
   const e = new TrialsEngine()
   assert.equal(e.applyZone('The Lower Prison'), true)

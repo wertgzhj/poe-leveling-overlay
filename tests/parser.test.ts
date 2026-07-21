@@ -25,6 +25,17 @@ test('parses a level-up with name and class', () => {
   assert.deepEqual(ev, { kind: 'levelUp', name: 'MyExile', charClass: 'Marauder', level: 2 })
 })
 
+test('parses an Izaro voice line (the trial-completion signal)', () => {
+  // Real capture (2026-07-21): Izaro narrates as you finish a Trial of Ascendancy.
+  const ev = parser.parseLine(
+    '2026/07/21 19:43:28 221309484 cffb06dd [INFO Client 27740] Izaro: Shine boldly so that all might find you when the night falls.'
+  )
+  assert.deepEqual(ev, {
+    kind: 'izaro',
+    line: 'Shine boldly so that all might find you when the night falls.'
+  })
+})
+
 test('drops chat lines before parsing — a pasted level-up cannot spoof', () => {
   const spoof =
     '2024/01/15 10:03:00 400 cffb0734 [INFO Client 1234] $Global 820: RandomTrader: MyExile (Marauder) is now level 99'
@@ -61,7 +72,7 @@ test('real capture: every line parses and the event mix is right', () => {
   const events = lines.map((l) => parser.parseLine(l))
   events.forEach((e, i) => assert.ok(e !== null, `unparsed real line ${i + 1}: ${lines[i]}`))
 
-  const byKind = { areaGenerated: 0, levelUp: 0, zoneEntered: 0 }
+  const byKind = { areaGenerated: 0, levelUp: 0, zoneEntered: 0, izaro: 0 }
   for (const e of events) byKind[e!.kind]++
   assert.equal(byKind.levelUp, 3)
   assert.equal(byKind.areaGenerated + byKind.zoneEntered, lines.length - 3)

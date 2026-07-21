@@ -21,6 +21,8 @@ export class TrialsService {
     this.log = log
     this.engine = new TrialsEngine()
     log.addAreaListener((area) => this.onZone(area.name))
+    // Izaro's plaque line identifies the trial you just finished — auto-check it.
+    log.addIzaroListener((line) => this.onIzaro(line))
   }
 
   start(): void {
@@ -50,6 +52,11 @@ export class TrialsService {
   private onZone(zoneName: string): void {
     this.syncCharacter()
     if (this.engine.applyZone(zoneName)) this.afterChange()
+  }
+
+  private onIzaro(line: string): void {
+    this.syncCharacter()
+    if (this.engine.completeByIzaro(line)) this.afterChange()
   }
 
   private syncCharacter(): void {

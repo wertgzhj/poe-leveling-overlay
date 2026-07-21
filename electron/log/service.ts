@@ -25,6 +25,8 @@ export class LogService {
   private areaListeners: Array<(area: AreaState) => void> = []
   /** In-main consumers of bound-character level changes (e.g. the gem panel). */
   private levelListeners: Array<(level: number) => void> = []
+  /** In-main consumers of Izaro voice lines (the trials service). */
+  private izaroListeners: Array<(line: string) => void> = []
 
   constructor(overlay: OverlayController) {
     this.overlay = overlay
@@ -78,6 +80,10 @@ export class LogService {
     this.levelListeners.push(listener)
   }
 
+  addIzaroListener(listener: (line: string) => void): void {
+    this.izaroListeners.push(listener)
+  }
+
   getSnapshot(): LogSnapshot {
     return {
       status: this.watcher.status(),
@@ -129,7 +135,12 @@ export class LogService {
   private onLines(lines: string[]): void {
     for (const line of lines) {
       const ev = this.parser.parseLine(line)
-      if (ev) this.tracker.handle(ev)
+      if (!ev) continue
+      if (ev.kind === 'izaro') {
+        for (const listener of this.izaroListeners) listener(ev.line)
+        continue
+      }
+      this.tracker.handle(ev)
     }
   }
 

@@ -1,10 +1,11 @@
 {
-  "_note": "Patterns (plan §8). areaGenerated, levelUp and zoneEntered are VERIFIED verbatim against a real capture (fixtures/act1-real.log, 2026-07-17). The 'chat' sigil filter remains assumption-based — chat lines are stripped from committed fixtures, so revisit it if a real chat line ever gets through. Regexes use named groups; only the distinctive substring is matched, so the timestamp/log-tag prefix is ignored. The tracker drops chat lines BEFORE parsing (privacy §11.1 + prevents a whisper from spoofing a level-up or zone).",
+  "_note": "Patterns (plan §8). areaGenerated, levelUp, zoneEntered and izaro are VERIFIED verbatim against real captures (fixtures/act1-real.log 2026-07-17; an Izaro trial line 2026-07-21). The 'chat' sigil filter remains assumption-based — chat lines are stripped from committed fixtures, so revisit it if a real chat line ever gets through. Regexes use named groups; only the distinctive substring is matched, so the timestamp/log-tag prefix is ignored. The tracker drops chat lines BEFORE parsing (privacy §11.1 + prevents a whisper from spoofing a level-up or zone). izaro captures Izaro's NPC voice line (no channel sigil, so it isn't dropped as chat); each trial has a distinct plaque line, so the trials engine maps the captured line to the exact trial it completes.",
   "language": "en",
   "patterns": {
     "chat": "\\] (?:[$#@%&]|To |From )",
     "areaGenerated": "Generating level (?<areaLevel>\\d+) area \"(?<areaId>[^\"]+)\"",
     "levelUp": "\\] : (?<name>[^:()]+?) \\((?<class>[A-Za-z]+)\\) is now level (?<level>\\d+)",
-    "zoneEntered": "\\] : You have entered (?<zoneName>.+?)\\.\\s*$"
+    "zoneEntered": "\\] : You have entered (?<zoneName>.+?)\\.\\s*$",
+    "izaro": "\\] Izaro: (?<line>.+)"
   }
 }
