@@ -13,7 +13,7 @@
     "typecheck:node": "tsc -p tsconfig.node.json --noEmit",
     "typecheck:web": "tsc -p tsconfig.json --noEmit",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
-    "test": "node --experimental-strip-types --test tests/parser.test.ts tests/tracker.test.ts tests/watcher.test.ts tests/guide.test.ts tests/profile.test.ts tests/pob.test.ts tests/trials.test.ts tests/editor.test.ts tests/gem-cargo.test.ts",
+    "test": "node --experimental-strip-types --test tests/parser.test.ts tests/tracker.test.ts tests/overlay-mouse.test.ts tests/watcher.test.ts tests/guide.test.ts tests/profile.test.ts tests/pob.test.ts tests/trials.test.ts tests/editor.test.ts tests/gem-cargo.test.ts",
     "sanitize": "node --experimental-strip-types scripts/sanitize-fixtures.ts",
     "import-pob": "node --experimental-strip-types scripts/import-pob.ts",
     "fetch-gems": "node --experimental-strip-types scripts/fetch-gem-data.ts",
