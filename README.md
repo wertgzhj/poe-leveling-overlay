@@ -96,8 +96,10 @@ Two things to know:
 | Guide: previous step | `Ctrl+Shift+P` | Reopens the last completed step |
 
 The overlay has **Guide**, **Gems** and **Trials** tabs. The Trials tab tracks the
-six normal-Labyrinth Trials of Ascendancy — it auto-checks a trial when you enter its
-zone, and you can click any trial to correct it; all six unlock the Labyrinth.
+six normal-Labyrinth Trials of Ascendancy — it **auto-checks a trial when you finish
+it**: Izaro speaks a distinct plaque line as you complete each one, and the overlay
+maps that line to the right trial. It also shows a hint while you're standing in a
+trial's zone, and lets you click any trial to correct it; all six unlock the Labyrinth.
 
 All hotkeys are rebindable in-app: open **Settings** (the ⚙ button in the overlay, or
 the tray → *Settings…*), click a binding, and press the new combo — the change takes

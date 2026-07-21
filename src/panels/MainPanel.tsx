@@ -302,8 +302,8 @@ function TrialsBody(): React.JSX.Element {
         )
       })}
       <p className="mt-1 px-1 text-[10px] text-overlay-muted">
-        Entering a trial&apos;s zone shows a hint — click the trial (or the hint&apos;s Done button)
-        once you actually complete it. All six unlock the Labyrinth.
+        Finishing a trial auto-checks it (Izaro&apos;s plaque line names the trial);
+        the hint and a manual click are fallbacks. All six unlock the Labyrinth.
       </p>
     </>
   )

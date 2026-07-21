@@ -61,11 +61,13 @@ Then, in Path of Exile (**Windowed Fullscreen**):
    overlay mid-session — the Gems tab must show the correct stage immediately (not
    stage 1 until the next level-up).
 6. **Trials (P6):** entering a trial zone (e.g. The Lower Prison) shows an amber
-   **"Trial of Ascendancy in this zone"** hint (on every tab) — it is **not**
-   auto-checked; click the hint's *Done ✓* (or the trial row) when you complete it.
-   **Bonus capture:** when you finish a trial plaque, grab the exact `Client.txt`
-   line (Select-String on `Trial` / `Ascendancy`) — with it, auto-complete can be
-   wired properly.
+   **"Trial of Ascendancy in this zone"** hint (on every tab). **Completing** the
+   trial now **auto-checks** it — Izaro speaks a distinct plaque line as you finish
+   each trial, and the overlay maps that line to the exact trial (zone-independent).
+   Confirm it ticks the **right** trial at the moment you finish; the hint's *Done ✓*
+   and clicking a trial remain as manual fallbacks. (If a line doesn't register, the
+   six fragments live in `NORMAL_TRIALS` — `electron/trials/engine.ts` — and the
+   capture pattern in `data/log-patterns/en.json`.)
 7. **Editor:** tray → *Edit routes & profile…* (or the button in Settings) opens a
    normal window. Add/edit a step on an act, hit **Save** — the Guide tab reflects it
    without a restart. Same for the Profile tab → the Gems tab.
@@ -107,9 +109,12 @@ updates as *disabled*; an unreachable feed shows *Couldn't check* and never nags
   + support gem each class begins with (owner-confirmed, validated against the gem list),
   so the overlay marks them "✓ start" and never tells you to buy/quest them. Edit + rebuild
   if a patch changes them.
-- **Trial completion line:** when you finish a trial plaque, capture the exact
-  `Client.txt` line (Select-String `Trial` / `Ascendancy`) so auto-complete can be
-  wired; until then completion is the one-click hint/manual toggle.
+- **Trial auto-complete: WIRED** (2026-07-21). Izaro speaks a distinct plaque line
+  in `Client.txt` (`] Izaro: …`, verified from real captures) as you finish each
+  trial; the engine maps each line straight to its trial, so it's zone-independent
+  and his other chatter never counts. Manual toggle stays as a fallback. If a patch
+  changes his lines, update the fragments in `NORMAL_TRIALS`
+  (`electron/trials/engine.ts`).
 - **Code signing:** the release is unsigned (SmartScreen warning) — a paid cert is the
   fix; backlog.
 

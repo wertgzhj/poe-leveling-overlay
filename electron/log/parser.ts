@@ -8,24 +8,29 @@ export interface LogPatterns {
   areaGenerated: string
   levelUp: string
   zoneEntered: string
+  /** Izaro's voice line — he speaks when a Trial of Ascendancy is completed. */
+  izaro?: string
 }
 
 export type ParsedLogEvent =
   | { kind: 'areaGenerated'; areaId: string; areaLevel: number }
   | { kind: 'levelUp'; name: string; charClass: string; level: number }
   | { kind: 'zoneEntered'; zoneName: string }
+  | { kind: 'izaro'; line: string }
 
 export class LogParser {
   private readonly chat: RegExp | null
   private readonly areaGenerated: RegExp
   private readonly levelUp: RegExp
   private readonly zoneEntered: RegExp
+  private readonly izaro: RegExp | null
 
   constructor(patterns: LogPatterns) {
     this.chat = patterns.chat ? new RegExp(patterns.chat) : null
     this.areaGenerated = new RegExp(patterns.areaGenerated)
     this.levelUp = new RegExp(patterns.levelUp)
     this.zoneEntered = new RegExp(patterns.zoneEntered)
+    this.izaro = patterns.izaro ? new RegExp(patterns.izaro) : null
   }
 
   /**
@@ -61,6 +66,12 @@ export class LogParser {
     if (zone?.groups) {
       return { kind: 'zoneEntered', zoneName: zone.groups['zoneName'] }
     }
+
+    // Izaro narrates the Trials of Ascendancy — his plaque line identifies which
+    // trial you just finished (the trials engine maps the line -> trial). Not
+    // gated by the chat filter: his line has no channel sigil, so it survives.
+    const izaro = this.izaro?.exec(line)
+    if (izaro?.groups) return { kind: 'izaro', line: izaro.groups['line'].trim() }
 
     return null
   }
