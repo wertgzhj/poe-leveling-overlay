@@ -93,6 +93,7 @@ export function registerIpc(
   ipcMain.on(Channels.overlayHoverUi, (_e, over: unknown) => overlay.setHoverUi(!!over))
 
   ipcMain.handle(Channels.logGetSnapshot, () => log.getSnapshot())
+  ipcMain.handle(Channels.logDetectCharacter, () => log.detectCharacter())
 
   ipcMain.handle(Channels.guideGet, () => guide.snapshot())
   ipcMain.on(Channels.guideToggleStep, (_e, stepId: unknown) => {

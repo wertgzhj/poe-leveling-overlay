@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import {
   Channels,
   type AppInfo,
+  type DetectedCharacter,
   type EditorLoad,
   type EditorSaveResult,
   type GuideState,
@@ -29,6 +30,8 @@ const api = {
     subscribe(Channels.overlayState, cb),
 
   getLogSnapshot: (): Promise<LogSnapshot> => ipcRenderer.invoke(Channels.logGetSnapshot),
+  detectCharacter: (): Promise<DetectedCharacter | null> =>
+    ipcRenderer.invoke(Channels.logDetectCharacter),
   onLogStatus: (cb: (status: unknown) => void): (() => void) =>
     subscribe(Channels.logStatus, cb),
   onLogSnapshot: (cb: (snap: LogSnapshot) => void): (() => void) =>

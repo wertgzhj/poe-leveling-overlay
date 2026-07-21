@@ -47,6 +47,9 @@ export const Channels = {
   playerLevelUp: 'player:levelup',
   /** renderer -> main (invoke): current status + tracker state + recent events */
   logGetSnapshot: 'log:get-snapshot',
+  /** renderer -> main (invoke): re-detect + track the character from the most
+   *  recent level-up in the log; returns the detected character or null. */
+  logDetectCharacter: 'log:detect-character',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
   /** renderer -> main (invoke): current guide state */
@@ -117,6 +120,15 @@ export interface LogSnapshot {
   status: WatcherStatus
   state: TrackerSnapshot
   recent: LogEventSummary[]
+}
+
+/** The character the log says you're on now — from the most recent level-up —
+ *  returned by the detect-character action. null = no level-up seen in the log
+ *  yet (Client.txt only reveals a name when a character levels up). */
+export interface DetectedCharacter {
+  name: string
+  charClass: string
+  level: number
 }
 
 export interface GuideState {

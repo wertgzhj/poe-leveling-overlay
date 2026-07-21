@@ -75,6 +75,12 @@ interface TrackerStateBridge {
   level: number | null
 }
 
+interface DetectedCharacterBridge {
+  name: string
+  charClass: string
+  level: number
+}
+
 interface LogEventSummaryBridge {
   kind: 'area' | 'levelup'
   ts: number
@@ -283,6 +289,7 @@ interface OverlayBridge {
   getState(): Promise<OverlayStateBridge>
   onState(cb: (state: OverlayStateBridge) => void): () => void
   getLogSnapshot(): Promise<LogSnapshotBridge>
+  detectCharacter(): Promise<DetectedCharacterBridge | null>
   onLogStatus(cb: (status: WatcherStatusBridge) => void): () => void
   onLogSnapshot(cb: (snap: LogSnapshotBridge) => void): () => void
   onAreaEntered(cb: (area: AreaStateBridge) => void): () => void

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
 import { UpdateBanner } from './UpdateBanner'
@@ -41,6 +42,30 @@ function ResizeGrip(): React.JSX.Element {
     window.addEventListener('pointerup', up)
   }
   return <div className="resize-grip" onPointerDown={onPointerDown} title="Drag to resize" />
+}
+
+// Manual "who am I logged in as?" — re-detects the character from your most
+// recent level-up (the only character signal Client.txt carries) and locks
+// tracking onto it. Flashes the result for a few seconds; the tracker strip
+// itself also updates via the pushed snapshot. Needs interactive mode to click
+// (like the ⚙ and step buttons).
+function DetectCharButton(): React.JSX.Element {
+  const [flash, setFlash] = useState<string | null>(null)
+  const onClick = (): void => {
+    void window.overlay?.detectCharacter().then((found) => {
+      setFlash(found ? `✓ ${found.name}` : 'no level-up yet')
+      window.setTimeout(() => setFlash(null), 3000)
+    })
+  }
+  return (
+    <button
+      onClick={onClick}
+      title="Detect the character you're logged in as (from your most recent level-up)"
+      className="no-drag max-w-[45%] shrink-0 truncate rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-overlay-muted hover:text-overlay-text"
+    >
+      {flash ?? '⟳ character'}
+    </button>
+  )
 }
 
 function trackerLine(
@@ -157,7 +182,8 @@ export function MainPanel(): React.JSX.Element {
               (logStatus?.state === 'watching' ? 'bg-emerald-400' : 'bg-white/25')
             }
           />
-          <span className="truncate">{trackerLine(logStatus, tracked)}</span>
+          <span className="min-w-0 flex-1 truncate">{trackerLine(logStatus, tracked)}</span>
+          <DetectCharButton />
         </div>
 
         <TrialHint />

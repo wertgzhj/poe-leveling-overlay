@@ -47,6 +47,31 @@ test('an explicit binding is NOT overridden by entering the Twilight Strand', ()
   assert.equal(tracker.snapshot().character, 'MyMain') // still pinned
 })
 
+test('detect character locks onto the most recent level-up, even after switching', () => {
+  const { tracker } = makeTracker() // auto mode
+  assert.equal(tracker.detectCurrentCharacter(), null) // no level-up seen yet
+
+  feed(tracker, '… [INFO Client 1] : Alpha (Witch) is now level 10')
+  feed(tracker, '… [INFO Client 1] : Beta (Marauder) is now level 3')
+
+  // Auto-adoption stuck on the first-seen character...
+  assert.equal(tracker.snapshot().character, 'Alpha')
+  // ...but detect jumps to whoever most recently levelled (you switched).
+  const found = tracker.detectCurrentCharacter()
+  assert.deepEqual(found, { name: 'Beta', charClass: 'Marauder', level: 3 })
+  assert.equal(tracker.snapshot().character, 'Beta')
+  assert.equal(tracker.snapshot().level, 3)
+})
+
+test('detect reports the log character but an explicit pin still wins tracking', () => {
+  const { tracker } = makeTracker('Pinned')
+  feed(tracker, '… [INFO Client 1] : Alpha (Witch) is now level 10')
+  const found = tracker.detectCurrentCharacter()
+  assert.deepEqual(found, { name: 'Alpha', charClass: 'Witch', level: 10 })
+  // The explicit binding still governs tracking (party-play safety).
+  assert.equal(tracker.snapshot().character, 'Pinned')
+})
+
 test('areaGenerated drives the area with mapped display name + monster level', () => {
   const { tracker, areas } = makeTracker()
   feed(tracker, '… [DEBUG Client 1] Generating level 1 area "1_1_town" with seed 7')

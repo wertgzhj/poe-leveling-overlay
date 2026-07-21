@@ -62,6 +62,9 @@ export class ProgressTracker {
   private levelUpCounts = new Map<string, number>()
   /** Latest level/class seen per character name (any name, bound or not). */
   private lastSeen = new Map<string, { level: number; charClass: string }>()
+  /** Name from the most recent level-up (backscan tail + live) — the "who am I
+   *  playing now" signal for the manual detect-character action. */
+  private lastLevelUpName: string | null = null
 
   private area: AreaState | null = null
   /** A Generating line was seen and its localized "You have entered" is still expected. */
@@ -85,6 +88,22 @@ export class ProgressTracker {
 
   setBoundCharacter(name: string | null): void {
     this.explicitBinding = normalizeName(name)
+  }
+
+  /**
+   * Manual "who am I logged in as?" — adopt the character from the most recent
+   * level-up seen in the log (backscan tail + live lines). A level-up is the
+   * only place Client.txt names your character, so one that hasn't levelled in
+   * the retained log can't be found (returns null). Sets the adopted binding;
+   * an explicit settings binding still wins for tracking. Safe against party
+   * hijack — adoptedBinding ends up set, so a partymate's level-up won't grab it.
+   */
+  detectCurrentCharacter(): { name: string; charClass: string; level: number } | null {
+    const name = this.lastLevelUpName
+    if (!name) return null
+    this.adoptedBinding = name
+    const seen = this.lastSeen.get(name)
+    return { name, charClass: seen?.charClass ?? '', level: seen?.level ?? 0 }
   }
 
   snapshot(): TrackerSnapshot {
@@ -191,6 +210,7 @@ export class ProgressTracker {
         break
       }
       case 'levelUp': {
+        this.lastLevelUpName = ev.name
         this.levelUpCounts.set(ev.name, (this.levelUpCounts.get(ev.name) ?? 0) + 1)
         this.lastSeen.set(ev.name, { level: ev.level, charClass: ev.charClass })
         if (!this.explicitBinding && !this.adoptedBinding && emit) {
