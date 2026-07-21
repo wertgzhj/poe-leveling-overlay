@@ -6,6 +6,7 @@ import { GemData, vendorCostFor, normalizeGemName } from '../electron/profile/ge
 import {
   actFromAreaId,
   activeStageIndex,
+  stepStageView,
   resolveStage,
   acquisitionsForStage
 } from '../electron/profile/engine.ts'
@@ -388,6 +389,44 @@ test('acquisition plan interleaves rewards and buys by act, rewards first on tie
     it.kind === 'reward' ? `take:${it.group.gems.map((g) => g.gem).join('+')}` : `buy:${it.entry.gem}`
   )
   assert.deepEqual(labels, ['take:Reward A1', 'buy:Buy A1', 'take:Reward A2', 'buy:Buy A2'])
+})
+
+test('the plan hides gems from acts you have not reached yet', () => {
+  const gems = new GemData({
+    'Buy A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    'Buy A3': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'act', class: 'Witch' },
+      stages: [{ range: [1, 40], socketGroups: [{ gems: ['Buy A1', 'Buy A3'] }] }],
+      gemPlan: [{ gem: 'Buy A1' }, { gem: 'Buy A3' }]
+    })
+  ).profile!
+  const gemsOf = (acq: ReturnType<typeof acquisitionsForStage>): string[] =>
+    acq.plan.map((it) => (it.kind === 'buy' ? it.entry.gem : ''))
+
+  // In Act 1 the Act 3 buy isn't reachable yet, so it's kept off the plan...
+  assert.deepEqual(gemsOf(acquisitionsForStage(profile, 0, gems, 1)), ['Buy A1'])
+  // ...though the purchases list itself (drives the link tags) still has both.
+  assert.deepEqual(
+    acquisitionsForStage(profile, 0, gems, 1).purchases.map((e) => e.gem),
+    ['Buy A1', 'Buy A3']
+  )
+  // Reaching Act 3 reveals it; unknown current act filters nothing.
+  assert.deepEqual(gemsOf(acquisitionsForStage(profile, 0, gems, 3)), ['Buy A1', 'Buy A3'])
+  assert.equal(acquisitionsForStage(profile, 0, gems).plan.length, 2)
+})
+
+test('stepStageView pages stages and snaps back to auto on the live one', () => {
+  // Live stage is index 2 of 5; null = following the level.
+  assert.equal(stepStageView(null, -1, 2, 5), 1) // step back pins stage 1
+  assert.equal(stepStageView(1, -1, 2, 5), 0) // and again
+  assert.equal(stepStageView(0, -1, 2, 5), 0) // clamped at the start
+  assert.equal(stepStageView(1, 1, 2, 5), null) // stepping onto the live stage resumes auto
+  assert.equal(stepStageView(3, 1, 2, 5), 4) // page forward past live
+  assert.equal(stepStageView(4, 1, 2, 5), 4) // clamped at the end
+  assert.equal(stepStageView(null, -1, 0, 0), null) // no stages
 })
 
 test('a class starting gem is marked and kept off the buy/reward lists', () => {

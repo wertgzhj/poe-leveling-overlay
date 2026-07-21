@@ -541,6 +541,11 @@ function GemBody(): React.JSX.Element {
   const stage = profile.activeStage
   const cursorStep = guide?.route?.steps.find((s) => s.id === guide.cursorStepId)
   const atReward = cursorStep?.rewardHint === true
+  // Manual stage paging (◀/▶): the shown stage may differ from the live one.
+  const { stageCount, viewedIndex, liveIndex } = profile
+  const onLiveStage = viewedIndex === liveIndex
+  const canPrev = viewedIndex > 0
+  const canNext = viewedIndex >= 0 && viewedIndex < stageCount - 1
   // One merged, chronologically-ordered acquisition list (rewards + buys),
   // reward-first on ties (owner: don't buy what you can take free).
   const plan = profile.acquisitions?.plan ?? []
@@ -606,9 +611,43 @@ function GemBody(): React.JSX.Element {
 
       {stage ? (
         <>
-          <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
-            {stage.label}
-          </div>
+          {stageCount > 1 ? (
+            <div className="mb-1 flex items-center gap-1 px-1">
+              <button
+                disabled={!canPrev}
+                onClick={() => window.overlay?.stageStep(-1)}
+                title="Previous stage"
+                className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
+              >
+                ◀
+              </button>
+              <span className="flex-1 truncate text-center text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+                {stage.label}
+              </span>
+              <button
+                disabled={!canNext}
+                onClick={() => window.overlay?.stageStep(1)}
+                title="Next stage"
+                className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
+              >
+                ▶
+              </button>
+            </div>
+          ) : (
+            <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+              {stage.label}
+            </div>
+          )}
+          {!onLiveStage && (
+            <button
+              onClick={() => window.overlay?.stageToLive()}
+              title="Return to the stage for your current level"
+              className="mb-1.5 flex w-full items-center justify-center gap-1 rounded bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200 hover:bg-amber-400/20"
+            >
+              Viewing {viewedIndex < liveIndex ? 'an earlier' : 'a later'} stage
+              {profile.level != null ? ` · you're level ${profile.level}` : ''} — ▸ jump to current
+            </button>
+          )}
           {stage.groups.map((group, i) => (
             <SocketGroup key={i} group={group} acq={acqByGem} />
           ))}

@@ -62,6 +62,11 @@ export const Channels = {
   profileState: 'profile:state',
   /** renderer -> main (invoke): current profile snapshot */
   profileGet: 'profile:get',
+  /** renderer -> main: page the viewed gem stage by a delta (±1); pins a manual
+   *  view until it lands back on the live stage. */
+  profileStageStep: 'profile:stage-step',
+  /** renderer -> main: drop the manual gem-stage view, resume auto-follow. */
+  profileStageLive: 'profile:stage-live',
   /** renderer -> main (invoke): import a PoB code/link into an active profile */
   pobImport: 'pob:import',
   /** renderer -> main: open the editor window */
@@ -148,9 +153,17 @@ export interface ProfileSnapshot {
   level: number | null
   /** The tracked class when it differs from the profile's class, else null (§8). */
   classMismatch: string | null
+  /** The stage being shown (the viewed one — see viewedIndex vs liveIndex). */
   activeStage: ResolvedStage | null
   nextStage: ResolvedStage | null
   acquisitions: Acquisitions | null
+  /** Total stages in the profile (for the ◀/▶ paging bounds). */
+  stageCount: number
+  /** Index of the stage currently shown (may be a manual view), -1 if none. */
+  viewedIndex: number
+  /** Index of the stage the tracked level maps to, -1 if none. When it differs
+   *  from viewedIndex you're looking at a manually-paged stage, not the live one. */
+  liveIndex: number
 }
 
 export interface PobImportResponse {
