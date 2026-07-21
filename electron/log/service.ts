@@ -7,7 +7,7 @@ import { LogParser } from './parser.ts'
 import { ProgressTracker, type AreaState, type LevelUpEvent } from './tracker.ts'
 import { LogFileWatcher } from './watcher.ts'
 import { store } from '../settings.ts'
-import { Channels, type LogEventSummary, type LogSnapshot } from '../channels.ts'
+import { Channels, type DetectedCharacter, type LogEventSummary, type LogSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
 import patternsEn from '../../data/log-patterns/en.json'
 import areasEn from '../../data/areas/en.json'
@@ -84,6 +84,16 @@ export class LogService {
       state: this.tracker.snapshot(),
       recent: this.recent
     }
+  }
+
+  /** Manual re-detect (overlay button): lock tracking onto the character from
+   *  the most recent level-up in the log. Returns the detected character, or
+   *  null when the log has no level-up yet. */
+  detectCharacter(): DetectedCharacter | null {
+    const found = this.tracker.detectCurrentCharacter()
+    this.persistSoon()
+    this.pushSnapshot()
+    return found
   }
 
   private makeTracker(): ProgressTracker {
