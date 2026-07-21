@@ -115,6 +115,9 @@ updates as *disabled*; an unreachable feed shows *Couldn't check* and never nags
 
 ## Releasing (long-term)
 
+Full workflow (testing safely, cutting a release from the GitHub UI, versioning, and
+the naming/rename gotchas): **[`../CONTRIBUTING.md`](../CONTRIBUTING.md)**. In short:
+
 - **Dev build:** Actions → *Build Windows* → *Run workflow*. Artifact only, version stays
   `0.0.0`, no release.
 - **Real release:** push a tag `vX.Y.Z` (e.g. `v0.1.0`). The workflow builds with that
