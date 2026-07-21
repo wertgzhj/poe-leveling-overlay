@@ -3,7 +3,14 @@
 // acquisition views (reward picks / vendor shopping list) from the gemPlan.
 
 import type { Profile, Stage, CharClass, GemSource } from './profile.ts'
-import { GemData, vendorCostFor, costRank, normalizeGemName, type ColoredGem } from './gems.ts'
+import {
+  GemData,
+  vendorCostFor,
+  costRank,
+  safeLevelRange,
+  normalizeGemName,
+  type ColoredGem
+} from './gems.ts'
 
 export interface ColoredSocketGroup {
   gems: ColoredGem[]
@@ -34,6 +41,8 @@ export interface AcquisitionEntry {
   cost?: string
   /** the class's starting gem — already in inventory, so don't buy/quest it. */
   starting?: boolean
+  /** the gem's level requirement (gems.json) — drives the now/coming-up split. */
+  requiredLevel?: number
 }
 
 export interface Acquisitions {
@@ -66,9 +75,16 @@ export interface RewardGroup {
 /** A single line in the acquisition to-do list — either a quest-reward group
  *  (one in-game pick, possibly a choice between several of your gems) or a
  *  single vendor purchase. */
-export type AcquisitionItem =
+export type AcquisitionItem = (
   | { kind: 'reward'; group: RewardGroup }
   | { kind: 'buy'; entry: AcquisitionEntry }
+) & {
+  /** true when the gem is more than the XP safe-range above your level — show it
+   *  dimmed as "coming up" rather than as an act-now item. */
+  later: boolean
+  /** the gem's (soonest) required level, for the "lvl X" coming-up tag. */
+  atLevel?: number
+}
 
 /** Campaign act from a numeric area id ("2_1_3" -> 2). Word ids (hideouts,
  *  maps) and unknown shapes give null — keep the last known act instead. */
@@ -140,7 +156,8 @@ export function acquisitionsForStage(
   stageIndex: number,
   gems?: GemData,
   currentAct?: number | null,
-  startingGems?: ReadonlySet<string>
+  startingGems?: ReadonlySet<string>,
+  playerLevel?: number | null
 ): Acquisitions {
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
@@ -181,7 +198,7 @@ export function acquisitionsForStage(
   const plan = buildPlan(
     buildRewardGroups(rewards.filter(isNewThisStage), upcoming),
     purchases.filter(isNewThisStage),
-    currentAct
+    playerLevel
   )
   return { rewards, purchases, other, upcoming, rewardGroups, plan }
 }
@@ -195,23 +212,34 @@ export function acquisitionsForStage(
 function buildPlan(
   rewardGroups: RewardGroup[],
   purchases: AcquisitionEntry[],
-  currentAct?: number | null
+  playerLevel?: number | null
 ): AcquisitionItem[] {
-  // You can only take/buy a gem once you've reached its act — an Act 3 buy is
-  // noise while you're still in Act 1 (owner feedback). Unknown act, or unknown
-  // current act, stays visible.
-  const reachable = (act: number | undefined): boolean =>
-    currentAct == null || act == null || act <= currentAct
-  const items: AcquisitionItem[] = [
-    ...rewardGroups
-      .filter((g) => reachable(g.act))
-      .map((group): AcquisitionItem => ({ kind: 'reward', group })),
-    ...purchases.filter((e) => reachable(e.act)).map((entry): AcquisitionItem => ({ kind: 'buy', entry }))
+  const minReq = (entries: AcquisitionEntry[]): number | undefined => {
+    const levels = entries.map((e) => e.requiredLevel).filter((l): l is number => l != null)
+    return levels.length ? Math.min(...levels) : undefined
+  }
+  type Raw = ({ kind: 'reward'; group: RewardGroup } | { kind: 'buy'; entry: AcquisitionEntry }) & {
+    req?: number
+  }
+  const raw: Raw[] = [
+    ...rewardGroups.map((group): Raw => ({ kind: 'reward', group, req: minReq(group.gems) })),
+    ...purchases.map((entry): Raw => ({ kind: 'buy', entry, req: entry.requiredLevel }))
   ]
-  const actOf = (it: AcquisitionItem): number =>
-    (it.kind === 'reward' ? it.group.act : it.entry.act) ?? 99
-  const rewardFirst = (it: AcquisitionItem): number => (it.kind === 'reward' ? 0 : 1)
-  return items.sort((a, b) => actOf(a) - actOf(b) || rewardFirst(a) - rewardFirst(b))
+  // Order by the act you reach each in, reward-first on ties (unchanged).
+  const actOf = (it: Raw): number => (it.kind === 'reward' ? it.group.act : it.entry.act) ?? 99
+  const rewardFirst = (it: Raw): number => (it.kind === 'reward' ? 0 : 1)
+  raw.sort((a, b) => actOf(a) - actOf(b) || rewardFirst(a) - rewardFirst(b))
+  // Nothing is filtered out (owner feedback: act-based hiding vanished too much,
+  // and act detection is unreliable). Instead a gem more than the XP safe-range
+  // above your level is flagged "later" — the UI dims it and shows the level it
+  // comes online. Unknown player level = everything shown as now.
+  const range = playerLevel != null ? safeLevelRange(playerLevel) : null
+  return raw.map((it): AcquisitionItem => {
+    const later = range != null && it.req != null && it.req > (playerLevel as number) + range
+    return it.kind === 'reward'
+      ? { kind: 'reward', group: it.group, later, atLevel: it.req }
+      : { kind: 'buy', entry: it.entry, later, atLevel: it.req }
+  })
 }
 
 /** Cheapest first, then earliest act, then alphabetical (owner priority).
@@ -290,11 +318,19 @@ function classify(
   gems?: GemData,
   startingGems?: ReadonlySet<string>
 ): AcquisitionEntry {
+  const requiredLevel = gems?.info(entry.gem)?.requiredLevel
   // Starting gems are already in inventory — never buy or quest them.
   if (startingGems?.has(normalizeGemName(entry.gem))) {
-    return { gem: entry.gem, count: entry.count, bucket: 'other', starting: true, note: 'you start with it' }
+    return {
+      gem: entry.gem,
+      count: entry.count,
+      bucket: 'other',
+      starting: true,
+      note: 'you start with it',
+      requiredLevel
+    }
   }
-  const cost = vendorCostFor(gems?.info(entry.gem)?.requiredLevel)
+  const cost = vendorCostFor(requiredLevel)
   const authored = entry.source
   if (authored) {
     const bucket = authored.kind === 'questReward' ? 'reward' : authored.kind === 'vendor' ? 'purchase' : 'other'
@@ -306,7 +342,8 @@ function classify(
       npc: authored.npc,
       quest: authored.questId,
       note: authored.note,
-      cost: bucket === 'purchase' ? cost : undefined
+      cost: bucket === 'purchase' ? cost : undefined,
+      requiredLevel
     }
   }
   const src = gems?.earliestSource(entry.gem, cls)
@@ -320,8 +357,9 @@ function classify(
       quest: src.quest,
       note: src.note,
       fallback: src.fallback,
-      cost: src.kind === 'vendor' ? cost : undefined
+      cost: src.kind === 'vendor' ? cost : undefined,
+      requiredLevel
     }
   }
-  return { gem: entry.gem, count: entry.count, bucket: 'other' }
+  return { gem: entry.gem, count: entry.count, bucket: 'other', requiredLevel }
 }
