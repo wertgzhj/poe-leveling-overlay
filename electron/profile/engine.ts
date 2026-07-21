@@ -146,6 +146,19 @@ export function acquisitionsForStage(
   const used = new Set<string>()
   if (stage) for (const g of stage.socketGroups) for (const gem of g.gems) used.add(gem.toLowerCase())
 
+  // Gems already required (socketed) in the PREVIOUS stage are assumed acquired,
+  // so they're dropped from this stage's to-do plan — don't repeat what you've
+  // already handled (owner feedback). Advance-buys are exempt automatically:
+  // they were never in the previous stage's socket groups, so a gem that only
+  // becomes required now still counts as new. The first stage has nothing before
+  // it, and this only touches the plan — the full lists (and link tags) stay put.
+  const prevGems = new Set<string>()
+  if (stageIndex > 0) {
+    const prev = profile.stages[stageIndex - 1]
+    if (prev) for (const g of prev.socketGroups) for (const gem of g.gems) prevGems.add(gem.toLowerCase())
+  }
+  const isNewThisStage = (e: AcquisitionEntry): boolean => !prevGems.has(e.gem.toLowerCase())
+
   const rewards: AcquisitionEntry[] = []
   const purchases: AcquisitionEntry[] = []
   const other: AcquisitionEntry[] = []
@@ -163,7 +176,13 @@ export function acquisitionsForStage(
   const upcoming = upcomingRewards(profile, stageIndex, used, gems, currentAct, startingGems)
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming)
-  const plan = buildPlan(rewardGroups, purchases, currentAct)
+  // Only the to-do plan is deduped against the previous stage; rewardGroups and
+  // the reward/purchase lists (which drive the link-overview tags) stay full.
+  const plan = buildPlan(
+    buildRewardGroups(rewards.filter(isNewThisStage), upcoming),
+    purchases.filter(isNewThisStage),
+    currentAct
+  )
   return { rewards, purchases, other, upcoming, rewardGroups, plan }
 }
 

@@ -418,6 +418,33 @@ test('the plan hides gems from acts you have not reached yet', () => {
   assert.equal(acquisitionsForStage(profile, 0, gems).plan.length, 2)
 })
 
+test('the plan drops gems already required (socketed) in the previous stage', () => {
+  const gems = new GemData({
+    Main: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    NewGem: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'dedup', class: 'Witch' },
+      stages: [
+        { range: [1, 5], socketGroups: [{ gems: ['Main'] }] },
+        { range: [6, 12], socketGroups: [{ gems: ['Main', 'NewGem'] }] }
+      ],
+      gemPlan: [{ gem: 'Main' }, { gem: 'NewGem' }]
+    })
+  ).profile!
+  const buys = (i: number): string[] =>
+    acquisitionsForStage(profile, i, gems, 1).plan.map((it) => (it.kind === 'buy' ? it.entry.gem : ''))
+
+  assert.deepEqual(buys(0), ['Main']) // stage 0: Main is new (nothing before it)
+  assert.deepEqual(buys(1), ['NewGem']) // stage 1: Main carried over -> hidden
+  // ...but the purchases list (which drives the link-overview tags) still has both.
+  assert.deepEqual(
+    acquisitionsForStage(profile, 1, gems, 1).purchases.map((e) => e.gem).sort(),
+    ['Main', 'NewGem']
+  )
+})
+
 test('stepStageView pages stages and snaps back to auto on the live one', () => {
   // Live stage is index 2 of 5; null = following the level.
   assert.equal(stepStageView(null, -1, 2, 5), 1) // step back pins stage 1
