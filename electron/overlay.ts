@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { app, BrowserWindow, screen, type Rectangle } from 'electron'
 import { store } from './settings'
 import { Channels, type OverlayState } from './channels'
+import { shouldIgnoreMouse } from './overlay-mouse'
 
 const RENDERER_DEV_URL = process.env['ELECTRON_RENDERER_URL']
 
@@ -146,15 +147,15 @@ export class OverlayController {
 
   private applyMouseEvents(): void {
     if (!this.win) return
-    // Move mode / settings: the whole window must be grabbable. Click-through
-    // on: everything passes to the game. Otherwise (interactive mode) only the
-    // visible panel captures the mouse — the transparent rest of the window
-    // forwards clicks to the game, driven by hover reports from the renderer
-    // (forward:true keeps mousemove flowing so hover detection still works).
-    let ignore: boolean
-    if (this.moveMode || this.settingsOpen) ignore = false
-    else if (this.clickThrough) ignore = true
-    else ignore = !this.hoverUi
+    // Decision is a pure function (overlay-mouse.ts, unit-tested). forward:true
+    // keeps mousemove flowing so the renderer can keep reporting hover even when
+    // the window is currently ignoring clicks.
+    const ignore = shouldIgnoreMouse({
+      moveMode: this.moveMode,
+      clickThrough: this.clickThrough,
+      settingsOpen: this.settingsOpen,
+      hoverUi: this.hoverUi
+    })
     this.win.setIgnoreMouseEvents(ignore, { forward: true })
   }
 
