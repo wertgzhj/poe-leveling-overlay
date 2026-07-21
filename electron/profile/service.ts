@@ -111,7 +111,14 @@ export class ProfileService {
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
           : null,
       acquisitions: profile
-        ? acquisitionsForStage(profile, stageIndex, this.gems, this.act, this.startingByClass.get(profile.meta.class))
+        ? acquisitionsForStage(
+            profile,
+            stageIndex,
+            this.gems,
+            this.act,
+            this.startingByClass.get(profile.meta.class),
+            this.level
+          )
         : null,
       stageCount: profile ? profile.stages.length : 0,
       viewedIndex: stageIndex,

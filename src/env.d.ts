@@ -162,6 +162,7 @@ interface AcquisitionEntryBridge {
   fromLevel?: number
   cost?: string
   starting?: boolean
+  requiredLevel?: number
 }
 
 interface RewardGroupBridge {
@@ -171,9 +172,10 @@ interface RewardGroupBridge {
   gems: AcquisitionEntryBridge[]
 }
 
-type AcquisitionItemBridge =
+type AcquisitionItemBridge = (
   | { kind: 'reward'; group: RewardGroupBridge }
   | { kind: 'buy'; entry: AcquisitionEntryBridge }
+) & { later: boolean; atLevel?: number }
 
 interface AcquisitionsBridge {
   rewards: AcquisitionEntryBridge[]

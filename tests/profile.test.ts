@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { parseProfile, type Profile } from '../electron/profile/profile.ts'
-import { GemData, vendorCostFor, normalizeGemName } from '../electron/profile/gems.ts'
+import { GemData, vendorCostFor, safeLevelRange, normalizeGemName } from '../electron/profile/gems.ts'
 import {
   actFromAreaId,
   activeStageIndex,
@@ -391,31 +391,36 @@ test('acquisition plan interleaves rewards and buys by act, rewards first on tie
   assert.deepEqual(labels, ['take:Reward A1', 'buy:Buy A1', 'take:Reward A2', 'buy:Buy A2'])
 })
 
-test('the plan hides gems from acts you have not reached yet', () => {
+test('safeLevelRange grows by one every 16 levels', () => {
+  assert.equal(safeLevelRange(1), 3)
+  assert.equal(safeLevelRange(15), 3)
+  assert.equal(safeLevelRange(16), 4)
+  assert.equal(safeLevelRange(31), 4)
+  assert.equal(safeLevelRange(32), 5)
+})
+
+test('the plan flags gems past the safe level range as coming up, without hiding them', () => {
   const gems = new GemData({
-    'Buy A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
-    'Buy A3': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa', classes: ['Witch'] }] }
+    Soon: { attr: 'int', requiredLevel: 10, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    Later: { attr: 'int', requiredLevel: 31, sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa', classes: ['Witch'] }] }
   })
   const profile = parseProfile(
     JSON.stringify({
-      meta: { name: 'act', class: 'Witch' },
-      stages: [{ range: [1, 40], socketGroups: [{ gems: ['Buy A1', 'Buy A3'] }] }],
-      gemPlan: [{ gem: 'Buy A1' }, { gem: 'Buy A3' }]
+      meta: { name: 'safezone', class: 'Witch' },
+      stages: [{ range: [1, 40], socketGroups: [{ gems: ['Soon', 'Later'] }] }],
+      gemPlan: [{ gem: 'Soon' }, { gem: 'Later' }]
     })
   ).profile!
-  const gemsOf = (acq: ReturnType<typeof acquisitionsForStage>): string[] =>
-    acq.plan.map((it) => (it.kind === 'buy' ? it.entry.gem : ''))
-
-  // In Act 1 the Act 3 buy isn't reachable yet, so it's kept off the plan...
-  assert.deepEqual(gemsOf(acquisitionsForStage(profile, 0, gems, 1)), ['Buy A1'])
-  // ...though the purchases list itself (drives the link tags) still has both.
-  assert.deepEqual(
-    acquisitionsForStage(profile, 0, gems, 1).purchases.map((e) => e.gem),
-    ['Buy A1', 'Buy A3']
-  )
-  // Reaching Act 3 reveals it; unknown current act filters nothing.
-  assert.deepEqual(gemsOf(acquisitionsForStage(profile, 0, gems, 3)), ['Buy A1', 'Buy A3'])
-  assert.equal(acquisitionsForStage(profile, 0, gems).plan.length, 2)
+  // At level 12 the safe range is 3 (threshold 15): Soon (lvl 10) is now,
+  // Later (lvl 31) is coming up — but nothing is dropped.
+  const plan = acquisitionsForStage(profile, 0, gems, 1, undefined, 12).plan
+  assert.equal(plan.length, 2)
+  const by = new Map(plan.map((it) => [it.kind === 'buy' ? it.entry.gem : '', it]))
+  assert.equal(by.get('Soon')?.later, false)
+  assert.equal(by.get('Later')?.later, true)
+  assert.equal(by.get('Later')?.atLevel, 31)
+  // Unknown player level flags nothing.
+  assert.equal(acquisitionsForStage(profile, 0, gems, 1).plan.every((it) => !it.later), true)
 })
 
 test('the plan drops gems already required (socketed) in the previous stage', () => {

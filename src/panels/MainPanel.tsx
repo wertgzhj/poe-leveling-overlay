@@ -409,7 +409,13 @@ function GuideBody(): React.JSX.Element {
 // One quest's reward gems. When several of your build's gems come from the same
 // quest you can only pick ONE — the rest must be bought — so that's flagged
 // loudly. Act + quest are shown once per group (owner feedback).
-function RewardGroupRow({ group }: { group: RewardGroupBridge }): React.JSX.Element {
+function RewardGroupRow({
+  group,
+  comingUpAt
+}: {
+  group: RewardGroupBridge
+  comingUpAt?: number
+}): React.JSX.Element {
   const context = (e: AcquisitionEntryBridge): string =>
     e.fromLevel ? ` — for later (lvl ${e.fromLevel}+)` : ''
   const where = [group.act ? `Act ${group.act}` : null, group.quest].filter(Boolean).join(' · ')
@@ -425,6 +431,9 @@ function RewardGroupRow({ group }: { group: RewardGroupBridge }): React.JSX.Elem
           {e.gem}
           {where && <span className="text-overlay-muted"> · {where}</span>}
           {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+          {comingUpAt != null && !e.fromLevel && (
+            <span className="text-overlay-muted"> · lvl {comingUpAt}</span>
+          )}
         </span>
         <span className="shrink-0 text-[10px] text-emerald-400/80" title="free quest reward">
           free
@@ -453,7 +462,13 @@ function RewardGroupRow({ group }: { group: RewardGroupBridge }): React.JSX.Elem
 // A single vendor purchase in the merged acquisition box. The cost sits on the
 // right in gold, mirroring the "free" tag on reward lines, so the take-it-free
 // vs. pay-for-it trade-off reads at a glance (owner: cost matters a lot).
-function BuyRow({ entry: e }: { entry: AcquisitionEntryBridge }): React.JSX.Element {
+function BuyRow({
+  entry: e,
+  comingUpAt
+}: {
+  entry: AcquisitionEntryBridge
+  comingUpAt?: number
+}): React.JSX.Element {
   const where = [e.npc ?? 'vendor', e.act ? `Act ${e.act}` : null].filter(Boolean).join(' · ')
   return (
     <div className="flex items-baseline gap-1.5 text-xs">
@@ -466,6 +481,7 @@ function BuyRow({ entry: e }: { entry: AcquisitionEntryBridge }): React.JSX.Elem
           {' · '}
           {where}
           {e.fallback && <span title="general vendor — may be available earlier"> ≈</span>}
+          {comingUpAt != null && ` · lvl ${comingUpAt}`}
         </span>
       </span>
       {e.cost && <span className="shrink-0 text-[10px] font-medium text-overlay-accent">{e.cost}</span>}
@@ -592,13 +608,15 @@ function GemBody(): React.JSX.Element {
             Get these gems{atReward ? ' — take rewards now' : ''}
           </div>
           <div className="flex flex-col gap-1.5">
-            {plan.map((item, i) =>
-              item.kind === 'reward' ? (
-                <RewardGroupRow key={i} group={item.group} />
-              ) : (
-                <BuyRow key={i} entry={item.entry} />
-              )
-            )}
+            {plan.map((item, i) => (
+              <div key={i} className={item.later ? 'opacity-50' : ''} title={item.later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}>
+                {item.kind === 'reward' ? (
+                  <RewardGroupRow group={item.group} comingUpAt={item.later ? item.atLevel : undefined} />
+                ) : (
+                  <BuyRow entry={item.entry} comingUpAt={item.later ? item.atLevel : undefined} />
+                )}
+              </div>
+            ))}
           </div>
           {plan.some((it) => it.kind === 'buy' && it.entry.fallback) && (
             <p className="mt-1.5 text-[10px] text-overlay-muted">
