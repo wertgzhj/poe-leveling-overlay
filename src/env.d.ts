@@ -200,6 +200,9 @@ interface ProfileSnapshotBridge {
   activeStage: ResolvedStageBridge | null
   nextStage: ResolvedStageBridge | null
   acquisitions: AcquisitionsBridge | null
+  stageCount: number
+  viewedIndex: number
+  liveIndex: number
 }
 
 interface PobImportResponseBridge {
@@ -300,6 +303,8 @@ interface OverlayBridge {
   guideReset(): void
   getProfile(): Promise<ProfileSnapshotBridge>
   onProfileState(cb: (snap: ProfileSnapshotBridge) => void): () => void
+  stageStep(delta: number): void
+  stageToLive(): void
   pickProfile(): Promise<string | null>
   importPob(input: string): Promise<PobImportResponseBridge>
   getTrials(): Promise<TrialsSnapshotBridge>

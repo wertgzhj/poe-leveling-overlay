@@ -51,6 +51,8 @@ const api = {
   getProfile: (): Promise<ProfileSnapshot> => ipcRenderer.invoke(Channels.profileGet),
   onProfileState: (cb: (snap: ProfileSnapshot) => void): (() => void) =>
     subscribe(Channels.profileState, cb),
+  stageStep: (delta: number): void => ipcRenderer.send(Channels.profileStageStep, delta),
+  stageToLive: (): void => ipcRenderer.send(Channels.profileStageLive),
   pickProfile: (): Promise<string | null> => ipcRenderer.invoke(Channels.dialogPickProfile),
   importPob: (input: string): Promise<PobImportResponse> =>
     ipcRenderer.invoke(Channels.pobImport, input),

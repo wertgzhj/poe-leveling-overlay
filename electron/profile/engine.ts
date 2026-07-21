@@ -100,6 +100,23 @@ export function activeStageIndex(profile: Profile, level: number | null): number
   return fallback
 }
 
+/** Manual stage paging for the Gems tab (owner feedback: you may have missed a
+ *  gem from an earlier level range and need to look back). Given the currently
+ *  viewed index (null = follow the level), step by delta and clamp to range.
+ *  Returns null when it lands back on the live stage — so it resumes auto-follow
+ *  — otherwise the new index to pin. */
+export function stepStageView(
+  viewIndex: number | null,
+  delta: number,
+  liveIndex: number,
+  count: number
+): number | null {
+  if (count <= 0) return null
+  const current = viewIndex ?? liveIndex
+  const next = Math.min(count - 1, Math.max(0, current + delta))
+  return next === liveIndex ? null : next
+}
+
 export function resolveStage(stage: Stage, index: number, gems: GemData): ResolvedStage {
   return {
     index,
@@ -146,7 +163,7 @@ export function acquisitionsForStage(
   const upcoming = upcomingRewards(profile, stageIndex, used, gems, currentAct, startingGems)
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming)
-  const plan = buildPlan(rewardGroups, purchases)
+  const plan = buildPlan(rewardGroups, purchases, currentAct)
   return { rewards, purchases, other, upcoming, rewardGroups, plan }
 }
 
@@ -156,10 +173,21 @@ export function acquisitionsForStage(
  *  gem before spending on the vendor one (owner feedback). Relies on a stable
  *  sort to keep the reward groups' choices-first order and the buys'
  *  cheapest-first order intact within a single act. */
-function buildPlan(rewardGroups: RewardGroup[], purchases: AcquisitionEntry[]): AcquisitionItem[] {
+function buildPlan(
+  rewardGroups: RewardGroup[],
+  purchases: AcquisitionEntry[],
+  currentAct?: number | null
+): AcquisitionItem[] {
+  // You can only take/buy a gem once you've reached its act — an Act 3 buy is
+  // noise while you're still in Act 1 (owner feedback). Unknown act, or unknown
+  // current act, stays visible.
+  const reachable = (act: number | undefined): boolean =>
+    currentAct == null || act == null || act <= currentAct
   const items: AcquisitionItem[] = [
-    ...rewardGroups.map((group): AcquisitionItem => ({ kind: 'reward', group })),
-    ...purchases.map((entry): AcquisitionItem => ({ kind: 'buy', entry }))
+    ...rewardGroups
+      .filter((g) => reachable(g.act))
+      .map((group): AcquisitionItem => ({ kind: 'reward', group })),
+    ...purchases.filter((e) => reachable(e.act)).map((entry): AcquisitionItem => ({ kind: 'buy', entry }))
   ]
   const actOf = (it: AcquisitionItem): number =>
     (it.kind === 'reward' ? it.group.act : it.entry.act) ?? 99

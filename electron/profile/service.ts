@@ -8,7 +8,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchF
 import { join } from 'node:path'
 import { parseProfile, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
-import { actFromAreaId, activeStageIndex, resolveStage, acquisitionsForStage } from './engine.ts'
+import {
+  actFromAreaId,
+  activeStageIndex,
+  stepStageView,
+  resolveStage,
+  acquisitionsForStage
+} from './engine.ts'
 import { store } from '../settings.ts'
 import { Channels, type ProfileSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
@@ -25,6 +31,8 @@ export class ProfileService {
   private level: number | null = null
   /** Campaign act the player is in (from area ids) — scopes the upcoming-rewards list. */
   private act: number | null = null
+  /** Manually paged gem stage (◀/▶). null = follow the tracked level (auto). */
+  private viewIndex: number | null = null
   private watchedPath: string | null = null
 
   /** class -> normalized set of its starting gems (already in inventory). */
@@ -80,7 +88,15 @@ export class ProfileService {
     const profile = this.profile
     const level = this.level
     const trackedClass = this.log.getSnapshot().state.charClass
-    const stageIndex = profile ? activeStageIndex(profile, level) : -1
+    const liveIndex = profile ? activeStageIndex(profile, level) : -1
+    // The shown stage is a pinned manual view (◀/▶) when set and in range,
+    // otherwise the live stage the level maps to.
+    const stageIndex =
+      liveIndex < 0
+        ? -1
+        : this.viewIndex != null
+          ? Math.min(profile!.stages.length - 1, Math.max(0, this.viewIndex))
+          : liveIndex
     const stage = profile && stageIndex >= 0 ? profile.stages[stageIndex] : null
 
     return {
@@ -96,11 +112,32 @@ export class ProfileService {
           : null,
       acquisitions: profile
         ? acquisitionsForStage(profile, stageIndex, this.gems, this.act, this.startingByClass.get(profile.meta.class))
-        : null
+        : null,
+      stageCount: profile ? profile.stages.length : 0,
+      viewedIndex: stageIndex,
+      liveIndex
     }
   }
 
+  /** Page the viewed gem stage (◀/▶). Pins a manual view until it lands back on
+   *  the live stage; a level-up then no longer moves what you're reading. */
+  stageStep(delta: number): void {
+    if (!this.profile) return
+    const liveIndex = activeStageIndex(this.profile, this.level)
+    this.viewIndex = stepStageView(this.viewIndex, delta, liveIndex, this.profile.stages.length)
+    this.push()
+  }
+
+  /** Drop the manual view and resume following the tracked level. */
+  stageToLive(): void {
+    if (this.viewIndex == null) return
+    this.viewIndex = null
+    this.push()
+  }
+
   private reload(): void {
+    // A new/edited profile can shift stage indices — drop any manual paging.
+    this.viewIndex = null
     const path = this.resolvePath()
     this.watch(path)
 

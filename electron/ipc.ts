@@ -102,6 +102,10 @@ export function registerIpc(
   ipcMain.on(Channels.guideReset, () => guide.reset())
 
   ipcMain.handle(Channels.profileGet, () => profile.snapshot())
+  ipcMain.on(Channels.profileStageStep, (_e, delta: unknown) => {
+    if (typeof delta === 'number') profile.stageStep(delta)
+  })
+  ipcMain.on(Channels.profileStageLive, () => profile.stageToLive())
 
   ipcMain.on(Channels.editorOpen, () => editor.open())
   ipcMain.handle(Channels.editorLoad, () => loadForEditor())
