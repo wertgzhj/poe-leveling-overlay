@@ -191,6 +191,10 @@ are stored locally. Full details: [`docs/plan.md`](docs/plan.md) §11.1.
 
 ## Development
 
+The full **development & release workflow** — how to test a change without touching
+the live build, cut a release, and version it — lives in
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ```bash
 npm install
 npm run make-icon   # generate the tray/app icon (build/icon.png)
