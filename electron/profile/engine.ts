@@ -46,6 +46,9 @@ export interface AcquisitionEntry {
   mule?: string[]
   /** the gem's level requirement (gems.json) — drives the now/coming-up split. */
   requiredLevel?: number
+  /** where this entry's quest falls within its act (lower = earlier), so the
+   *  to-do list reads in the order you actually reach things. */
+  questRank?: number
 }
 
 export interface Acquisitions {
@@ -246,7 +249,23 @@ function buildPlan(
   // Order by the act you reach each in, reward-first on ties (unchanged).
   const actOf = (it: Raw): number => (it.kind === 'reward' ? it.group.act : it.entry.act) ?? 99
   const rewardFirst = (it: Raw): number => (it.kind === 'reward' ? 0 : 1)
-  raw.sort((a, b) => actOf(a) - actOf(b) || rewardFirst(a) - rewardFirst(b))
+  // Within an act, follow the quest order you actually play (derived rank), so
+  // an "Enemy at the Gate" pick sits above a "Caged Brute" one. Rewards still
+  // beat buys at the same point (never pay for what a quest hands over), and
+  // cost/name break any remaining tie.
+  const questOf = (it: Raw): number =>
+    it.kind === 'reward' ? groupQuestRank(it.group) : (it.entry.questRank ?? Number.MAX_SAFE_INTEGER)
+  const costOf = (it: Raw): number => (it.kind === 'buy' ? costRank(it.entry.cost) : 0)
+  const nameOf = (it: Raw): string =>
+    it.kind === 'reward' ? (it.group.gems[0]?.gem ?? '') : it.entry.gem
+  raw.sort(
+    (a, b) =>
+      actOf(a) - actOf(b) ||
+      questOf(a) - questOf(b) ||
+      rewardFirst(a) - rewardFirst(b) ||
+      costOf(a) - costOf(b) ||
+      nameOf(a).localeCompare(nameOf(b))
+  )
   // Nothing is filtered out (owner feedback: act-based hiding vanished too much,
   // and act detection is unreliable). Instead a gem more than the XP safe-range
   // above your level is flagged "later" — the UI dims it and shows the level it
@@ -290,12 +309,22 @@ function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEnt
     return { quest: gems[0].quest, act: gems[0].act, pickOne: gems.length > 1, gems }
   })
   // Choices first (they need a decision), then by act, then quest name.
+  // Chronological: act, then where the quest sits within that act (derived rank),
+  // then name. Choices are no longer hoisted to the top — the amber "Pick one"
+  // box already makes them stand out, and reading order should match play order.
   return groups.sort(
     (a, b) =>
-      Number(b.pickOne) - Number(a.pickOne) ||
       (a.act ?? 99) - (b.act ?? 99) ||
+      groupQuestRank(a) - groupQuestRank(b) ||
       (a.quest ?? '').localeCompare(b.quest ?? '')
   )
+}
+
+/** A group's place in its act = the earliest rank among its gems. */
+function groupQuestRank(group: RewardGroup): number {
+  let best = Number.MAX_SAFE_INTEGER
+  for (const g of group.gems) best = Math.min(best, g.questRank ?? Number.MAX_SAFE_INTEGER)
+  return best
 }
 
 /** Gems first used in LATER stages that a quest rewards this class — worth
@@ -367,7 +396,8 @@ function classify(
       note: authored.note,
       cost: bucket === 'purchase' ? cost : undefined,
       requiredLevel,
-      mule: mule?.length ? mule : undefined
+      mule: mule?.length ? mule : undefined,
+      questRank: gems?.questRank(authored.act, authored.questId)
     }
   }
   const src = gems?.earliestSource(entry.gem, cls)
@@ -383,7 +413,8 @@ function classify(
       fallback: src.fallback,
       cost: src.kind === 'vendor' ? cost : undefined,
       requiredLevel,
-      mule: mule?.length ? mule : undefined
+      mule: mule?.length ? mule : undefined,
+      questRank: gems?.questRank(src.act, src.quest)
     }
   }
   return {

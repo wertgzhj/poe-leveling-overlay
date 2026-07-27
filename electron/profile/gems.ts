@@ -92,11 +92,37 @@ export interface ColoredGem {
 
 export class GemData {
   private readonly byKey = new Map<string, GemInfo>()
+  /** "<act>|<quest>" -> lowest gem level that quest hands out. */
+  private readonly questLevel = new Map<string, number>()
 
   constructor(gems: Record<string, GemInfo>) {
     for (const [name, info] of Object.entries(gems)) {
       this.byKey.set(normalizeGemName(name), info)
     }
+    // Chronological quest order, derived instead of hardcoded: a quest's gems
+    // scale with where it sits in the campaign, so the LOWEST gem level a quest
+    // rewards ranks it within its act (verified to reproduce the real order for
+    // every act with reward data). Self-updates with the wiki gem refresh.
+    for (const info of this.byKey.values()) {
+      const level = info.requiredLevel
+      if (level == null) continue
+      for (const s of info.sources ?? []) {
+        // Quest REWARDS only. A vendor's unlock quest would poison the rank —
+        // "A Fixture of Fate" unlocks Siosa, who sells level-1 gems, which would
+        // rank the game's latest Act 3 quest as its earliest.
+        if (s.kind !== 'quest' || !s.quest || s.act == null) continue
+        const key = questKey(s.act, s.quest)
+        const prev = this.questLevel.get(key)
+        if (prev == null || level < prev) this.questLevel.set(key, level)
+      }
+    }
+  }
+
+  /** Where a quest falls within its act (lower = earlier). Unknown quests sort
+   *  last so they never jump ahead of a quest we can actually place. */
+  questRank(act: number | undefined, quest: string | undefined): number {
+    if (act == null || !quest) return Number.MAX_SAFE_INTEGER
+    return this.questLevel.get(questKey(act, quest)) ?? Number.MAX_SAFE_INTEGER
   }
 
   info(gem: string): GemInfo | undefined {
@@ -138,6 +164,10 @@ export class GemData {
 
 function rank(kind: GemSourceInfo['kind']): number {
   return kind === 'quest' ? 0 : 1
+}
+
+function questKey(act: number, quest: string): string {
+  return `${act}|${quest.trim().toLowerCase()}`
 }
 
 /** Forgiving match: case-insensitive, trailing " Support" optional, so

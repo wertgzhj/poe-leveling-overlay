@@ -450,6 +450,43 @@ test('the plan drops gems already required (socketed) in the previous stage', ()
   )
 })
 
+test('quest rank is derived from gem levels and orders an act chronologically', () => {
+  // Real Act 1 shape: each quest's gems scale with how far in it sits.
+  const gems = new GemData({
+    Early: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    Mid: { attr: 'int', requiredLevel: 8, sources: [{ kind: 'quest', act: 1, quest: 'The Caged Brute', classes: ['Witch'] }] },
+    Late: { attr: 'int', requiredLevel: 12, sources: [{ kind: 'quest', act: 1, quest: "The Siren's Cadence", classes: ['Witch'] }] }
+  })
+  // The rank orders the quests the way you actually play them...
+  assert.ok(gems.questRank(1, 'Enemy at the Gate') < gems.questRank(1, 'The Caged Brute'))
+  assert.ok(gems.questRank(1, 'The Caged Brute') < gems.questRank(1, "The Siren's Cadence"))
+  assert.equal(gems.questRank(1, 'No Such Quest'), Number.MAX_SAFE_INTEGER) // unknown sorts last
+
+  // A vendor's UNLOCK quest must not set the rank: "A Fixture of Fate" unlocks
+  // Siosa, who sells level-1 gems — counting those would rank Act 3's latest
+  // quest as its earliest (caught against real data).
+  const withVendor = new GemData({
+    Cheap: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }] },
+    Reward: { attr: 'int', requiredLevel: 31, sources: [{ kind: 'quest', act: 3, quest: 'A Fixture of Fate', classes: ['Witch'] }] },
+    Earlier: { attr: 'int', requiredLevel: 24, sources: [{ kind: 'quest', act: 3, quest: 'Lost in Love', classes: ['Witch'] }] }
+  })
+  assert.ok(withVendor.questRank(3, 'Lost in Love') < withVendor.questRank(3, 'A Fixture of Fate'))
+
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'order', class: 'Witch' },
+      // Listed in the WRONG order on purpose — the plan must fix it.
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Late', 'Mid', 'Early'] }] }],
+      gemPlan: [{ gem: 'Late' }, { gem: 'Mid' }, { gem: 'Early' }]
+    })
+  ).profile!
+  const plan = acquisitionsForStage(profile, 0, gems, 1)
+  assert.deepEqual(
+    plan.plan.map((it) => (it.kind === 'reward' ? it.group.gems[0].gem : it.entry.gem)),
+    ['Early', 'Mid', 'Late']
+  )
+})
+
 test('a gem needed in two different links is counted (x2)', () => {
   const gems = new GemData({
     Twice: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
