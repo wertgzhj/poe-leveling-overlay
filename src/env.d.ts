@@ -23,6 +23,12 @@ interface HotkeyBindingsBridge {
   stepBack: string
 }
 
+interface VisibleTabsBridge {
+  guide: boolean
+  gems: boolean
+  trials: boolean
+}
+
 interface AppSettingsBridge {
   bounds: { x?: number; y?: number; width: number; height: number }
   opacity: number
@@ -32,6 +38,7 @@ interface AppSettingsBridge {
   profilePath: string | null
   characterName: string | null
   logLanguage: string
+  visibleTabs: VisibleTabsBridge
 }
 
 interface SettingsPatchBridge {
@@ -41,6 +48,7 @@ interface SettingsPatchBridge {
   clientTxtPath?: string | null
   profilePath?: string | null
   characterName?: string | null
+  visibleTabs?: VisibleTabsBridge
 }
 
 interface SettingsSetResultBridge {
@@ -162,6 +170,7 @@ interface AcquisitionEntryBridge {
   fromLevel?: number
   cost?: string
   starting?: boolean
+  mule?: string[]
   requiredLevel?: number
 }
 

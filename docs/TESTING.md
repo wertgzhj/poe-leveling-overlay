@@ -21,6 +21,8 @@ Last updated: 2026-07-19.
 | — | Visual route/profile editor (separate window) | ✅ | pure edit ops | window opens, edit → save → overlay reloads |
 | — | In-app auto-update (electron-updater) | ✅ | build only | update prompt + one-click Restart on the installed build |
 | — | Gems tab polish: prices, "pick one", starting gems, cost/act order | ✅ | ✅ engine | hints read right; never buy what you own/start with |
+| — | Gems: stage paging (◀/▶), level-gated "coming up", ×2 copies, mule hints | ✅ | ✅ engine | paging pins/resumes; dimmed gems read right; ×2 and mule tags correct |
+| — | Optional tabs (Settings → Overlay → Tabs to show) | ✅ | — | hiding a tab works; the last one can't be turned off |
 
 ¹ P0 is overlay/window behaviour that only exists on Windows; there's no headless test,
 only the bundle build. Everything else marked ✅ has real unit/integration tests.

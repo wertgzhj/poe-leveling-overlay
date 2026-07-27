@@ -41,6 +41,9 @@ export interface AcquisitionEntry {
   cost?: string
   /** the class's starting gem — already in inventory, so don't buy/quest it. */
   starting?: boolean
+  /** other classes that START with this gem: roll a level-1 mule of one of them
+   *  and stash its two starting gems instead of buying this. */
+  mule?: string[]
   /** the gem's level requirement (gems.json) — drives the now/coming-up split. */
   requiredLevel?: number
 }
@@ -157,11 +160,23 @@ export function acquisitionsForStage(
   gems?: GemData,
   currentAct?: number | null,
   startingGems?: ReadonlySet<string>,
-  playerLevel?: number | null
+  playerLevel?: number | null,
+  startingOwners?: ReadonlyMap<string, string[]>
 ): Acquisitions {
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
-  if (stage) for (const g of stage.socketGroups) for (const gem of g.gems) used.add(gem.toLowerCase())
+  // How many copies this stage needs: the same gem in two different links means
+  // you must own TWO of it, so the to-do list has to say so (owner feedback).
+  const copies = new Map<string, number>()
+  if (stage) {
+    for (const g of stage.socketGroups) {
+      for (const gem of g.gems) {
+        const key = gem.toLowerCase()
+        used.add(key)
+        copies.set(key, (copies.get(key) ?? 0) + 1)
+      }
+    }
+  }
 
   // Gems already required (socketed) in the PREVIOUS stage are assumed acquired,
   // so they're dropped from this stage's to-do plan — don't repeat what you've
@@ -181,7 +196,10 @@ export function acquisitionsForStage(
   const other: AcquisitionEntry[] = []
   for (const entry of profile.gemPlan) {
     if (used.size > 0 && !used.has(entry.gem.toLowerCase())) continue
-    const acq = classify(entry, profile.meta.class, gems, startingGems)
+    const acq = classify(entry, profile.meta.class, gems, startingGems, startingOwners)
+    // The stage's socket groups are the truth for how many you need.
+    const needed = copies.get(entry.gem.toLowerCase())
+    if (needed != null && needed > (acq.count ?? 1)) acq.count = needed
     if (acq.bucket === 'reward') rewards.push(acq)
     else if (acq.bucket === 'purchase') purchases.push(acq)
     else other.push(acq)
@@ -316,7 +334,8 @@ function classify(
   entry: { gem: string; count?: number; source?: GemSource },
   cls: CharClass,
   gems?: GemData,
-  startingGems?: ReadonlySet<string>
+  startingGems?: ReadonlySet<string>,
+  startingOwners?: ReadonlyMap<string, string[]>
 ): AcquisitionEntry {
   const requiredLevel = gems?.info(entry.gem)?.requiredLevel
   // Starting gems are already in inventory — never buy or quest them.
@@ -330,6 +349,10 @@ function classify(
       requiredLevel
     }
   }
+  // Muling: another class BEGINS with this gem, so a level-1 alt of that class
+  // hands it over for free (its skill + support gem are in its inventory at
+  // creation) — no quest, no vendor. Only classes other than yours qualify.
+  const mule = startingOwners?.get(normalizeGemName(entry.gem))?.filter((c) => c !== cls)
   const cost = vendorCostFor(requiredLevel)
   const authored = entry.source
   if (authored) {
@@ -343,7 +366,8 @@ function classify(
       quest: authored.questId,
       note: authored.note,
       cost: bucket === 'purchase' ? cost : undefined,
-      requiredLevel
+      requiredLevel,
+      mule: mule?.length ? mule : undefined
     }
   }
   const src = gems?.earliestSource(entry.gem, cls)
@@ -358,8 +382,15 @@ function classify(
       note: src.note,
       fallback: src.fallback,
       cost: src.kind === 'vendor' ? cost : undefined,
-      requiredLevel
+      requiredLevel,
+      mule: mule?.length ? mule : undefined
     }
   }
-  return { gem: entry.gem, count: entry.count, bucket: 'other', requiredLevel }
+  return {
+    gem: entry.gem,
+    count: entry.count,
+    bucket: 'other',
+    requiredLevel,
+    mule: mule?.length ? mule : undefined
+  }
 }

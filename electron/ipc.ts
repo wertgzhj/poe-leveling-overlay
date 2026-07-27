@@ -1,6 +1,13 @@
 import { app, dialog, ipcMain } from 'electron'
 import { Channels, type AppInfo, type SettingsSetResult } from './channels'
-import { getHotkeys, getSettings, store, type AppSettings, type HotkeyBindings } from './settings'
+import {
+  getHotkeys,
+  getSettings,
+  sanitizeVisibleTabs,
+  store,
+  type AppSettings,
+  type HotkeyBindings
+} from './settings'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
@@ -64,6 +71,9 @@ export function registerIpc(
     }
     if (typeof patch.clickThrough === 'boolean') {
       overlay.setClickThrough(patch.clickThrough)
+    }
+    if (patch.visibleTabs && typeof patch.visibleTabs === 'object') {
+      store.set('visibleTabs', sanitizeVisibleTabs(patch.visibleTabs))
     }
 
     let failed: string[] = []
