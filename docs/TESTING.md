@@ -16,7 +16,7 @@ Last updated: 2026-07-19.
 | P3 | Build-profile gem panel (computed colours, stage switch) | ✅ | ✅ engine | panel on screen, stage switch on level-up |
 | P4 | Path of Building import (code / pobb.in link) | ✅ | ✅ + CLI end-to-end | in-app import button, pobb.in fetch |
 | P5 | Class-aware gem sources (engine + poewiki data) | ✅ | ✅ | reward/buy hints in the Gems tab look right |
-| P6 | Trials tracker | ✅ | ✅ | auto-check on entering a trial zone |
+| P6 | Trials tracker (all 12: normal + cruel + merciless) | ✅ | ✅ | auto-check on finishing each trial |
 | P6 | Packaged Windows release (installer + portable) | ✅ | icon + CI build | double-click launch |
 | — | Visual route/profile editor (separate window) | ✅ | pure edit ops | window opens, edit → save → overlay reloads |
 | — | In-app auto-update (electron-updater) | ✅ | build only | update prompt + one-click Restart on the installed build |
@@ -64,12 +64,14 @@ Then, in Path of Exile (**Windowed Fullscreen**):
    stage 1 until the next level-up).
 6. **Trials (P6):** entering a trial zone (e.g. The Lower Prison) shows an amber
    **"Trial of Ascendancy in this zone"** hint (on every tab). **Completing** the
-   trial now **auto-checks** it — Izaro speaks a distinct plaque line as you finish
-   each trial, and the overlay maps that line to the exact trial (zone-independent).
-   Confirm it ticks the **right** trial at the moment you finish; the hint's *Done ✓*
-   and clicking a trial remain as manual fallbacks. (If a line doesn't register, the
-   six fragments live in `NORMAL_TRIALS` — `electron/trials/engine.ts` — and the
-   capture pattern in `data/log-patterns/en.json`.)
+   trial **auto-checks** it — Izaro voices a plaque line only on completion, and the
+   zone you're in identifies the trial. The tab lists all **twelve** campaign trials
+   grouped by Labyrinth (Normal 6 / Cruel 3 / Merciless 3). Confirm it ticks the
+   **right** trial at the moment you finish — especially in **Act 7's Chamber of Sins
+   Level 2**, which must tick the *Cruel* entry, not the Act 2 one. **Cruel/Merciless
+   zone names are provisional**: if a trial doesn't auto-check, note the zone name
+   from the 🐞 panel and correct `CAMPAIGN_TRIALS` (`electron/trials/engine.ts`); the
+   hint's *Done ✓* and clicking a trial remain manual fallbacks.
 7. **Editor:** tray → *Edit routes & profile…* (or the button in Settings) opens a
    normal window. Add/edit a step on an act, hit **Save** — the Guide tab reflects it
    without a restart. Same for the Profile tab → the Gems tab.
@@ -111,12 +113,15 @@ updates as *disabled*; an unreachable feed shows *Couldn't check* and never nags
   + support gem each class begins with (owner-confirmed, validated against the gem list),
   so the overlay marks them "✓ start" and never tells you to buy/quest them. Edit + rebuild
   if a patch changes them.
-- **Trial auto-complete: WIRED** (2026-07-21). Izaro speaks a distinct plaque line
-  in `Client.txt` (`] Izaro: …`, verified from real captures) as you finish each
-  trial; the engine maps each line straight to its trial, so it's zone-independent
-  and his other chatter never counts. Manual toggle stays as a fallback. If a patch
-  changes his lines, update the fragments in `NORMAL_TRIALS`
-  (`electron/trials/engine.ts`).
+- **Trial auto-complete: WIRED** (2026-07-21), now covering **all twelve** campaign
+  trials (Normal / Cruel / Merciless). Izaro voices a plaque line in `Client.txt`
+  (`] Izaro: …`, verified from real captures) only as a trial is completed; the
+  **zone** decides which trial (six lines cover twelve trials, so the line alone
+  can't) and the **act** breaks ties where a zone hosts a trial in two difficulties
+  (e.g. The Chamber of Sins Level 2 in Acts 2 and 7). With an unknown zone it falls
+  back to the six verified normal-lab line fragments. **Cruel/Merciless zone names
+  are provisional** — verify in game and correct `CAMPAIGN_TRIALS`
+  (`electron/trials/engine.ts`); the manual toggle covers any miss.
 - **Code signing:** the release is unsigned (SmartScreen warning) — a paid cert is the
   fix; backlog.
 

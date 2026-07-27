@@ -19,6 +19,14 @@ const TYPE_ICONS: Record<StepTypeBridge, string> = {
   hint: '✎'
 }
 
+// Labyrinth tier names. Mirrored by hand from electron/trials/engine.ts — the
+// main and renderer build graphs are intentionally decoupled (see env.d.ts).
+const LAB_LABEL: Record<LabTierBridge, string> = {
+  normal: 'Normal Labyrinth',
+  cruel: 'Cruel Labyrinth',
+  merciless: 'Merciless Labyrinth'
+}
+
 // Distinct hues + the attribute letter inside each pip, so red/green/blue are
 // unambiguous even when the green/blue are hard to tell apart (owner feedback,
 // and colour-blind friendly). Green = true green (not emerald), blue = deep blue.
@@ -275,7 +283,7 @@ function TrialsBody(): React.JSX.Element {
     <>
       <div className="mb-2 flex items-center justify-between px-1">
         <span className="text-[11px] text-overlay-muted">
-          Normal Labyrinth · {trials.seenCount}/{trials.total} trials
+          Campaign trials · {trials.seenCount}/{trials.total}
         </span>
         <button
           className="text-[10px] text-overlay-muted hover:text-overlay-text"
@@ -285,11 +293,24 @@ function TrialsBody(): React.JSX.Element {
           reset
         </button>
       </div>
-      {trials.trials.map((t) => {
+      {trials.trials.map((t, i) => {
         const here = t.id === trials.currentZoneTrialId
+        // Header per Labyrinth tier — three separate labs run in the campaign.
+        const newLab = i === 0 || trials.trials[i - 1].lab !== t.lab
+        const labSeen = trials.trials.filter((x) => x.lab === t.lab)
         return (
+          <div key={`${t.id}-w`}>
+          {newLab && (
+            <div className="mb-1 mt-2 flex items-center justify-between px-1 first:mt-0">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-overlay-muted/80">
+                {LAB_LABEL[t.lab]}
+              </span>
+              <span className="text-[10px] text-overlay-muted/70">
+                {labSeen.filter((x) => x.seen).length}/{labSeen.length}
+              </span>
+            </div>
+          )}
           <button
-            key={t.id}
             onClick={() => window.overlay?.trialsToggle(t.id)}
             className={
               'mb-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left ' +
@@ -313,6 +334,7 @@ function TrialsBody(): React.JSX.Element {
               <div className="text-[10px] text-overlay-muted">Act {t.act}</div>
             </div>
           </button>
+          </div>
         )
       })}
       <p className="mt-1 px-1 text-[10px] text-overlay-muted">
@@ -624,6 +646,47 @@ function GemBody(): React.JSX.Element {
         </div>
       )}
 
+      {/* Stage navigation sits ABOVE the acquisition list so it keeps a fixed
+          position — a longer or shorter buy list must not move the controls. */}
+      {stage &&
+        (stageCount > 1 ? (
+          <div className="mb-1 flex items-center gap-1 px-1">
+            <button
+              disabled={!canPrev}
+              onClick={() => window.overlay?.stageStep(-1)}
+              title="Previous stage"
+              className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
+            >
+              ◀
+            </button>
+            <span className="flex-1 truncate text-center text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+              {stage.label}
+            </span>
+            <button
+              disabled={!canNext}
+              onClick={() => window.overlay?.stageStep(1)}
+              title="Next stage"
+              className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
+            >
+              ▶
+            </button>
+          </div>
+        ) : (
+          <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+            {stage.label}
+          </div>
+        ))}
+      {stage && !onLiveStage && (
+        <button
+          onClick={() => window.overlay?.stageToLive()}
+          title="Return to the stage for your current level"
+          className="mb-1.5 flex w-full items-center justify-center gap-1 rounded bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200 hover:bg-amber-400/20"
+        >
+          Viewing {viewedIndex < liveIndex ? 'an earlier' : 'a later'} stage
+          {profile.level != null ? ` · you're level ${profile.level}` : ''} — ▸ jump to current
+        </button>
+      )}
+
       {plan.length > 0 && (
         <div
           className={
@@ -661,43 +724,6 @@ function GemBody(): React.JSX.Element {
 
       {stage ? (
         <>
-          {stageCount > 1 ? (
-            <div className="mb-1 flex items-center gap-1 px-1">
-              <button
-                disabled={!canPrev}
-                onClick={() => window.overlay?.stageStep(-1)}
-                title="Previous stage"
-                className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
-              >
-                ◀
-              </button>
-              <span className="flex-1 truncate text-center text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
-                {stage.label}
-              </span>
-              <button
-                disabled={!canNext}
-                onClick={() => window.overlay?.stageStep(1)}
-                title="Next stage"
-                className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
-              >
-                ▶
-              </button>
-            </div>
-          ) : (
-            <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
-              {stage.label}
-            </div>
-          )}
-          {!onLiveStage && (
-            <button
-              onClick={() => window.overlay?.stageToLive()}
-              title="Return to the stage for your current level"
-              className="mb-1.5 flex w-full items-center justify-center gap-1 rounded bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200 hover:bg-amber-400/20"
-            >
-              Viewing {viewedIndex < liveIndex ? 'an earlier' : 'a later'} stage
-              {profile.level != null ? ` · you're level ${profile.level}` : ''} — ▸ jump to current
-            </button>
-          )}
           {stage.groups.map((group, i) => (
             <SocketGroup key={i} group={group} acq={acqByGem} />
           ))}

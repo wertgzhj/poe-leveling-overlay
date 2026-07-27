@@ -1,13 +1,39 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { TrialsEngine, NORMAL_TRIALS } from '../electron/trials/engine.ts'
+import { TrialsEngine, CAMPAIGN_TRIALS, NORMAL_TRIALS } from '../electron/trials/engine.ts'
 
-test('there are six normal trials across acts 1–3', () => {
+test('twelve campaign trials: 6 normal, 3 cruel, 3 merciless', () => {
+  assert.equal(CAMPAIGN_TRIALS.length, 12)
   assert.equal(NORMAL_TRIALS.length, 6)
-  assert.deepEqual(
-    [...new Set(NORMAL_TRIALS.map((t) => t.act))].sort(),
-    [1, 2, 3]
-  )
+  const byLab = (lab: string): number => CAMPAIGN_TRIALS.filter((t) => t.lab === lab).length
+  assert.equal(byLab('normal'), 6)
+  assert.equal(byLab('cruel'), 3)
+  assert.equal(byLab('merciless'), 3)
+  // Normal gates the first Labyrinth in acts 1-3; the other two come later.
+  assert.deepEqual([...new Set(NORMAL_TRIALS.map((t) => t.act))].sort(), [1, 2, 3])
+  assert.ok(CAMPAIGN_TRIALS.filter((t) => t.lab !== 'normal').every((t) => t.act >= 6))
+  assert.equal(new Set(CAMPAIGN_TRIALS.map((t) => t.id)).size, 12) // ids unique
+})
+
+test('a zone hosting a trial in two difficulties resolves by act', () => {
+  const engine = new TrialsEngine()
+  // The Chamber of Sins Level 2 has a normal trial (Act 2) AND a cruel one (Act 7).
+  assert.equal(engine.matchZone('The Chamber of Sins Level 2', 2)?.lab, 'normal')
+  assert.equal(engine.matchZone('The Chamber of Sins Level 2', 7)?.lab, 'cruel')
+
+  // In Act 7, Izaro's line must tick the CRUEL trial, not the normal one.
+  engine.applyZone('The Chamber of Sins Level 2', 7)
+  assert.equal(engine.completeByIzaro('Any plaque line'), true)
+  const seen = engine.snapshot().trials.filter((t) => t.seen)
+  assert.deepEqual(seen.map((t) => t.id), ['t-a7-chamber-of-sins'])
+})
+
+test('a cruel/merciless trial completes from the zone (no known plaque line)', () => {
+  const engine = new TrialsEngine()
+  engine.applyZone('The Ossuary', 10)
+  assert.equal(engine.completeByIzaro('An emperor must know precisely where he stands.'), true)
+  assert.equal(engine.snapshot().trials.find((t) => t.id === 't-a10-ossuary')?.seen, true)
+  assert.equal(engine.completeByIzaro('An emperor must know precisely where he stands.'), false)
 })
 
 test("each Izaro plaque line completes its own trial; his other chatter doesn't", () => {
