@@ -37,6 +37,9 @@ export class ProfileService {
 
   /** class -> normalized set of its starting gems (already in inventory). */
   private readonly startingByClass = new Map<string, Set<string>>()
+  /** normalized gem -> classes that START with it, for the muling hint (roll a
+   *  level-1 alt of that class and stash its two starting gems). */
+  private readonly startingOwners = new Map<string, string[]>()
 
   constructor(overlay: OverlayController, log: LogService) {
     this.overlay = overlay
@@ -44,6 +47,10 @@ export class ProfileService {
     this.gems = new GemData(gemsJson.gems as Record<string, GemInfo>)
     for (const [cls, names] of Object.entries(startingGemsJson.classes as Record<string, string[]>)) {
       this.startingByClass.set(cls, new Set(names.map(normalizeGemName)))
+      for (const name of names) {
+        const key = normalizeGemName(name)
+        this.startingOwners.set(key, [...(this.startingOwners.get(key) ?? []), cls])
+      }
     }
     log.addLevelListener((level) => {
       this.level = level
@@ -117,7 +124,8 @@ export class ProfileService {
             this.gems,
             this.act,
             this.startingByClass.get(profile.meta.class),
-            this.level
+            this.level,
+            this.startingOwners
           )
         : null,
       stageCount: profile ? profile.stages.length : 0,

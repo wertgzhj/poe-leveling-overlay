@@ -97,8 +97,14 @@ export function MainPanel(): React.JSX.Element {
     profile,
     trials,
     tab,
+    visibleTabs,
     patch
   } = useOverlayStore()
+
+  // Hiding the active tab falls back to the first one still shown (settings
+  // guarantees at least one is on).
+  const shownTabs = (['guide', 'gems', 'trials'] as const).filter((t) => visibleTabs[t])
+  const activeTab = shownTabs.includes(tab) ? tab : (shownTabs[0] ?? 'guide')
 
   if (!visible) return <div />
 
@@ -109,9 +115,9 @@ export function MainPanel(): React.JSX.Element {
       : 'Campaign'
     : 'PoE Leveling Overlay'
   const title =
-    tab === 'gems'
+    activeTab === 'gems'
       ? (profile?.meta?.name ?? 'Build')
-      : tab === 'trials'
+      : activeTab === 'trials'
         ? 'Trials of Ascendancy'
         : guideTitle
   const guideHasErrors = (guide?.errors?.length ?? 0) > 0
@@ -168,12 +174,20 @@ export function MainPanel(): React.JSX.Element {
 
         <UpdateBanner />
 
-        {/* Tab switch */}
-        <div className="flex gap-1 px-2">
-          <Tab label="Guide" active={tab === 'guide'} flag={guideHasErrors} onClick={() => patch({ tab: 'guide' })} />
-          <Tab label="Gems" active={tab === 'gems'} flag={profileHasErrors} onClick={() => patch({ tab: 'gems' })} />
-          <Tab label="Trials" badge={trialsBadge} active={tab === 'trials'} onClick={() => patch({ tab: 'trials' })} />
-        </div>
+        {/* Tab switch — only the tabs enabled in Settings; hidden when just one. */}
+        {shownTabs.length > 1 && (
+          <div className="flex gap-1 px-2">
+            {visibleTabs.guide && (
+              <Tab label="Guide" active={activeTab === 'guide'} flag={guideHasErrors} onClick={() => patch({ tab: 'guide' })} />
+            )}
+            {visibleTabs.gems && (
+              <Tab label="Gems" active={activeTab === 'gems'} flag={profileHasErrors} onClick={() => patch({ tab: 'gems' })} />
+            )}
+            {visibleTabs.trials && (
+              <Tab label="Trials" badge={trialsBadge} active={activeTab === 'trials'} onClick={() => patch({ tab: 'trials' })} />
+            )}
+          </div>
+        )}
 
         <div className="mt-1 flex items-center gap-1.5 border-y border-overlay-border/60 bg-black/20 px-3 py-1 text-[11px] text-overlay-muted">
           <span
@@ -189,9 +203,9 @@ export function MainPanel(): React.JSX.Element {
         <TrialHint />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
-          {tab === 'guide' && <GuideBody />}
-          {tab === 'gems' && <GemBody />}
-          {tab === 'trials' && <TrialsBody />}
+          {activeTab === 'guide' && <GuideBody />}
+          {activeTab === 'gems' && <GemBody />}
+          {activeTab === 'trials' && <TrialsBody />}
         </div>
 
         <VersionBadge />
@@ -429,6 +443,11 @@ function RewardGroupRow({
         </span>
         <span className={'min-w-0 flex-1 ' + (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')}>
           {e.gem}
+          {(e.count ?? 1) > 1 && (
+            <span className="ml-1 rounded bg-white/10 px-1 text-[9px] font-bold text-overlay-text" title="needed in two different links">
+              ×{e.count}
+            </span>
+          )}
           {where && <span className="text-overlay-muted"> · {where}</span>}
           {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
           {comingUpAt != null && !e.fromLevel && (
@@ -477,12 +496,25 @@ function BuyRow({
       </span>
       <span className="min-w-0 flex-1 text-overlay-text">
         {e.gem}
+        {(e.count ?? 1) > 1 && (
+          <span className="ml-1 rounded bg-white/10 px-1 text-[9px] font-bold text-overlay-text" title="needed in two different links">
+            ×{e.count}
+          </span>
+        )}
         <span className="text-overlay-muted">
           {' · '}
           {where}
           {e.fallback && <span title="general vendor — may be available earlier"> ≈</span>}
           {comingUpAt != null && ` · lvl ${comingUpAt}`}
         </span>
+        {e.mule && e.mule.length > 0 && (
+          <span
+            className="ml-1 text-[10px] text-sky-300/90"
+            title={`A level-1 ${e.mule[0]} starts with this gem — roll a mule, stash it, delete the mule (free)`}
+          >
+            · mule a {e.mule.join('/')}
+          </span>
+        )}
       </span>
       {e.cost && <span className="shrink-0 text-[10px] font-medium text-overlay-accent">{e.cost}</span>}
     </div>

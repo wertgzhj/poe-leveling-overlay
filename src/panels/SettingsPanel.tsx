@@ -12,13 +12,27 @@ const HOTKEY_FIELDS: ReadonlyArray<readonly [HotkeyField, string]> = [
   ['stepBack', 'Guide: previous step']
 ]
 
+const TAB_FIELDS: ReadonlyArray<readonly [keyof VisibleTabsBridge, string]> = [
+  ['guide', 'Guide'],
+  ['gems', 'Gems'],
+  ['trials', 'Trials']
+]
+
 function hasModifier(accelerator: string): boolean {
   return /(CommandOrControl|CmdOrCtrl|Control|Ctrl|Alt|AltGr|Shift|Super|Meta)/.test(accelerator)
 }
 
 export function SettingsPanel(): React.JSX.Element {
-  const { hotkeys, opacity, clickThrough, clientTxtPath, profilePath, characterName, patch } =
-    useOverlayStore()
+  const {
+    hotkeys,
+    opacity,
+    clickThrough,
+    clientTxtPath,
+    profilePath,
+    characterName,
+    visibleTabs,
+    patch
+  } = useOverlayStore()
   const [recording, setRecording] = useState<HotkeyField | null>(null)
   const [failed, setFailed] = useState<Set<string>>(new Set())
   const [pathDraft, setPathDraft] = useState(clientTxtPath ?? '')
@@ -75,6 +89,11 @@ export function SettingsPanel(): React.JSX.Element {
   const setClickThrough = (value: boolean): void => {
     patch({ clickThrough: value })
     void window.overlay?.setSettings({ clickThrough: value })
+  }
+
+  const setVisibleTabs = (value: VisibleTabsBridge): void => {
+    patch({ visibleTabs: value })
+    void window.overlay?.setSettings({ visibleTabs: value })
   }
 
   const commitPath = (value: string): void => {
@@ -214,6 +233,27 @@ export function SettingsPanel(): React.JSX.Element {
             <div className="mt-2 flex items-center justify-between">
               <span className="text-xs text-overlay-text">Click-through by default</span>
               <Toggle on={clickThrough} onChange={setClickThrough} />
+            </div>
+
+            <div className="mt-3 border-t border-overlay-border/60 pt-2">
+              <span className="text-[11px] text-overlay-muted">Tabs to show</span>
+              {TAB_FIELDS.map(([key, label]) => {
+                const on = visibleTabs[key]
+                // Keep at least one tab — the last one on can't be switched off.
+                const isLastOn = on && TAB_FIELDS.filter(([k]) => visibleTabs[k]).length === 1
+                return (
+                  <div key={key} className="mt-1.5 flex items-center justify-between">
+                    <span className={'text-xs ' + (isLastOn ? 'text-overlay-muted' : 'text-overlay-text')}>
+                      {label}
+                      {isLastOn && <span className="ml-1 text-[10px] text-overlay-muted">(keep one)</span>}
+                    </span>
+                    <Toggle
+                      on={on}
+                      onChange={(v) => !isLastOn && setVisibleTabs({ ...visibleTabs, [key]: v })}
+                    />
+                  </div>
+                )
+              })}
             </div>
           </Section>
 

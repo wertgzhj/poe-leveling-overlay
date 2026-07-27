@@ -24,7 +24,8 @@ export function App(): React.JSX.Element {
         hotkeys: s.hotkeys,
         clientTxtPath: s.clientTxtPath,
         profilePath: s.profilePath,
-        characterName: s.characterName
+        characterName: s.characterName,
+        visibleTabs: s.visibleTabs
       })
     )
     void api.getLogSnapshot().then(applyLogSnapshot)

@@ -450,6 +450,56 @@ test('the plan drops gems already required (socketed) in the previous stage', ()
   )
 })
 
+test('a gem needed in two different links is counted (x2)', () => {
+  const gems = new GemData({
+    Twice: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    Once: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'dupes', class: 'Witch' },
+      stages: [
+        {
+          range: [1, 20],
+          // "Twice" is socketed in BOTH links -> you need two copies.
+          socketGroups: [{ gems: ['Twice', 'Once'] }, { gems: ['Twice'] }]
+        }
+      ],
+      gemPlan: [{ gem: 'Twice' }, { gem: 'Once' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems, 1)
+  assert.equal(acq.purchases.find((e) => e.gem === 'Twice')?.count, 2)
+  assert.equal(acq.purchases.find((e) => e.gem === 'Once')?.count, undefined)
+})
+
+test('a gem another class STARTS with is flagged as mulable', () => {
+  const gems = new GemData({
+    'Ruthless Support': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
+    Fireball: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
+  })
+  // Marauder begins with Ruthless Support; the Witch begins with Fireball.
+  const startingOwners = new Map([
+    [normalizeGemName('Ruthless Support'), ['Marauder']],
+    [normalizeGemName('Fireball'), ['Witch']]
+  ])
+  const starting = new Set([normalizeGemName('Fireball')]) // this Witch's own starter
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'mule', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Ruthless Support', 'Fireball'] }] }],
+      gemPlan: [{ gem: 'Ruthless Support' }, { gem: 'Fireball' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems, 1, starting, 10, startingOwners)
+
+  // A Witch can't quest Ruthless Support, but a level-1 Marauder starts with it.
+  assert.deepEqual(acq.purchases.find((e) => e.gem === 'Ruthless Support')?.mule, ['Marauder'])
+  // Your OWN starting gem is never a mule suggestion (you already have it).
+  assert.equal(acq.other.find((e) => e.gem === 'Fireball')?.starting, true)
+  assert.equal(acq.other.find((e) => e.gem === 'Fireball')?.mule, undefined)
+})
+
 test('stepStageView pages stages and snaps back to auto on the live one', () => {
   // Live stage is index 2 of 5; null = following the level.
   assert.equal(stepStageView(null, -1, 2, 5), 1) // step back pins stage 1

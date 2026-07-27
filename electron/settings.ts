@@ -20,6 +20,14 @@ export interface OverlayBounds {
   height: number
 }
 
+/** Which of the overlay's tabs are shown. At least one is always on — the
+ *  sanitizer falls back to Guide if a patch would turn them all off. */
+export interface VisibleTabs {
+  guide: boolean
+  gems: boolean
+  trials: boolean
+}
+
 export interface AppSettings {
   bounds: OverlayBounds
   /** 0.4–1.0, applied to the overlay panel */
@@ -35,6 +43,8 @@ export interface AppSettings {
   characterName: string | null
   /** log-pattern language (data/log-patterns/<lang>.json); v1 ships 'en' */
   logLanguage: string
+  /** tabs to show in the overlay (hide the ones you don't use) */
+  visibleTabs: VisibleTabs
 }
 
 /** Everything persisted, including non-setting state (resume snapshot §8,
@@ -61,6 +71,7 @@ const defaults: StoreSchema = {
   profilePath: null,
   characterName: null,
   logLanguage: 'en',
+  visibleTabs: { guide: true, gems: true, trials: true },
   progress: null,
   guideProgress: {},
   trialsProgress: {}
@@ -75,6 +86,24 @@ export function getHotkeys(): HotkeyBindings {
   return { ...defaults.hotkeys, ...store.get('hotkeys') }
 }
 
+/** Stored tab visibility merged over defaults (same nested-merge gap as hotkeys),
+ *  guaranteeing at least one visible tab. */
+export function getVisibleTabs(): VisibleTabs {
+  return sanitizeVisibleTabs(store.get('visibleTabs'))
+}
+
+/** Never let every tab be hidden — an empty overlay has no way back to Settings
+ *  other than the tray, so fall back to Guide. */
+export function sanitizeVisibleTabs(next: Partial<VisibleTabs> | undefined): VisibleTabs {
+  const merged = { ...defaults.visibleTabs, ...next }
+  const tabs: VisibleTabs = {
+    guide: merged.guide !== false,
+    gems: merged.gems !== false,
+    trials: merged.trials !== false
+  }
+  return tabs.guide || tabs.gems || tabs.trials ? tabs : { ...tabs, guide: true }
+}
+
 export function getSettings(): AppSettings {
   return {
     bounds: store.get('bounds'),
@@ -84,6 +113,7 @@ export function getSettings(): AppSettings {
     clientTxtPath: store.get('clientTxtPath'),
     profilePath: store.get('profilePath'),
     characterName: store.get('characterName'),
-    logLanguage: store.get('logLanguage')
+    logLanguage: store.get('logLanguage'),
+    visibleTabs: getVisibleTabs()
   }
 }

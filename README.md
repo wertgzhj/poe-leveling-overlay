@@ -101,6 +101,9 @@ it**: Izaro speaks a distinct plaque line as you complete each one, and the over
 maps that line to the right trial. It also shows a hint while you're standing in a
 trial's zone, and lets you click any trial to correct it; all six unlock the Labyrinth.
 
+Don't use one of the tabs? **Settings → Overlay → Tabs to show** hides any of them
+(at least one stays on); with a single tab the switcher disappears entirely.
+
 All hotkeys are rebindable in-app: open **Settings** (the ⚙ button in the overlay, or
 the tray → *Settings…*), click a binding, and press the new combo — the change takes
 effect immediately and is saved. Defaults are chosen to avoid PoE's own binds; a
@@ -149,6 +152,11 @@ yourself for now.
   from (`questReward` / `vendor` / `drop`), which feeds the reward + buy hints.
 - Socket colours come from `data/gems.json` (gem → attribute); a gem missing there
   shows a neutral pip with a `?`. It covers ~70 common gems for now — add your own.
+- A gem another class **starts** with is tagged **"mule a &lt;class&gt;"** — roll a level-1
+  character of that class, stash its two starting gems, and you have it for free
+  instead of buying it (from `data/starting-gems.json`).
+- A gem socketed in **two different links** in the same stage shows **×2**, so you buy
+  both copies.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
   gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`,
   filled from the Path of Exile Wiki. **Easiest way to (re)fill it:** repo → Actions →

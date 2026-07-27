@@ -14,6 +14,7 @@ interface OverlayStore {
   clientTxtPath: string | null
   profilePath: string | null
   characterName: string | null
+  visibleTabs: VisibleTabsBridge
   // log tracking (P1)
   logStatus: WatcherStatusBridge | null
   tracked: TrackerStateBridge | null
@@ -54,6 +55,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   clientTxtPath: null,
   profilePath: null,
   characterName: null,
+  visibleTabs: { guide: true, gems: true, trials: true },
   logStatus: null,
   tracked: null,
   recentEvents: [],
