@@ -95,11 +95,13 @@ Two things to know:
 | Guide: next step | `Ctrl+Shift+N` | Marks the current step done |
 | Guide: previous step | `Ctrl+Shift+P` | Reopens the last completed step |
 
-The overlay has **Guide**, **Gems** and **Trials** tabs. The Trials tab tracks the
-six normal-Labyrinth Trials of Ascendancy — it **auto-checks a trial when you finish
-it**: Izaro speaks a distinct plaque line as you complete each one, and the overlay
-maps that line to the right trial. It also shows a hint while you're standing in a
-trial's zone, and lets you click any trial to correct it; all six unlock the Labyrinth.
+The overlay has **Guide**, **Gems** and **Trials** tabs. The Trials tab tracks all
+**twelve** campaign Trials of Ascendancy — six for the **Normal** Labyrinth (Acts 1–3),
+three for **Cruel** (Acts 6–7) and three for **Merciless** (Acts 8–10), grouped per
+Labyrinth. It **auto-checks a trial when you finish it**: Izaro voices a plaque line
+only on completion, and the zone you're standing in says which trial it was (the same
+zone can host a trial in two difficulties, so the act decides). It also shows a hint
+while you're in a trial's zone, and you can click any trial to correct it.
 
 Don't use one of the tabs? **Settings → Overlay → Tabs to show** hides any of them
 (at least one stays on); with a single tab the switcher disappears entirely.

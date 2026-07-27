@@ -223,9 +223,12 @@ interface PobImportResponseBridge {
   errors: string[]
 }
 
+type LabTierBridge = 'normal' | 'cruel' | 'merciless'
+
 interface TrialStateBridge {
   id: string
   act: number
+  lab: LabTierBridge
   zone: string
   seen: boolean
 }

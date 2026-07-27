@@ -2,6 +2,7 @@
 // six trials per bound character, persists, and pushes state to the overlay.
 
 import { TrialsEngine } from './engine.ts'
+import { actFromAreaId } from '../profile/engine.ts'
 import { store } from '../settings.ts'
 import { Channels, type TrialsSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
@@ -20,7 +21,7 @@ export class TrialsService {
     this.overlay = overlay
     this.log = log
     this.engine = new TrialsEngine()
-    log.addAreaListener((area) => this.onZone(area.name))
+    log.addAreaListener((area) => this.onZone(area.name, actFromAreaId(area.areaId)))
     // Izaro's plaque line identifies the trial you just finished — auto-check it.
     log.addIzaroListener((line) => this.onIzaro(line))
   }
@@ -49,9 +50,9 @@ export class TrialsService {
     this.afterChange()
   }
 
-  private onZone(zoneName: string): void {
+  private onZone(zoneName: string, act: number | null): void {
     this.syncCharacter()
-    if (this.engine.applyZone(zoneName)) this.afterChange()
+    if (this.engine.applyZone(zoneName, act)) this.afterChange()
   }
 
   private onIzaro(line: string): void {
