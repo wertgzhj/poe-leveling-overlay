@@ -25,12 +25,20 @@ export interface GemSourceInfo {
 }
 
 // Siosa (Act 3, after "A Fixture of Fate") and Lilly Roth (Act 6+) sell almost
-// every gem to any class (plan §5.2). Used as a fallback for known campaign gems
-// that don't have a gem-specific source yet — you can always top up there.
+// every gem to any class (plan §5.2). A *guess* for gems with no gem-specific
+// source — only used while the dataset can't answer the question itself (see
+// `hasBroadVendorData` below).
 export const BROAD_VENDORS: readonly GemSourceInfo[] = [
   { kind: 'vendor', act: 3, npc: 'Siosa', classes: undefined, fallback: true, note: 'A3 Library — sells most gems' },
   { kind: 'vendor', act: 6, npc: 'Lilly Roth', classes: undefined, fallback: true, note: 'A6+ — sells most gems' }
 ] as const
+
+/** NPCs whose stock the wiki lists per gem. Their presence in the data is what
+ *  tells us the dataset can answer "does a broad vendor sell this?" itself. */
+const BROAD_VENDOR_NPCS = new Set(['siosa', 'lilly roth'])
+/** How many explicit broad-vendor rows make the dataset authoritative. A couple
+ *  of hand-written entries shouldn't flip it; the wiki fetch yields hundreds. */
+export const BROAD_VENDOR_DATA_MIN = 20
 
 export interface GemInfo {
   attr?: Attr
@@ -94,11 +102,22 @@ export class GemData {
   private readonly byKey = new Map<string, GemInfo>()
   /** "<act>|<quest>" -> lowest gem level that quest hands out. */
   private readonly questLevel = new Map<string, number>()
+  /** True when the dataset lists Siosa/Lilly stock per gem (i.e. the wiki fetch
+   *  has run). Then "no source" is an answer — they don't sell it — and the
+   *  broad-vendor guess must stay quiet. */
+  private readonly hasBroadVendorData: boolean
 
   constructor(gems: Record<string, GemInfo>) {
     for (const [name, info] of Object.entries(gems)) {
       this.byKey.set(normalizeGemName(name), info)
     }
+    let broadVendorRows = 0
+    for (const info of this.byKey.values()) {
+      for (const s of info.sources ?? []) {
+        if (s.kind === 'vendor' && s.npc && BROAD_VENDOR_NPCS.has(s.npc.toLowerCase())) broadVendorRows++
+      }
+    }
+    this.hasBroadVendorData = broadVendorRows >= BROAD_VENDOR_DATA_MIN
     // Chronological quest order, derived instead of hardcoded: a quest's gems
     // scale with where it sits in the campaign, so the LOWEST gem level a quest
     // rewards ranks it within its act (verified to reproduce the real order for
@@ -147,14 +166,20 @@ export class GemData {
     return all.filter((s) => !s.classes || s.classes.includes(cls))
   }
 
-  /** Earliest source for a class: lowest act, quest reward before vendor. Falls
-   *  back to the broad vendors (Siosa/Lilly) for a known campaign gem with no
-   *  gem-specific source, so the shopping list is still useful without full data. */
+  /** Earliest source for a class: lowest act, quest reward before vendor.
+   *
+   *  With a filled dataset there is deliberately NO fallback: the wiki lists
+   *  Siosa's and Lilly's stock per gem, so a gem without any source is one they
+   *  don't sell — Vaal, Awakened and Transfigured gems, and drop-only supports
+   *  like Empower. Guessing "Siosa · Act 3" for those was worse than saying
+   *  nothing (it sent people shopping for gems that only drop). The guess only
+   *  survives for a dataset that predates the fetch, where it's the best we have. */
   earliestSource(gem: string, cls?: CharClass | null): GemSourceInfo | null {
     const options = this.sourcesFor(gem, cls)
     if (options.length > 0) {
       return [...options].sort((a, b) => a.act - b.act || rank(a.kind) - rank(b.kind))[0]
     }
+    if (this.hasBroadVendorData) return null
     // Only known gems (present in gems.json) fall back — an unknown name might
     // not be a real campaign gem, so don't claim Siosa sells it.
     if (this.info(gem)?.attr) return BROAD_VENDORS[0]

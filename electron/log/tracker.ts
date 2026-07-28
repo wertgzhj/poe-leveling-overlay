@@ -41,6 +41,16 @@ export interface TrackerCallbacks {
   onLevelUp?: (ev: LevelUpEvent) => void
 }
 
+/** What a backscan window actually contained, per event kind. The split matters
+ *  for diagnosis: `areaGenerated` is locale-independent, `zoneEntered` and
+ *  `levelUp` are localized. A window with the former and none of the latter is
+ *  the signature of a game client running in a language we have no patterns for. */
+export interface BackscanCounts {
+  areaGenerated: number
+  zoneEntered: number
+  levelUp: number
+}
+
 export interface TrackerOptions {
   /** areaId -> display name (data/areas/<lang>.json) */
   areaNames: Record<string, string>
@@ -136,13 +146,18 @@ export class ProgressTracker {
    * Mutates state without emitting events; character binding falls to the most
    * frequent level-up name in the window — you always see your own level-ups,
    * party members only while grouped. Ties resolve to the latest seen.
+   *
+   * Returns what the window contained per kind, so the caller can tell "nothing
+   * happened yet" from "we can't read this client's language".
    */
-  backscan(lines: string[], parser: LogParser): void {
+  backscan(lines: string[], parser: LogParser): BackscanCounts {
+    const counts: BackscanCounts = { areaGenerated: 0, zoneEntered: 0, levelUp: 0 }
     let lastName: string | null = null
     for (const line of lines) {
       const ev = parser.parseLine(line)
       if (!ev) continue
       if (ev.kind === 'levelUp') lastName = ev.name
+      if (ev.kind !== 'izaro') counts[ev.kind]++
       this.apply(ev, false)
     }
     if (!this.explicitBinding && !this.adoptedBinding && this.levelUpCounts.size > 0) {
@@ -156,6 +171,7 @@ export class ProgressTracker {
       }
       this.adoptedBinding = best
     }
+    return counts
   }
 
   handle(ev: ParsedLogEvent): void {

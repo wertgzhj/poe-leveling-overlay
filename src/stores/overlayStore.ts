@@ -19,6 +19,8 @@ interface OverlayStore {
   logStatus: WatcherStatusBridge | null
   tracked: TrackerStateBridge | null
   recentEvents: LogEventSummaryBridge[]
+  /** The log parses only its locale-independent lines — non-English client. */
+  languageMismatch: boolean
   debugOpen: boolean
   // guide (P2)
   guide: GuideStateBridge | null
@@ -59,16 +61,24 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   logStatus: null,
   tracked: null,
   recentEvents: [],
+  languageMismatch: false,
   debugOpen: false,
   guide: null,
   profile: null,
   trials: null,
   update: null,
   updateDismissed: false,
-  tab: 'guide',
+  // Gems first: it works out of the box (bundled gem data + PoB import), while
+  // the Guide depends on route content the user still has to write.
+  tab: 'gems',
   patch: (partial) => set(partial),
   applyLogSnapshot: (snap) =>
-    set({ logStatus: snap.status, tracked: snap.state, recentEvents: snap.recent }),
+    set({
+      logStatus: snap.status,
+      tracked: snap.state,
+      recentEvents: snap.recent,
+      languageMismatch: snap.languageMismatch
+    }),
   pushEvent: (ev) =>
     set((s) => ({ recentEvents: [...s.recentEvents, ev].slice(-RECENT_MAX) }))
 }))

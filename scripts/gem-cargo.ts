@@ -45,12 +45,19 @@ export function parseClasses(raw: unknown): CharClass[] | undefined {
   return unique
 }
 
+/** MediaWiki namespace pages ("Template:…", "Category:…") ride along in Cargo
+ *  results because they carry the same table rows. No gem name contains a
+ *  colon, so this is a safe reject. */
+const WIKI_NAMESPACE = /^[A-Za-z][\w ]*:/
+
 /** The gem name for a rewards row — the reward field (on poewiki an aliased
  *  _pageName: the tables attach to each gem's page), else the raw page name.
- *  Wiki disambiguation suffixes like "Blight (gem)" are stripped. */
+ *  Wiki disambiguation suffixes like "Blight (gem)" are stripped; namespace
+ *  pages are dropped so wiki scaffolding never lands in gems.json. */
 export function gemName(row: CargoRow): string | undefined {
   const raw = str(row['reward']) ?? str(row['_pageName']) ?? str(row['reward_id'])
-  return raw?.replace(/\s*\((?:skill )?gem\)$/i, '')
+  if (!raw || WIKI_NAMESPACE.test(raw)) return undefined
+  return raw.replace(/\s*\((?:skill )?gem\)$/i, '')
 }
 
 function actNumber(row: CargoRow): number | undefined {

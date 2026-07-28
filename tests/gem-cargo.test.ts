@@ -54,6 +54,15 @@ test('gemName strips wiki disambiguation suffixes', () => {
   assert.equal(gemName({ reward: 'Vaal Fireball' }), 'Vaal Fireball')
 })
 
+test('gemName rejects MediaWiki namespace pages', () => {
+  // These ride along in Cargo results and used to land in gems.json as "gems".
+  assert.equal(gemName({ reward: 'Template:Create skill gem article/preload' }), undefined)
+  assert.equal(gemName({ _pageName: 'Category:Skill gems' }), undefined)
+  assert.equal(gemName({ reward: 'Module:Item2' }), undefined)
+  // No real gem name has a colon, and normal names are untouched.
+  assert.equal(gemName({ reward: 'Herald of Ice' }), 'Herald of Ice')
+})
+
 test('questRowToSource maps a valid row and rejects an invalid one', () => {
   const row: CargoRow = { reward: 'Fireball', act: '1', quest: 'Enemy at the Gate', classes: 'Witch' }
   assert.deepEqual(questRowToSource(row), {

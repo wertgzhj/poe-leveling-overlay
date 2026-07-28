@@ -1,6 +1,7 @@
 {
   "_note": "Route template — the route is YOURS to write (owner decision, plan changelog 2026-07-17): edit this file freely, the overlay hot-reloads it on save and shows validation errors in the panel. Steps match by areaId when known (see data/areas/en.json; the dev 🐞 panel shows the id of every zone you enter) or by zone display name until you learn the id. Step types: quest | waypoint | trial | town | boss | kill | enter | hint. 'rewardHint: true' marks quest-reward steps for the P3 gem panel. Keep step ids stable — progress is saved against them.",
   "act": 1,
+  "skeleton": true,
   "name": "Act 1",
   "steps": [
     {

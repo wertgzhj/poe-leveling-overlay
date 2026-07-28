@@ -1,6 +1,7 @@
 {
   "_note": "FALLBACK skeleton — replace with your own Act 9 route (hot-reloads on save).",
   "act": 9,
+  "skeleton": true,
   "name": "Act 9",
   "steps": [
     { "id": "a9-town", "zone": "Highgate", "type": "town", "text": "Highgate (returned): quests, gems, reward", "rewardHint": true },

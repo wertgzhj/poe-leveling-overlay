@@ -25,6 +25,7 @@ export class GuideService {
   private engine: GuideEngine | null = null
   private route: Route | null = null
   private acts: number[] = []
+  private skeletonActs: number[] = []
   private errors: string[] = []
   private charKey = DEFAULT_CHAR_KEY
   private watched: string[] = []
@@ -61,6 +62,7 @@ export class GuideService {
     return {
       route: this.route,
       acts: this.acts,
+      skeletonActs: this.skeletonActs,
       errors: this.errors,
       doneIds: engineSnap?.doneIds ?? [],
       cursorIndex: engineSnap?.cursorIndex ?? 0,
@@ -131,6 +133,7 @@ export class GuideService {
       this.route = null
       this.engine = null
       this.acts = []
+      this.skeletonActs = []
       this.push()
       return
     }
@@ -138,6 +141,7 @@ export class GuideService {
     const combined = combineRoutes(routes)
     this.errors = [...errors, ...combined.errors]
     this.acts = combined.acts
+    this.skeletonActs = combined.skeletonActs
     const route: Route = { act: combined.acts[0], name: 'Campaign', steps: combined.steps }
     this.route = route
     this.charKey = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY

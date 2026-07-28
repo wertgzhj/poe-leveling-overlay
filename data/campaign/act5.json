@@ -1,6 +1,7 @@
 {
   "_note": "FALLBACK skeleton — replace with your own Act 5 route (hot-reloads on save). Act 5's hub name is unset here — fill it in from the 🐞 panel.",
   "act": 5,
+  "skeleton": true,
   "name": "Act 5",
   "steps": [
     { "id": "a5-start", "type": "hint", "text": "Act 5 (Oriath under Kitava). Placeholder — add your zones and the town hub" },

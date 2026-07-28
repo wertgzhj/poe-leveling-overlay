@@ -38,6 +38,10 @@ export interface Route {
   act: number
   name?: string
   steps: RouteStep[]
+  /** The bundled placeholder route, not a real one. Set on the shipped fallback
+   *  files so the overlay can say so instead of looking broken; DELETE IT once
+   *  you've written this act yourself and the notice disappears. */
+  skeleton?: boolean
 }
 
 export interface RouteParseResult {
@@ -124,13 +128,23 @@ export function validateRoute(raw: unknown): RouteParseResult {
   })
 
   if (errors.length > 0) return { route: null, errors }
-  return { route: { act, name: typeof obj['name'] === 'string' ? obj['name'] : undefined, steps }, errors: [] }
+  return {
+    route: {
+      act,
+      name: typeof obj['name'] === 'string' ? obj['name'] : undefined,
+      steps,
+      skeleton: obj['skeleton'] === true ? true : undefined
+    },
+    errors: []
+  }
 }
 
 export interface CombinedRoute {
   steps: RouteStep[]
   /** Acts present, in order. */
   acts: number[]
+  /** Acts still running on the bundled placeholder route (`skeleton: true`). */
+  skeletonActs: number[]
   errors: string[]
 }
 
@@ -156,5 +170,10 @@ export function combineRoutes(routes: Route[]): CombinedRoute {
       steps.push({ ...step, act: route.act })
     }
   }
-  return { steps, acts: ordered.map((r) => r.act), errors }
+  return {
+    steps,
+    acts: ordered.map((r) => r.act),
+    skeletonActs: ordered.filter((r) => r.skeleton).map((r) => r.act),
+    errors
+  }
 }

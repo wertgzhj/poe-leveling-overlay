@@ -8,6 +8,11 @@ export interface ResolvedPobInput {
   error?: string
 }
 
+/** A paste host that never answers must not leave the Import button spinning. */
+const FETCH_TIMEOUT_MS = 15_000
+/** A PoB export is tens of KB; anything past this isn't one, so stop reading. */
+const MAX_BYTES = 4 * 1024 * 1024
+
 export async function resolvePobInput(input: string): Promise<ResolvedPobInput> {
   const t = input.trim()
   if (!t) return { error: 'paste a Path of Building code or a pobb.in / pastebin link' }
@@ -19,13 +24,24 @@ export async function resolvePobInput(input: string): Promise<ResolvedPobInput> 
     return { error: 'unsupported link — paste a pobb.in or pastebin link, or the export code itself' }
   }
   try {
-    const res = await fetch(raw, { redirect: 'follow' })
+    const res = await fetch(raw, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+    })
     if (!res.ok) return { error: `could not fetch the link (HTTP ${res.status})` }
-    const text = (await res.text()).trim()
+    const body = await res.arrayBuffer()
+    if (body.byteLength > MAX_BYTES) {
+      return { error: 'the link returned far too much data to be a Path of Building export' }
+    }
+    const text = new TextDecoder().decode(body).trim()
     if (!text) return { error: 'the link returned nothing' }
     return text.startsWith('<') ? { xml: text } : { code: text }
   } catch (e) {
-    return { error: `could not fetch the link: ${(e as Error).message}` }
+    const err = e as Error
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      return { error: 'the link took too long to respond — try again, or paste the export code' }
+    }
+    return { error: `could not fetch the link: ${err.message}` }
   }
 }
 
