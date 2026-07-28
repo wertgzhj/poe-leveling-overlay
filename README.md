@@ -82,7 +82,11 @@ Two things to know:
    - Steam: `…\steamapps\common\Path of Exile\logs\Client.txt`
    - Standalone: `…\Grinding Gear Games\Path of Exile\logs\Client.txt`
 2. Run Path of Exile in **Windowed Fullscreen** — exclusive fullscreen covers overlays.
-3. Optional: set your character name (Settings → Game log) if you play in a party,
+3. Run the game in **English**. Two of the three log lines the overlay reads are
+   translated by the game, and only English patterns ship — on another language
+   zones still track but your level never does (the overlay says so rather than
+   quietly half-working). Adding a language is a data change, see below.
+4. Optional: set your character name (Settings → Game log) if you play in a party,
    so a partymate's level-up can't advance your progress. Solo it auto-detects.
 
 ## Hotkeys
@@ -153,7 +157,8 @@ yourself for now.
   stage switches automatically as you level. `gemPlan` records where each gem comes
   from (`questReward` / `vendor` / `drop`), which feeds the reward + buy hints.
 - Socket colours come from `data/gems.json` (gem → attribute); a gem missing there
-  shows a neutral pip with a `?`. It covers ~70 common gems for now — add your own.
+  shows a neutral pip with a `?`. It covers **820 gems** pulled from the wiki, so
+  that's rare — a gem with no attribute at all (Portal, Quickstep) fits any socket.
 - A gem another class **starts** with is tagged **"mule a &lt;class&gt;"** — roll a level-1
   character of that class, stash its two starting gems, and you have it for free
   instead of buying it (from `data/starting-gems.json`).
@@ -190,16 +195,32 @@ npm run import-pob -- "<pob code or file>" --name "My Build" --out data/profiles
 
 - **Overlay is invisible:** switch PoE to Windowed Fullscreen; the overlay cannot draw
   over exclusive fullscreen.
-- **No zone detection:** check the `Client.txt` path and your client language.
+- **No zone detection:** check the `Client.txt` path in Settings.
+- **Zones track but the level never changes:** the game isn't running in English. The
+  tracker strip turns amber and says so; switch the client to English, or add your
+  language as `data/log-patterns/<lang>.json` and register it in
+  `electron/log/service.ts`.
+- **A gem says "drop/trade" but you can buy it:** the gem data may predate a patch —
+  repo → Actions → *Fetch gem data* → *Run workflow*, then report it if it persists.
 - **A hotkey does nothing:** another app may already own that combo — rebind it.
 
 ## Privacy
 
 Local-only by design: no server, no account, no telemetry, no analytics, no crash
-reporting. In the default configuration **no data ever leaves your machine**. The log
-watcher matches only zone/level patterns and discards every other line immediately;
-chat and whisper content is never parsed, stored, or displayed. Settings and profiles
-are stored locally. Full details: [`docs/plan.md`](docs/plan.md) §11.1.
+reporting. **Nothing about you, your characters or your game is ever sent anywhere.**
+The log watcher matches only zone/level patterns and discards every other line
+immediately; chat and whisper content is never parsed, stored, or displayed. Settings
+and profiles are stored locally.
+
+The app makes exactly two kinds of outbound request, both to third parties that learn
+nothing but your IP:
+
+- **GitHub**, to check for a new release (on launch and every 6h). This is the only
+  one that happens on its own — it sends no data about you, and an unreachable feed
+  just reports "Couldn't check".
+- **pobb.in / pastebin**, only when *you* paste a link into the PoB importer.
+
+Full details: [`docs/plan.md`](docs/plan.md) §11.1.
 
 ## Development
 
