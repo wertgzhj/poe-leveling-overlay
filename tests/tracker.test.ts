@@ -151,6 +151,30 @@ test('backscan replays silently and resumes area + bound level', () => {
   assert.equal(snap.area?.name, "Lioneye's Watch")
 })
 
+test('backscan counts per kind, exposing a non-English client', () => {
+  // A real English window has all three kinds.
+  const { tracker } = makeTracker()
+  const real = tracker.backscan(loadFixtureLines('act1-real.log'), parser)
+  assert.ok(real.areaGenerated > 0)
+  assert.ok(real.zoneEntered > 0)
+  assert.ok(real.levelUp > 0)
+
+  // A localized client still emits the locale-independent "Generating level N
+  // area" line, but neither "You have entered" nor the level-up line — that
+  // asymmetry is what the overlay reports instead of silently never levelling.
+  const german = makeTracker().tracker.backscan(
+    [
+      '2026/07/28 12:00:00 1 [DEBUG Client 1] Generating level 13 area "1_1_town" with seed 1',
+      '2026/07/28 12:00:01 1 [INFO Client 1] : Du hast Lioneyes Wacht betreten.',
+      '2026/07/28 12:00:02 1 [INFO Client 1] : MeinExilant (Hexe) ist jetzt Stufe 12'
+    ],
+    parser
+  )
+  assert.equal(german.areaGenerated, 1)
+  assert.equal(german.zoneEntered, 0)
+  assert.equal(german.levelUp, 0)
+})
+
 test('changing the explicit binding rebinds level from what was already seen', () => {
   const { tracker } = makeTracker()
   tracker.backscan(loadFixtureLines('act1-synthetic.log'), parser)

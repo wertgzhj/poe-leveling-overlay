@@ -1,6 +1,7 @@
 {
   "_note": "FALLBACK skeleton — replace with your own Act 8 route (hot-reloads on save).",
   "act": 8,
+  "skeleton": true,
   "name": "Act 8",
   "steps": [
     { "id": "a8-town", "zone": "The Sarn Encampment", "type": "town", "text": "The Sarn Encampment (returned): quests, gems, reward", "rewardHint": true },

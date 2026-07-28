@@ -99,6 +99,7 @@ interface LogSnapshotBridge {
   status: WatcherStatusBridge
   state: TrackerStateBridge
   recent: LogEventSummaryBridge[]
+  languageMismatch: boolean
 }
 
 type StepTypeBridge =
@@ -126,11 +127,13 @@ interface RouteBridge {
   act: number
   name?: string
   steps: RouteStepBridge[]
+  skeleton?: boolean
 }
 
 interface GuideStateBridge {
   route: RouteBridge | null
   acts: number[]
+  skeletonActs: number[]
   errors: string[]
   doneIds: string[]
   cursorIndex: number

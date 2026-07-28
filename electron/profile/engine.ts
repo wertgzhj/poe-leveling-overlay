@@ -149,6 +149,19 @@ export function resolveStage(stage: Stage, index: number, gems: GemData): Resolv
   }
 }
 
+/** What the app knows about the player, beyond the profile itself. Passed as one
+ *  object because these are independent optional refinements — as positional
+ *  arguments they were easy to line up wrong (and one of them, the current act,
+ *  turned out to be the wrong signal entirely). */
+export interface AcquisitionContext {
+  /** Normalized gems the profile's class already owns at level 1. */
+  startingGems?: ReadonlySet<string>
+  /** Tracked character level — drives the now/coming-up split. */
+  playerLevel?: number | null
+  /** Normalized gem -> classes that start with it, for the mule hint. */
+  startingOwners?: ReadonlyMap<string, string[]>
+}
+
 /**
  * The gems used by the active stage, grouped by how they're acquired — the
  * basis for the reward recommendation and the town shopping list. A gem's
@@ -161,11 +174,9 @@ export function acquisitionsForStage(
   profile: Profile,
   stageIndex: number,
   gems?: GemData,
-  currentAct?: number | null,
-  startingGems?: ReadonlySet<string>,
-  playerLevel?: number | null,
-  startingOwners?: ReadonlyMap<string, string[]>
+  ctx: AcquisitionContext = {}
 ): Acquisitions {
+  const { startingGems, playerLevel, startingOwners } = ctx
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
   // How many copies this stage needs: the same gem in two different links means
@@ -211,7 +222,7 @@ export function acquisitionsForStage(
   rewards.sort(acquisitionOrder)
   purchases.sort(acquisitionOrder)
   other.sort(acquisitionOrder)
-  const upcoming = upcomingRewards(profile, stageIndex, used, gems, currentAct, startingGems)
+  const upcoming = upcomingRewards(profile, stageIndex, used, gems, startingGems, startingOwners)
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming)
   // Only the to-do plan is deduped against the previous stage; rewardGroups and
@@ -328,16 +339,20 @@ function groupQuestRank(group: RewardGroup): number {
 }
 
 /** Gems first used in LATER stages that a quest rewards this class — worth
- *  grabbing the moment the quest offers them (free beats buying later). Only
- *  quests up to the CURRENT act are listed (an Act 3 reward is noise while you
- *  stand in Act 1 — owner feedback); unknown act = no filter. */
+ *  grabbing the moment the quest offers them (free beats buying later).
+ *
+ *  Nothing is dropped by act. Act detection needs a numeric area id and lags
+ *  behind reality, and hiding an Act 3 reward while you stand in Act 1 was one
+ *  of the ways gems went missing from the list — "dim, don't hide" (owner).
+ *  `buildPlan` dims what your level can't use yet, which is the signal we can
+ *  actually track. */
 function upcomingRewards(
   profile: Profile,
   stageIndex: number,
   activeGems: Set<string>,
   gems?: GemData,
-  currentAct?: number | null,
-  startingGems?: ReadonlySet<string>
+  startingGems?: ReadonlySet<string>,
+  startingOwners?: ReadonlyMap<string, string[]>
 ): AcquisitionEntry[] {
   const seen = new Set<string>()
   const out: AcquisitionEntry[] = []
@@ -349,9 +364,8 @@ function upcomingRewards(
         if (activeGems.has(key) || seen.has(key)) continue
         seen.add(key)
         const planned = profile.gemPlan.find((p) => p.gem.toLowerCase() === key)
-        const acq = classify(planned ?? { gem }, profile.meta.class, gems, startingGems)
+        const acq = classify(planned ?? { gem }, profile.meta.class, gems, startingGems, startingOwners)
         if (acq.bucket !== 'reward') continue
-        if (currentAct != null && acq.act != null && acq.act > currentAct) continue
         out.push({ ...acq, fromLevel: st.range[0] })
       }
     }

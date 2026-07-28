@@ -78,13 +78,17 @@ function DetectCharButton(): React.JSX.Element {
 
 function trackerLine(
   logStatus: WatcherStatusBridge | null,
-  tracked: TrackerStateBridge | null
+  tracked: TrackerStateBridge | null,
+  languageMismatch: boolean
 ): string {
   if (logStatus?.state !== 'watching') {
     if (logStatus?.state === 'missing') return 'Client.txt not found — check Settings'
     if (logStatus?.state === 'error') return 'Log read error — see Settings'
     return 'Set the Client.txt path in Settings to enable tracking'
   }
+  // Zone lines parse (they're locale-independent) but the localized ones don't:
+  // levels never arrive, so the Gems tab would sit on stage 1 forever. Say why.
+  if (languageMismatch) return 'Log is not in English — set the game to English for level tracking'
   const zone = tracked?.area?.name ?? 'zone unknown'
   const char =
     tracked?.character != null
@@ -106,6 +110,7 @@ export function MainPanel(): React.JSX.Element {
     trials,
     tab,
     visibleTabs,
+    languageMismatch,
     patch
   } = useOverlayStore()
 
@@ -201,10 +206,16 @@ export function MainPanel(): React.JSX.Element {
           <span
             className={
               'inline-block h-1.5 w-1.5 shrink-0 rounded-full ' +
-              (logStatus?.state === 'watching' ? 'bg-emerald-400' : 'bg-white/25')
+              (logStatus?.state !== 'watching'
+                ? 'bg-white/25'
+                : languageMismatch
+                  ? 'bg-amber-400'
+                  : 'bg-emerald-400')
             }
           />
-          <span className="min-w-0 flex-1 truncate">{trackerLine(logStatus, tracked)}</span>
+          <span className={'min-w-0 flex-1 truncate' + (languageMismatch ? ' text-amber-300' : '')}>
+            {trackerLine(logStatus, tracked, languageMismatch)}
+          </span>
           <DetectCharButton />
         </div>
 
@@ -279,6 +290,15 @@ function TrialsBody(): React.JSX.Element {
   const { trials } = useOverlayStore()
   if (!trials) return <p className="px-1 text-xs text-overlay-muted">Loading…</p>
 
+  // done/total per Labyrinth, counted once instead of per row.
+  const perLab = new Map<LabTierBridge, { done: number; total: number }>()
+  for (const t of trials.trials) {
+    const tally = perLab.get(t.lab) ?? { done: 0, total: 0 }
+    tally.total++
+    if (t.seen) tally.done++
+    perLab.set(t.lab, tally)
+  }
+
   return (
     <>
       <div className="mb-2 flex items-center justify-between px-1">
@@ -297,7 +317,7 @@ function TrialsBody(): React.JSX.Element {
         const here = t.id === trials.currentZoneTrialId
         // Header per Labyrinth tier — three separate labs run in the campaign.
         const newLab = i === 0 || trials.trials[i - 1].lab !== t.lab
-        const labSeen = trials.trials.filter((x) => x.lab === t.lab)
+        const tally = perLab.get(t.lab)
         return (
           <div key={`${t.id}-w`}>
           {newLab && (
@@ -306,7 +326,7 @@ function TrialsBody(): React.JSX.Element {
                 {LAB_LABEL[t.lab]}
               </span>
               <span className="text-[10px] text-overlay-muted/70">
-                {labSeen.filter((x) => x.seen).length}/{labSeen.length}
+                {tally?.done}/{tally?.total}
               </span>
             </div>
           )}
@@ -339,7 +359,8 @@ function TrialsBody(): React.JSX.Element {
       })}
       <p className="mt-1 px-1 text-[10px] text-overlay-muted">
         Finishing a trial auto-checks it (Izaro&apos;s plaque line names the trial);
-        the hint and a manual click are fallbacks. All six unlock the Labyrinth.
+        the hint and a manual click are fallbacks. Each Labyrinth needs all of its
+        own trials — six for Normal, three each for Cruel and Merciless.
       </p>
     </>
   )
@@ -356,6 +377,29 @@ function ErrorBox({ title, errors }: { title: string; errors: string[] }): React
   )
 }
 
+// The bundled routes are placeholders by design — the owner writes the real
+// ones. Saying so beats letting a step called "Placeholder — add the zones you
+// take" read as a broken feature, and it points at the editor that fixes it.
+function SkeletonNotice({ act }: { act: number | undefined }): React.JSX.Element {
+  return (
+    <div className="mb-2 rounded-md border border-overlay-border/60 bg-black/25 p-2">
+      <div className="text-[11px] text-overlay-text">
+        {act ? `Act ${act} runs on the placeholder route.` : 'This route is a placeholder.'}
+      </div>
+      <p className="mt-0.5 text-[10px] leading-snug text-overlay-muted">
+        The overlay ships the engine, not the route — write your own steps and they
+        hot-reload as you save. Everything else (Gems, Trials) works regardless.
+      </p>
+      <button
+        onClick={() => window.overlay?.openEditor()}
+        className="mt-1.5 rounded bg-overlay-accent/15 px-2 py-0.5 text-[10px] text-overlay-accent hover:bg-overlay-accent/25"
+      >
+        Open the route editor…
+      </button>
+    </div>
+  )
+}
+
 function GuideBody(): React.JSX.Element {
   const { guide, clickThrough, hotkeys } = useOverlayStore()
   const route = guide?.route ?? null
@@ -364,12 +408,15 @@ function GuideBody(): React.JSX.Element {
   const steps = route?.steps ?? []
   const start = Math.max(0, cursor - 1)
   const visibleSteps = steps.slice(start, cursor + 5)
+  const currentAct = steps[cursor]?.act
+  const onSkeleton = currentAct != null && (guide?.skeletonActs ?? []).includes(currentAct)
 
   return (
     <>
       {guide?.errors && guide.errors.length > 0 && (
         <ErrorBox title="Route file problems:" errors={guide.errors} />
       )}
+      {onSkeleton && <SkeletonNotice act={currentAct} />}
       {!route && (!guide || guide.errors.length === 0) && (
         <p className="px-1 text-xs text-overlay-muted">Loading route…</p>
       )}
@@ -380,7 +427,7 @@ function GuideBody(): React.JSX.Element {
       )}
 
       {visibleSteps.map((step, vi) => {
-        const idx = steps.indexOf(step)
+        const idx = start + vi
         const isDone = done.has(step.id)
         const isCurrent = idx === cursor
         const prevAct = vi > 0 ? visibleSteps[vi - 1].act : undefined

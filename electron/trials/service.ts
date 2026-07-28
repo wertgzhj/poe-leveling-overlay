@@ -1,5 +1,6 @@
-// Glue for the trials tracker: consumes area events from the log, tracks the
-// six trials per bound character, persists, and pushes state to the overlay.
+// Glue for the trials tracker: consumes area + Izaro events from the log, tracks
+// all twelve campaign trials per bound character, persists, and pushes state to
+// the overlay.
 
 import { TrialsEngine } from './engine.ts'
 import { actFromAreaId } from '../profile/engine.ts'
@@ -24,6 +25,10 @@ export class TrialsService {
     log.addAreaListener((area) => this.onZone(area.name, actFromAreaId(area.areaId)))
     // Izaro's plaque line identifies the trial you just finished — auto-check it.
     log.addIzaroListener((line) => this.onIzaro(line))
+    // start() runs before the log backscan has identified the character, so the
+    // first load lands under "(default)". Level-ups are the signal that names a
+    // character, so re-check the binding on every one, not just on zone changes.
+    log.addLevelListener(() => this.syncCharacter())
   }
 
   start(): void {
@@ -84,8 +89,12 @@ export class TrialsService {
   }
 
   private persistNow(): void {
+    const seen = this.engine.seenIds()
     const all = { ...store.get('trialsProgress') }
-    all[this.charKey] = this.engine.seenIds()
+    // Don't leave an empty "(default)" bucket behind when the backscan finally
+    // names the character — it's noise in a file people do open and edit.
+    if (seen.length === 0 && this.charKey === DEFAULT_CHAR_KEY && !(DEFAULT_CHAR_KEY in all)) return
+    all[this.charKey] = seen
     store.set('trialsProgress', all)
   }
 

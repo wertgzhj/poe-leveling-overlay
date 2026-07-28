@@ -125,6 +125,9 @@ export interface LogSnapshot {
   status: WatcherStatus
   state: TrackerSnapshot
   recent: LogEventSummary[]
+  /** The log is being read, but only its locale-independent lines parse — the
+   *  game client speaks a language the shipped patterns don't cover. */
+  languageMismatch: boolean
 }
 
 /** The character the log says you're on now — from the most recent level-up —
@@ -140,6 +143,9 @@ export interface GuideState {
   route: Route | null
   /** Acts present in the combined campaign route, in order. */
   acts: number[]
+  /** Acts still on the bundled placeholder route — the panel says so rather
+   *  than presenting "Placeholder — add the zones you take" as guidance. */
+  skeletonActs: number[]
   /** Route-file validation problems, shown to the author in the panel. */
   errors: string[]
   doneIds: string[]

@@ -3,7 +3,7 @@
 // the resume snapshot (§8 restart/resume). The only file in electron/log/ that
 // may import Electron modules.
 
-import { LogParser } from './parser.ts'
+import { LogParser, type LogPatterns } from './parser.ts'
 import { ProgressTracker, type AreaState, type LevelUpEvent } from './tracker.ts'
 import { LogFileWatcher } from './watcher.ts'
 import { store } from '../settings.ts'
@@ -13,6 +13,13 @@ import patternsEn from '../../data/log-patterns/en.json'
 import areasEn from '../../data/areas/en.json'
 
 const RECENT_MAX = 100
+
+// Log patterns per client language (settings.logLanguage). Only English ships:
+// two of the three tracking lines are localized by the game, and guessing another
+// client's wording would silently mistrack rather than fail loudly. Adding a
+// language is a data change — drop a file next to en.json and register it here.
+const PATTERNS: Record<string, LogPatterns> = { en: patternsEn.patterns }
+const DEFAULT_LANGUAGE = 'en'
 
 export class LogService {
   private readonly overlay: OverlayController
@@ -27,10 +34,13 @@ export class LogService {
   private levelListeners: Array<(level: number) => void> = []
   /** In-main consumers of Izaro voice lines (the trials service). */
   private izaroListeners: Array<(line: string) => void> = []
+  /** The backscan saw locale-independent lines but none of the localized ones —
+   *  i.e. the game runs in a language we have no patterns for. */
+  private languageMismatch = false
 
   constructor(overlay: OverlayController) {
     this.overlay = overlay
-    this.parser = new LogParser(patternsEn.patterns)
+    this.parser = this.makeParser()
     this.tracker = this.makeTracker()
     this.watcher = new LogFileWatcher(
       {
@@ -58,6 +68,7 @@ export class LogService {
   }
 
   setPath(path: string | null): void {
+    this.languageMismatch = false // re-decided by the new file's backscan
     if (path) {
       this.watcher.start(path) // restart = fresh backscan on the new file
     } else {
@@ -88,7 +99,8 @@ export class LogService {
     return {
       status: this.watcher.status(),
       state: this.tracker.snapshot(),
-      recent: this.recent
+      recent: this.recent,
+      languageMismatch: this.languageMismatch
     }
   }
 
@@ -100,6 +112,15 @@ export class LogService {
     this.persistSoon()
     this.pushSnapshot()
     return found
+  }
+
+  private makeParser(): LogParser {
+    const lang = store.get('logLanguage')
+    const patterns = PATTERNS[lang]
+    if (!patterns) {
+      console.warn(`[log] no patterns for language "${lang}" — using ${DEFAULT_LANGUAGE}`)
+    }
+    return new LogParser(patterns ?? PATTERNS[DEFAULT_LANGUAGE])
   }
 
   private makeTracker(): ProgressTracker {
@@ -118,7 +139,11 @@ export class LogService {
     // the log tail — the log is ground truth. Persisted state only fills the
     // gaps the tail couldn't answer (e.g. the log was deleted).
     this.tracker = this.makeTracker()
-    this.tracker.backscan(lines, this.parser)
+    const seen = this.tracker.backscan(lines, this.parser)
+    // "Generating level N area" is locale-independent; "You have entered" and
+    // the level-up line are not. Seeing only the former means the client speaks
+    // a language we can't read — zone tracking limps on, levels never arrive.
+    this.languageMismatch = seen.areaGenerated > 0 && seen.zoneEntered === 0 && seen.levelUp === 0
     const persisted = store.get('progress')
     if (persisted) this.tracker.hydrate(persisted)
     this.persistSoon()

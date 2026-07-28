@@ -9,7 +9,6 @@ import { join } from 'node:path'
 import { parseProfile, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
 import {
-  actFromAreaId,
   activeStageIndex,
   stepStageView,
   resolveStage,
@@ -29,8 +28,6 @@ export class ProfileService {
   private profile: Profile | null = null
   private errors: string[] = []
   private level: number | null = null
-  /** Campaign act the player is in (from area ids) — scopes the upcoming-rewards list. */
-  private act: number | null = null
   /** Manually paged gem stage (◀/▶). null = follow the tracked level (auto). */
   private viewIndex: number | null = null
   private watchedPath: string | null = null
@@ -56,19 +53,10 @@ export class ProfileService {
       this.level = level
       this.push()
     })
-    log.addAreaListener((area) => {
-      const act = actFromAreaId(area.areaId)
-      if (act !== null && act !== this.act) {
-        this.act = act
-        this.push()
-      }
-    })
   }
 
   start(): void {
-    const state = this.log.getSnapshot().state
-    this.level = state.level
-    this.act = actFromAreaId(state.area?.areaId)
+    this.level = this.log.getSnapshot().state.level
     this.reload()
   }
 
@@ -118,15 +106,11 @@ export class ProfileService {
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
           : null,
       acquisitions: profile
-        ? acquisitionsForStage(
-            profile,
-            stageIndex,
-            this.gems,
-            this.act,
-            this.startingByClass.get(profile.meta.class),
-            this.level,
-            this.startingOwners
-          )
+        ? acquisitionsForStage(profile, stageIndex, this.gems, {
+            startingGems: this.startingByClass.get(profile.meta.class),
+            playerLevel: this.level,
+            startingOwners: this.startingOwners
+          })
         : null,
       stageCount: profile ? profile.stages.length : 0,
       viewedIndex: stageIndex,

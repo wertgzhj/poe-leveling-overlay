@@ -72,11 +72,23 @@ test('entering a trial zone hints it — it is NOT auto-completed', () => {
   assert.equal(snap.trials.find((t) => t.id === 't-a1-lower-prison')?.seen, false)
 })
 
-test('zone matching is case-insensitive and prefix-tolerant', () => {
+test('zone matching is case-insensitive and tolerates an instance suffix', () => {
   const e = new TrialsEngine()
   assert.equal(e.matchZone('the crypt level 1')?.id, 't-a2-crypt')
   assert.equal(e.matchZone('The Crypt Level 1 (some suffix)')?.id, 't-a2-crypt')
   assert.equal(e.matchZone('The Coast'), null)
+})
+
+test('a nested zone name does not borrow another trial (Crypt Level 2 is not The Crypt)', () => {
+  const e = new TrialsEngine()
+  // Act 7's trial zone is "The Crypt"; Act 2 also has "The Crypt Level 2", which
+  // holds no trial. A prefix match used to hint the cruel trial there — and, since
+  // completion is zone-first, an Izaro line would have ticked the wrong one.
+  assert.equal(e.matchZone('The Crypt Level 2', 2), null)
+  assert.equal(e.applyZone('The Crypt Level 2', 2), false)
+  assert.equal(e.snapshot().currentZoneTrialId, null)
+  // The real Act 7 zone still matches.
+  assert.equal(e.matchZone('The Crypt', 7)?.id, 't-a7-crypt')
 })
 
 test('leaving for a non-trial zone clears the hint', () => {

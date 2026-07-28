@@ -135,15 +135,18 @@ export class TrialsEngine {
     return true
   }
 
-  /** The trial located in a zone (exact or prefix name match), else null. When
-   *  the act is known it wins the tie between difficulties that share a zone
-   *  name; without it the earliest matching trial is used. */
+  /** The trial located in a zone, else null. The name must match exactly (a
+   *  parenthesised instance suffix is tolerated) — a free prefix match is wrong
+   *  here, because zone names nest: "The Crypt Level 2" in Act 2 would otherwise
+   *  match Act 7's "The Crypt" and hint at a trial that isn't there. When the act
+   *  is known it wins the tie between difficulties that share a zone name;
+   *  without it the earliest matching trial is used. */
   matchZone(zoneName: string, act?: number | null): TrialDef | null {
     if (!zoneName) return null
     const entered = zoneName.trim().toLowerCase()
     const hits = this.trials.filter((t) => {
       const z = t.zone.toLowerCase()
-      return entered === z || entered.startsWith(z)
+      return entered === z || entered.startsWith(`${z} (`)
     })
     if (hits.length === 0) return null
     if (act != null) {

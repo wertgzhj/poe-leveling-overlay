@@ -69,6 +69,25 @@ test('all ten shipped act files validate and combine without errors', () => {
   assert.equal(combined.steps.at(-1)?.act, 10)
 })
 
+test('the shipped acts declare themselves placeholders; authoring clears the flag', () => {
+  const routes: Route[] = []
+  for (let act = 1; act <= 10; act++) routes.push(loadAct(act))
+  // Every bundled act is a fallback skeleton — the overlay says so instead of
+  // presenting "Placeholder — add the zones you take" as real guidance.
+  assert.deepEqual(combineRoutes(routes).skeletonActs, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+
+  // An authored route simply omits the flag, and the notice disappears with it.
+  const authored = parseRoute(
+    JSON.stringify({
+      act: 2,
+      name: 'My Act 2',
+      steps: [{ id: 'mine', type: 'town', zone: 'The Forest Encampment', text: 'go' }]
+    })
+  ).route!
+  assert.equal(authored.skeleton, undefined)
+  assert.deepEqual(combineRoutes([authored]).skeletonActs, [])
+})
+
 test('combineRoutes concatenates by act and flags cross-act id collisions', () => {
   const a: Route = { act: 2, name: 'A2', steps: [{ id: 'x', type: 'town', zone: 'T', text: 'a' }] }
   const b: Route = { act: 1, name: 'A1', steps: [{ id: 'x', type: 'kill', zone: 'Z', text: 'b' }] }
