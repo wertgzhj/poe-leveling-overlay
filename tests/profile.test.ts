@@ -240,6 +240,32 @@ test('once the dataset lists Siosa stock, a sourceless gem is NOT attributed to 
   )
 })
 
+test('gems.json is shipped as a resource, since it is no longer bundled', () => {
+  // The profile service reads gems.json from process.resourcesPath at runtime
+  // instead of importing it (halves the main bundle). That means the packaging
+  // config is now load-bearing: drop this entry and the installed app starts
+  // with no gem colours and no sources, which nothing else here would catch —
+  // typecheck, tests and the bundle build all stay green.
+  const builder = readFileSync(repoPath('electron-builder.yml'), 'utf8')
+  assert.match(builder, /from:\s*data\/gems\.json/, 'electron-builder must ship data/gems.json')
+  assert.match(builder, /to:\s*gems\.json/, 'it must land at resources/gems.json')
+
+  // And the file the config points at has to be loadable in the shape the
+  // service expects (`{ gems: { … } }`).
+  const raw = JSON.parse(readFileSync(repoPath('data/gems.json'), 'utf8')) as { gems?: object }
+  assert.ok(raw.gems && typeof raw.gems === 'object')
+  assert.ok(Object.keys(raw.gems).length > 100, 'gem data looks truncated')
+})
+
+test('missing gem data degrades to unknown colours instead of throwing', () => {
+  // What the loader falls back to when the resource can't be read. The Gems tab
+  // reports the reason separately (gemDataError); the engine must stay usable.
+  const empty = new GemData({})
+  assert.equal(empty.color('Frostbolt').unknown, true)
+  assert.equal(empty.earliestSource('Frostbolt', 'Witch'), null)
+  assert.equal(empty.info('Frostbolt'), undefined)
+})
+
 test('the shipped gem data never sends you to a vendor for drop-only gems', () => {
   const gems = exampleGems()
   // Vaal (corrupted drops), Awakened (endgame drops) and Transfigured ("… of X",

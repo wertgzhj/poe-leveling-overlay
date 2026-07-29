@@ -31,7 +31,7 @@ Last updated: 2026-07-28.
 only the bundle build. Everything else marked ✅ has real unit/integration tests.
 
 **Automated:** `npm test` (parser, tracker, watcher, guide, profile, PoB, trials, editor,
-gem-cargo, overlay-mouse — 132 tests), `npm run typecheck`, `npm run build`; CI runs all of
+gem-cargo, overlay-mouse — 134 tests), `npm run typecheck`, `npm run build`; CI runs all of
 these on every push/PR (`ci.yml`), plus `npm audit --omit=dev`.
 
 ## Manual test steps (Windows, with the game)
@@ -45,7 +45,10 @@ Then, in Path of Exile (**Windowed Fullscreen**, **English client** — see belo
 0. **First run:** the overlay opens on the **Gems** tab. The Guide tab shows a
    "runs on the placeholder route" notice with a button into the editor — that's
    expected until you write your own route; the notice disappears per act as you
-   remove `"skeleton": true` from that act's file.
+   remove `"skeleton": true` from that act's file. **Check the gem pips have
+   colours** (red/green/blue, not all `?`): gem data ships as a resource rather
+   than inside the bundle, so a packaging mistake would show up here and nowhere
+   in CI — and it would say so in a red box at the top of the tab.
 1. **Overlay (P0):** it stays on top of the game; `Ctrl+Shift+O/C/M` toggle
    visibility / click-through / move mode; drag to reposition (move mode); check it
    still behaves at non-100% DPI and on a second monitor. In **interactive** mode,
