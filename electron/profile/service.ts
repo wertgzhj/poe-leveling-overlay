@@ -1,7 +1,14 @@
 // Glue between the pure profile engine and the Electron app: profile file load
 // with hot reload, gem data, live active-stage tracking from the bound
 // character's level, and IPC pushes. Profiles resolve from settings.profilePath
-// (owner's file) or the bundled example; gems.json ships with the app.
+// (owner's file) or the bundled example.
+//
+// gems.json is READ AT RUNTIME rather than imported. It's ~370 KB, and an import
+// makes the bundler inline it as a JavaScript object literal that V8 has to
+// parse on every launch — over half the main bundle. Shipped as a resource and
+// JSON.parse'd, it's both smaller and faster to start. The cost is a file that
+// can go missing, so a failure to load is reported loudly (`gemDataError`)
+// instead of degrading into "every gem is unknown".
 
 import { app } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
@@ -18,13 +25,15 @@ import { store } from '../settings.ts'
 import { Channels, type ProfileSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
 import type { LogService } from '../log/service.ts'
-import gemsJson from '../../data/gems.json'
 import startingGemsJson from '../../data/starting-gems.json'
 
 export class ProfileService {
   private readonly overlay: OverlayController
   private readonly log: LogService
   private readonly gems: GemData
+  /** Set when gems.json couldn't be loaded — surfaced in the Gems tab, because
+   *  silently colourless gems with no sources look like a data gap, not a bug. */
+  private readonly gemDataError: string | null
   private profile: Profile | null = null
   private errors: string[] = []
   private level: number | null = null
@@ -41,7 +50,9 @@ export class ProfileService {
   constructor(overlay: OverlayController, log: LogService) {
     this.overlay = overlay
     this.log = log
-    this.gems = new GemData(gemsJson.gems as Record<string, GemInfo>)
+    const loaded = loadGemData()
+    this.gems = loaded.gems
+    this.gemDataError = loaded.error
     for (const [cls, names] of Object.entries(startingGemsJson.classes as Record<string, string[]>)) {
       this.startingByClass.set(cls, new Set(names.map(normalizeGemName)))
       for (const name of names) {
@@ -97,6 +108,7 @@ export class ProfileService {
     return {
       meta: profile?.meta ?? null,
       errors: this.errors,
+      gemDataError: this.gemDataError,
       level,
       classMismatch:
         !!profile && !!trackedClass && trackedClass !== profile.meta.class ? trackedClass : null,
@@ -184,5 +196,24 @@ export class ProfileService {
 
   private push(): void {
     this.overlay.window?.webContents.send(Channels.profileState, this.snapshot())
+  }
+}
+
+/** Read gems.json from the app's resources (packaged) or the repo (dev). Never
+ *  throws: an unreadable file yields empty gem data plus the reason, so the Gems
+ *  tab can say what's wrong rather than quietly showing every gem as unknown. */
+function loadGemData(): { gems: GemData; error: string | null } {
+  const path = app.isPackaged
+    ? join(process.resourcesPath, 'gems.json')
+    : join(app.getAppPath(), 'data', 'gems.json')
+  try {
+    const raw = JSON.parse(readFileSync(path, 'utf8')) as { gems?: Record<string, GemInfo> }
+    const gems = raw.gems
+    if (!gems || typeof gems !== 'object') {
+      return { gems: new GemData({}), error: `gem data at ${path} has no "gems" object` }
+    }
+    return { gems: new GemData(gems), error: null }
+  } catch (e) {
+    return { gems: new GemData({}), error: `could not read gem data (${path}): ${(e as Error).message}` }
   }
 }

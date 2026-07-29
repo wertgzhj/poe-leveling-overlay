@@ -22,6 +22,11 @@ extraResources:
     to: campaign
   - from: data/profiles
     to: profiles
+  # Read at runtime, not bundled: inlining ~370 KB of gem data as a JS object
+  # literal made it over half the main bundle and cost V8 a parse on every
+  # launch. The app reports a loud error if this file is missing.
+  - from: data/gems.json
+    to: gems.json
 win:
   # nsis = an installer that adds Start Menu + Desktop shortcuts.
   # portable = a single .exe you can double-click with no install.

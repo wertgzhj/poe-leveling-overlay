@@ -679,6 +679,14 @@ function GemBody(): React.JSX.Element {
   return (
     <>
       {profile.errors.length > 0 && <ErrorBox title="Profile file problems:" errors={profile.errors} />}
+      {/* Without gem data every gem is colourless and sourceless — that looks
+          like missing curation rather than a broken install, so name it. */}
+      {profile.gemDataError && (
+        <ErrorBox
+          title="Gem data failed to load — colours and sources are unavailable:"
+          errors={[profile.gemDataError, 'Reinstalling the overlay should fix this.']}
+        />
+      )}
 
       <div className="mb-2 flex items-center gap-2 px-1 text-[11px] text-overlay-muted">
         <span className="text-overlay-text">{profile.meta.class}</span>

@@ -209,6 +209,7 @@ interface ProfileMetaBridge {
 interface ProfileSnapshotBridge {
   meta: ProfileMetaBridge | null
   errors: string[]
+  gemDataError: string | null
   level: number | null
   classMismatch: string | null
   activeStage: ResolvedStageBridge | null

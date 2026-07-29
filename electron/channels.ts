@@ -156,6 +156,9 @@ export interface GuideState {
 export interface ProfileSnapshot {
   meta: ProfileMeta | null
   errors: string[]
+  /** gems.json (shipped as a resource) failed to load — colours and sources are
+   *  all missing, which needs saying out loud rather than looking like bad data. */
+  gemDataError: string | null
   level: number | null
   /** The tracked class when it differs from the profile's class, else null (§8). */
   classMismatch: string | null
