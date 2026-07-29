@@ -1,0 +1,13 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Gem data looks wrong after a patch
+    url: https://github.com/wertgzhj/poe-leveling-overlay/actions/workflows/fetch-gems.yml
+    about: >
+      Gem attributes, level requirements and quest/vendor sources come from the
+      Path of Exile Wiki. After a league or patch, run "Fetch gem data" first —
+      that fixes most of it. Open an issue if it persists.
+  - name: My route is empty / says "placeholder"
+    url: https://github.com/wertgzhj/poe-leveling-overlay#author-your-route
+    about: >
+      Expected. The overlay ships the guide engine and deliberately thin
+      skeletons; you write the route (in-app editor or JSON). Not a bug.

@@ -1,0 +1,81 @@
+name: Bug report
+description: Something in the overlay behaves wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing. The fields below are the ones that actually let me
+        reproduce something — the version and the tab are usually enough to
+        narrow it down, and the 🐞 panel settles anything to do with tracking.
+
+  - type: input
+    id: version
+    attributes:
+      label: Overlay version
+      description: Bottom-right corner of the overlay, e.g. `v0.6.0`.
+      placeholder: v0.6.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - Guide tab
+        - Gems tab
+        - Trials tab
+        - Settings
+        - Route / profile editor
+        - Overlay window (hotkeys, click-through, position)
+        - Updating / installing
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected vs. what happened
+      description: Both halves, please — "wrong gem shown" is hard to act on without knowing which one you expected.
+      placeholder: |
+        Expected: Herald of Ice listed as a quest reward from Act 2.
+        Happened: it says "buy · Siosa · Act 3".
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to get there
+      placeholder: |
+        1. Level 14 Witch, standing in The Crypt Level 1
+        2. Open the Gems tab
+        3. …
+
+  - type: textarea
+    id: debug
+    attributes:
+      label: Dev panel output (tracking issues only)
+      description: >
+        If it's about zones, levels, stage switching or trials: run from source
+        (`npm run dev`), open the 🐞 button in the overlay header, and paste the
+        last few lines. That panel shows only parsed events — no raw log.
+      render: text
+
+  - type: input
+    id: client-language
+    attributes:
+      label: Game client language
+      description: Only English is supported today; if it's another one, that's very likely the cause.
+      placeholder: English
+
+  - type: checkboxes
+    id: build
+    attributes:
+      label: Which build
+      options:
+        - label: Installer (`…-setup.exe`)
+        - label: Portable (`…-portable.exe`)
+        - label: From source (`npm run dev`)
