@@ -87,6 +87,33 @@ test('unknown gems render neutral and are flagged', () => {
   const c = gems.color('Mystery Gem')
   assert.equal(c.color, 'W')
   assert.equal(c.unknown, true)
+  assert.equal(c.anyColor, undefined)
+})
+
+test('a gem with no attribute requirement is white on purpose, not for lack of data', () => {
+  // Owner report: Portal, Convocation and friends have no attribute requirement
+  // in game, so they fit any socket. Flagging them "?" (= "not in gems.json")
+  // made the overlay look broken on gems it knows perfectly well.
+  const gems = new GemData({ Portal: { requiredLevel: 10 }, Fireball: { attr: 'int' } })
+  const portal = gems.color('Portal')
+  assert.equal(portal.color, 'W')
+  assert.equal(portal.unknown, false, 'it IS in the data — do not flag it as a guess')
+  assert.equal(portal.anyColor, true)
+
+  // A gem with an attribute is unaffected, and so is a truly unknown one.
+  assert.equal(gems.color('Fireball').anyColor, undefined)
+  assert.equal(gems.color('Nonexistent Gem').unknown, true)
+})
+
+test('the shipped data has attribute-less gems, and none of them is flagged unknown', () => {
+  const gems = exampleGems()
+  // These are the real cases from data/gems.json that triggered the report.
+  for (const gem of ['Portal', 'Convocation', 'Quickstep']) {
+    const c = gems.color(gem)
+    assert.equal(c.color, 'W', `${gem} has no attribute, so it fits any socket`)
+    assert.equal(c.unknown, false, `${gem} is in the gem data — it must not show "?"`)
+    assert.equal(c.anyColor, true)
+  }
 })
 
 test('gem matching ignores case and a trailing " Support"', () => {
@@ -283,6 +310,36 @@ test('the shipped gem data never sends you to a vendor for drop-only gems', () =
   assert.equal(gems.earliestSource('Frostbolt', 'Witch')?.act, 1)
   // Wiki scaffolding must never have landed in the gem list.
   assert.deepEqual(Object.keys(JSON.parse(readFileSync(repoPath('data/gems.json'), 'utf8')).gems).filter((k) => k.includes(':')), [])
+})
+
+test('the shipped gem data carries no HTML entities and no duplicate names', () => {
+  const gems = JSON.parse(readFileSync(repoPath('data/gems.json'), 'utf8')).gems as Record<
+    string,
+    { sources?: Array<{ quest?: string; npc?: string }> }
+  >
+  const entity = /&(#\d+|#[xX][0-9a-fA-F]+|[a-zA-Z]+);/
+  const offenders: string[] = []
+  const seen = new Map<string, string>()
+  for (const [name, info] of Object.entries(gems)) {
+    if (entity.test(name)) offenders.push(`gem name: ${name}`)
+    for (const s of info.sources ?? []) {
+      if (s.quest && entity.test(s.quest)) offenders.push(`${name} quest: ${s.quest}`)
+      if (s.npc && entity.test(s.npc)) offenders.push(`${name} npc: ${s.npc}`)
+    }
+    // Gem lookup is case-insensitive, so two spellings of one name collide and
+    // one silently wins — which is how the escaped duplicates hid.
+    const key = name.toLowerCase()
+    const prev = seen.get(key)
+    if (prev) offenders.push(`duplicate: "${prev}" and "${name}"`)
+    seen.set(key, name)
+  }
+  assert.deepEqual(offenders.slice(0, 10), [], 'run the fetch again after fixing scripts/gem-cargo.ts')
+
+  // The quest that actually tripped this must be spelled the way the game does.
+  const quests = new Set(
+    Object.values(gems).flatMap((g) => (g.sources ?? []).map((s) => s.quest).filter(Boolean))
+  )
+  assert.ok(quests.has("The Siren's Cadence"))
 })
 
 test('vendor cost tier follows the gem level requirement (provisional table)', () => {

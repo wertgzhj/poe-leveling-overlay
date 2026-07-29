@@ -616,16 +616,29 @@ function SocketGroup({
         return (
           <div key={i} className="flex items-center gap-1.5 text-xs">
             <span
+              title={
+                gem.unknown
+                  ? 'Colour unknown — this gem is not in the gem data'
+                  : gem.anyColor
+                    ? 'No attribute requirement — fits a socket of any colour'
+                    : undefined
+              }
               className={
                 'inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-black/80 ' +
-                PIP_CLASS[gem.color]
+                PIP_CLASS[gem.color] +
+                // An "any colour" gem gets a dashed ring: white on purpose, not
+                // white for lack of data. Nothing else changes about the row.
+                (gem.anyColor ? ' border border-dashed border-white/50 bg-transparent' : '')
               }
             >
               {gem.color === 'W' ? '' : gem.color}
             </span>
             <span className="min-w-0 truncate text-overlay-text">{gem.name}</span>
+            {/* Only a genuinely unrecognised gem is flagged. A gem with no
+                attribute requirement is fully known — marking it "?" made the
+                overlay look broken on Portal, Convocation and friends. */}
             {gem.unknown && (
-              <span className="text-[9px] text-amber-400/80" title="not in gems.json — colour guessed">?</span>
+              <span className="text-[9px] text-amber-400/80" title="not in the gem data — colour guessed">?</span>
             )}
             {tag && (
               <span

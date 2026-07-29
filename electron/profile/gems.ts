@@ -94,8 +94,13 @@ const ATTR_COLOR: Record<Attr, SocketColor> = { str: 'R', dex: 'G', int: 'B' }
 export interface ColoredGem {
   name: string
   color: SocketColor
-  /** True when the gem wasn't found in gems.json (colour is a guess). */
+  /** True when the gem wasn't found in gems.json at all — we have no idea what
+   *  colour it is, and the neutral pip is a placeholder. */
   unknown: boolean
+  /** True when the gem IS known and simply has no attribute requirement, so it
+   *  goes in a socket of any colour (Portal, Convocation, …). A white pip is the
+   *  correct, complete answer here — not a missing one. */
+  anyColor?: boolean
 }
 
 export class GemData {
@@ -148,10 +153,16 @@ export class GemData {
     return this.byKey.get(normalizeGemName(gem))
   }
 
+  /** Socket colour for a gem. Three outcomes, deliberately distinct: a known
+   *  attribute gives its colour; a known gem with no attribute requirement gives
+   *  a white "any socket" pip (that's an answer, not a gap); an unknown name
+   *  gives a white pip flagged as a guess. Conflating the last two made the
+   *  overlay put a "?" on gems it knew perfectly well. */
   color(gem: string): ColoredGem {
     const info = this.info(gem)
-    const c = info?.attr ? ATTR_COLOR[info.attr] : undefined
-    if (!c) return { name: gem, color: 'W', unknown: true }
+    if (!info) return { name: gem, color: 'W', unknown: true }
+    const c = info.attr ? ATTR_COLOR[info.attr] : undefined
+    if (!c) return { name: gem, color: 'W', unknown: false, anyColor: true }
     return { name: gem, color: c, unknown: false }
   }
 

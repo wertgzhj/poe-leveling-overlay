@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   parseClasses,
   parseAttr,
+  decodeEntities,
   gemName,
   gemBasicsRow,
   buildGemBasics,
@@ -52,6 +53,25 @@ test('gemName strips wiki disambiguation suffixes', () => {
   assert.equal(gemName({ reward: 'Portal (skill gem)' }), 'Portal')
   // ...but only as a suffix — parenthesised words elsewhere survive.
   assert.equal(gemName({ reward: 'Vaal Fireball' }), 'Vaal Fireball')
+})
+
+test('HTML entities from the wiki are decoded in every text field', () => {
+  // The wiki escapes apostrophes. Left alone this duplicated nine gems under a
+  // second name, split "The Siren's Cadence" into two quests for the derived
+  // ordering, and put "&#039;" in front of the player.
+  assert.equal(decodeEntities('Assassin&#039;s Mark'), "Assassin's Mark")
+  assert.equal(decodeEntities('The Siren&#039;s Cadence'), "The Siren's Cadence")
+  assert.equal(decodeEntities('&amp; &lt; &gt; &quot; &apos;'), '& < > " \'')
+  assert.equal(decodeEntities('&#x27;&#39;'), "''") // hex and decimal
+  assert.equal(decodeEntities('nothing to do here'), 'nothing to do here')
+  assert.equal(decodeEntities('&notanentity; A&B'), '&notanentity; A&B') // left alone
+
+  // It applies through the row readers, not just as a standalone helper.
+  assert.equal(gemName({ reward: 'Warlord&#039;s Mark' }), "Warlord's Mark")
+  const q = questRowToSource({ reward: 'Arc', act: '1', quest: 'The Siren&#039;s Cadence' })
+  assert.equal(q?.source.quest, "The Siren's Cadence")
+  const v = vendorRowToSource({ reward: 'Arc', act: '1', npc: 'Nessa', quest: 'The Siren&#039;s Cadence' })
+  assert.equal(v?.source.quest, "The Siren's Cadence")
 })
 
 test('gemName rejects MediaWiki namespace pages', () => {

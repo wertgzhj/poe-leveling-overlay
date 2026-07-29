@@ -112,7 +112,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder"
           ]
@@ -121,7 +121,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Marauder",
@@ -719,7 +719,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
           ]
@@ -728,7 +728,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -832,7 +832,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
           ]
@@ -841,7 +841,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -869,7 +869,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -880,7 +880,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -1547,7 +1547,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Witch"
           ]
@@ -1556,7 +1556,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Shadow",
             "Templar",
@@ -1704,7 +1704,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
           ]
@@ -1713,7 +1713,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Templar",
@@ -1817,7 +1817,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Witch",
             "Shadow"
@@ -1827,7 +1827,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -2506,7 +2506,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
           ]
@@ -2515,7 +2515,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder",
             "Witch",
@@ -3498,7 +3498,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -3799,7 +3799,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger",
             "Shadow",
@@ -3835,7 +3835,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Shadow",
             "Scion"
@@ -3845,7 +3845,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger",
             "Scion",
@@ -4076,7 +4076,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Witch",
             "Templar"
@@ -4086,7 +4086,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -4455,7 +4455,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Templar",
@@ -4755,7 +4755,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder"
           ]
@@ -4764,7 +4764,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Marauder",
@@ -5566,7 +5566,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Witch"
           ]
@@ -5575,7 +5575,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -6740,7 +6740,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder",
             "Duelist"
@@ -6750,7 +6750,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Marauder",
@@ -6875,7 +6875,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
           ]
@@ -6884,7 +6884,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -7592,7 +7592,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion"
           ]
@@ -7601,7 +7601,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder",
             "Scion",
@@ -7759,7 +7759,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
           ]
@@ -7768,7 +7768,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger",
             "Scion",
@@ -7923,7 +7923,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -8201,7 +8201,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Witch"
           ]
@@ -8210,7 +8210,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Templar",
@@ -9600,7 +9600,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder",
             "Duelist"
@@ -9610,7 +9610,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Marauder",
@@ -9800,7 +9800,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Witch",
             "Templar",
@@ -9811,7 +9811,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -9853,7 +9853,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -9919,7 +9919,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
           ]
@@ -9928,7 +9928,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -10135,7 +10135,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -10255,7 +10255,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder"
           ]
@@ -10264,7 +10264,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Marauder",
@@ -10806,7 +10806,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -10947,7 +10947,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist"
           ]
@@ -10956,7 +10956,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Marauder",
@@ -11266,7 +11266,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
           ]
@@ -11275,7 +11275,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -11357,7 +11357,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
           ]
@@ -11366,7 +11366,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger",
             "Scion",
@@ -11617,7 +11617,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar",
             "Witch"
@@ -11627,7 +11627,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar",
             "Witch",
@@ -12621,7 +12621,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
           ]
@@ -12630,7 +12630,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Shadow",
@@ -12709,7 +12709,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -13430,7 +13430,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger",
             "Shadow"
@@ -13440,7 +13440,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -13706,7 +13706,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Witch",
             "Templar",
@@ -13717,7 +13717,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -13796,7 +13796,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
           ]
@@ -13805,7 +13805,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder",
             "Templar",
@@ -13958,7 +13958,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist"
           ]
@@ -13967,7 +13967,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -14277,7 +14277,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
           ]
@@ -14286,7 +14286,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Ranger",
@@ -14705,7 +14705,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion"
           ]
@@ -14714,7 +14714,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder",
             "Templar",
@@ -14978,7 +14978,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Templar",
@@ -15052,7 +15052,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar",
             "Marauder",
@@ -15063,7 +15063,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Duelist",
             "Marauder",
@@ -15139,7 +15139,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar",
             "Scion"
@@ -15149,7 +15149,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -15182,7 +15182,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
           ]
@@ -15191,7 +15191,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -16736,7 +16736,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
           ]
@@ -16745,7 +16745,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger",
             "Scion",
@@ -17002,7 +17002,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Witch",
             "Shadow"
@@ -17012,7 +17012,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Ranger",
             "Scion",
@@ -17088,7 +17088,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Marauder",
             "Duelist"
@@ -17150,7 +17150,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
           ]
@@ -17159,7 +17159,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Shadow",
             "Scion",
@@ -17537,7 +17537,7 @@
         {
           "kind": "quest",
           "act": 1,
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
           ]
@@ -17546,7 +17546,7 @@
           "kind": "vendor",
           "act": 1,
           "npc": "Nessa",
-          "quest": "The Siren&#039;s Cadence",
+          "quest": "The Siren's Cadence",
           "classes": [
             "Scion",
             "Shadow",
@@ -17759,107 +17759,6 @@
         }
       ]
     },
-    "Alchemist&#039;s Mark": {
-      "attr": "dex",
-      "requiredLevel": 24,
-      "sources": [
-        {
-          "kind": "quest",
-          "act": 3,
-          "quest": "Lost in Love",
-          "classes": [
-            "Ranger"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Clarissa",
-          "quest": "Lost in Love",
-          "classes": [
-            "Ranger",
-            "Scion",
-            "Shadow"
-          ]
-        }
-      ]
-    },
-    "Assassin&#039;s Mark": {
-      "attr": "int",
-      "requiredLevel": 16,
-      "sources": [
-        {
-          "kind": "quest",
-          "act": 2,
-          "quest": "Intruders in Black",
-          "classes": [
-            "Shadow"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 2,
-          "npc": "Yeena",
-          "quest": "Intruders in Black",
-          "classes": [
-            "Ranger",
-            "Shadow",
-            "Duelist",
-            "Scion"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Siosa",
-          "quest": "A Fixture of Fate"
-        },
-        {
-          "kind": "vendor",
-          "act": 6,
-          "npc": "Lilly Roth",
-          "quest": "Fallen from Grace"
-        }
-      ]
-    },
-    "Battlemage&#039;s Cry": {
-      "attr": "str",
-      "requiredLevel": 24,
-      "sources": [
-        {
-          "kind": "quest",
-          "act": 3,
-          "quest": "Lost in Love",
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Siosa",
-          "quest": "A Fixture of Fate"
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Clarissa",
-          "quest": "Lost in Love",
-          "classes": [
-            "Duelist",
-            "Marauder",
-            "Scion",
-            "Templar"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 6,
-          "npc": "Lilly Roth",
-          "quest": "Fallen from Grace"
-        }
-      ]
-    },
     "Chain Hook of Angling": {
       "attr": "str",
       "requiredLevel": 12
@@ -17878,81 +17777,6 @@
     },
     "Divine Blast of Radiance": {
       "requiredLevel": 28
-    },
-    "General&#039;s Cry": {
-      "attr": "str",
-      "requiredLevel": 24,
-      "sources": [
-        {
-          "kind": "quest",
-          "act": 3,
-          "quest": "Lost in Love",
-          "classes": [
-            "Marauder"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Siosa",
-          "quest": "A Fixture of Fate"
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Clarissa",
-          "quest": "Lost in Love",
-          "classes": [
-            "Duelist",
-            "Marauder",
-            "Scion",
-            "Templar"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 6,
-          "npc": "Lilly Roth",
-          "quest": "Fallen from Grace"
-        }
-      ]
-    },
-    "Guardian&#039;s Blessing Support": {
-      "attr": "str",
-      "requiredLevel": 31,
-      "sources": [
-        {
-          "kind": "quest",
-          "act": 3,
-          "quest": "A Fixture of Fate",
-          "classes": [
-            "Templar"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Clarissa",
-          "quest": "A Fixture of Fate",
-          "classes": [
-            "Templar",
-            "Witch",
-            "Scion"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Siosa",
-          "quest": "A Fixture of Fate"
-        },
-        {
-          "kind": "vendor",
-          "act": 6,
-          "npc": "Lilly Roth",
-          "quest": "Fallen from Grace"
-        }
-      ]
     },
     "Holy Sweep of Hammerfalls": {
       "attr": "str",
@@ -17995,129 +17819,9 @@
         }
       ]
     },
-    "Pact of K&#039;Tash": {
-      "requiredLevel": 24
-    },
-    "Poacher&#039;s Mark": {
-      "attr": "dex",
-      "requiredLevel": 16,
-      "sources": [
-        {
-          "kind": "quest",
-          "act": 2,
-          "quest": "Intruders in Black",
-          "classes": [
-            "Ranger",
-            "Duelist"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 2,
-          "npc": "Yeena",
-          "quest": "Intruders in Black",
-          "classes": [
-            "Shadow",
-            "Duelist",
-            "Ranger",
-            "Scion"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Siosa",
-          "quest": "A Fixture of Fate"
-        },
-        {
-          "kind": "vendor",
-          "act": 6,
-          "npc": "Lilly Roth",
-          "quest": "Fallen from Grace"
-        }
-      ]
-    },
     "Reap of Butchery": {
       "attr": "str",
       "requiredLevel": 28
-    },
-    "Sniper&#039;s Mark": {
-      "attr": "dex",
-      "requiredLevel": 4,
-      "sources": [
-        {
-          "kind": "quest",
-          "act": 1,
-          "quest": "Breaking Some Eggs",
-          "classes": [
-            "Ranger",
-            "Duelist"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 1,
-          "npc": "Nessa",
-          "quest": "Breaking Some Eggs",
-          "classes": [
-            "Duelist",
-            "Ranger",
-            "Shadow",
-            "Scion"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Siosa",
-          "quest": "A Fixture of Fate"
-        },
-        {
-          "kind": "vendor",
-          "act": 6,
-          "npc": "Lilly Roth",
-          "quest": "Fallen from Grace"
-        }
-      ]
-    },
-    "Warlord&#039;s Mark": {
-      "attr": "str",
-      "requiredLevel": 16,
-      "sources": [
-        {
-          "kind": "quest",
-          "act": 2,
-          "quest": "Intruders in Black",
-          "classes": [
-            "Marauder",
-            "Duelist"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 2,
-          "npc": "Yeena",
-          "quest": "Intruders in Black",
-          "classes": [
-            "Marauder",
-            "Duelist",
-            "Ranger",
-            "Scion"
-          ]
-        },
-        {
-          "kind": "vendor",
-          "act": 3,
-          "npc": "Siosa",
-          "quest": "A Fixture of Fate"
-        },
-        {
-          "kind": "vendor",
-          "act": 6,
-          "npc": "Lilly Roth",
-          "quest": "Fallen from Grace"
-        }
-      ]
     }
   }
 }
