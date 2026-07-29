@@ -1,0 +1,41 @@
+PoE Leveling Overlay — third-party attribution
+==============================================
+
+The overlay itself is MIT licensed (see LICENSE). This file records where the
+data it ships comes from.
+
+
+Path of Exile Wiki (poewiki.net)
+--------------------------------
+
+`data/gems.json` — gem attributes, level requirements and per-class quest/vendor
+availability — is derived from the Path of Exile Wiki via its public Cargo query
+API (see `scripts/fetch-gem-data.ts`, and the "Fetch gem data" GitHub Action that
+refreshes it). No wiki prose is copied; only the structured game facts the tables
+expose.
+
+Wiki content is community-contributed and published under the licence stated at
+https://www.poewiki.net/wiki/Path_of_Exile_Wiki:Copyrights — consult that page
+before redistributing this data outside the overlay.
+
+
+Route and build-profile content
+-------------------------------
+
+None. The campaign routes in `data/campaign/` and the example profile in
+`data/profiles/` are written for this project and ship as deliberately thin
+placeholders (`"skeleton": true`) for you to replace.
+
+Earlier drafts of the design doc planned to convert route data from the
+open-source *exile-leveling* project. That was dropped in favour of
+owner-authored routes (plan changelog, 2026-07-17), so no exile-leveling data is
+present and none of its attribution applies.
+
+
+Grinding Gear Games
+-------------------
+
+This project is not affiliated with, endorsed by, or sponsored by Grinding Gear
+Games. "Path of Exile" and related names and imagery are their property. The
+overlay only reads the game's own `Client.txt` log file and sends nothing to the
+game (see README, "What it is & ToS compliance").
