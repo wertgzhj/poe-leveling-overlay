@@ -25,8 +25,32 @@ export interface GemSourceInfo {
 /** A Cargo row is an object of string/number fields; we read defensively. */
 export type CargoRow = Record<string, unknown>
 
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' '
+}
+
+/** Decode the HTML entities the wiki's Cargo API returns in text fields. It
+ *  escapes apostrophes as `&#039;`, so "The Siren's Cadence" arrives mangled —
+ *  which duplicated gems under a second name AND split one quest into two for
+ *  the derived quest ordering, besides being shown to the player verbatim. */
+export function decodeEntities(text: string): string {
+  return text.replace(/&(#\d+|#[xX][0-9a-fA-F]+|[a-zA-Z]+);/g, (whole, body: string) => {
+    if (body[0] !== '#') return NAMED_ENTITIES[body.toLowerCase()] ?? whole
+    const code =
+      body[1] === 'x' || body[1] === 'X'
+        ? Number.parseInt(body.slice(2), 16)
+        : Number.parseInt(body.slice(1), 10)
+    return Number.isFinite(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : whole
+  })
+}
+
 function str(v: unknown): string | undefined {
-  if (typeof v === 'string') return v.trim() || undefined
+  if (typeof v === 'string') return decodeEntities(v).trim() || undefined
   if (typeof v === 'number') return String(v)
   return undefined
 }

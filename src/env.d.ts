@@ -146,6 +146,7 @@ interface ColoredGemBridge {
   name: string
   color: SocketColorBridge
   unknown: boolean
+  anyColor?: boolean
 }
 
 interface ColoredSocketGroupBridge {
