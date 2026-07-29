@@ -1,6 +1,6 @@
 // Glue between the pure log pipeline (watcher -> parser -> tracker) and the
 // Electron app: settings, IPC pushes to the overlay window, and persistence of
-// the resume snapshot (§8 restart/resume). The only file in electron/log/ that
+// the resume snapshot (restart/resume). The only file in electron/log/ that
 // may import Electron modules.
 
 import { LogParser, type LogPatterns } from './parser.ts'

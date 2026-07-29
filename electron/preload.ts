@@ -22,7 +22,7 @@ function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
 }
 
 // The only surface exposed to the renderer. Sandboxed + contextIsolated, so the
-// overlay can reach exactly these channels and nothing else (plan §11.1).
+// overlay can reach exactly these channels and nothing else.
 const api = {
   getState: (): Promise<OverlayState> => ipcRenderer.invoke(Channels.overlayGetState),
 

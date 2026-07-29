@@ -1,7 +1,7 @@
 // Glue between the pure profile engine and the Electron app: profile file load
 // with hot reload, gem data, live active-stage tracking from the bound
 // character's level, and IPC pushes. Profiles resolve from settings.profilePath
-// (owner's file) or the bundled example.
+// (a file you point at) or the bundled example.
 //
 // gems.json is READ AT RUNTIME rather than imported. It's ~370 KB, and an import
 // makes the bundler inline it as a JavaScript object literal that V8 has to

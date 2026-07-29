@@ -114,7 +114,7 @@ just as safe.
 
 ## Your content stays yours
 
-Routes (`data/campaign/actN.json`) and build profiles are **owner-authored**.
+Routes (`data/campaign/actN.json`) and build profiles are **yours to write**.
 Edit them in the in-app editor (tray → *Edit routes & profile…*) or the JSON
 directly. Ship engines, schemas and honest fallback skeletons — never import
 route content from other projects.
@@ -123,5 +123,5 @@ route content from other projects.
 
 For local setup and the command reference, see the
 [README](README.md#development). For design rationale, see
-[`docs/plan.md`](docs/plan.md); for the manual test checklist,
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); for the manual test checklist,
 [`docs/TESTING.md`](docs/TESTING.md).

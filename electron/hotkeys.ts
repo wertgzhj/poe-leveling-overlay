@@ -5,7 +5,7 @@ import type { GuideService } from './guide/service.ts'
 
 /**
  * Register the global overlay hotkeys. These only ever drive the overlay — the
- * combo is consumed system-wide and never forwarded to the game (plan §2).
+ * combo is consumed system-wide and never forwarded to the game.
  * Returns the accelerators that failed to bind (e.g. already taken) so the
  * caller can surface a conflict.
  */

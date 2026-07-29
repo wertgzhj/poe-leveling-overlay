@@ -1,6 +1,6 @@
 // Pure Client.txt line parser (no Electron imports — unit-tested directly).
 // Patterns come from data/log-patterns/<lang>.json so a new client language is
-// a data change, not a code change (plan §8).
+// a data change, not a code change.
 
 export interface LogPatterns {
   /** Channel-sigil test that identifies chat/whisper/party/guild/trade lines. */
@@ -35,7 +35,7 @@ export class LogParser {
 
   /**
    * Classify one log line. Chat/whisper lines are dropped before any other
-   * matching — both for privacy (§11.1: chat is never parsed) and so pasted
+   * matching — both for privacy (chat is never parsed) and so pasted
    * text can't spoof a level-up or zone change. Unmatched lines return null
    * and are discarded immediately by the caller.
    */

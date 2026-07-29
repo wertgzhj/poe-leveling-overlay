@@ -101,7 +101,7 @@ test('parseStageTitle tolerates Lvl/Lv shorthand and ranges inside longer titles
 })
 
 test('overlapping labelled stages are clamped WITH a warning naming the stage', () => {
-  // The owner's real case: sets "1-11" and "9-24" -> first becomes 1–8.
+  // A real-world case: sets "1-11" and "9-24" -> first becomes 1–8.
   const xml = `<PathOfBuilding><Build className="Witch"/><Skills>
     <SkillSet title="1-11"><Skill enabled="true"><Gem nameSpec="Fireball" level="1"/></Skill></SkillSet>
     <SkillSet title="9-24"><Skill enabled="true"><Gem nameSpec="Firestorm" level="1"/></Skill></SkillSet>

@@ -24,12 +24,8 @@ Route and build-profile content
 
 None. The campaign routes in `data/campaign/` and the example profile in
 `data/profiles/` are written for this project and ship as deliberately thin
-placeholders (`"skeleton": true`) for you to replace.
-
-Earlier drafts of the design doc planned to convert route data from the
-open-source *exile-leveling* project. That was dropped in favour of
-owner-authored routes (plan changelog, 2026-07-17), so no exile-leveling data is
-present and none of its attribution applies.
+placeholders (`"skeleton": true`) for you to replace. No route or quest data is
+taken from any other project.
 
 
 Grinding Gear Games

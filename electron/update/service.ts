@@ -1,4 +1,4 @@
-// In-app auto-update (plan §9 P6+ / backlog "effortless updates"). Wraps
+// In-app auto-update. Wraps
 // electron-updater's autoUpdater, which reads the update feed baked in at build
 // time (app-update.yml -> the GitHub Releases of this repo, see the `publish`
 // block in electron-builder.yml). The flow the user sees: on launch we check,

@@ -1,6 +1,6 @@
 // Route schema + validation (pure, no Electron imports — unit-tested).
-// Route content is OWNER-AUTHORED by design (plan changelog 2026-07-17): the
-// app ships an engine and a template, not imported route data. Files live in
+// Route content is written by whoever uses the overlay: the app ships an
+// engine and a template, not route data imported from elsewhere. Files live in
 // data/campaign/ (dev) or userData/routes/ (override) and hot-reload on save,
 // so authoring feedback must be good: validation returns human messages, not
 // throws.
@@ -28,7 +28,7 @@ export interface RouteStep {
   zone?: string
   text: string
   hints?: string[]
-  /** P3: the GemPanel shows the build's reward choice at this step. */
+  /** The Gems tab shows the build's reward choice at this step. */
   rewardHint?: boolean
   /** Owning act — set when acts are combined into one campaign list (not authored). */
   act?: number

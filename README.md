@@ -32,23 +32,20 @@ semi-automatically from a Path of Building import.
 Only English game clients are supported today — see [Setup](#setup).
 
 <details>
-<summary>Project status &amp; versioning</summary>
+<summary>More</summary>
 
-Phases **P0–P6** implemented, plus post-P6 follow-ups: transparent overlay with
-hotkeys and in-overlay settings; live `Client.txt` tracking (restart-safe resume,
-auto-detects a newly-rolled character); route guide across all ten acts;
-build-profile Gems tab; PoB import; Trials tracker; visual route/profile editor;
-packaged Windows release with auto-update. Gem data (attributes, level
-requirements, per-class quest/vendor sources) is pulled from the Path of Exile
-Wiki in one command — `npm run fetch-gems`, also the *Fetch gem data* GitHub
-Action.
-
-Where things stand + what to test: [`docs/TESTING.md`](docs/TESTING.md).
-Design & changelog: [`docs/plan.md`](docs/plan.md).
+How it's built and why: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+What's verified and what still needs checking in game:
+[`docs/TESTING.md`](docs/TESTING.md).
 Third-party data attribution: [`NOTICE`](NOTICE).
+Security and the app's network behaviour: [`SECURITY.md`](SECURITY.md).
 
-Version is `0.0.0` during development on purpose — a real version is set only
-when a `v*` tag is pushed to cut a release (see below).
+Gem data — attributes, level requirements and per-class quest/vendor sources —
+comes from the Path of Exile Wiki and is refreshed with one command
+(`npm run fetch-gems`, or the *Fetch gem data* GitHub Action) after a patch.
+
+The version in `package.json` stays `0.0.0`; a release takes its version from
+the `v*` tag that builds it.
 
 </details>
 
@@ -61,7 +58,8 @@ The overlay is a **separate window that sits on top of the game**. It only ever
 Exile process — no memory reading, no injection, no simulated input, no automation.
 Hotkeys control the overlay only (the key combo is consumed system-wide and never
 forwarded to the game). This mirrors long-tolerated tools like Awakened PoE Trade
-and Exile Leveling. Full guardrails: [`docs/plan.md`](docs/plan.md) §2.
+and Exile Leveling. Full guardrails:
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#tos-position).
 
 ## Install (Windows)
 
@@ -249,7 +247,8 @@ nothing but your IP:
   just reports "Couldn't check".
 - **pobb.in / pastebin**, only when *you* paste a link into the PoB importer.
 
-Full details: [`docs/plan.md`](docs/plan.md) §11.1.
+Full details: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#privacy) and
+[`SECURITY.md`](SECURITY.md).
 
 ## Development
 

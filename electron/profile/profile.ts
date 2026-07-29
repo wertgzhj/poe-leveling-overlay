@@ -1,6 +1,6 @@
 // Build-profile schema + validation (pure, no Electron imports — unit-tested).
-// Profiles are OWNER-AUTHORED JSON (same workflow as routes): hot-reloaded on
-// save with author-facing validation. Two axes (plan §5.3): `stages` = loadout
+// Profiles are hand-written JSON (same workflow as routes): hot-reloaded on
+// save with author-facing validation. Two axes: `stages` = loadout
 // per level range, `gemPlan` = where each gem is acquired.
 
 export const CLASSES = [
@@ -158,8 +158,8 @@ function validateStages(raw: unknown, errors: string[]): Stage[] | null {
     stages.push({ range: [min, max], label: str(s['label']), socketGroups, note: str(s['note']) })
   })
 
-  // Warn (not fail) on overlaps so switching is unambiguous — plan §6 wizard
-  // does this for imports; here it just flags author mistakes.
+  // Warn (not fail) on overlaps so stage switching stays unambiguous. The PoB
+  // import clamps them; here it just flags author mistakes.
   const ordered = [...stages].sort((a, b) => a.range[0] - b.range[0])
   for (let i = 1; i < ordered.length; i++) {
     if (ordered[i].range[0] <= ordered[i - 1].range[1]) {

@@ -1,5 +1,5 @@
-// Gem data: socket colour (from attribute) + acquisition sources (P5).
-// Socket colour is computed, never authored (plan §5.3): Str->red, Dex->green,
+// Gem data: socket colour (from attribute) + acquisition sources.
+// Socket colour is computed, never authored: Str->red, Dex->green,
 // Int->blue. Sources say where a gem comes from, per class — the engine uses
 // them to fill a gemPlan and build the shopping list / reward recommendation.
 // The shipped data/gems.json is partial and flagged; unknown gems degrade
@@ -25,7 +25,7 @@ export interface GemSourceInfo {
 }
 
 // Siosa (Act 3, after "A Fixture of Fate") and Lilly Roth (Act 6+) sell almost
-// every gem to any class (plan §5.2). A *guess* for gems with no gem-specific
+// every gem to any class. A *guess* for gems with no gem-specific
 // source — only used while the dataset can't answer the question itself (see
 // `hasBroadVendorData` below).
 export const BROAD_VENDORS: readonly GemSourceInfo[] = [

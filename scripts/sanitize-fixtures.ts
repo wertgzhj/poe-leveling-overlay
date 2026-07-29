@@ -1,5 +1,5 @@
 // Sanitize a real Client.txt capture before it may be committed as a fixture
-// (plan §11.1): drops chat/whisper lines entirely, strips IP addresses, and
+//: drops chat/whisper lines entirely, strips IP addresses, and
 // replaces character names with ExileN placeholders.
 //
 //   npm run sanitize -- <input> [output]      (default output: <input>.sanitized.log)
@@ -24,7 +24,7 @@ const outPath = output ?? `${input}.sanitized.log`
 
 const chatRe = new RegExp(patterns.chat)
 const levelUpRe = new RegExp(patterns.levelUp)
-// Lines that leak network details (instance server IPs) — §11.1 says strip IPs.
+// Lines that leak network details (instance server IPs) — says strip IPs.
 const ipLineRe = /Connect(?:ing|ed) to|instance server/i
 const ipRe = /\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b/g
 // Other lines that carry player names.

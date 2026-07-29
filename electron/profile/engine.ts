@@ -59,14 +59,14 @@ export interface Acquisitions {
   /** drop-only, unobtainable en route, or source unknown. */
   other: AcquisitionEntry[]
   /** quest-reward gems that LATER stages need — take them when a quest offers
-   *  them now instead of paying a vendor later (owner feedback). */
+   *  them now instead of paying a vendor later. */
   upcoming: AcquisitionEntry[]
   /** rewards + upcoming grouped by quest. A quest reward is ONE pick in game —
    *  a group with several gems is a player choice (take one, buy the rest). */
   rewardGroups: RewardGroup[]
   /** one chronological to-do list: reward-picks and vendor-buys interleaved by
    *  the act you reach them in, rewards first on ties so you never pay for a
-   *  gem you could take free (owner feedback — the merged Gems-tab box). */
+   *  gem you could take free. */
   plan: AcquisitionItem[]
 }
 
@@ -122,8 +122,8 @@ export function activeStageIndex(profile: Profile, level: number | null): number
   return fallback
 }
 
-/** Manual stage paging for the Gems tab (owner feedback: you may have missed a
- *  gem from an earlier level range and need to look back). Given the currently
+/** Manual stage paging for the Gems tab, for when a gem from an earlier level
+ *  range was missed and needs looking up. Given the currently
  *  viewed index (null = follow the level), step by delta and clamp to range.
  *  Returns null when it lands back on the live stage — so it resumes auto-follow
  *  — otherwise the new index to pin. */
@@ -166,7 +166,7 @@ export interface AcquisitionContext {
  * The gems used by the active stage, grouped by how they're acquired — the
  * basis for the reward recommendation and the town shopping list. A gem's
  * source is the profile's authored `gemPlan.source` when present, otherwise
- * resolved live from gems.json for the profile's class (P5), so a hand-written
+ * resolved live from gems.json for the profile's class, so a hand-written
  * or imported plan without sources still gets buy/reward hints where the data
  * exists.
  */
@@ -180,7 +180,7 @@ export function acquisitionsForStage(
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
   // How many copies this stage needs: the same gem in two different links means
-  // you must own TWO of it, so the to-do list has to say so (owner feedback).
+  // you must own TWO of it, so the to-do list has to say so.
   const copies = new Map<string, number>()
   if (stage) {
     for (const g of stage.socketGroups) {
@@ -194,7 +194,7 @@ export function acquisitionsForStage(
 
   // Gems already required (socketed) in the PREVIOUS stage are assumed acquired,
   // so they're dropped from this stage's to-do plan — don't repeat what you've
-  // already handled (owner feedback). Advance-buys are exempt automatically:
+  // already handled. Advance-buys are exempt automatically:
   // they were never in the previous stage's socket groups, so a gem that only
   // becomes required now still counts as new. The first stage has nothing before
   // it, and this only touches the plan — the full lists (and link tags) stay put.
@@ -238,7 +238,7 @@ export function acquisitionsForStage(
 /** Merge the reward groups and vendor buys into one ordered to-do list. Ordered
  *  by the act you reach each in (the order you play through them); when a reward
  *  and a buy land in the same act the reward comes first, so you take the free
- *  gem before spending on the vendor one (owner feedback). Relies on a stable
+ *  gem before spending on the vendor one. Relies on a stable
  *  sort to keep the reward groups' choices-first order and the buys'
  *  cheapest-first order intact within a single act. */
 function buildPlan(
@@ -277,7 +277,7 @@ function buildPlan(
       costOf(a) - costOf(b) ||
       nameOf(a).localeCompare(nameOf(b))
   )
-  // Nothing is filtered out (owner feedback: act-based hiding vanished too much,
+  // Nothing is filtered out: act-based hiding vanished too much,
   // and act detection is unreliable). Instead a gem more than the XP safe-range
   // above your level is flagged "later" — the UI dims it and shows the level it
   // comes online. Unknown player level = everything shown as now.
@@ -290,7 +290,7 @@ function buildPlan(
   })
 }
 
-/** Cheapest first, then earliest act, then alphabetical (owner priority).
+/** Cheapest first, then earliest act, then alphabetical.
  *  Quest rewards have no cost so they order by act — the order you meet them. */
 function acquisitionOrder(a: AcquisitionEntry, b: AcquisitionEntry): number {
   return (
@@ -302,7 +302,7 @@ function acquisitionOrder(a: AcquisitionEntry, b: AcquisitionEntry): number {
 
 /** Group reward + upcoming gems by the quest that offers them. A quest reward
  *  is ONE pick in game, so a group with several of your gems is a choice —
- *  take one, buy the rest (owner feedback). Singleton groups are plain "take it". */
+ *  take one, buy the rest. Singleton groups are plain "take it". */
 function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEntry[]): RewardGroup[] {
   const byQuest = new Map<string, AcquisitionEntry[]>()
   const order: string[] = []

@@ -1,5 +1,5 @@
 // Pure progress state machine fed by parsed log events (no Electron imports).
-// Pairs the locale-independent areaGenerated debug line (primary signal, §8)
+// Pairs the locale-independent areaGenerated debug line (primary signal)
 // with the localized zoneEntered INFO line (fallback / display-name source),
 // and binds level-ups to one character so party members don't advance stages.
 
@@ -62,7 +62,7 @@ export interface TrackerOptions {
 
 export class ProgressTracker {
   private readonly areaNames: Record<string, string>
-  /** name -> areaId; null value = ambiguous (duplicate zone names across acts, §5.1). */
+  /** name -> areaId; null value = ambiguous (duplicate zone names across acts). */
   private readonly reverseNames = new Map<string, string | null>()
   private readonly callbacks: TrackerCallbacks
   private readonly now: () => number
@@ -142,7 +142,7 @@ export class ProgressTracker {
   }
 
   /**
-   * Replay a chunk of historical lines (startup backscan, §8 restart/resume).
+   * Replay a chunk of historical lines (the startup backscan, for resume).
    * Mutates state without emitting events; character binding falls to the most
    * frequent level-up name in the window — you always see your own level-ups,
    * party members only while grouped. Ties resolve to the latest seen.
@@ -214,7 +214,7 @@ export class ProgressTracker {
         }
         // Repeat announcement of the current zone: nothing to do.
         if (this.area && this.area.name === ev.zoneName) break
-        // Fallback: the debug line was missed (pattern drift, §8) — reverse
+        // Fallback: the debug line was missed (pattern drift) — reverse
         // name lookup; unknown or act-ambiguous names yield a null id.
         this.area = {
           areaId: this.reverseNames.get(ev.zoneName.toLowerCase()) ?? null,

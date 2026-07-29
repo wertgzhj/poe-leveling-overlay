@@ -2,7 +2,7 @@
 // All TWELVE campaign Trials of Ascendancy: six gating the Normal Labyrinth
 // (Acts 1–3), three for Cruel (Acts 6–7) and three for Merciless (Acts 8–10).
 // Entering a trial's zone does NOT auto-complete it (you can walk a zone without
-// doing its trial — owner feedback); the tracker surfaces a "trial in this zone"
+// doing its trial); the tracker surfaces a "trial in this zone"
 // hint. Completion IS auto-detected from Izaro's plaque voice line: he only
 // speaks it as you finish a trial. There are just six plaque lines for twelve
 // trials, so the LINE alone cannot say which one — the ZONE you're standing in

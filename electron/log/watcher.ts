@@ -1,9 +1,9 @@
 // Polling tail for Client.txt (no Electron imports — integration-tested with
 // plain Node). Polling is the primary mechanism, not a fallback: fs.watch is
-// unreliable on Windows for files appended by another process (plan §3).
+// unreliable on Windows for files appended by another process.
 // The file reaches hundreds of MB per league, so we never read it whole —
-// seek to end, then read only appended bytes (§3), plus a bounded tail
-// backscan on start for restart/resume (§8).
+// seek to end, then read only appended bytes, plus a bounded tail
+// backscan on start for restart/resume.
 
 import { open, stat } from 'node:fs/promises'
 

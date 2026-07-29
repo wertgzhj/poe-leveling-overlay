@@ -2,8 +2,8 @@ import Store from 'electron-store'
 import type { TrackerSnapshot } from './log/tracker.ts'
 
 // Persistent, user-editable settings. electron-store writes JSON into the OS
-// userData folder (docs/plan.md §3). No personal data beyond local file paths
-// and the optional in-game character name (§11.1).
+// userData folder. No personal data beyond local file paths
+// and the optional in-game character name.
 
 export interface HotkeyBindings {
   toggleVisibility: string
@@ -35,11 +35,11 @@ export interface AppSettings {
   /** when true the overlay is transparent to mouse input (game gets the clicks) */
   clickThrough: boolean
   hotkeys: HotkeyBindings
-  /** absolute path to the game's Client.txt (P1 log watching) */
+  /** absolute path to the game's Client.txt */
   clientTxtPath: string | null
-  /** absolute path to the active build profile JSON; null = bundled example (P3) */
+  /** absolute path to the active build profile JSON; null = bundled example */
   profilePath: string | null
-  /** explicit character binding for level-ups; null = adopt heuristically (§8) */
+  /** explicit character binding for level-ups; null = adopt heuristically */
   characterName: string | null
   /** log-pattern language (data/log-patterns/<lang>.json); v1 ships 'en' */
   logLanguage: string
@@ -47,8 +47,8 @@ export interface AppSettings {
   visibleTabs: VisibleTabs
 }
 
-/** Everything persisted, including non-setting state (resume snapshot §8,
- *  per-character guide progress). */
+/** Everything persisted, including non-setting state: the resume snapshot and
+ *  per-character guide progress. */
 interface StoreSchema extends AppSettings {
   progress: TrackerSnapshot | null
   guideProgress: Record<string, string[]>

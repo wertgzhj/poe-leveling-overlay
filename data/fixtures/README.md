@@ -15,11 +15,11 @@ Parser/tracker tests run against the files in this folder.
   member's level-up, an instance-server IP line, and a town re-entry without
   a Generating line (fallback path).
 
-## Adding a real capture (P1 DoD)
+## Adding a real capture
 
 1. Play a few minutes (enter 2–3 zones, level up once; ideally once while in a party).
 2. Copy the relevant tail of `Client.txt` to a temp file.
-3. Sanitize it — **never commit a raw excerpt** (§11.1):
+3. Sanitize it — **never commit a raw excerpt**:
 
    ```bash
    npm run sanitize -- path/to/capture.txt data/fixtures/act1-real.log
