@@ -25,6 +25,18 @@ to publish a broken **Release**, and that step is entirely in your hands.
 Merging to `main` does **not** ship anything. It just stages the change for the
 next release.
 
+### No linter, on purpose (for now)
+
+There's no ESLint setup. Not an oversight: `typescript-eslint` still declares
+`typescript >=4.8.4 <6.1.0`, including its canary builds, and this project
+compiles with **TypeScript 7**. Installing it anyway would mean linting the code
+with a parser that doesn't know the syntax it's written in.
+
+`tsc` covers most of what a lean config would have caught — `strict`,
+`noUnusedLocals` and `noUnusedParameters` are all on, for both the main and the
+renderer projects, and CI runs them on every push. Revisit when
+`typescript-eslint` ships TypeScript 7 support.
+
 ## Test a change safely (before releasing)
 
 Build the change as a throwaway dev build that never touches the update feed:
