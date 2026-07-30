@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
 import { UpdateBanner } from './UpdateBanner'
@@ -112,7 +113,23 @@ export function MainPanel(): React.JSX.Element {
     visibleTabs,
     languageMismatch,
     patch
-  } = useOverlayStore()
+  } = useOverlayStore(
+    useShallow((s) => ({
+      visible: s.visible,
+      moveMode: s.moveMode,
+      opacity: s.opacity,
+      isDev: s.isDev,
+      logStatus: s.logStatus,
+      tracked: s.tracked,
+      guide: s.guide,
+      profile: s.profile,
+      trials: s.trials,
+      tab: s.tab,
+      visibleTabs: s.visibleTabs,
+      languageMismatch: s.languageMismatch,
+      patch: s.patch
+    }))
+  )
 
   // Hiding the active tab falls back to the first one still shown (settings
   // guarantees at least one is on).
@@ -287,7 +304,7 @@ function TrialHint(): React.JSX.Element | null {
 }
 
 function TrialsBody(): React.JSX.Element {
-  const { trials } = useOverlayStore()
+  const trials = useOverlayStore((s) => s.trials)
   if (!trials) return <p className="px-1 text-xs text-overlay-muted">Loading…</p>
 
   // done/total per Labyrinth, counted once instead of per row.
@@ -401,7 +418,9 @@ function SkeletonNotice({ act }: { act: number | undefined }): React.JSX.Element
 }
 
 function GuideBody(): React.JSX.Element {
-  const { guide, clickThrough, hotkeys } = useOverlayStore()
+  const { guide, clickThrough, hotkeys } = useOverlayStore(
+    useShallow((s) => ({ guide: s.guide, clickThrough: s.clickThrough, hotkeys: s.hotkeys }))
+  )
   const route = guide?.route ?? null
   const done = new Set(guide?.doneIds ?? [])
   const cursor = guide?.cursorIndex ?? 0
@@ -659,7 +678,9 @@ function SocketGroup({
 }
 
 function GemBody(): React.JSX.Element {
-  const { profile, guide } = useOverlayStore()
+  const { profile, guide } = useOverlayStore(
+    useShallow((s) => ({ profile: s.profile, guide: s.guide }))
+  )
 
   if (profile?.errors && profile.errors.length > 0 && !profile.activeStage) {
     return <ErrorBox title="Profile file problems:" errors={profile.errors} />

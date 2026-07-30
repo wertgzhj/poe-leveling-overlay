@@ -18,7 +18,6 @@ interface OverlayStore {
   // log tracking
   logStatus: WatcherStatusBridge | null
   tracked: TrackerStateBridge | null
-  recentEvents: LogEventSummaryBridge[]
   /** The log parses only its locale-independent lines — non-English client. */
   languageMismatch: boolean
   debugOpen: boolean
@@ -34,10 +33,7 @@ interface OverlayStore {
   tab: 'guide' | 'gems' | 'trials'
   patch: (partial: Partial<OverlayStore>) => void
   applyLogSnapshot: (snap: LogSnapshotBridge) => void
-  pushEvent: (ev: LogEventSummaryBridge) => void
 }
-
-const RECENT_MAX = 100
 
 export const useOverlayStore = create<OverlayStore>((set) => ({
   visible: true,
@@ -60,7 +56,6 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   visibleTabs: { guide: true, gems: true, trials: true },
   logStatus: null,
   tracked: null,
-  recentEvents: [],
   languageMismatch: false,
   debugOpen: false,
   guide: null,
@@ -76,9 +71,6 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     set({
       logStatus: snap.status,
       tracked: snap.state,
-      recentEvents: snap.recent,
       languageMismatch: snap.languageMismatch
-    }),
-  pushEvent: (ev) =>
-    set((s) => ({ recentEvents: [...s.recentEvents, ev].slice(-RECENT_MAX) }))
+    })
 }))

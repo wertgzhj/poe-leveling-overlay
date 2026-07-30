@@ -2,7 +2,7 @@
 // active stage for the current level, colours its socket groups, and derives
 // acquisition views (reward picks / vendor shopping list) from the gemPlan.
 
-import type { Profile, Stage, CharClass, GemSource } from './profile.ts'
+import type { Profile, Stage, CharClass, GemSource, GemPlanEntry } from './profile.ts'
 import {
   GemData,
   vendorCostFor,
@@ -222,7 +222,11 @@ export function acquisitionsForStage(
   rewards.sort(acquisitionOrder)
   purchases.sort(acquisitionOrder)
   other.sort(acquisitionOrder)
-  const upcoming = upcomingRewards(profile, stageIndex, used, gems, startingGems, startingOwners)
+  // One lookup table for the plan, instead of a linear scan per gem per stage.
+  const planByGem = new Map<string, GemPlanEntry>()
+  for (const entry of profile.gemPlan) planByGem.set(entry.gem.toLowerCase(), entry)
+
+  const upcoming = upcomingRewards(profile, stageIndex, used, planByGem, gems, startingGems, startingOwners)
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming)
   // Only the to-do plan is deduped against the previous stage; rewardGroups and
@@ -350,6 +354,7 @@ function upcomingRewards(
   profile: Profile,
   stageIndex: number,
   activeGems: Set<string>,
+  planByGem: ReadonlyMap<string, GemPlanEntry>,
   gems?: GemData,
   startingGems?: ReadonlySet<string>,
   startingOwners?: ReadonlyMap<string, string[]>
@@ -363,7 +368,7 @@ function upcomingRewards(
         const key = gem.toLowerCase()
         if (activeGems.has(key) || seen.has(key)) continue
         seen.add(key)
-        const planned = profile.gemPlan.find((p) => p.gem.toLowerCase() === key)
+        const planned = planByGem.get(key)
         const acq = classify(planned ?? { gem }, profile.meta.class, gems, startingGems, startingOwners)
         if (acq.bucket !== 'reward') continue
         out.push({ ...acq, fromLevel: st.range[0] })

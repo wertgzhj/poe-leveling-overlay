@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { acceleratorFromEvent, formatAccelerator } from '../lib/accelerator'
 
@@ -32,7 +33,18 @@ export function SettingsPanel(): React.JSX.Element {
     characterName,
     visibleTabs,
     patch
-  } = useOverlayStore()
+  } = useOverlayStore(
+    useShallow((s) => ({
+      hotkeys: s.hotkeys,
+      opacity: s.opacity,
+      clickThrough: s.clickThrough,
+      clientTxtPath: s.clientTxtPath,
+      profilePath: s.profilePath,
+      characterName: s.characterName,
+      visibleTabs: s.visibleTabs,
+      patch: s.patch
+    }))
+  )
   const [recording, setRecording] = useState<HotkeyField | null>(null)
   const [failed, setFailed] = useState<Set<string>>(new Set())
   const [pathDraft, setPathDraft] = useState(clientTxtPath ?? '')
