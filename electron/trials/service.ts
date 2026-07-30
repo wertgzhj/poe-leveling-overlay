@@ -33,7 +33,7 @@ export class TrialsService {
 
   start(): void {
     this.charKey = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
-    this.engine = new TrialsEngine(this.loadSeen(this.charKey))
+    this.engine = this.engineFor(this.charKey)
     this.push()
   }
 
@@ -55,6 +55,11 @@ export class TrialsService {
     this.afterChange()
   }
 
+  /** Acknowledge a Labyrinth's unlock notice so it stops showing. */
+  dismissLab(lab: string): void {
+    if (this.engine.dismissLab(lab)) this.afterChange()
+  }
+
   private onZone(zoneName: string, act: number | null): void {
     this.syncCharacter()
     if (this.engine.applyZone(zoneName, act)) this.afterChange()
@@ -70,12 +75,15 @@ export class TrialsService {
     if (next === this.charKey) return
     this.persistNow()
     this.charKey = next
-    this.engine = new TrialsEngine(this.loadSeen(next))
+    this.engine = this.engineFor(next)
     this.push()
   }
 
-  private loadSeen(charKey: string): string[] {
-    return store.get('trialsProgress')[charKey] ?? []
+  private engineFor(charKey: string): TrialsEngine {
+    return new TrialsEngine(
+      store.get('trialsProgress')[charKey] ?? [],
+      store.get('trialsDismissedLabs')[charKey] ?? []
+    )
   }
 
   private afterChange(): void {
@@ -90,12 +98,17 @@ export class TrialsService {
 
   private persistNow(): void {
     const seen = this.engine.seenIds()
+    const dismissed = this.engine.dismissedLabIds()
     const all = { ...store.get('trialsProgress') }
     // Don't leave an empty "(default)" bucket behind when the backscan finally
     // names the character — it's noise in a file people do open and edit.
-    if (seen.length === 0 && this.charKey === DEFAULT_CHAR_KEY && !(DEFAULT_CHAR_KEY in all)) return
+    const empty = seen.length === 0 && dismissed.length === 0
+    if (empty && this.charKey === DEFAULT_CHAR_KEY && !(DEFAULT_CHAR_KEY in all)) return
     all[this.charKey] = seen
     store.set('trialsProgress', all)
+    const labs = { ...store.get('trialsDismissedLabs') }
+    labs[this.charKey] = dismissed
+    store.set('trialsDismissedLabs', labs)
   }
 
   private push(): void {

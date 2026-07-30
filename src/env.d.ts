@@ -243,6 +243,7 @@ interface TrialsSnapshotBridge {
   seenCount: number
   total: number
   currentZoneTrialId: string | null
+  unlockedLabs: LabTierBridge[]
 }
 
 // --- Editor (route/profile file editing) ---
@@ -330,6 +331,7 @@ interface OverlayBridge {
   onTrialsState(cb: (snap: TrialsSnapshotBridge) => void): () => void
   trialsToggle(id: string): void
   trialsReset(): void
+  trialsDismissLab(lab: LabTierBridge): void
   exitMoveMode(): void
   setSettingsOpen(open: boolean): void
   resizeBy(dx: number, dy: number): void

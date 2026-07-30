@@ -126,6 +126,57 @@ test('manual toggle corrects both directions; reset clears', () => {
   assert.equal(e.snapshot().seenCount, 0)
 })
 
+test('a Labyrinth reports as unlocked only once all of its trials are done', () => {
+  const e = new TrialsEngine()
+  assert.deepEqual(e.snapshot().unlockedLabs, [])
+
+  const normal = CAMPAIGN_TRIALS.filter((t) => t.lab === 'normal')
+  for (const t of normal.slice(0, -1)) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, [], 'five of six is not unlocked')
+
+  e.toggle(normal.at(-1)!.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['normal'])
+
+  // Finishing a later tier reports both, normal first — you run them in order.
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'cruel')) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['normal', 'cruel'])
+
+  // Undoing a trial retracts the notice rather than leaving a stale one.
+  e.toggle(normal[0].id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['cruel'])
+})
+
+test('dismissing an unlock notice sticks, per Labyrinth, and survives a reload', () => {
+  const e = new TrialsEngine()
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'normal')) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['normal'])
+
+  assert.equal(e.dismissLab('normal'), true)
+  assert.deepEqual(e.snapshot().unlockedLabs, [], 'acknowledged, so it stops showing')
+  assert.equal(e.dismissLab('normal'), false, 'idempotent — nothing to persist twice')
+  assert.equal(e.dismissLab('not-a-lab'), false)
+
+  // Cruel is untouched by the normal dismissal.
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'cruel')) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['cruel'])
+
+  // Restored from persistence: the notice stays gone.
+  const restored = new TrialsEngine(e.seenIds(), e.dismissedLabIds())
+  assert.deepEqual(restored.dismissedLabIds().sort(), ['normal'])
+  assert.deepEqual(restored.snapshot().unlockedLabs, ['cruel'])
+})
+
+test('reset clears dismissals too, so a fresh character is notified again', () => {
+  const e = new TrialsEngine()
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'normal')) e.toggle(t.id)
+  e.dismissLab('normal')
+  e.reset()
+  assert.deepEqual(e.dismissedLabIds(), [])
+
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'normal')) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['normal'])
+})
+
 test('seen state hydrates from persisted ids (ignoring unknown ids)', () => {
   const e = new TrialsEngine(['t-a1-lower-prison', 'bogus'])
   assert.equal(e.snapshot().seenCount, 1)

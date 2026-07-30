@@ -85,6 +85,8 @@ export const Channels = {
   trialsToggle: 'trials:toggle',
   /** renderer -> main: clear trials for the active character */
   trialsReset: 'trials:reset',
+  /** renderer -> main: acknowledge a Labyrinth's "unlocked" notice */
+  trialsDismissLab: 'trials:dismiss-lab',
   /** main -> renderer: auto-update status changed (checking/downloading/ready/…) */
   updateStatus: 'update:status',
   /** renderer -> main (invoke): current auto-update status */
