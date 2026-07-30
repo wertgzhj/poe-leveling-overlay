@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useOverlayStore } from './stores/overlayStore'
+import { useDebugStore } from './stores/debugStore'
 import { MainPanel } from './panels/MainPanel'
 import { SettingsPanel } from './panels/SettingsPanel'
 import { DebugPanel } from './panels/DebugPanel'
@@ -7,7 +8,6 @@ import { DebugPanel } from './panels/DebugPanel'
 export function App(): React.JSX.Element {
   const patch = useOverlayStore((s) => s.patch)
   const applyLogSnapshot = useOverlayStore((s) => s.applyLogSnapshot)
-  const pushEvent = useOverlayStore((s) => s.pushEvent)
   const settingsOpen = useOverlayStore((s) => s.settingsOpen)
   const debugOpen = useOverlayStore((s) => s.debugOpen)
 
@@ -28,7 +28,11 @@ export function App(): React.JSX.Element {
         visibleTabs: s.visibleTabs
       })
     )
-    void api.getLogSnapshot().then(applyLogSnapshot)
+    const { setEvents, pushEvent } = useDebugStore.getState()
+    void api.getLogSnapshot().then((snap) => {
+      applyLogSnapshot(snap)
+      setEvents(snap.recent)
+    })
     void api.getGuide().then((guide) => patch({ guide }))
     void api.getProfile().then((profile) => patch({ profile }))
     void api.getTrials().then((trials) => patch({ trials }))
@@ -37,7 +41,10 @@ export function App(): React.JSX.Element {
     const store = useOverlayStore.getState
     const subs = [
       api.onState(patch),
-      api.onLogSnapshot(applyLogSnapshot),
+      api.onLogSnapshot((snap) => {
+        applyLogSnapshot(snap)
+        setEvents(snap.recent)
+      }),
       api.onLogStatus((logStatus) => patch({ logStatus })),
       api.onGuideState((guide) => patch({ guide })),
       api.onProfileState((profile) => patch({ profile })),
@@ -72,7 +79,7 @@ export function App(): React.JSX.Element {
       })
     ]
     return () => subs.forEach((unsub) => unsub())
-  }, [patch, applyLogSnapshot, pushEvent])
+  }, [patch, applyLogSnapshot])
 
   // Tell the main process whether the cursor is over visible UI, so in
   // interactive mode the transparent rest of the window forwards clicks to the

@@ -19,7 +19,8 @@ import {
   activeStageIndex,
   stepStageView,
   resolveStage,
-  acquisitionsForStage
+  acquisitionsForStage,
+  type Acquisitions
 } from './engine.ts'
 import { store } from '../settings.ts'
 import { Channels, type ProfileSnapshot } from '../channels.ts'
@@ -40,6 +41,9 @@ export class ProfileService {
   /** Manually paged gem stage (◀/▶). null = follow the tracked level (auto). */
   private viewIndex: number | null = null
   private watchedPath: string | null = null
+  /** Bumped on every (re)load so the acquisition cache can't outlive its profile. */
+  private profileRevision = 0
+  private acqCache: { key: string; value: Acquisitions } | null = null
 
   /** class -> normalized set of its starting gems (already in inventory). */
   private readonly startingByClass = new Map<string, Set<string>>()
@@ -117,17 +121,28 @@ export class ProfileService {
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
           : null,
-      acquisitions: profile
-        ? acquisitionsForStage(profile, stageIndex, this.gems, {
-            startingGems: this.startingByClass.get(profile.meta.class),
-            playerLevel: this.level,
-            startingOwners: this.startingOwners
-          })
-        : null,
+      acquisitions: profile ? this.acquisitions(profile, stageIndex) : null,
       stageCount: profile ? profile.stages.length : 0,
       viewedIndex: stageIndex,
       liveIndex
     }
+  }
+
+  /** The acquisition views for a stage, recomputed only when an input actually
+   *  changed. A snapshot goes out on every level-up and every reload, but the
+   *  plan only depends on the stage, the level and the loaded profile — and most
+   *  level-ups stay inside the same stage, so the sorting work was being redone
+   *  for an identical result. */
+  private acquisitions(profile: Profile, stageIndex: number): Acquisitions {
+    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}`
+    if (this.acqCache?.key === key) return this.acqCache.value
+    const value = acquisitionsForStage(profile, stageIndex, this.gems, {
+      startingGems: this.startingByClass.get(profile.meta.class),
+      playerLevel: this.level,
+      startingOwners: this.startingOwners
+    })
+    this.acqCache = { key, value }
+    return value
   }
 
   /** Page the viewed gem stage (◀/▶). Pins a manual view until it lands back on
@@ -149,6 +164,8 @@ export class ProfileService {
   private reload(): void {
     // A new/edited profile can shift stage indices — drop any manual paging.
     this.viewIndex = null
+    this.profileRevision++
+    this.acqCache = null
     const path = this.resolvePath()
     this.watch(path)
 

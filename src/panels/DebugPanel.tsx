@@ -1,11 +1,16 @@
+import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
+import { useDebugStore } from '../stores/debugStore'
 
 // Dev-only event feed: shows *parsed* events, held in memory —
 // never raw log lines, never written to disk. Reachable only when the app runs
 // in dev (the 🐞 button is hidden in packaged builds).
 
 export function DebugPanel(): React.JSX.Element {
-  const { logStatus, tracked, recentEvents, patch } = useOverlayStore()
+  const { logStatus, tracked, patch } = useOverlayStore(
+    useShallow((s) => ({ logStatus: s.logStatus, tracked: s.tracked, patch: s.patch }))
+  )
+  const recentEvents = useDebugStore((s) => s.recentEvents)
 
   return (
     <div className="flex h-screen w-screen items-start justify-center p-2">
