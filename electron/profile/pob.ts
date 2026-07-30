@@ -1,5 +1,5 @@
 // Path of Building import (pure — node builtins + fast-xml-parser only, no
-// Electron). Export string -> XML -> our Profile (plan §6). Semi-automatic:
+// Electron). Export string -> XML -> our Profile. Semi-automatic:
 // stage level ranges are read from SkillSet/Spec titles when present and guessed
 // (with a warning) otherwise, so the result is always a valid, editable profile.
 
@@ -160,7 +160,7 @@ function buildStages(sets: RawSet[], warnings: string[]): Stage[] {
   if (allLabeled) {
     // Sort by start level, clamp overlaps so the schema stays valid — and SAY
     // so: PoB sets often overlap ("1-11" then "9-24"), and a silently clamped
-    // range next to the original title reads like a bug (owner feedback).
+    // range next to the original title reads like a bug.
     const ordered = parsed
       .map((p) => ({ ...p, range: [...(p.range as [number, number])] as [number, number] }))
       .sort((a, b) => a.range[0] - b.range[0])
@@ -210,7 +210,7 @@ function buildGemPlan(stages: Stage[]): GemPlanEntry[] {
   return [...maxPerStage].map(([key, count]) => ({
     gem: display.get(key) as string,
     count: count > 1 ? count : undefined
-    // source is left unset — populated from full gem data (P5) or by hand.
+    // source is left unset — populated from full gem data or by hand.
   }))
 }
 

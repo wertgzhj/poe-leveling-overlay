@@ -42,7 +42,7 @@ export class OverlayController {
       fullscreenable: false,
       skipTaskbar: true,
       // Overlays never hold focus while the game runs; without this Electron
-      // throttles the unfocused renderer and live updates stutter (plan §4).
+      // throttles the unfocused renderer and live updates stutter.
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         contextIsolation: true,
@@ -53,7 +53,7 @@ export class OverlayController {
     })
 
     // Sit above borderless-fullscreen games; 'screen-saver' outranks plain
-    // always-on-top which games intermittently beat (plan §4/§8).
+    // always-on-top which games intermittently beat.
     this.win.setAlwaysOnTop(true, 'screen-saver')
     this.win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
@@ -175,7 +175,7 @@ export class OverlayController {
   /**
    * Restore the saved window rectangle, but fall back to the primary display
    * if the saved position is off every currently-connected monitor (a monitor
-   * was unplugged, resolution changed, etc.) — plan §8 multi-monitor.
+   * was unplugged, resolution changed, etc.).
    */
   private resolveBounds(): Rectangle {
     const saved = store.get('bounds')

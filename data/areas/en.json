@@ -1,5 +1,5 @@
 {
-  "_note": "areaId -> display name (plan §5.1, §8). Every id below is VERIFIED against a real Client.txt capture (fixtures/act1-real.log, 2026-07-17). Campaign ids are act-scoped and sometimes sub-numbered (e.g. 1_1_4_1); towns end in _town; non-campaign instances use word ids (Hideout*, MapWorlds*, …) and are deliberately NOT listed — the tracker adopts their display name from the 'You have entered' line. Unverified ids are absent on purpose: a wrong id silently mismatches route steps, a missing one degrades gracefully. Grows as captures confirm more zones (P2/P6).",
+  "_note": "areaId -> display name. Every id below is VERIFIED against a real Client.txt capture (fixtures/act1-real.log, 2026-07-17). Campaign ids are act-scoped and sometimes sub-numbered (e.g. 1_1_4_1); towns end in _town; non-campaign instances use word ids (Hideout*, MapWorlds*, …) and are deliberately NOT listed — the tracker adopts their display name from the 'You have entered' line. Unverified ids are absent on purpose: a wrong id silently mismatches route steps, a missing one degrades gracefully. Grows as captures confirm more zones.",
   "language": "en",
   "areas": {
     "1_1_1": "The Twilight Strand",

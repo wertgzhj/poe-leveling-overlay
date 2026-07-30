@@ -67,7 +67,7 @@ test('entering a trial zone hints it — it is NOT auto-completed', () => {
   assert.equal(e.applyZone('The Lower Prison'), true)
   const snap = e.snapshot()
   assert.equal(snap.currentZoneTrialId, 't-a1-lower-prison')
-  // Owner feedback: walking the zone must not check the trial off.
+  // Walking the zone must not check the trial off.
   assert.equal(snap.seenCount, 0)
   assert.equal(snap.trials.find((t) => t.id === 't-a1-lower-prison')?.seen, false)
 })

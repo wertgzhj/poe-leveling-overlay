@@ -41,7 +41,7 @@ export const Channels = {
   logStatus: 'log:status',
   /** main -> renderer: full tracker snapshot (after backscan / rebinding) */
   logSnapshot: 'log:snapshot',
-  /** main -> renderer: the tracked player entered an area (plan §4) */
+  /** main -> renderer: the tracked player entered an area */
   areaEntered: 'area:entered',
   /** main -> renderer: a level-up line was seen (bound or party member) */
   playerLevelUp: 'player:levelup',
@@ -114,7 +114,7 @@ export interface SettingsSetResult {
 }
 
 /** Human-readable, already-parsed log event for the (dev-only) DebugPanel.
- *  Never contains raw log lines (§11.1). */
+ *  Never contains raw log lines. */
 export interface LogEventSummary {
   kind: 'area' | 'levelup'
   ts: number
@@ -160,7 +160,7 @@ export interface ProfileSnapshot {
    *  all missing, which needs saying out loud rather than looking like bad data. */
   gemDataError: string | null
   level: number | null
-  /** The tracked class when it differs from the profile's class, else null (§8). */
+  /** The tracked class when it differs from the profile's class, else null. */
   classMismatch: string | null
   /** The stage being shown (the viewed one — see viewedIndex vs liveIndex). */
   activeStage: ResolvedStage | null

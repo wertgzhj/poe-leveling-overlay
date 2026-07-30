@@ -91,7 +91,7 @@ test('unknown gems render neutral and are flagged', () => {
 })
 
 test('a gem with no attribute requirement is white on purpose, not for lack of data', () => {
-  // Owner report: Portal, Convocation and friends have no attribute requirement
+  // Portal, Convocation and friends have no attribute requirement
   // in game, so they fit any socket. Flagging them "?" (= "not in gems.json")
   // made the overlay look broken on gems it knows perfectly well.
   const gems = new GemData({ Portal: { requiredLevel: 10 }, Fireball: { attr: 'int' } })

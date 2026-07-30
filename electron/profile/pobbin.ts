@@ -1,6 +1,6 @@
 // Resolve a PoB import input to a code or XML. Handles a raw export code, a raw
 // XML paste, and pobb.in / pastebin links (fetched from their raw endpoints).
-// The only network in the profile pipeline (plan §11.1: user-initiated import).
+// The only network in the profile pipeline (user-initiated import).
 
 export interface ResolvedPobInput {
   code?: string

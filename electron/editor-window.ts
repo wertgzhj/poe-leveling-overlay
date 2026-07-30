@@ -4,7 +4,7 @@ import { BrowserWindow } from 'electron'
 const RENDERER_DEV_URL = process.env['ELECTRON_RENDERER_URL']
 
 /** A normal (framed, resizable) window hosting the route/profile editor —
- *  separate from the transparent overlay (plan §4). */
+ *  separate from the transparent overlay. */
 export class EditorWindow {
   private win: BrowserWindow | null = null
 

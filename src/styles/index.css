@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Central design tokens — dark, compact overlay theme (plan §3).
+/* Central design tokens — dark, compact overlay theme.
    Tailwind v4 turns each --color-* token into bg-/text-/border- utilities. */
 @theme {
   --color-overlay-bg: #0e1118;
@@ -28,7 +28,7 @@ body {
   cursor: default;
 }
 
-/* Frameless-window drag support (plan §4): a click-through window can't be
+/* Frameless-window drag support: a click-through window can't be
    grabbed, so move mode marks the header draggable and buttons non-draggable. */
 .drag-region {
   -webkit-app-region: drag;

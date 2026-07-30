@@ -4,7 +4,7 @@ import { formatAccelerator } from '../lib/accelerator'
 import { UpdateBanner } from './UpdateBanner'
 import { VersionBadge } from './VersionBadge'
 
-// Main overlay panel (P2 guide + P3 gems) with a shared chrome and a tab switch.
+// Main overlay panel (guide + gems) with a shared chrome and a tab switch.
 // Steps/stage auto-advance from the log; interacting needs interactive mode
 // (Ctrl+Shift+C) while forward/back hotkeys work regardless.
 
@@ -27,9 +27,9 @@ const LAB_LABEL: Record<LabTierBridge, string> = {
   merciless: 'Merciless Labyrinth'
 }
 
-// Distinct hues + the attribute letter inside each pip, so red/green/blue are
-// unambiguous even when the green/blue are hard to tell apart (owner feedback,
-// and colour-blind friendly). Green = true green (not emerald), blue = deep blue.
+// Distinct hues + the attribute letter inside each pip, so red/green/blue stay
+// unambiguous even when green and blue are hard to tell apart (colour-blind
+// friendly). Green is a true green rather than emerald, blue a deep blue.
 const PIP_CLASS: Record<SocketColorBridge, string> = {
   R: 'bg-red-500',
   G: 'bg-green-500',
@@ -491,7 +491,7 @@ function GuideBody(): React.JSX.Element {
 
 // One quest's reward gems. When several of your build's gems come from the same
 // quest you can only pick ONE — the rest must be bought — so that's flagged
-// loudly. Act + quest are shown once per group (owner feedback).
+// loudly. Act + quest are shown once per group.
 function RewardGroupRow({
   group,
   comingUpAt
@@ -590,7 +590,7 @@ function BuyRow({
   )
 }
 
-/** Short "where it comes from" tag for a gem line (owner feedback: sources
+/** Short "where it comes from" tag for a gem line (sources
  *  visible right at the links, not only in the lists). */
 function sourceTag(e: AcquisitionEntryBridge | undefined): string | null {
   if (!e) return null

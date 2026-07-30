@@ -3,7 +3,7 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// Layout follows docs/plan.md §10: main process in electron/, overlay renderer in src/.
+// Main process in electron/, overlay renderer in src/, editor renderer in editor/.
 export default defineConfig({
   main: {
     // electron-store is ESM-only; exclude it from externalization so it is bundled

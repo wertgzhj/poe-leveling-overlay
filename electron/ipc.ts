@@ -21,7 +21,7 @@ import type { EditorSaveResult, PobImportResponse } from './channels'
 import type { EditorWindow } from './editor-window.ts'
 import { loadForEditor, saveRoute as saveRouteFile, saveProfile as saveProfileFile } from './editor/io.ts'
 
-// Allow-listed IPC only (plan §11.1 Electron hardening). Every channel the
+// Allow-listed IPC only (Electron hardening). Every channel the
 // preload bridge can reach is registered here explicitly.
 export function registerIpc(
   overlay: OverlayController,

@@ -15,18 +15,18 @@ interface OverlayStore {
   profilePath: string | null
   characterName: string | null
   visibleTabs: VisibleTabsBridge
-  // log tracking (P1)
+  // log tracking
   logStatus: WatcherStatusBridge | null
   tracked: TrackerStateBridge | null
   recentEvents: LogEventSummaryBridge[]
   /** The log parses only its locale-independent lines — non-English client. */
   languageMismatch: boolean
   debugOpen: boolean
-  // guide (P2)
+  // guide
   guide: GuideStateBridge | null
-  // build profile (P3)
+  // build profile
   profile: ProfileSnapshotBridge | null
-  // trials (P6)
+  // trials
   trials: TrialsSnapshotBridge | null
   // auto-update
   update: UpdateStatusBridge | null

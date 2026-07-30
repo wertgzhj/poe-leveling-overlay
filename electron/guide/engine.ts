@@ -1,6 +1,6 @@
 // Pure guide-progress engine (no Electron imports — unit-tested).
 // Consumes area events from the P1 tracker and advances a cursor through the
-// route's steps. Design rules (plan §8, validated in P1):
+// route's steps. Design rules (validated against real captures):
 //  - "Next open step": completion is positional — advancing to step j marks
 //    everything before j done, and the cursor is always the first open step.
 //  - Towns never skip work: a town entry only advances when the matched town

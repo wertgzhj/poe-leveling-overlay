@@ -140,7 +140,7 @@ test('entering zones advances the cursor positionally', () => {
   assert.equal(engine.snapshot().cursorStepId, 'a1-mud-flats')
 })
 
-test('DoD: a portal trip to town and back does not derail the guide', () => {
+test('a portal trip to town and back does not derail the guide', () => {
   const engine = new GuideEngine(starterRoute())
   engine.applyArea({ areaId: '1_1_town', name: "Lioneye's Watch" })
   engine.applyArea({ areaId: '1_1_2', name: 'The Coast' }) // cursor: a1-coast

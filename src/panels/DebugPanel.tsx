@@ -1,6 +1,6 @@
 import { useOverlayStore } from '../stores/overlayStore'
 
-// Dev-only event feed (plan §4/§11.1): shows *parsed* events, held in memory —
+// Dev-only event feed: shows *parsed* events, held in memory —
 // never raw log lines, never written to disk. Reachable only when the app runs
 // in dev (the 🐞 button is hidden in packaged builds).
 
