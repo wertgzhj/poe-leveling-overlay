@@ -98,6 +98,30 @@ function trackerLine(
   return `${zone} — ${char}`
 }
 
+// Path of Exile cuts experience once your level and the zone's monster level
+// differ by more than the safe range — in both directions. Under means the zone
+// is dangerous AND stingy; over means you're farming for nothing. Towns and
+// non-campaign instances are excluded upstream, so this only appears where it
+// means something.
+function ZoneFitTag({ fit }: { fit: ZoneFitBridge }): React.JSX.Element {
+  const under = fit.verdict === 'under'
+  return (
+    <span
+      title={
+        under
+          ? `The zone is level ${fit.areaLevel}, ${fit.by} past your safe range — tougher, and reduced experience.`
+          : `The zone is level ${fit.areaLevel}, ${fit.by} below your safe range — reduced experience, move on.`
+      }
+      className={
+        'shrink-0 rounded px-1 text-[10px] font-medium ' +
+        (under ? 'bg-red-400/15 text-red-300' : 'bg-white/10 text-overlay-muted')
+      }
+    >
+      {under ? `zone ${fit.areaLevel} ▲` : `zone ${fit.areaLevel} ▼`}
+    </span>
+  )
+}
+
 export function MainPanel(): React.JSX.Element {
   const {
     visible,
@@ -112,6 +136,7 @@ export function MainPanel(): React.JSX.Element {
     tab,
     visibleTabs,
     languageMismatch,
+    zoneFit,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -127,6 +152,7 @@ export function MainPanel(): React.JSX.Element {
       tab: s.tab,
       visibleTabs: s.visibleTabs,
       languageMismatch: s.languageMismatch,
+      zoneFit: s.zoneFit,
       patch: s.patch
     }))
   )
@@ -233,6 +259,7 @@ export function MainPanel(): React.JSX.Element {
           <span className={'min-w-0 flex-1 truncate' + (languageMismatch ? ' text-amber-300' : '')}>
             {trackerLine(logStatus, tracked, languageMismatch)}
           </span>
+          {zoneFit && !languageMismatch && <ZoneFitTag fit={zoneFit} />}
           <DetectCharButton />
         </div>
 

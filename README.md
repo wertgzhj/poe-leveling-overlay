@@ -17,6 +17,8 @@ semi-automatically from a Path of Building import.
 - **Reads your game log, so it keeps up on its own.** Zone and level come from
   `Client.txt`; the guide advances as you enter zones and the Gems tab flips
   stages as you level. Close and reopen mid-session and it resumes where you are.
+  It flags a zone that's well above or below your level, and switching characters
+  brings back that character's build profile.
 - **Tells you which gems to get, and where from.** Quest rewards and vendor buys
   in one chronological list, rewards first so you never pay for a gem a quest
   hands over. Socket colours are computed, prices shown, "pick one" quest choices

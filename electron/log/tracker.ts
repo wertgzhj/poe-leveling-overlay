@@ -29,6 +29,40 @@ export interface LevelUpEvent {
   ts: number
 }
 
+/** How your level sits against the zone's monster level. */
+export interface ZoneFit {
+  verdict: 'under' | 'over'
+  /** The zone's monster level, for the message. */
+  areaLevel: number
+  /** How far past the safe range you are, in levels. */
+  by: number
+}
+
+/**
+ * Compare the character's level with the zone's monster level. Path of Exile
+ * cuts experience once the gap exceeds the safe range in *either* direction, so
+ * both are worth saying: too far under and the zone is dangerous and stingy, too
+ * far over and you're farming for nothing.
+ *
+ * Returns null whenever the comparison would mislead:
+ *  - towns generate at a fixed monster level (Lioneye's Watch at 13), so
+ *    standing in one at level 5 is not "underlevelled"
+ *  - non-campaign instances (hideouts, maps) aren't part of the levelling curve
+ *  - the fallback zone path carries no monster level at all
+ */
+export function zoneFit(
+  area: { areaId: string | null; areaLevel: number | null } | null,
+  charLevel: number | null,
+  safeRange: number
+): ZoneFit | null {
+  if (!area || area.areaLevel == null || charLevel == null) return null
+  if (!area.areaId || !/^\d/.test(area.areaId) || area.areaId.endsWith('_town')) return null
+  const gap = area.areaLevel - charLevel
+  if (gap > safeRange) return { verdict: 'under', areaLevel: area.areaLevel, by: gap - safeRange }
+  if (-gap > safeRange) return { verdict: 'over', areaLevel: area.areaLevel, by: -gap - safeRange }
+  return null
+}
+
 export interface TrackerSnapshot {
   area: AreaState | null
   character: string | null

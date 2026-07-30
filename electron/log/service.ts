@@ -4,7 +4,10 @@
 // may import Electron modules.
 
 import { LogParser, type LogPatterns } from './parser.ts'
-import { ProgressTracker, type AreaState, type LevelUpEvent } from './tracker.ts'
+import { ProgressTracker, zoneFit, type AreaState, type LevelUpEvent } from './tracker.ts'
+// Both are pure modules; the safe-range formula is the gem panel's too, and
+// duplicating it here would let the two drift.
+import { safeLevelRange } from '../profile/gems.ts'
 import { LogFileWatcher } from './watcher.ts'
 import { store } from '../settings.ts'
 import { Channels, type DetectedCharacter, type LogEventSummary, type LogSnapshot } from '../channels.ts'
@@ -96,11 +99,13 @@ export class LogService {
   }
 
   getSnapshot(): LogSnapshot {
+    const state = this.tracker.snapshot()
     return {
       status: this.watcher.status(),
-      state: this.tracker.snapshot(),
+      state,
       recent: this.recent,
-      languageMismatch: this.languageMismatch
+      languageMismatch: this.languageMismatch,
+      zoneFit: zoneFit(state.area, state.level, safeLevelRange(state.level ?? 1))
     }
   }
 
@@ -177,6 +182,9 @@ export class LogService {
     })
     this.send(Channels.areaEntered, area)
     for (const listener of this.areaListeners) listener(area)
+    // zoneFit is derived from the zone AND the level, so it lives on the
+    // snapshot rather than the event — which means the snapshot has to follow.
+    this.pushSnapshot()
     this.persistSoon()
   }
 
@@ -187,7 +195,10 @@ export class LogService {
       text: `${ev.name} (${ev.charClass}) → level ${ev.level}${ev.isBound ? '' : ' — other player'}`
     })
     this.send(Channels.playerLevelUp, ev)
-    if (ev.isBound) for (const listener of this.levelListeners) listener(ev.level)
+    if (ev.isBound) {
+      for (const listener of this.levelListeners) listener(ev.level)
+      this.pushSnapshot() // same reason as onArea
+    }
     this.persistSoon()
   }
 
