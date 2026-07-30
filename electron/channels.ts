@@ -1,7 +1,7 @@
 // IPC channel names + payload types shared between the main process and the
 // preload bridge. Renderer-facing type mirrors live in src/env.d.ts (kept in sync).
 
-import type { TrackerSnapshot } from './log/tracker.ts'
+import type { TrackerSnapshot, ZoneFit } from './log/tracker.ts'
 import type { WatcherStatus } from './log/watcher.ts'
 import type { Route } from './guide/route.ts'
 import type { ProfileMeta, Profile } from './profile/profile.ts'
@@ -130,6 +130,9 @@ export interface LogSnapshot {
   /** The log is being read, but only its locale-independent lines parse — the
    *  game client speaks a language the shipped patterns don't cover. */
   languageMismatch: boolean
+  /** Character level vs. the zone's monster level, when the gap is wide enough
+   *  to cost experience. null in towns and wherever the comparison is moot. */
+  zoneFit: ZoneFit | null
 }
 
 /** The character the log says you're on now — from the most recent level-up —

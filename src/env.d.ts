@@ -95,11 +95,18 @@ interface LogEventSummaryBridge {
   text: string
 }
 
+interface ZoneFitBridge {
+  verdict: 'under' | 'over'
+  areaLevel: number
+  by: number
+}
+
 interface LogSnapshotBridge {
   status: WatcherStatusBridge
   state: TrackerStateBridge
   recent: LogEventSummaryBridge[]
   languageMismatch: boolean
+  zoneFit: ZoneFitBridge | null
 }
 
 type StepTypeBridge =

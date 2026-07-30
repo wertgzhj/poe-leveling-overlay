@@ -50,6 +50,9 @@ export class ProfileService {
   /** normalized gem -> classes that START with it, for the muling hint (roll a
    *  level-1 alt of that class and stash its two starting gems). */
   private readonly startingOwners = new Map<string, string[]>()
+  /** The character the loaded profile is currently associated with, so a switch
+   *  can be noticed. */
+  private character: string | null = null
 
   constructor(overlay: OverlayController, log: LogService) {
     this.overlay = overlay
@@ -66,13 +69,48 @@ export class ProfileService {
     }
     log.addLevelListener((level) => {
       this.level = level
-      this.push()
+      // A level-up is the only line that names a character, so it's also where a
+      // character switch becomes visible.
+      if (!this.syncCharacter()) this.push()
     })
+    // The binding can also change without a level-up — the "⟳ character" button
+    // and pinning a name in Settings both do it. Zone changes are the cheap,
+    // frequent tick that notices those; syncCharacter is a no-op when nothing moved.
+    log.addAreaListener(() => this.syncCharacter())
   }
 
   start(): void {
-    this.level = this.log.getSnapshot().state.level
+    const state = this.log.getSnapshot().state
+    this.level = state.level
+    this.character = state.character
     this.reload()
+  }
+
+  /** Follow the tracked character: when it changes to one that has a remembered
+   *  profile, load that profile instead of leaving the previous character's on
+   *  screen. Returns true when it triggered a reload (which pushes by itself). */
+  private syncCharacter(): boolean {
+    const next = this.log.getSnapshot().state.character
+    if (next === this.character) return false
+    this.character = next
+    if (!next) return false
+    const remembered = store.get('profileByCharacter')[next]
+    if (!remembered || remembered === store.get('profilePath')) return false
+    this.setPath(remembered)
+    return true
+  }
+
+  /** Remember which profile belongs to which character, so the next switch can
+   *  restore it. A profile that names its own character (`meta.character`) wins:
+   *  it is an explicit statement, whereas the tracked name is just who happened
+   *  to be playing when it loaded. */
+  private rememberProfile(): void {
+    const path = store.get('profilePath')
+    const owner = this.profile?.meta.character?.trim() || this.character
+    if (!path || !owner) return
+    const map = store.get('profileByCharacter')
+    if (map[owner] === path) return
+    store.set('profileByCharacter', { ...map, [owner]: path })
   }
 
   stop(): void {
@@ -185,7 +223,10 @@ export class ProfileService {
     }
     const { profile, errors } = parseProfile(text)
     this.errors = errors
-    if (profile) this.profile = profile // keep last good on error
+    if (profile) {
+      this.profile = profile // keep last good on error
+      this.rememberProfile()
+    }
     this.push()
   }
 

@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 141 tests: parser, tracker, watcher, guide, profile,
+npm test        # 145 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough
 npm run typecheck
 npm run build
@@ -51,11 +51,15 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    playing. Restart the overlay mid-session — it resumes both. With no character
    pinned, rolling a fresh character (entering the Twilight Strand) switches
    tracking to it on its first level-up. Pin a name in Settings → Game log only
-   when playing in a party.
+   when playing in a party. A zone whose monster level is far from yours adds a
+   tag — `zone 32 ▲` in red when it outpaces your safe range, `▼` when you have
+   outgrown it. It must **not** appear in towns.
 5. **Guide.** Advances as zones are entered; a portal to town and back must not
    skip steps; `Ctrl+Shift+N/P` correct the cursor; it crosses act boundaries.
 6. **Gems.** Point Settings → Build profile at a profile, or paste a PoB code or
-   link into the importer. The tab shows the current stage's links with colours
+   link into the importer. Play a second character and point the tab at its own
+   profile: switching back to the first should restore the first profile without
+   a trip to Settings. The tab shows the current stage's links with colours
    and flips stages on level-up, the moment the level enters the next range.
    Close and reopen mid-session: it must show the correct stage immediately, not
    stage 1 until the next level-up.

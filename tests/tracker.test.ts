@@ -1,6 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ProgressTracker, type AreaState, type LevelUpEvent } from '../electron/log/tracker.ts'
+import {
+  ProgressTracker,
+  zoneFit,
+  type AreaState,
+  type LevelUpEvent
+} from '../electron/log/tracker.ts'
+import { safeLevelRange } from '../electron/profile/gems.ts'
 import { makeParser, loadAreaNames, loadFixtureLines } from './helpers.ts'
 
 const parser = makeParser()
@@ -215,4 +221,43 @@ test('hydrate restores persisted state only where the log gave nothing', () => {
   // A live event then wins over hydrated state.
   feed(tracker, '… [INFO Client 1] : MyExile (Marauder) is now level 8')
   assert.equal(tracker.snapshot().level, 8)
+})
+
+// ---------- zone level vs. character level ----------
+
+const fit = (areaId: string | null, areaLevel: number | null, charLevel: number | null) =>
+  zoneFit({ areaId, areaLevel }, charLevel, safeLevelRange(charLevel ?? 1))
+
+test('a zone far above your level reports as underlevelled', () => {
+  // At level 20 the safe range is 4 (3 + 20/16), so level 25 is one past it.
+  assert.equal(fit('2_1_3', 24, 20), null, 'inside the safe range says nothing')
+  assert.deepEqual(fit('2_1_3', 25, 20), { verdict: 'under', areaLevel: 25, by: 1 })
+  assert.deepEqual(fit('2_1_3', 30, 20), { verdict: 'under', areaLevel: 30, by: 6 })
+})
+
+test('a zone far below your level reports as overlevelled', () => {
+  assert.equal(fit('1_1_2', 16, 20), null)
+  assert.deepEqual(fit('1_1_2', 15, 20), { verdict: 'over', areaLevel: 15, by: 1 })
+  assert.deepEqual(fit('1_1_2', 2, 20), { verdict: 'over', areaLevel: 2, by: 14 })
+})
+
+test('the safe range widens with level, so the same gap stops mattering', () => {
+  // Gap of 5: past the range at level 1 (safe 3), inside it at level 32 (safe 5).
+  assert.equal(fit('1_1_2', 6, 1)?.verdict, 'under')
+  assert.equal(fit('9_1_2', 37, 32), null)
+})
+
+test('towns, hideouts and nameless zones are excluded — the comparison would lie', () => {
+  // Lioneye's Watch generates at monster level 13 regardless of your level, so
+  // standing in it at level 5 is not "underlevelled", it is just standing in town.
+  assert.equal(fit('1_1_town', 13, 5), null)
+  assert.equal(fit('6_1_town', 45, 12), null)
+  // Non-campaign instances use word ids and aren't part of the levelling curve.
+  assert.equal(fit('HideoutWorldTurtle', 68, 20), null)
+  assert.equal(fit('MapWorldsCitySquare', 78, 40), null)
+  // The fallback zone path carries no monster level at all.
+  assert.equal(fit('2_1_3', null, 20), null)
+  assert.equal(fit(null, 40, 20), null)
+  // No level tracked yet.
+  assert.equal(fit('2_1_3', 40, null), null)
 })

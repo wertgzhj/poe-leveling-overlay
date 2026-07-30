@@ -20,6 +20,8 @@ interface OverlayStore {
   tracked: TrackerStateBridge | null
   /** The log parses only its locale-independent lines — non-English client. */
   languageMismatch: boolean
+  /** Level vs. zone monster level, when the gap costs experience. */
+  zoneFit: ZoneFitBridge | null
   debugOpen: boolean
   // guide
   guide: GuideStateBridge | null
@@ -57,6 +59,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   logStatus: null,
   tracked: null,
   languageMismatch: false,
+  zoneFit: null,
   debugOpen: false,
   guide: null,
   profile: null,
@@ -71,6 +74,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     set({
       logStatus: snap.status,
       tracked: snap.state,
-      languageMismatch: snap.languageMismatch
+      languageMismatch: snap.languageMismatch,
+      zoneFit: snap.zoneFit
     })
 }))
