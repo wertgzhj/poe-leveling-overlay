@@ -135,6 +135,9 @@ export function registerIpc(
     if (typeof id === 'string') trials.toggle(id)
   })
   ipcMain.on(Channels.trialsReset, () => trials.reset())
+  ipcMain.on(Channels.trialsDismissLab, (_e, lab: unknown) => {
+    if (typeof lab === 'string') trials.dismissLab(lab)
+  })
 
   ipcMain.handle(Channels.updateGet, () => update.snapshot())
   ipcMain.on(Channels.updateCheck, () => update.check())

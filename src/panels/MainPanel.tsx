@@ -279,11 +279,34 @@ function Tab({
   )
 }
 
-// Shown on every tab while the player stands in a zone that contains an
-// uncompleted Trial of Ascendancy — the trial is NOT auto-checked (you can walk
-// a zone without doing it); completing is one click here or on the Trials tab.
+// The trials notice bar, shown on every tab. Two things can claim it, and a
+// finished Labyrinth outranks a trial you're standing in: the trial will still
+// be there in a minute, whereas "you can run the Labyrinth now" is the thing
+// you'd otherwise miss for an hour. Only one bar, so it never stacks.
 function TrialHint(): React.JSX.Element | null {
   const trials = useOverlayStore((s) => s.trials)
+  const unlocked = trials?.unlockedLabs?.[0]
+  if (unlocked) {
+    return (
+      <div className="flex items-center gap-2 border-b border-overlay-accent/50 bg-overlay-accent/15 px-3 py-1.5">
+        <span className="text-overlay-accent">⌂</span>
+        <span className="min-w-0 flex-1 truncate text-[11px] text-overlay-accent">
+          {LAB_LABEL[unlocked]} unlocked — Aspirants&apos; Plaza.
+        </span>
+        <button
+          className="shrink-0 text-overlay-muted hover:text-overlay-text"
+          title="Got it — don't show this again for this Labyrinth"
+          onClick={() => window.overlay?.trialsDismissLab(unlocked)}
+        >
+          ✕
+        </button>
+      </div>
+    )
+  }
+
+  // Otherwise: standing in a zone that holds an uncompleted trial. Entering a
+  // zone never checks a trial off (you can walk it without doing the trial), so
+  // this is a reminder plus a one-click correction.
   const trial = trials?.trials.find((t) => t.id === trials.currentZoneTrialId)
   if (!trial || trial.seen) return null
   return (

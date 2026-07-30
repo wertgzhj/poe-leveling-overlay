@@ -24,7 +24,7 @@ semi-automatically from a Path of Building import.
 - **Imports your Path of Building build** — paste an export code or a `pobb.in`
   link and it writes the stages for you.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
-  you finish it.
+  you finish it, and telling you when a Labyrinth is ready to run.
 - **Updates itself.** One click when a new version is ready.
 - **A route guide you write yourself** — the app ships the engine and an in-app
   editor; the campaign route is yours (see [Author your route](#author-your-route)).
@@ -132,7 +132,8 @@ three for **Cruel** (Acts 6–7) and three for **Merciless** (Acts 8–10), grou
 Labyrinth. It **auto-checks a trial when you finish it**: Izaro voices a plaque line
 only on completion, and the zone you're standing in says which trial it was (the same
 zone can host a trial in two difficulties, so the act decides). It also shows a hint
-while you're in a trial's zone, and you can click any trial to correct it.
+while you're in a trial's zone, tells you when a Labyrinth's trials are all
+done, and you can click any trial to correct it.
 
 Don't use one of the tabs? **Settings → Overlay → Tabs to show** hides any of them
 (at least one stays on); with a single tab the switcher disappears entirely.

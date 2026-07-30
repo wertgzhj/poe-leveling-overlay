@@ -73,17 +73,54 @@ export interface TrialsSnapshot {
   total: number
   /** Trial located in the zone the player is currently in (hint), else null. */
   currentZoneTrialId: string | null
+  /** Labyrinths whose trials are all done and that haven't been dismissed yet —
+   *  the "you can run this now" notice. Ordered normal → cruel → merciless. */
+  unlockedLabs: LabTier[]
 }
+
+const LAB_ORDER: readonly LabTier[] = ['normal', 'cruel', 'merciless']
 
 export class TrialsEngine {
   private readonly trials: readonly TrialDef[]
   private seen = new Set<string>()
   private currentZoneTrial: string | null = null
+  /** Labyrinths whose unlock notice has been dismissed. Persisted, because the
+   *  gap between "unlocked" and "actually ran it" is often hours. */
+  private dismissedLabs = new Set<LabTier>()
 
-  constructor(seenIds: string[] = [], trials: readonly TrialDef[] = CAMPAIGN_TRIALS) {
+  constructor(
+    seenIds: string[] = [],
+    dismissedLabs: string[] = [],
+    trials: readonly TrialDef[] = CAMPAIGN_TRIALS
+  ) {
     this.trials = trials
     const valid = new Set(trials.map((t) => t.id))
     for (const id of seenIds) if (valid.has(id)) this.seen.add(id)
+    for (const lab of dismissedLabs) {
+      if ((LAB_ORDER as readonly string[]).includes(lab)) this.dismissedLabs.add(lab as LabTier)
+    }
+  }
+
+  /** Labyrinths with every trial done, minus the ones already acknowledged. */
+  private unlocked(): LabTier[] {
+    return LAB_ORDER.filter((lab) => {
+      if (this.dismissedLabs.has(lab)) return false
+      const of = this.trials.filter((t) => t.lab === lab)
+      return of.length > 0 && of.every((t) => this.seen.has(t.id))
+    })
+  }
+
+  /** Acknowledge a Labyrinth's unlock notice. Returns true if that changed
+   *  anything, so the caller knows whether to persist and push. */
+  dismissLab(lab: string): boolean {
+    if (!(LAB_ORDER as readonly string[]).includes(lab)) return false
+    if (this.dismissedLabs.has(lab as LabTier)) return false
+    this.dismissedLabs.add(lab as LabTier)
+    return true
+  }
+
+  dismissedLabIds(): string[] {
+    return [...this.dismissedLabs]
   }
 
   snapshot(): TrialsSnapshot {
@@ -98,7 +135,8 @@ export class TrialsEngine {
       trials,
       seenCount: this.seen.size,
       total: this.trials.length,
-      currentZoneTrialId: this.currentZoneTrial
+      currentZoneTrialId: this.currentZoneTrial,
+      unlockedLabs: this.unlocked()
     }
   }
 
@@ -165,6 +203,9 @@ export class TrialsEngine {
 
   reset(): void {
     this.seen.clear()
+    // Dismissals go too: with no trials done there is nothing to acknowledge,
+    // and keeping them would silence the notice for a fresh character.
+    this.dismissedLabs.clear()
   }
 
   seenIds(): string[] {

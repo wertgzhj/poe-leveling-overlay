@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 134 tests: parser, tracker, watcher, guide, profile,
+npm test        # 141 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough
 npm run typecheck
 npm run build
@@ -64,6 +64,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    plaque line only on completion, and the zone identifies which trial it was.
    Confirm the **right** one is ticked, especially in **Act 7's Chamber of Sins
    Level 2**, which must tick the *Cruel* entry rather than the Act 2 one.
+   When the last trial of a Labyrinth is checked, the same bar switches to
+   "**Normal Labyrinth unlocked**". Dismiss it with ✕ and it must stay gone —
+   including after a restart — while a later Labyrinth still announces itself.
 8. **Editor.** Tray → *Edit routes & profile…* opens a normal window. Add or edit
    a step, save, and the Guide tab reflects it without a restart. Same for the
    profile and the Gems tab.

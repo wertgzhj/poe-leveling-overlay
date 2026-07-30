@@ -62,6 +62,7 @@ const api = {
     subscribe(Channels.trialsState, cb),
   trialsToggle: (id: string): void => ipcRenderer.send(Channels.trialsToggle, id),
   trialsReset: (): void => ipcRenderer.send(Channels.trialsReset),
+  trialsDismissLab: (lab: string): void => ipcRenderer.send(Channels.trialsDismissLab, lab),
 
   getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(Channels.updateGet),
   onUpdateStatus: (cb: (status: UpdateStatus) => void): (() => void) =>
