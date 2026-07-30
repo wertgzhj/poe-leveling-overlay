@@ -10,6 +10,7 @@ import {
   type OverlayState,
   type PobImportResponse,
   type ProfileSnapshot,
+  type RouteImportResult,
   type SettingsSetResult,
   type TrialsSnapshot,
   type UpdateStatus
@@ -76,6 +77,9 @@ const api = {
     ipcRenderer.invoke(Channels.editorSaveRoute, { act, json }),
   editorSaveProfile: (json: unknown): Promise<EditorSaveResult> =>
     ipcRenderer.invoke(Channels.editorSaveProfile, json),
+  editorExportRoutes: (): Promise<string> => ipcRenderer.invoke(Channels.editorExportRoutes),
+  editorImportRoutes: (text: string): Promise<RouteImportResult> =>
+    ipcRenderer.invoke(Channels.editorImportRoutes, text),
 
   exitMoveMode: (): void => ipcRenderer.send(Channels.overlayExitMoveMode),
 

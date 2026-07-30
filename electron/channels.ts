@@ -77,6 +77,10 @@ export const Channels = {
   editorSaveRoute: 'editor:save-route',
   /** editor -> main (invoke): validate + save + activate the profile */
   editorSaveProfile: 'editor:save-profile',
+  /** editor -> main (invoke): the routes in effect, serialized for sharing */
+  editorExportRoutes: 'editor:export-routes',
+  /** editor -> main (invoke): validate shared routes and write them as overrides */
+  editorImportRoutes: 'editor:import-routes',
   /** main -> renderer: trials tracker state changed */
   trialsState: 'trials:state',
   /** renderer -> main (invoke): current trials state */
@@ -198,6 +202,13 @@ export interface EditorRouteEntry {
 export interface EditorLoad {
   routes: EditorRouteEntry[]
   profile: { profile: Profile | null; errors: string[]; path: string | null }
+}
+
+/** Outcome of importing shared routes: which acts landed, and everything that
+ *  didn't — a bad act is reported, never fatal to the rest. */
+export interface RouteImportResult {
+  written: number[]
+  errors: string[]
 }
 
 export interface EditorSaveResult {

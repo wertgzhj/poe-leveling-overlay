@@ -300,6 +300,11 @@ interface EditorLoadBridge {
   profile: { profile: ProfileFileBridge | null; errors: string[]; path: string | null }
 }
 
+interface RouteImportResultBridge {
+  written: number[]
+  errors: string[]
+}
+
 interface EditorSaveResultBridge {
   ok: boolean
   errors: string[]
@@ -353,6 +358,8 @@ interface OverlayBridge {
   editorLoad(): Promise<EditorLoadBridge>
   editorSaveRoute(act: number, json: unknown): Promise<EditorSaveResultBridge>
   editorSaveProfile(json: unknown): Promise<EditorSaveResultBridge>
+  editorExportRoutes(): Promise<string>
+  editorImportRoutes(text: string): Promise<RouteImportResultBridge>
   getUpdateStatus(): Promise<UpdateStatusBridge>
   onUpdateStatus(cb: (status: UpdateStatusBridge) => void): () => void
   checkForUpdates(): void
