@@ -191,6 +191,7 @@ interface RewardGroupBridge {
   act?: number
   pickOne: boolean
   gems: AcquisitionEntryBridge[]
+  buyRest?: { count: number; cost?: string }
 }
 
 type AcquisitionItemBridge = (

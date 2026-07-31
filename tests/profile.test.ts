@@ -7,7 +7,8 @@ import {
   vendorCostFor,
   safeLevelRange,
   normalizeGemName,
-  BROAD_VENDOR_DATA_MIN
+  BROAD_VENDOR_DATA_MIN,
+  type GemSourceInfo
 } from '../electron/profile/gems.ts'
 import {
   actFromAreaId,
@@ -482,6 +483,72 @@ test('reward groups flag same-quest gems as a pick-one choice', () => {
   // The lone Act 2 reward is its own take-it group.
   assert.equal(g[1].pickOne, false)
   assert.deepEqual(g[1].gems.map((e) => e.gem), ['Fireball'])
+  assert.equal(g[1].buyRest, undefined, 'nothing to buy when there is no choice')
+})
+
+test('a pick-one group prices the copies the quest does not give you', () => {
+  const quest = (act: number, q: string): GemSourceInfo => ({
+    kind: 'quest',
+    act,
+    quest: q,
+    classes: ['Witch']
+  })
+  const gems = new GemData({
+    // Four golems from one quest, same price tier (lvl 28+ -> Alchemy).
+    Flame: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
+    Ice: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
+    Lightning: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
+    Stone: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
+    // Mixed tiers: Wisdom (lvl 1) and Alchemy (lvl 28).
+    Cheap: { attr: 'int', requiredLevel: 1, sources: [quest(1, 'Mercy Mission')] },
+    Dear: { attr: 'int', requiredLevel: 28, sources: [quest(1, 'Mercy Mission')] }
+  })
+  const names = ['Flame', 'Ice', 'Lightning', 'Stone', 'Cheap', 'Dear']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'pick', class: 'Witch' },
+      stages: [{ range: [1, 60], socketGroups: [{ gems: names }] }],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const groups = acquisitionsForStage(profile, 0, gems).rewardGroups
+  const byQuest = new Map(groups.map((g) => [g.quest, g]))
+
+  // Four gems, one free: three buys at the shared tier.
+  assert.deepEqual(byQuest.get('Breaking the Seal')?.buyRest, { count: 3, cost: 'Alchemy' })
+  // Mixed tiers: you take the dearest free, so what is left is the cheap one.
+  assert.deepEqual(byQuest.get('Mercy Mission')?.buyRest, { count: 1, cost: 'Wisdom' })
+})
+
+test('a pick-one group counts copies, not gems', () => {
+  const gems = new GemData({
+    Twice: {
+      attr: 'int',
+      requiredLevel: 12,
+      sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }]
+    },
+    Once: {
+      attr: 'int',
+      requiredLevel: 12,
+      sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }]
+    }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'copies', class: 'Witch' },
+      // "Twice" sits in two links, so the build needs three copies in total.
+      stages: [
+        {
+          range: [1, 20],
+          socketGroups: [{ gems: ['Twice', 'Once'] }, { gems: ['Twice'] }]
+        }
+      ],
+      gemPlan: [{ gem: 'Twice' }, { gem: 'Once' }]
+    })
+  ).profile!
+  const g = acquisitionsForStage(profile, 0, gems).rewardGroups[0]
+  assert.equal(g.pickOne, true)
+  assert.deepEqual(g.buyRest, { count: 2, cost: 'Alteration' })
 })
 
 test('purchases sort by cost tier, then act, then name', () => {
