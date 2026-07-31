@@ -79,6 +79,9 @@ export interface RewardGroup {
   /** several gems from the same quest reward — the player must choose one. */
   pickOne: boolean
   gems: AcquisitionEntry[]
+  /** the copies you DON'T get free, and what the dearest of them costs. Only
+   *  set on a pickOne group — see buyRest(). */
+  buyRest?: { count: number; cost?: string }
 }
 
 /** A single line in the acquisition to-do list — either a quest-reward group
@@ -324,7 +327,13 @@ function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEnt
   }
   const groups = order.map((key): RewardGroup => {
     const gems = byQuest.get(key)!.slice().sort(acquisitionOrder)
-    return { quest: gems[0].quest, act: gems[0].act, pickOne: gems.length > 1, gems }
+    return {
+      quest: gems[0].quest,
+      act: gems[0].act,
+      pickOne: gems.length > 1,
+      gems,
+      buyRest: gems.length > 1 ? buyRest(gems) : undefined
+    }
   })
   // Choices first (they need a decision), then by act, then quest name.
   // Chronological: act, then where the quest sits within that act (derived rank),
@@ -336,6 +345,27 @@ function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEnt
       groupQuestRank(a) - groupQuestRank(b) ||
       (a.quest ?? '').localeCompare(b.quest ?? '')
   )
+}
+
+/**
+ * What a "pick one" group actually costs you. The quest hands out exactly ONE
+ * gem, so every other copy your build needs is a vendor purchase: for a group of
+ * four golems that's three buys, not four.
+ *
+ * Copies count, not gems — a gem the build needs twice is one extra buy. And the
+ * free pick is assumed to be the dearest of them, because that's what anyone
+ * would take; the price quoted is the dearest of what's left, so the number is
+ * never an underestimate of a single purchase.
+ */
+function buyRest(gems: AcquisitionEntry[]): { count: number; cost?: string } | undefined {
+  const copies = gems.reduce((n, g) => n + (g.count ?? 1), 0)
+  if (copies < 2) return undefined
+  // Cheapest first, so dropping the last one drops the free pick.
+  const tiers = gems
+    .flatMap((g) => Array<string | undefined>((g.count ?? 1)).fill(vendorCostFor(g.requiredLevel)))
+    .sort((a, b) => costRank(a) - costRank(b))
+  tiers.pop()
+  return { count: copies - 1, cost: tiers[tiers.length - 1] }
 }
 
 /** A group's place in its act = the earliest rank among its gems. */

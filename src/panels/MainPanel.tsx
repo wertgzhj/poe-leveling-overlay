@@ -724,15 +724,15 @@ function RewardGroupRow({
       </>
     )
   }
-  // A choice, so it keeps its own box — but on the same three columns as every
-  // other row: the badge and the quest name take the header, and the gems start
-  // at the middle column's edge like the gems above and below them. They run on
-  // into the source column because nothing else is in it; a gem name plus its
-  // "for later" note doesn't fit 1fr alone.
+  // A choice, so it keeps its own box — but on the tab's columns, not its own:
+  // `subgrid` borrows the parent's tracks, so the box's border and padding shift
+  // its outer edges without moving the shared column lines. That's what keeps
+  // the gems and the quest name lined up with the plain rows around it.
+  const rest = group.buyRest
   return (
     <div
       className={
-        'col-span-3 grid grid-cols-[3.5rem_1fr_6.5rem] items-baseline gap-x-1.5 rounded border border-amber-400/30 bg-amber-400/5 p-1.5' +
+        'col-span-3 grid grid-cols-subgrid items-baseline gap-x-1.5 rounded border border-amber-400/30 bg-amber-400/5 p-1.5' +
         (later ? ' opacity-50' : '')
       }
     >
@@ -740,6 +740,20 @@ function RewardGroupRow({
         Pick one, buy rest
       </span>
       <SourceCell act={group.act} what={group.quest ?? 'quest'} />
+      {/* One price for the whole group, centred against the gems it covers: the
+          quest gives one, so the rest is what you actually pay. */}
+      {rest && (
+        <span
+          style={{ gridRow: `span ${group.gems.length}` }}
+          title={`The quest gives one — the other ${rest.count === 1 ? 'copy costs' : `${rest.count} copies cost`}${rest.cost ? ` about ${rest.cost} each (price is provisional)` : ' vendor money'}`}
+          className={
+            'self-center text-right text-[10px] ' +
+            ((rest.cost && COST_TONE[rest.cost]) || 'text-overlay-muted')
+          }
+        >
+          {rest.count}× {rest.cost ? (COST_SHORT[rest.cost] ?? rest.cost) : 'buy'}
+        </span>
+      )}
       {group.gems.map((e) => (
         <div
           key={e.gem}
@@ -865,9 +879,10 @@ function sourceMark(
   return { label: note, title: note, starting: false }
 }
 
-// The build's links. Same grid as the acquisition list above, and deliberately
-// the same source-column width: one vertical line runs down the whole tab
-// instead of two independently ragged edges.
+// The build's links, on the tab's shared columns. The pip and the gem take the
+// first two together — a link row has no price, and giving up the whole cost
+// column to whitespace would cost the names a third of the panel — while the
+// source sits in the same column as everywhere else, which is the point.
 function SocketGroup({
   group,
   acq
@@ -876,25 +891,27 @@ function SocketGroup({
   acq: Map<string, AcquisitionEntryBridge>
 }): React.JSX.Element {
   return (
-    <div className="mb-1.5 grid grid-cols-[0.875rem_1fr_6.5rem] items-center gap-x-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
+    <div className="col-span-3 mb-1.5 grid grid-cols-subgrid items-center gap-x-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
       {group.gems.map((gem, i) => {
         const mark = sourceMark(acq.get(gem.name.toLowerCase()))
         return (
           <Fragment key={i}>
-            <Pip gem={gem} />
-            <span className="min-w-0 truncate text-xs text-overlay-text">
-              {gem.name}
-              {/* Only a genuinely unrecognised gem is flagged. A gem with no
-                  attribute requirement is fully known — marking it "?" made the
-                  overlay look broken on Portal, Convocation and friends. */}
-              {gem.unknown && (
-                <span className="ml-1 text-[9px] text-amber-400/80" title="not in the gem data — colour guessed">
-                  ?
-                </span>
-              )}
-            </span>
+            <div className="col-span-2 flex min-w-0 items-center gap-1.5">
+              <Pip gem={gem} />
+              <span className="min-w-0 truncate text-xs text-overlay-text">
+                {gem.name}
+                {/* Only a genuinely unrecognised gem is flagged. A gem with no
+                    attribute requirement is fully known — marking it "?" made
+                    the overlay look broken on Portal, Convocation and friends. */}
+                {gem.unknown && (
+                  <span className="ml-1 text-[9px] text-amber-400/80" title="not in the gem data — colour guessed">
+                    ?
+                  </span>
+                )}
+              </span>
+            </div>
             {/* Always rendered, even when empty: a missing cell would pull the
-                next row's pip into the source column. */}
+                next row's gem into the source column. */}
             <span
               title={mark?.title}
               className={
@@ -1010,27 +1027,32 @@ function GemBody(): React.JSX.Element {
         </button>
       )}
 
-      {plan.length > 0 && (
-        <div
-          className={
-            'mb-2 rounded-md border p-2 ' +
-            (atReward ? 'border-overlay-accent/50 bg-overlay-accent/10' : 'border-overlay-border/60 bg-black/20')
-          }
-        >
+      {/* One column system for the whole tab: cost, gem, source. Every list is a
+          `subgrid` inside it, which is what makes the alignment structural
+          instead of arithmetic — a box borrows these tracks, so its own border
+          and padding move its outer edges without moving the shared column
+          lines. Nesting them (the "pick one" box inside the plan box) stays
+          aligned for the same reason. Anything that isn't a row spans all
+          three. */}
+      <div className="grid grid-cols-[4rem_1fr_6.5rem] items-baseline gap-x-1.5">
+        {plan.length > 0 && (
           <div
             className={
-              'mb-1.5 text-[10px] font-semibold uppercase tracking-wider ' +
-              (atReward ? 'text-overlay-accent' : 'text-overlay-muted')
+              'col-span-3 mb-2 grid grid-cols-subgrid items-baseline gap-x-1.5 gap-y-1.5 rounded-md border p-2 ' +
+              (atReward ? 'border-overlay-accent/50 bg-overlay-accent/10' : 'border-overlay-border/60 bg-black/20')
             }
           >
-            Get these gems{atReward ? ' — take rewards now' : ''}
-          </div>
-          {/* Three fixed columns — cost, gem, source — with the rows rendering
-              bare cells into this grid. The source column is the same width as
-              the one on the link rows below, so the tab reads down a single
-              line. Dimming a "later" row happens per cell: a wrapper element
-              here would become a grid item and break the columns. */}
-          <div className="grid grid-cols-[3.5rem_1fr_6.5rem] items-baseline gap-x-1.5 gap-y-1.5">
+            <div
+              className={
+                'col-span-3 text-[10px] font-semibold uppercase tracking-wider ' +
+                (atReward ? 'text-overlay-accent' : 'text-overlay-muted')
+              }
+            >
+              Get these gems{atReward ? ' — take rewards now' : ''}
+            </div>
+            {/* Rows render bare cells into this grid, so the columns line up
+                across every row. Dimming a "later" row happens per cell: a
+                wrapper element here would become a grid item and break them. */}
             {plan.map((item, i) =>
               item.kind === 'reward' ? (
                 <RewardGroupRow
@@ -1048,26 +1070,28 @@ function GemBody(): React.JSX.Element {
                 />
               )
             )}
+            {plan.some((it) => it.kind === 'buy' && it.entry.fallback) && (
+              <p className="col-span-3 text-[10px] text-overlay-muted">
+                ≈ general vendor: Siosa (Act 3, after the Library) / Lilly Roth (Act 6+) sell most
+                gems; you may find it earlier as a quest reward.
+              </p>
+            )}
           </div>
-          {plan.some((it) => it.kind === 'buy' && it.entry.fallback) && (
-            <p className="mt-1.5 text-[10px] text-overlay-muted">
-              ≈ general vendor: Siosa (Act 3, after the Library) / Lilly Roth (Act 6+) sell most
-              gems; you may find it earlier as a quest reward.
-            </p>
-          )}
-        </div>
-      )}
+        )}
 
-      {stage ? (
-        <>
-          {stage.groups.map((group, i) => (
-            <SocketGroup key={i} group={group} acq={acqByGem} />
-          ))}
-          {stage.note && <div className="mb-2 px-1 text-[10px] text-overlay-muted">{stage.note}</div>}
-        </>
-      ) : (
-        <p className="px-1 text-xs text-overlay-muted">No stage for the current level.</p>
-      )}
+        {stage ? (
+          <>
+            {stage.groups.map((group, i) => (
+              <SocketGroup key={i} group={group} acq={acqByGem} />
+            ))}
+            {stage.note && (
+              <div className="col-span-3 mb-2 px-1 text-[10px] text-overlay-muted">{stage.note}</div>
+            )}
+          </>
+        ) : (
+          <p className="col-span-3 px-1 text-xs text-overlay-muted">No stage for the current level.</p>
+        )}
+      </div>
 
       {profile.nextStage && (
         <div className="mt-2 px-1 text-[10px] text-overlay-muted">
