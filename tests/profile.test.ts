@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { parseProfile, type Profile } from '../electron/profile/profile.ts'
+import { parseProfile, baseClassOf, ASCENDANCIES, CLASSES, type Profile } from '../electron/profile/profile.ts'
 import {
   GemData,
   vendorCostFor,
@@ -850,4 +850,31 @@ test('an authored source overrides the live lookup', () => {
   const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
   assert.equal(acq.rewards.length, 0)
   assert.deepEqual(acq.other.map((e) => e.gem), ['Frostbolt'])
+})
+
+test('an ascended character still counts as its base class', () => {
+  // Client.txt reports the ascendancy after you ascend, so this is the exact
+  // case that used to warn a Witch build about being played on a Witch.
+  assert.equal(baseClassOf('Elementalist'), 'Witch')
+  assert.equal(baseClassOf('Witch'), 'Witch')
+  assert.equal(baseClassOf('Ascendant'), 'Scion')
+  assert.equal(baseClassOf('juggernaut'), 'Marauder', 'case should not matter')
+  // A name we can't place — a localized log, say — is not a mismatch claim.
+  assert.equal(baseClassOf('Hexenmeisterin'), null)
+  assert.equal(baseClassOf(''), null)
+})
+
+test('every ascendancy belongs to exactly one class', () => {
+  const seen = new Map<string, string>()
+  for (const cls of CLASSES) {
+    assert.ok(ASCENDANCIES[cls].length > 0, `${cls} has no ascendancies`)
+    for (const asc of ASCENDANCIES[cls]) {
+      assert.equal(seen.get(asc), undefined, `${asc} is listed under two classes`)
+      seen.set(asc, cls)
+      assert.equal(baseClassOf(asc), cls)
+    }
+  }
+  // No ascendancy shares a name with a base class, or the lookup would be
+  // ambiguous and the base-class branch would silently win.
+  for (const cls of CLASSES) assert.equal(seen.has(cls), false, `${cls} is also an ascendancy`)
 })

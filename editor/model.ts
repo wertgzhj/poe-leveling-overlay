@@ -26,6 +26,32 @@ export const CLASSES = [
 ] as const
 export type CharClass = (typeof CLASSES)[number]
 
+// Ascendancies per base class. Mirrored by hand from electron/profile/profile.ts
+// — the editor and main build graphs are intentionally decoupled (see env.d.ts).
+export const ASCENDANCIES: Record<CharClass, readonly string[]> = {
+  Marauder: ['Juggernaut', 'Berserker', 'Chieftain'],
+  Ranger: ['Deadeye', 'Raider', 'Pathfinder'],
+  Witch: ['Necromancer', 'Elementalist', 'Occultist'],
+  Duelist: ['Slayer', 'Gladiator', 'Champion'],
+  Templar: ['Inquisitor', 'Hierophant', 'Guardian'],
+  Shadow: ['Assassin', 'Saboteur', 'Trickster'],
+  Scion: ['Ascendant']
+}
+
+/** The ascendancy choices for a class, with "" first for "not decided yet".
+ *  Anything already in the draft that isn't one of them is kept as an option, so
+ *  switching class doesn't silently swallow a hand-written value. */
+export function ascendancyOptions(cls: CharClass, current?: string): string[] {
+  const list = ['', ...ASCENDANCIES[cls]]
+  return current && !list.includes(current) ? [...list, current] : list
+}
+
+/** Ascendancies belong to one class, so changing class invalidates the pick.
+ *  Returns the ascendancy to keep — the old one if it still fits, else none. */
+export function ascendancyFor(cls: CharClass, current?: string): string | undefined {
+  return current && ASCENDANCIES[cls].includes(current) ? current : undefined
+}
+
 export interface StepDraft {
   id: string
   type: StepType

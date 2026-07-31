@@ -581,6 +581,12 @@ function GuideBody(): React.JSX.Element {
   )
 }
 
+/** "a" or "an" — every class and ascendancy name starts with a plain letter, so
+ *  the vowel test is enough (Assassin, Elementalist, Inquisitor, Occultist). */
+function article(word: string): string {
+  return /^[aeiou]/i.test(word) ? 'an' : 'a'
+}
+
 // The socket-colour dot. Shared by the link rows and the to-do list so a gem
 // looks the same wherever it turns up. Renders an empty box of the same size
 // when the colour is unknown (gems.json failed to load), so nothing shifts.
@@ -779,13 +785,14 @@ function RewardGroupRow({
       {group.gems.map((e) => (
         <div
           key={e.gem}
+          title={e.gem + context(e)}
           className={
             'col-span-2 col-start-2 flex items-baseline gap-1.5 text-xs ' +
             (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')
           }
         >
           <Pip gem={e.colored} />
-          <span className="min-w-0">
+          <span className="min-w-0 truncate">
             {e.gem}
             {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
           </span>
@@ -819,7 +826,10 @@ function GemCell({
       }
     >
       <Pip gem={e.colored} />
-      <span className="min-w-0">
+      {/* Truncated, never wrapped: "for later (lvl 62+)" is worth knowing but
+          not worth a second line, least of all in a narrow panel. The full
+          text is in the tooltip. */}
+      <span className="min-w-0 truncate">
         {e.gem}
         {children}
         {comingUpAt != null && !e.fromLevel && (
@@ -879,17 +889,28 @@ function BuyRow({
  */
 function sourceMark(
   e: AcquisitionEntryBridge | undefined
-): { label: string; title: string; starting: boolean } | null {
+): { label: string; title: string; tone: string } | null {
   if (!e) return null
-  if (e.starting) return { label: '✓ start', title: 'You start with this gem', starting: true }
+  const muted = 'text-overlay-muted'
+  if (e.starting)
+    return { label: '✓ start', title: 'You start with this gem', tone: 'text-emerald-400/90' }
   const act = e.act ? `A${e.act}` : null
   const inAct = e.act ? ` in Act ${e.act}` : ''
+  // Muling wins over the vendor even here: quoting Siosa's price next to a gem
+  // an alt hands you for nothing is the one thing the links should not do.
+  if (e.mule?.length) {
+    return {
+      label: `Mule · ${e.mule.join('/')}`,
+      title: `Roll a level-1 ${e.mule.join(' or ')}, stash its starting gems, delete it. Otherwise ${e.npc ?? 'a vendor'}${inAct} sells it${e.cost ? ` for ${e.cost}` : ''}.`,
+      tone: 'text-sky-300/90'
+    }
+  }
   if (e.bucket === 'reward') {
     const quest = e.quest ?? 'quest'
     return {
       label: [act, quest].filter(Boolean).join(' · '),
       title: `Free quest reward${inAct}: ${quest}`,
-      starting: false
+      tone: muted
     }
   }
   if (e.bucket === 'purchase') {
@@ -899,11 +920,11 @@ function sourceMark(
       title:
         `Buy from ${npc}${inAct}${e.cost ? ` · ${e.cost}` : ''}` +
         (e.fallback ? ' — general vendor, may show up earlier as a quest reward' : ''),
-      starting: false
+      tone: muted
     }
   }
   const note = e.note ?? 'drop/trade'
-  return { label: note, title: note, starting: false }
+  return { label: note, title: note, tone: muted }
 }
 
 // The build's links, on the tab's shared columns. The pip and the gem take the
@@ -939,12 +960,7 @@ function SocketGroup({
             </div>
             {/* Always rendered, even when empty: a missing cell would pull the
                 next row's gem into the source column. */}
-            <span
-              title={mark?.title}
-              className={
-                'truncate text-[9px] ' + (mark?.starting ? 'text-emerald-400/90' : 'text-overlay-muted')
-              }
-            >
+            <span title={mark?.title} className={'truncate text-[9px] ' + (mark?.tone ?? '')}>
               {mark?.label}
             </span>
           </Fragment>
@@ -1006,10 +1022,12 @@ function GemBody(): React.JSX.Element {
         {profile.level != null && <span>· level {profile.level}</span>}
       </div>
 
+      {/* Only fires across base classes now — an Elementalist on a Witch build
+          is the same character, ascended. "an Assassin" needs its own article. */}
       {profile.classMismatch && (
         <div className="mb-2 rounded-md border border-amber-400/40 bg-amber-400/10 p-1.5 text-[10px] text-amber-300">
-          Tracked character is a {profile.classMismatch}, but this profile is for a {profile.meta.class}. Wrong
-          profile loaded?
+          Tracked character is {article(profile.classMismatch)} {profile.classMismatch}, but this profile is
+          for a {profile.meta.class}. Wrong profile loaded?
         </div>
       )}
 

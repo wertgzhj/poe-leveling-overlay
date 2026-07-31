@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
   CLASSES,
+  ascendancyFor,
+  ascendancyOptions,
   blankStage,
   moveItem,
   serializeProfile,
@@ -91,14 +93,26 @@ export function ProfileEditor({
           <TextInput value={draft.meta.name} onChange={(v) => edit({ ...draft, meta: { ...draft.meta, name: v } })} className="w-56" />
         </Labeled>
         <Labeled label="Class">
-          <Select value={draft.meta.class} options={CLASSES} onChange={(c) => edit({ ...draft, meta: { ...draft.meta, class: c } })} />
+          <Select
+            value={draft.meta.class}
+            options={CLASSES}
+            onChange={(c) =>
+              edit({
+                ...draft,
+                // An ascendancy belongs to one class, so switching class drops a
+                // pick that no longer fits rather than leaving a Witch Slayer.
+                meta: { ...draft.meta, class: c, ascendancy: ascendancyFor(c, draft.meta.ascendancy) }
+              })
+            }
+          />
         </Labeled>
         <Labeled label="Ascendancy">
-          <TextInput
+          <Select
             value={draft.meta.ascendancy ?? ''}
-            onChange={(v) => edit({ ...draft, meta: { ...draft.meta, ascendancy: v } })}
+            options={ascendancyOptions(draft.meta.class, draft.meta.ascendancy)}
+            labelFor={(v) => v || '— none —'}
+            onChange={(v) => edit({ ...draft, meta: { ...draft.meta, ascendancy: v || undefined } })}
             className="w-40"
-            placeholder="optional"
           />
         </Labeled>
         <div className="ml-auto flex items-center gap-2">

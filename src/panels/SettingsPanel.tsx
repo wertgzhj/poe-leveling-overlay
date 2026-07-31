@@ -180,137 +180,16 @@ export function SettingsPanel(): React.JSX.Element {
         </header>
 
         <div className="space-y-4 overflow-y-auto px-3 py-3">
+          <Section title="Updates">
+            <UpdateRow />
+          </Section>
+
           <button
             onClick={() => window.overlay?.openEditor()}
             className="w-full rounded-md border border-overlay-accent/40 bg-overlay-accent/10 px-2 py-1.5 text-xs text-overlay-accent hover:bg-overlay-accent/20"
           >
             Open route &amp; profile editor…
           </button>
-
-          <Section title="Hotkeys">
-            <div className="space-y-1.5">
-              {HOTKEY_FIELDS.map(([field, label]) => {
-                const accel = hotkeys[field]
-                const recordingThis = recording === field
-                const conflict = failed.has(accel)
-                return (
-                  <div key={field} className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-overlay-text">{label}</span>
-                    <div className="flex items-center gap-2">
-                      {conflict && <span className="text-[10px] text-red-400">⚠ conflict</span>}
-                      {!conflict && !hasModifier(accel) && (
-                        <span className="text-[10px] text-amber-400/80">no modifier</span>
-                      )}
-                      <button
-                        onClick={() => startRecording(field)}
-                        className={
-                          'min-w-[104px] rounded px-2 py-1 text-center font-mono text-[11px] ' +
-                          (recordingThis
-                            ? 'bg-overlay-accent/25 text-overlay-accent'
-                            : 'bg-white/10 text-overlay-text hover:bg-white/15')
-                        }
-                      >
-                        {recordingThis ? 'Press keys…' : formatAccelerator(accel)}
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            <p className="mt-1.5 text-[10px] text-overlay-muted">
-              {recording
-                ? 'Press a combo (Esc to cancel). A modifier is recommended so it does not clash with the game.'
-                : 'Click a binding to change it. Conflicts are shown if the combo is already taken.'}
-            </p>
-          </Section>
-
-          <Section title="Overlay">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-overlay-text">Opacity</span>
-              <div className="flex items-center gap-2">
-                <input
-                  type="range"
-                  min={0.4}
-                  max={1}
-                  step={0.05}
-                  value={opacity}
-                  onChange={(e) => setOpacity(Number(e.target.value))}
-                  className="w-28 accent-overlay-accent"
-                />
-                <span className="w-8 text-right font-mono text-[11px] text-overlay-muted">
-                  {Math.round(opacity * 100)}%
-                </span>
-              </div>
-            </div>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-overlay-text">Click-through by default</span>
-              <Toggle on={clickThrough} onChange={setClickThrough} />
-            </div>
-
-            <div className="mt-3 border-t border-overlay-border/60 pt-2">
-              <span className="text-[11px] text-overlay-muted">Tabs to show</span>
-              {TAB_FIELDS.map(([key, label]) => {
-                const on = visibleTabs[key]
-                // Keep at least one tab — the last one on can't be switched off.
-                const isLastOn = on && TAB_FIELDS.filter(([k]) => visibleTabs[k]).length === 1
-                return (
-                  <div key={key} className="mt-1.5 flex items-center justify-between">
-                    <span className={'text-xs ' + (isLastOn ? 'text-overlay-muted' : 'text-overlay-text')}>
-                      {label}
-                      {isLastOn && <span className="ml-1 text-[10px] text-overlay-muted">(keep one)</span>}
-                    </span>
-                    <Toggle
-                      on={on}
-                      onChange={(v) => !isLastOn && setVisibleTabs({ ...visibleTabs, [key]: v })}
-                    />
-                  </div>
-                )
-              })}
-            </div>
-          </Section>
-
-          <Section title="Updates">
-            <UpdateRow />
-          </Section>
-
-          <Section title="Game log">
-            <label className="text-[11px] text-overlay-muted">Client.txt path</label>
-            <div className="mt-1 flex gap-1.5">
-              <input
-                type="text"
-                spellCheck={false}
-                value={pathDraft}
-                placeholder="…\Path of Exile\logs\Client.txt"
-                onChange={(e) => setPathDraft(e.target.value)}
-                onBlur={() => commitPath(pathDraft)}
-                className="min-w-0 flex-1 rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
-              />
-              <button
-                onClick={browse}
-                className="shrink-0 rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15"
-              >
-                Browse…
-              </button>
-            </div>
-            <p className="mt-1 text-[10px] text-overlay-muted">Used for zone/level tracking.</p>
-
-            <label className="mt-2 block text-[11px] text-overlay-muted">
-              Character name (optional)
-            </label>
-            <input
-              type="text"
-              spellCheck={false}
-              value={charDraft}
-              placeholder="auto-detect from level-ups"
-              onChange={(e) => setCharDraft(e.target.value)}
-              onBlur={() => commitCharacter(charDraft)}
-              className="mt-1 w-full rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
-            />
-            <p className="mt-1 text-[10px] text-overlay-muted">
-              Binds level tracking to this character — set it if you play in a party, so a
-              partymate's level-up can't advance your progress.
-            </p>
-          </Section>
 
           <Section title="Build profile">
             <label className="text-[11px] text-overlay-muted">Profile JSON path</label>
@@ -377,6 +256,127 @@ export function SettingsPanel(): React.JSX.Element {
                 ))}
               </div>
             )}
+          </Section>
+
+          <Section title="Game log">
+            <label className="text-[11px] text-overlay-muted">Client.txt path</label>
+            <div className="mt-1 flex gap-1.5">
+              <input
+                type="text"
+                spellCheck={false}
+                value={pathDraft}
+                placeholder="…\Path of Exile\logs\Client.txt"
+                onChange={(e) => setPathDraft(e.target.value)}
+                onBlur={() => commitPath(pathDraft)}
+                className="min-w-0 flex-1 rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
+              />
+              <button
+                onClick={browse}
+                className="shrink-0 rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15"
+              >
+                Browse…
+              </button>
+            </div>
+            <p className="mt-1 text-[10px] text-overlay-muted">Used for zone/level tracking.</p>
+
+            <label className="mt-2 block text-[11px] text-overlay-muted">
+              Character name (optional)
+            </label>
+            <input
+              type="text"
+              spellCheck={false}
+              value={charDraft}
+              placeholder="auto-detect from level-ups"
+              onChange={(e) => setCharDraft(e.target.value)}
+              onBlur={() => commitCharacter(charDraft)}
+              className="mt-1 w-full rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
+            />
+            <p className="mt-1 text-[10px] text-overlay-muted">
+              Binds level tracking to this character — set it if you play in a party, so a
+              partymate's level-up can't advance your progress.
+            </p>
+          </Section>
+
+          <Section title="Overlay">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-overlay-text">Opacity</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min={0.4}
+                  max={1}
+                  step={0.05}
+                  value={opacity}
+                  onChange={(e) => setOpacity(Number(e.target.value))}
+                  className="w-28 accent-overlay-accent"
+                />
+                <span className="w-8 text-right font-mono text-[11px] text-overlay-muted">
+                  {Math.round(opacity * 100)}%
+                </span>
+              </div>
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-overlay-text">Click-through by default</span>
+              <Toggle on={clickThrough} onChange={setClickThrough} />
+            </div>
+
+            <div className="mt-3 border-t border-overlay-border/60 pt-2">
+              <span className="text-[11px] text-overlay-muted">Tabs to show</span>
+              {TAB_FIELDS.map(([key, label]) => {
+                const on = visibleTabs[key]
+                // Keep at least one tab — the last one on can't be switched off.
+                const isLastOn = on && TAB_FIELDS.filter(([k]) => visibleTabs[k]).length === 1
+                return (
+                  <div key={key} className="mt-1.5 flex items-center justify-between">
+                    <span className={'text-xs ' + (isLastOn ? 'text-overlay-muted' : 'text-overlay-text')}>
+                      {label}
+                      {isLastOn && <span className="ml-1 text-[10px] text-overlay-muted">(keep one)</span>}
+                    </span>
+                    <Toggle
+                      on={on}
+                      onChange={(v) => !isLastOn && setVisibleTabs({ ...visibleTabs, [key]: v })}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </Section>
+
+          <Section title="Hotkeys">
+            <div className="space-y-1.5">
+              {HOTKEY_FIELDS.map(([field, label]) => {
+                const accel = hotkeys[field]
+                const recordingThis = recording === field
+                const conflict = failed.has(accel)
+                return (
+                  <div key={field} className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-overlay-text">{label}</span>
+                    <div className="flex items-center gap-2">
+                      {conflict && <span className="text-[10px] text-red-400">⚠ conflict</span>}
+                      {!conflict && !hasModifier(accel) && (
+                        <span className="text-[10px] text-amber-400/80">no modifier</span>
+                      )}
+                      <button
+                        onClick={() => startRecording(field)}
+                        className={
+                          'min-w-[104px] rounded px-2 py-1 text-center font-mono text-[11px] ' +
+                          (recordingThis
+                            ? 'bg-overlay-accent/25 text-overlay-accent'
+                            : 'bg-white/10 text-overlay-text hover:bg-white/15')
+                        }
+                      >
+                        {recordingThis ? 'Press keys…' : formatAccelerator(accel)}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="mt-1.5 text-[10px] text-overlay-muted">
+              {recording
+                ? 'Press a combo (Esc to cancel). A modifier is recommended so it does not clash with the game.'
+                : 'Click a binding to change it. Conflicts are shown if the combo is already taken.'}
+            </p>
           </Section>
         </div>
       </div>
