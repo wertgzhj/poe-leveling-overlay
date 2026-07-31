@@ -6,10 +6,16 @@
 import { app } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { parseRoute, validateRoute } from '../guide/route.ts'
+import { parseRoute, validateRoute, type Route } from '../guide/route.ts'
+import { parseRoutes } from '../guide/share.ts'
 import { parseProfile, validateProfile } from '../profile/profile.ts'
 import { store } from '../settings.ts'
-import type { EditorLoad, EditorRouteEntry, EditorSaveResult } from '../channels.ts'
+import type {
+  EditorLoad,
+  EditorRouteEntry,
+  EditorSaveResult,
+  RouteImportResult
+} from '../channels.ts'
 
 function routesDir(): string {
   return join(app.getPath('userData'), 'routes')
@@ -67,6 +73,30 @@ export function saveRoute(act: number, json: unknown): EditorSaveResult {
   const path = join(routesDir(), `act${act}.json`)
   writeFileSync(path, JSON.stringify(json, null, 2) + '\n')
   return { ok: true, errors: [], path }
+}
+
+/** Every route currently in effect, for sharing — the owner's overrides where
+ *  they exist, the bundled file otherwise. */
+export function routesForExport(): Route[] {
+  return loadForEditor()
+    .routes.map((r) => r.route)
+    .filter((r): r is Route => r !== null)
+}
+
+/** Write shared routes in as per-act overrides. Each act is validated (again —
+ *  `parseRoutes` already did, but `saveRoute` is the single place that decides
+ *  what lands on disk) and written independently, so a bad act can't take the
+ *  good ones down with it. */
+export function importRoutes(text: string): RouteImportResult {
+  const { routes, errors } = parseRoutes(text)
+  const written: number[] = []
+  const problems = [...errors]
+  for (const route of routes) {
+    const res = saveRoute(route.act, route)
+    if (res.ok) written.push(route.act)
+    else for (const err of res.errors) problems.push(`act ${route.act}: ${err}`)
+  }
+  return { written, errors: problems }
 }
 
 /** Saves the profile to a userData override and returns its path (the caller

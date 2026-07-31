@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { parseRoute, combineRoutes, type Route } from '../electron/guide/route.ts'
+import { exportRoutes, parseRoutes } from '../electron/guide/share.ts'
 import { GuideEngine, isCampaignAreaId } from '../electron/guide/engine.ts'
 import { ProgressTracker, type AreaState } from '../electron/log/tracker.ts'
 import { makeParser, loadAreaNames, loadFixtureLines, repoPath } from './helpers.ts'
@@ -243,4 +244,51 @@ test('real capture: the July session walks the starter route to the Submerged Pa
   assert.ok(!snap.doneIds.includes('a1-submerged'))
   assert.ok(snap.doneIds.includes('a1-hillock'))
   assert.ok(snap.doneIds.includes('a1-mud-flats'))
+})
+
+// ---------- sharing routes between players ----------
+
+test('an exported bundle round-trips through the parser', () => {
+  const mine = [loadAct(1), loadAct(2)]
+  const { routes, errors } = parseRoutes(exportRoutes(mine))
+  assert.deepEqual(errors, [])
+  assert.deepEqual(routes.map((r) => r.act), [1, 2])
+  assert.deepEqual(routes[0].steps, mine[0].steps)
+})
+
+test('export drops the placeholder flag — an imported route is not a placeholder', () => {
+  // The shipped acts carry skeleton: true. Passing that on would tell the
+  // recipient that a file they deliberately imported is a stand-in.
+  assert.equal(loadAct(3).skeleton, true)
+  const shared = parseRoutes(exportRoutes([loadAct(3)])).routes[0]
+  assert.equal(shared.skeleton, undefined)
+  assert.equal(shared.act, 3)
+})
+
+test('import accepts whatever people actually paste', () => {
+  const act = loadAct(1)
+  // A bundle, a bare array, and a single actN.json all work.
+  assert.equal(parseRoutes(exportRoutes([act])).routes.length, 1)
+  assert.equal(parseRoutes(JSON.stringify([act])).routes.length, 1)
+  assert.equal(parseRoutes(JSON.stringify(act)).routes.length, 1)
+  assert.equal(parseRoutes(readFileSync(repoPath('data/campaign/act5.json'), 'utf8')).routes[0].act, 5)
+})
+
+test('one broken act does not cost you the others', () => {
+  const good = loadAct(1)
+  const text = JSON.stringify({
+    routes: [good, { act: 2, steps: [{ id: 'x', type: 'flytothemoon', text: 'nope' }] }]
+  })
+  const { routes, errors } = parseRoutes(text)
+  assert.deepEqual(routes.map((r) => r.act), [1], 'the valid act still lands')
+  assert.ok(errors.some((e) => e.includes('act 2') && e.includes('type must be one of')))
+})
+
+test('import reports junk instead of writing it', () => {
+  assert.match(parseRoutes('not json at all').errors[0], /not valid JSON/)
+  assert.match(parseRoutes('"a string"').errors[0], /expected a route file/)
+  assert.match(parseRoutes('[]').errors[0], /no routes/)
+  const dupes = parseRoutes(JSON.stringify([loadAct(1), loadAct(1)]))
+  assert.equal(dupes.routes.length, 1)
+  assert.ok(dupes.errors.some((e) => e.includes('listed twice')))
 })

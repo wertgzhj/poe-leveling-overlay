@@ -17,9 +17,16 @@ import type { TrialsService } from './trials/service.ts'
 import type { UpdateService } from './update/service.ts'
 import { importPobCode, importPobXml } from './profile/pob.ts'
 import { resolvePobInput } from './profile/pobbin.ts'
-import type { EditorSaveResult, PobImportResponse } from './channels'
+import type { EditorSaveResult, PobImportResponse, RouteImportResult } from './channels'
 import type { EditorWindow } from './editor-window.ts'
-import { loadForEditor, saveRoute as saveRouteFile, saveProfile as saveProfileFile } from './editor/io.ts'
+import {
+  loadForEditor,
+  routesForExport,
+  importRoutes,
+  saveRoute as saveRouteFile,
+  saveProfile as saveProfileFile
+} from './editor/io.ts'
+import { exportRoutes } from './guide/share.ts'
 
 // Allow-listed IPC only (Electron hardening). Every channel the
 // preload bridge can reach is registered here explicitly.
@@ -128,6 +135,15 @@ export function registerIpc(
     const result = saveProfileFile(json)
     if (result.ok && result.path) profile.setPath(result.path) // activate + reload
     return result
+  })
+
+  ipcMain.handle(Channels.editorExportRoutes, (): string => exportRoutes(routesForExport()))
+  ipcMain.handle(Channels.editorImportRoutes, (_e, text: unknown): RouteImportResult => {
+    if (typeof text !== 'string' || !text.trim()) {
+      return { written: [], errors: ['paste an exported route bundle or an actN.json'] }
+    }
+    // The guide watches the override files, so writing them hot-reloads the overlay.
+    return importRoutes(text)
   })
 
   ipcMain.handle(Channels.trialsGet, () => trials.snapshot())

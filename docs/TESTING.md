@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 145 tests: parser, tracker, watcher, guide, profile,
+npm test        # 150 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough
 npm run typecheck
 npm run build
@@ -73,7 +73,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    including after a restart — while a later Labyrinth still announces itself.
 8. **Editor.** Tray → *Edit routes & profile…* opens a normal window. Add or edit
    a step, save, and the Guide tab reflects it without a restart. Same for the
-   profile and the Gems tab.
+   profile and the Gems tab. **Share routes…** exports all ten acts into the box
+   (and onto the clipboard); pasting one back and pressing Import should write
+   the acts in the file, reload the overlay, and leave your other acts alone.
 9. **Auto-update** (installed build only). Needs a published Release newer than
    the installed version. Launch an older build: within ~10s Settings → Updates
    shows it downloading, then the overlay offers *Restart & update*; one click

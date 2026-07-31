@@ -11,6 +11,7 @@ import {
   type StepType
 } from './model'
 import { Btn, Select, TextInput, SaveResult } from './ui'
+import { ShareRoutes } from './ShareRoutes'
 
 const ACTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
 
@@ -119,6 +120,8 @@ export function RouteEditor({
           </Btn>
         </div>
       </div>
+
+      <ShareRoutes onImported={onSaved} />
 
       <ol className="flex flex-col gap-2">
         {draft.steps.map((step, i) => (
