@@ -746,6 +746,65 @@ test('a gem another class STARTS with is flagged as mulable', () => {
   assert.equal(acq.other.find((e) => e.gem === 'Fireball')?.mule, undefined)
 })
 
+test('mulable gems head the plan, whatever act their vendor sits in', () => {
+  const gems = new GemData({
+    // Sold in Act 3, but a level-1 Marauder hands it over before you start.
+    'Ruthless Support': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
+    'Buy A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    'Reward A1': { attr: 'int', sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'mule-order', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Reward A1', 'Buy A1', 'Ruthless Support'] }] }],
+      gemPlan: [{ gem: 'Reward A1' }, { gem: 'Buy A1' }, { gem: 'Ruthless Support' }]
+    })
+  ).profile!
+  const plan = acquisitionsForStage(profile, 0, gems, {
+    playerLevel: 10,
+    startingOwners: new Map([[normalizeGemName('Ruthless Support'), ['Marauder']]])
+  }).plan
+
+  assert.deepEqual(
+    plan.map((it) => (it.kind === 'reward' ? it.group.gems[0].gem : it.entry.gem)),
+    ['Ruthless Support', 'Reward A1', 'Buy A1']
+  )
+})
+
+test('a choice lists the gem you need soonest first', () => {
+  const quest = (): GemSourceInfo => ({
+    kind: 'quest',
+    act: 3,
+    quest: 'Lost in Love',
+    classes: ['Witch']
+  })
+  const gems = new GemData({
+    Starter: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] },
+    Discipline: { attr: 'int', requiredLevel: 24, sources: [quest()] },
+    Frostbite: { attr: 'int', requiredLevel: 24, sources: [quest()] },
+    Zealotry: { attr: 'int', requiredLevel: 24, sources: [quest()] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'soonest', class: 'Witch' },
+      stages: [
+        { range: [1, 31], socketGroups: [{ gems: ['Starter'] }] },
+        // Frostbite is slotted at 32, the other two only at 62.
+        { range: [32, 61], socketGroups: [{ gems: ['Starter', 'Frostbite'] }] },
+        { range: [62, 90], socketGroups: [{ gems: ['Discipline', 'Frostbite', 'Zealotry'] }] }
+      ],
+      gemPlan: [{ gem: 'Starter' }, { gem: 'Discipline' }, { gem: 'Frostbite' }, { gem: 'Zealotry' }]
+    })
+  ).profile!
+  // Viewed from stage 0, all three are upcoming — the order must follow when
+  // you actually need them, not the alphabet.
+  const g = acquisitionsForStage(profile, 0, gems).rewardGroups[0]
+  assert.deepEqual(
+    g.gems.map((e) => `${e.gem}@${e.fromLevel}`),
+    ['Frostbite@32', 'Discipline@62', 'Zealotry@62']
+  )
+})
+
 test('stepStageView pages stages and snaps back to auto on the live one', () => {
   // Live stage is index 2 of 5; null = following the level.
   assert.equal(stepStageView(null, -1, 2, 5), 1) // step back pins stage 1

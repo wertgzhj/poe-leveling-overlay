@@ -267,6 +267,10 @@ function buildPlan(
     ...rewardGroups.map((group): Raw => ({ kind: 'reward', group, req: minReq(group.gems) })),
     ...purchases.map((entry): Raw => ({ kind: 'buy', entry, req: entry.requiredLevel }))
   ]
+  // Muling comes first, whatever act the gem's vendor sits in. You roll the alt,
+  // stash its two starting gems and delete it before you take a step on the real
+  // character — it is the one item on this list that isn't part of the run.
+  const muleFirst = (it: Raw): number => (it.kind === 'buy' && it.entry.mule?.length ? 0 : 1)
   // Order by the act you reach each in, reward-first on ties (unchanged).
   const actOf = (it: Raw): number => (it.kind === 'reward' ? it.group.act : it.entry.act) ?? 99
   const rewardFirst = (it: Raw): number => (it.kind === 'reward' ? 0 : 1)
@@ -281,6 +285,7 @@ function buildPlan(
     it.kind === 'reward' ? (it.group.gems[0]?.gem ?? '') : it.entry.gem
   raw.sort(
     (a, b) =>
+      muleFirst(a) - muleFirst(b) ||
       actOf(a) - actOf(b) ||
       questOf(a) - questOf(b) ||
       rewardFirst(a) - rewardFirst(b) ||
@@ -326,7 +331,13 @@ function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEnt
     byQuest.get(key)!.push(e)
   }
   const groups = order.map((key): RewardGroup => {
-    const gems = byQuest.get(key)!.slice().sort(acquisitionOrder)
+    // Earliest need first: within one quest's choice, a gem you slot at 32 beats
+    // one you slot at 62, because it covers a need you actually have soon.
+    // Entries without a fromLevel are wanted right now, so they lead.
+    const gems = byQuest
+      .get(key)!
+      .slice()
+      .sort((a, b) => (a.fromLevel ?? 0) - (b.fromLevel ?? 0) || acquisitionOrder(a, b))
     return {
       quest: gems[0].quest,
       act: gems[0].act,
