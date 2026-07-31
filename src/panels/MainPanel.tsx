@@ -318,7 +318,10 @@ function Tab({
     <button
       onClick={onClick}
       className={
-        'no-drag rounded-t px-2.5 py-1 text-[11px] font-medium ' +
+        // flex-1 with a zero basis: equal shares of the row whatever the labels
+        // say, so the tabs are thirds at every window width instead of three
+        // label-sized buttons with dead space after them.
+        'no-drag min-w-0 flex-1 rounded-t px-2.5 py-1 text-[11px] font-medium ' +
         (active ? 'bg-overlay-accent/15 text-overlay-accent' : 'text-overlay-muted hover:text-overlay-text')
       }
     >
