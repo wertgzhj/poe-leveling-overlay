@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
@@ -36,6 +36,29 @@ const PIP_CLASS: Record<SocketColorBridge, string> = {
   G: 'bg-green-500',
   B: 'bg-blue-600',
   W: 'bg-white/30'
+}
+
+// Vendor price tiers, shortened for the Gems tab's cost column. Mirrored by hand
+// from COST_TIERS in electron/profile/gems.ts — the main and renderer build
+// graphs are intentionally decoupled (see env.d.ts). An unknown tier falls back
+// to its own name, so adding one there can never render a blank cell here.
+const COST_SHORT: Record<string, string> = {
+  Wisdom: 'Wisdom',
+  Transmutation: 'Trans',
+  Alteration: 'Alt',
+  Chance: 'Chance',
+  Alchemy: 'Alch'
+}
+
+// One hue, rising intensity: the pricier the gem, the brighter the gold. A ramp
+// rather than a palette — "this one actually costs something" reads at a glance
+// without having to learn five colours, and the word carries the meaning anyway.
+const COST_TONE: Record<string, string> = {
+  Wisdom: 'text-overlay-muted',
+  Transmutation: 'text-overlay-accent/60',
+  Alteration: 'text-overlay-accent/75',
+  Chance: 'text-overlay-accent/90',
+  Alchemy: 'text-overlay-accent'
 }
 
 function ResizeGrip(): React.JSX.Element {
@@ -558,48 +581,136 @@ function GuideBody(): React.JSX.Element {
   )
 }
 
+// The acquisition list's left column: what a gem costs you, and how many you
+// need. Fixed width and right-aligned, so every gem name starts on one line and
+// the price keeps a constant distance from the gem it belongs to.
+function CostCell({
+  cost,
+  count,
+  free,
+  later
+}: {
+  cost?: string
+  count?: number
+  free?: boolean
+  later?: boolean
+}): React.JSX.Element {
+  const n = count ?? 1
+  const cls = 'text-right text-[10px] ' + (later ? 'opacity-50 ' : '')
+
+  if (free) {
+    // A quest hands out exactly ONE reward. Needing the gem twice means one is
+    // free and the rest you buy or find — "2× free" would be a lie, and the old
+    // ×2 chip next to the name read as if the quest gave you both.
+    const extra = n - 1
+    return (
+      <span
+        className={cls + 'text-emerald-400/90'}
+        title={
+          extra > 0
+            ? `The quest gives one — the other ${extra === 1 ? 'copy' : `${extra} copies`} you buy or find`
+            : 'Free quest reward'
+        }
+      >
+        free{extra > 0 && ` +${extra}`}
+      </span>
+    )
+  }
+
+  // No known price still says "buy" rather than leaving the cell blank — an
+  // empty column would silently turn a purchase into an unlabelled row.
+  const short = cost ? (COST_SHORT[cost] ?? cost) : 'buy'
+  const tone = (cost && COST_TONE[cost]) || 'text-overlay-muted'
+  const copies = n > 1 ? ` — and you need ${n} of them` : ''
+  return (
+    <span
+      className={cls + tone}
+      title={cost ? `Costs ${cost}${copies} (price is provisional)` : `Buy from a vendor${copies}`}
+    >
+      {n > 1 && `${n}× `}
+      {short}
+    </span>
+  )
+}
+
+// The acquisition list's right column, and the same column on the link rows.
+// LEFT-aligned on purpose: every entry opens with "A<N> ·", so those anchors
+// line up down the list. Right-aligning would put them at a different x in
+// every row — the raggedness this whole layout exists to remove. Truncated
+// rather than wrapped, so a long quest name can't change a row's height.
+function SourceCell({
+  act,
+  what,
+  approx,
+  later
+}: {
+  act?: number
+  what: string
+  approx?: boolean
+  later?: boolean
+}): React.JSX.Element {
+  const text = [act ? `A${act}` : null, what].filter(Boolean).join(' · ')
+  return (
+    <span
+      title={text + (approx ? ' — general vendor, may show up earlier as a quest reward' : '')}
+      className={'truncate text-[10px] text-overlay-muted' + (later ? ' opacity-50' : '')}
+    >
+      {text}
+      {approx && ' ≈'}
+    </span>
+  )
+}
+
 // One quest's reward gems. When several of your build's gems come from the same
 // quest you can only pick ONE — the rest must be bought — so that's flagged
 // loudly. Act + quest are shown once per group.
+//
+// A row renders as three bare cells (no wrapper element) so they land directly
+// in the list's grid: the columns then line up across every row, not just
+// within one. A "pick one" group is a box instead and spans all three.
 function RewardGroupRow({
   group,
-  comingUpAt
+  comingUpAt,
+  later
 }: {
   group: RewardGroupBridge
   comingUpAt?: number
+  later?: boolean
 }): React.JSX.Element {
   const context = (e: AcquisitionEntryBridge): string =>
     e.fromLevel ? ` — for later (lvl ${e.fromLevel}+)` : ''
-  const where = [group.act ? `Act ${group.act}` : null, group.quest].filter(Boolean).join(' · ')
 
   if (!group.pickOne) {
     const e = group.gems[0]
     return (
-      <div className="flex items-baseline gap-1.5 text-xs">
-        <span className="shrink-0 rounded bg-emerald-400/15 px-1 py-px text-[9px] font-medium text-emerald-300">
-          take
-        </span>
-        <span className={'min-w-0 flex-1 ' + (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')}>
+      <>
+        <CostCell free count={e.count} later={later} />
+        <span
+          title={later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}
+          className={
+            'min-w-0 text-xs ' +
+            (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text') +
+            (later ? ' opacity-50' : '')
+          }
+        >
           {e.gem}
-          {(e.count ?? 1) > 1 && (
-            <span className="ml-1 rounded bg-white/10 px-1 text-[9px] font-bold text-overlay-text" title="needed in two different links">
-              ×{e.count}
-            </span>
-          )}
-          {where && <span className="text-overlay-muted"> · {where}</span>}
           {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
           {comingUpAt != null && !e.fromLevel && (
             <span className="text-overlay-muted"> · lvl {comingUpAt}</span>
           )}
         </span>
-        <span className="shrink-0 text-[10px] text-emerald-400/80" title="free quest reward">
-          free
-        </span>
-      </div>
+        <SourceCell act={group.act} what={group.quest ?? 'quest'} later={later} />
+      </>
     )
   }
+  const where = [group.act ? `Act ${group.act}` : null, group.quest].filter(Boolean).join(' · ')
   return (
-    <div className="rounded border border-amber-400/30 bg-amber-400/5 p-1.5">
+    <div
+      className={
+        'col-span-3 rounded border border-amber-400/30 bg-amber-400/5 p-1.5' +
+        (later ? ' opacity-50' : '')
+      }
+    >
       <div className="mb-0.5 flex items-center gap-1.5">
         <span className="rounded bg-amber-400/20 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-300">
           Pick one
@@ -616,60 +727,85 @@ function RewardGroupRow({
   )
 }
 
-// A single vendor purchase in the merged acquisition box. The cost sits on the
-// right in gold, mirroring the "free" tag on reward lines, so the take-it-free
-// vs. pay-for-it trade-off reads at a glance (owner: cost matters a lot).
+// A single vendor purchase in the merged acquisition box — same three cells as a
+// reward row, so buys and takes read as one list. The cost column carries the
+// take-it-free vs. pay-for-it distinction that the old take/buy badges did,
+// without spending a second column on it (owner: cost matters a lot).
 function BuyRow({
   entry: e,
-  comingUpAt
+  comingUpAt,
+  later
 }: {
   entry: AcquisitionEntryBridge
   comingUpAt?: number
+  later?: boolean
 }): React.JSX.Element {
-  const where = [e.npc ?? 'vendor', e.act ? `Act ${e.act}` : null].filter(Boolean).join(' · ')
   return (
-    <div className="flex items-baseline gap-1.5 text-xs">
-      <span className="shrink-0 rounded bg-amber-400/15 px-1 py-px text-[9px] font-medium text-amber-300">
-        buy
-      </span>
-      <span className="min-w-0 flex-1 text-overlay-text">
+    <>
+      <CostCell cost={e.cost} count={e.count} later={later} />
+      <span
+        title={later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}
+        className={'min-w-0 text-xs text-overlay-text' + (later ? ' opacity-50' : '')}
+      >
         {e.gem}
-        {(e.count ?? 1) > 1 && (
-          <span className="ml-1 rounded bg-white/10 px-1 text-[9px] font-bold text-overlay-text" title="needed in two different links">
-            ×{e.count}
-          </span>
-        )}
-        <span className="text-overlay-muted">
-          {' · '}
-          {where}
-          {e.fallback && <span title="general vendor — may be available earlier"> ≈</span>}
-          {comingUpAt != null && ` · lvl ${comingUpAt}`}
-        </span>
+        {comingUpAt != null && <span className="text-overlay-muted"> · lvl {comingUpAt}</span>}
         {e.mule && e.mule.length > 0 && (
           <span
-            className="ml-1 text-[10px] text-sky-300/90"
+            className="text-sky-300/90"
             title={`A level-1 ${e.mule[0]} starts with this gem — roll a mule, stash it, delete the mule (free)`}
           >
-            · mule a {e.mule.join('/')}
+            {' · mule a '}
+            {e.mule.join('/')}
           </span>
         )}
       </span>
-      {e.cost && <span className="shrink-0 text-[10px] font-medium text-overlay-accent">{e.cost}</span>}
-    </div>
+      <SourceCell act={e.act} what={e.npc ?? 'vendor'} approx={e.fallback} later={later} />
+    </>
   )
 }
 
-/** Short "where it comes from" tag for a gem line (sources
- *  visible right at the links, not only in the lists). */
-function sourceTag(e: AcquisitionEntryBridge | undefined): string | null {
+/**
+ * Short "where it comes from" tag for a gem line (sources visible right at the
+ * links, not only in the lists). Same shape as the acquisition list's source
+ * column — "A<N> · where" — so both share one left edge and one width.
+ *
+ * The full story (quest name in full, price, note) lives in the tooltip. In the
+ * row itself it was a third variable-width thing competing for the tightest
+ * cell on screen, and it is the reason the right-hand side used to jump between
+ * "✓ start" and "🎁 A1 Enemy at the Gate".
+ */
+function sourceMark(
+  e: AcquisitionEntryBridge | undefined
+): { label: string; title: string; starting: boolean } | null {
   if (!e) return null
-  if (e.starting) return '✓ start'
-  if (e.bucket === 'reward') return `🎁${e.act ? ` A${e.act}` : ''} ${e.quest ?? 'quest'}`
-  if (e.bucket === 'purchase')
-    return `${e.npc ?? 'vendor'}${e.act ? ` A${e.act}` : ''}${e.cost ? ` · ${e.cost}` : ''}${e.fallback ? ' ≈' : ''}`
-  return e.note ?? 'drop/trade'
+  if (e.starting) return { label: '✓ start', title: 'You start with this gem', starting: true }
+  const act = e.act ? `A${e.act}` : null
+  const inAct = e.act ? ` in Act ${e.act}` : ''
+  if (e.bucket === 'reward') {
+    const quest = e.quest ?? 'quest'
+    return {
+      label: [act, quest].filter(Boolean).join(' · '),
+      title: `Free quest reward${inAct}: ${quest}`,
+      starting: false
+    }
+  }
+  if (e.bucket === 'purchase') {
+    const npc = e.npc ?? 'vendor'
+    return {
+      label: [act, npc].filter(Boolean).join(' · '),
+      title:
+        `Buy from ${npc}${inAct}${e.cost ? ` · ${e.cost}` : ''}` +
+        (e.fallback ? ' — general vendor, may show up earlier as a quest reward' : ''),
+      starting: false
+    }
+  }
+  const note = e.note ?? 'drop/trade'
+  return { label: note, title: note, starting: false }
 }
 
+// The build's links. Same grid as the acquisition list above, and deliberately
+// the same source-column width: one vertical line runs down the whole tab
+// instead of two independently ragged edges.
 function SocketGroup({
   group,
   acq
@@ -678,12 +814,11 @@ function SocketGroup({
   acq: Map<string, AcquisitionEntryBridge>
 }): React.JSX.Element {
   return (
-    <div className="mb-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
+    <div className="mb-1.5 grid grid-cols-[0.875rem_1fr_6.5rem] items-center gap-x-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
       {group.gems.map((gem, i) => {
-        const entry = acq.get(gem.name.toLowerCase())
-        const tag = sourceTag(entry)
+        const mark = sourceMark(acq.get(gem.name.toLowerCase()))
         return (
-          <div key={i} className="flex items-center gap-1.5 text-xs">
+          <Fragment key={i}>
             <span
               title={
                 gem.unknown
@@ -693,7 +828,7 @@ function SocketGroup({
                     : undefined
               }
               className={
-                'inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-black/80 ' +
+                'inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-[8px] font-bold text-black/80 ' +
                 PIP_CLASS[gem.color] +
                 // An "any colour" gem gets a dashed ring: white on purpose, not
                 // white for lack of data. Nothing else changes about the row.
@@ -702,27 +837,31 @@ function SocketGroup({
             >
               {gem.color === 'W' ? '' : gem.color}
             </span>
-            <span className="min-w-0 truncate text-overlay-text">{gem.name}</span>
-            {/* Only a genuinely unrecognised gem is flagged. A gem with no
-                attribute requirement is fully known — marking it "?" made the
-                overlay look broken on Portal, Convocation and friends. */}
-            {gem.unknown && (
-              <span className="text-[9px] text-amber-400/80" title="not in the gem data — colour guessed">?</span>
-            )}
-            {tag && (
-              <span
-                className={
-                  'ml-auto shrink-0 pl-2 text-[9px] ' +
-                  (entry?.starting ? 'text-emerald-400/90' : 'text-overlay-muted')
-                }
-              >
-                {tag}
-              </span>
-            )}
-          </div>
+            <span className="min-w-0 truncate text-xs text-overlay-text">
+              {gem.name}
+              {/* Only a genuinely unrecognised gem is flagged. A gem with no
+                  attribute requirement is fully known — marking it "?" made the
+                  overlay look broken on Portal, Convocation and friends. */}
+              {gem.unknown && (
+                <span className="ml-1 text-[9px] text-amber-400/80" title="not in the gem data — colour guessed">
+                  ?
+                </span>
+              )}
+            </span>
+            {/* Always rendered, even when empty: a missing cell would pull the
+                next row's pip into the source column. */}
+            <span
+              title={mark?.title}
+              className={
+                'truncate text-[9px] ' + (mark?.starting ? 'text-emerald-400/90' : 'text-overlay-muted')
+              }
+            >
+              {mark?.label}
+            </span>
+          </Fragment>
         )
       })}
-      {group.note && <div className="mt-0.5 pl-4 text-[10px] text-overlay-muted">{group.note}</div>}
+      {group.note && <div className="col-span-3 mt-0.5 pl-4 text-[10px] text-overlay-muted">{group.note}</div>}
     </div>
   )
 }
@@ -841,16 +980,29 @@ function GemBody(): React.JSX.Element {
           >
             Get these gems{atReward ? ' — take rewards now' : ''}
           </div>
-          <div className="flex flex-col gap-1.5">
-            {plan.map((item, i) => (
-              <div key={i} className={item.later ? 'opacity-50' : ''} title={item.later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}>
-                {item.kind === 'reward' ? (
-                  <RewardGroupRow group={item.group} comingUpAt={item.later ? item.atLevel : undefined} />
-                ) : (
-                  <BuyRow entry={item.entry} comingUpAt={item.later ? item.atLevel : undefined} />
-                )}
-              </div>
-            ))}
+          {/* Three fixed columns — cost, gem, source — with the rows rendering
+              bare cells into this grid. The source column is the same width as
+              the one on the link rows below, so the tab reads down a single
+              line. Dimming a "later" row happens per cell: a wrapper element
+              here would become a grid item and break the columns. */}
+          <div className="grid grid-cols-[3.5rem_1fr_6.5rem] items-baseline gap-x-1.5 gap-y-1.5">
+            {plan.map((item, i) =>
+              item.kind === 'reward' ? (
+                <RewardGroupRow
+                  key={i}
+                  group={item.group}
+                  comingUpAt={item.later ? item.atLevel : undefined}
+                  later={item.later}
+                />
+              ) : (
+                <BuyRow
+                  key={i}
+                  entry={item.entry}
+                  comingUpAt={item.later ? item.atLevel : undefined}
+                  later={item.later}
+                />
+              )
+            )}
           </div>
           {plan.some((it) => it.kind === 'buy' && it.entry.fallback) && (
             <p className="mt-1.5 text-[10px] text-overlay-muted">
