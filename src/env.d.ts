@@ -183,6 +183,7 @@ interface AcquisitionEntryBridge {
   starting?: boolean
   mule?: string[]
   requiredLevel?: number
+  colored?: ColoredGemBridge
 }
 
 interface RewardGroupBridge {
