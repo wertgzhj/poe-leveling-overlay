@@ -146,6 +146,10 @@ export interface DetectedCharacter {
   name: string
   charClass: string
   level: number
+  /** false when a name pinned in Settings wins — the detection stands, but
+   *  tracking did not move, and the button has to say so rather than tick. */
+  tracking: boolean
+  pinnedTo: string | null
 }
 
 export interface GuideState {

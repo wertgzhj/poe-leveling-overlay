@@ -163,3 +163,35 @@ test('backscan window starting mid-line drops the torn first line', async () => 
     }
   })
 })
+
+test('a huge append is caught up from the tail, not read whole', async () => {
+  await withTmp(async (dir) => {
+    const file = join(dir, 'Client.txt')
+    await writeFile(file, 'start\n')
+
+    const h = makeWatcher() // backscanBytes: 4096
+    h.watcher.start(file)
+    try {
+      await until(() => h.backscans.length === 1)
+
+      // The machine slept: the game wrote far more than one window's worth
+      // while nobody was polling. Reading the gap whole would allocate all of
+      // it — for a real Client.txt that is hundreds of megabytes.
+      const filler = 'x'.repeat(200) + '\n'
+      await appendFile(file, filler.repeat(100)) // ~20 KB, five windows
+      await appendFile(file, 'the newest line\n')
+
+      await until(() => h.lines.length > 0)
+      // The tail arrived...
+      assert.equal(h.lines.at(-1), 'the newest line')
+      // ...and only the tail: a 4 KB window holds ~20 of these, not 101.
+      assert.ok(h.lines.length < 30, `expected a bounded catch-up, got ${h.lines.length} lines`)
+      // Nothing torn: the window opened mid-line and that line was dropped.
+      for (const line of h.lines) {
+        assert.ok(line === 'the newest line' || line.length === 200, `torn line: ${line.length}`)
+      }
+    } finally {
+      h.watcher.stop()
+    }
+  })
+})

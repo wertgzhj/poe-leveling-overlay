@@ -82,20 +82,35 @@ function ResizeGrip(): React.JSX.Element {
 // itself also updates via the pushed snapshot. Needs interactive mode to click
 // (like the ⚙ and step buttons).
 function DetectCharButton(): React.JSX.Element {
-  const [flash, setFlash] = useState<string | null>(null)
+  const [flash, setFlash] = useState<{ text: string; title?: string } | null>(null)
   const onClick = (): void => {
     void window.overlay?.detectCharacter().then((found) => {
-      setFlash(found ? `✓ ${found.name}` : 'no level-up yet')
-      window.setTimeout(() => setFlash(null), 3000)
+      // A name pinned in Settings outranks detection, so the tick would be a
+      // lie: it found the character and tracking still didn't move. Say which
+      // setting is holding it instead of pretending something happened.
+      setFlash(
+        !found
+          ? { text: 'no level-up yet' }
+          : found.tracking
+            ? { text: `✓ ${found.name}` }
+            : {
+                text: `pinned: ${found.pinnedTo}`,
+                title: `You're on ${found.name}, but Settings → Game log pins tracking to ${found.pinnedTo}. Clear that field to follow whoever you're playing.`
+              }
+      )
+      window.setTimeout(() => setFlash(null), 4000)
     })
   }
   return (
     <button
       onClick={onClick}
-      title="Detect the character you're logged in as (from your most recent level-up)"
-      className="no-drag max-w-[45%] shrink-0 truncate rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-overlay-muted hover:text-overlay-text"
+      title={flash?.title ?? "Detect the character you're logged in as (from your most recent level-up)"}
+      className={
+        'no-drag max-w-[45%] shrink-0 truncate rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:text-overlay-text ' +
+        (flash?.title ? 'text-amber-300' : 'text-overlay-muted')
+      }
     >
-      {flash ?? '⟳ character'}
+      {flash?.text ?? '⟳ character'}
     </button>
   )
 }

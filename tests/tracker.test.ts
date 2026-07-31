@@ -64,7 +64,13 @@ test('detect character locks onto the most recent level-up, even after switching
   assert.equal(tracker.snapshot().character, 'Alpha')
   // ...but detect jumps to whoever most recently levelled (you switched).
   const found = tracker.detectCurrentCharacter()
-  assert.deepEqual(found, { name: 'Beta', charClass: 'Marauder', level: 3 })
+  assert.deepEqual(found, {
+    name: 'Beta',
+    charClass: 'Marauder',
+    level: 3,
+    tracking: true,
+    pinnedTo: null
+  })
   assert.equal(tracker.snapshot().character, 'Beta')
   assert.equal(tracker.snapshot().level, 3)
 })
@@ -73,9 +79,25 @@ test('detect reports the log character but an explicit pin still wins tracking',
   const { tracker } = makeTracker('Pinned')
   feed(tracker, '… [INFO Client 1] : Alpha (Witch) is now level 10')
   const found = tracker.detectCurrentCharacter()
-  assert.deepEqual(found, { name: 'Alpha', charClass: 'Witch', level: 10 })
+  // It reports what it found AND that tracking didn't move, so the button can
+  // say "pinned: Pinned" instead of ticking as though something happened.
+  assert.deepEqual(found, {
+    name: 'Alpha',
+    charClass: 'Witch',
+    level: 10,
+    tracking: false,
+    pinnedTo: 'Pinned'
+  })
   // The explicit binding still governs tracking (party-play safety).
   assert.equal(tracker.snapshot().character, 'Pinned')
+})
+
+test('detect reports tracking when the pin already names who you are playing', () => {
+  const { tracker } = makeTracker('Alpha')
+  feed(tracker, '… [INFO Client 1] : Alpha (Witch) is now level 10')
+  const found = tracker.detectCurrentCharacter()
+  assert.equal(found?.tracking, true, 'the pin agrees — nothing to warn about')
+  assert.equal(found?.pinnedTo, 'Alpha')
 })
 
 test('areaGenerated drives the area with mapped display name + monster level', () => {

@@ -35,6 +35,11 @@ export class GuideService {
     this.overlay = overlay
     this.log = log
     log.addAreaListener((area) => this.onArea(area))
+    // A level-up is the only line that names a character, so it is where a
+    // switch becomes visible — and it can happen without changing zone. Trials
+    // and the profile already follow it; the guide used to wait for the next
+    // zone load and show the previous character's ticks until then.
+    log.addLevelListener(() => this.syncCharacter())
   }
 
   start(): void {
@@ -96,6 +101,12 @@ export class GuideService {
     }
   }
 
+  /**
+   * Adopt whoever the log says is playing. Persists the outgoing character's
+   * progress under THEIR key first, then loads the incoming one's — the two
+   * must happen together, because `charKey` is what `persistNow` writes under.
+   * Moving it on its own would file one character's ticks under another's name.
+   */
   private syncCharacter(): void {
     const next = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
     if (next === this.charKey) return
@@ -144,10 +155,16 @@ export class GuideService {
     this.skeletonActs = combined.skeletonActs
     const route: Route = { act: combined.acts[0], name: 'Campaign', steps: combined.steps }
     this.route = route
-    this.charKey = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
+    // A reload is not a character switch. Reassigning charKey here while the
+    // engine still held the previous character's ticks meant the next persist
+    // filed them under the new name — so saving a route in the editor after
+    // switching characters overwrote the other one's progress. Let
+    // syncCharacter own the pairing; a reload only swaps the route.
     if (this.engine) {
       this.engine.setRoute(route) // keep in-memory progress across hot reloads
+      this.syncCharacter()
     } else {
+      this.charKey = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
       this.engine = new GuideEngine(route, this.loadDone(this.charKey))
     }
     this.push()

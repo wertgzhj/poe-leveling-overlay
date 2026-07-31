@@ -117,18 +117,28 @@ export class LogFileWatcher {
 
       if (size === this.offset) return
 
-      const buf = await this.read(this.offset, size)
+      // Catch-up is bounded. A poll normally sees a few hundred bytes, but the
+      // overlay can be running while the machine sleeps for hours, and the file
+      // reaches hundreds of MB per league — reading the whole gap in one buffer
+      // would allocate all of it. Take the tail and skip the rest; those lines
+      // are history, and the only thing that reads history is the backscan.
+      const from = Math.max(this.offset, size - this.backscanBytes)
+      const skipped = from > this.offset
+      const buf = await this.read(from, size)
       if (!buf) return
       this.offset = size
 
-      const joined = this.carry.length ? Buffer.concat([this.carry, buf]) : buf
+      // After a skip the buffer starts mid-line and there is nothing to join to.
+      const joined = !skipped && this.carry.length ? Buffer.concat([this.carry, buf]) : buf
+      if (skipped) this.carry = Buffer.alloc(0)
       const lastNl = joined.lastIndexOf(NL)
       if (lastNl === -1) {
         this.carry = joined // still mid-line; keep bytes, not text (multibyte-safe)
         return
       }
       this.carry = Buffer.from(joined.subarray(lastNl + 1))
-      const lines = splitLines(joined.subarray(0, lastNl + 1))
+      let lines = splitLines(joined.subarray(0, lastNl + 1))
+      if (skipped) lines = lines.slice(1) // the truncated first line
       if (lines.length) this.callbacks.onLines(lines)
     } catch {
       this.setState('error')

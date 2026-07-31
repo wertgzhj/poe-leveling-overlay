@@ -142,12 +142,25 @@ export class ProgressTracker {
    * an explicit settings binding still wins for tracking. Safe against party
    * hijack — adoptedBinding ends up set, so a partymate's level-up won't grab it.
    */
-  detectCurrentCharacter(): { name: string; charClass: string; level: number } | null {
+  detectCurrentCharacter(): {
+    name: string
+    charClass: string
+    level: number
+    /** false when a pinned name in Settings wins, so tracking did NOT move. */
+    tracking: boolean
+    pinnedTo: string | null
+  } | null {
     const name = this.lastLevelUpName
     if (!name) return null
     this.adoptedBinding = name
     const seen = this.lastSeen.get(name)
-    return { name, charClass: seen?.charClass ?? '', level: seen?.level ?? 0 }
+    return {
+      name,
+      charClass: seen?.charClass ?? '',
+      level: seen?.level ?? 0,
+      tracking: this.explicitBinding == null || this.explicitBinding === name,
+      pinnedTo: this.explicitBinding
+    }
   }
 
   snapshot(): TrackerSnapshot {

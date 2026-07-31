@@ -192,13 +192,36 @@ yourself for now.
   stage switches automatically as you level. `gemPlan` records where each gem comes
   from (`questReward` / `vendor` / `drop`), which feeds the reward + buy hints.
 - Socket colours come from `data/gems.json` (gem → attribute); a gem missing there
-  shows a neutral pip with a `?`. It covers **820 gems** pulled from the wiki, so
+  shows a neutral pip with a `?`. It covers **828 gems** pulled from the wiki, so
   that's rare — a gem with no attribute at all (Portal, Quickstep) fits any socket.
-- A gem another class **starts** with is tagged **"mule a &lt;class&gt;"** — roll a level-1
-  character of that class, stash its two starting gems, and you have it for free
-  instead of buying it (from `data/starting-gems.json`).
-- A gem socketed in **two different links** in the same stage shows **×2**, so you buy
-  both copies.
+  `fetchedAt` in that file says when the data was last pulled.
+
+The tab reads in three columns — **cost, gem, source** — and every list shares them,
+so the prices line up under each other and so do the acts:
+
+```
+  Mule   Ⓖ Momentum                       Ranger
+Reward   Ⓑ Freezing Pulse                 A1 · Enemy at the Gate
+Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
+2× Alt   Ⓑ Summon Raging Spirit           A3 · Clarissa ≈
+```
+
+- The **cost column** says how you get a gem: `Reward` in green for a free quest
+  pick, otherwise the vendor price tier (`Wisdom` / `Trans` / `Alt` / `Chance` /
+  `Alch`, brighter gold the dearer it is). Prices are provisional — see
+  [`docs/TESTING.md`](docs/TESTING.md#known-limitations).
+- A gem needed in **two different links** shows its count there too: `2× Alt` means
+  two purchases. A quest hands out exactly one reward, so a reward needed twice reads
+  `Reward +1` — one free, the rest you buy or find.
+- A gem another class **starts** with reads **`Mule`** in the cost column and the class
+  to roll in the source column, both in turquoise — roll a level-1 character of that
+  class, stash its two starting gems, delete it, and you have it for free instead of
+  buying it (from `data/starting-gems.json`). Those come first in the list: it's the
+  one thing you do before you start.
+- A quest that offers several of your gems is one **pick**, so it gets its own box
+  reading `PICK ONE, BUY REST` with the price of the ones you don't take.
+- Gems you'll want later are dimmed and marked `— for later (lvl 32+)`, ordered by
+  when you actually need them.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
   gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`,
   filled from the Path of Exile Wiki. **Easiest way to (re)fill it:** repo → Actions →
