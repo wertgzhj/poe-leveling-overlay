@@ -87,6 +87,8 @@ interface DetectedCharacterBridge {
   name: string
   charClass: string
   level: number
+  tracking: boolean
+  pinnedTo: string | null
 }
 
 interface LogEventSummaryBridge {
