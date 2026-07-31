@@ -620,15 +620,31 @@ function CostCell({
   cost,
   count,
   free,
+  mule,
   later
 }: {
   cost?: string
   count?: number
   free?: boolean
+  /** the classes that START with this gem — a level-1 alt hands it over, so
+   *  there is no price to put here. */
+  mule?: string[]
   later?: boolean
 }): React.JSX.Element {
   const n = count ?? 1
   const cls = 'text-right text-[10px] ' + (later ? 'opacity-50 ' : '')
+
+  if (mule?.length) {
+    return (
+      <span
+        className={cls + 'text-sky-300/90'}
+        title={`A level-1 ${mule[0]} starts with this gem — roll one, stash it, delete the mule. Free.`}
+      >
+        {n > 1 && `${n}× `}
+        Mule
+      </span>
+    )
+  }
 
   if (free) {
     // A quest hands out exactly ONE reward. Needing the gem twice means one is
@@ -644,7 +660,7 @@ function CostCell({
             : 'Free quest reward'
         }
       >
-        free{extra > 0 && ` +${extra}`}
+        Reward{extra > 0 && ` +${extra}`}
       </span>
     )
   }
@@ -674,18 +690,24 @@ function SourceCell({
   act,
   what,
   approx,
+  tone,
+  title,
   later
 }: {
   act?: number
   what: string
   approx?: boolean
+  /** overrides the muted default — muling is turquoise on both sides of the row
+   *  so it stays obvious that this one isn't part of the shopping. */
+  tone?: string
+  title?: string
   later?: boolean
 }): React.JSX.Element {
   const text = [act ? `A${act}` : null, what].filter(Boolean).join(' · ')
   return (
     <span
-      title={text + (approx ? ' — general vendor, may show up earlier as a quest reward' : '')}
-      className={'truncate text-[10px] text-overlay-muted' + (later ? ' opacity-50' : '')}
+      title={title ?? text + (approx ? ' — general vendor, may show up earlier as a quest reward' : '')}
+      className={'truncate text-[10px] ' + (tone ?? 'text-overlay-muted') + (later ? ' opacity-50' : '')}
     >
       {text}
       {approx && ' ≈'}
@@ -812,6 +834,11 @@ function GemCell({
 // reward row, so buys and takes read as one list. The cost column carries the
 // take-it-free vs. pay-for-it distinction that the old take/buy badges did,
 // without spending a second column on it (owner: cost matters a lot).
+//
+// A gem another class starts with is the same row with both ends swapped out:
+// "Mule" where the price would be, because there isn't one, and the class you
+// roll where the vendor would be, because that is where you get it. Both in
+// turquoise, so muling never reads as shopping.
 function BuyRow({
   entry: e,
   comingUpAt,
@@ -821,21 +848,21 @@ function BuyRow({
   comingUpAt?: number
   later?: boolean
 }): React.JSX.Element {
+  const mule = e.mule?.length ? e.mule : undefined
   return (
     <>
-      <CostCell cost={e.cost} count={e.count} later={later} />
-      <GemCell entry={e} comingUpAt={comingUpAt} later={later}>
-        {e.mule && e.mule.length > 0 && (
-          <span
-            className="text-sky-300/90"
-            title={`A level-1 ${e.mule[0]} starts with this gem — roll a mule, stash it, delete the mule (free)`}
-          >
-            {' · mule a '}
-            {e.mule.join('/')}
-          </span>
-        )}
-      </GemCell>
-      <SourceCell act={e.act} what={e.npc ?? 'vendor'} approx={e.fallback} later={later} />
+      <CostCell cost={e.cost} count={e.count} mule={mule} later={later} />
+      <GemCell entry={e} comingUpAt={comingUpAt} later={later} />
+      {mule ? (
+        <SourceCell
+          what={mule.join('/')}
+          tone="text-sky-300/90"
+          title={`Roll a level-1 ${mule.join(' or ')}, stash its starting gems, delete it. Otherwise ${e.npc ?? 'a vendor'}${e.act ? ` in Act ${e.act}` : ''} sells it${e.cost ? ` for ${e.cost}` : ''}.`}
+          later={later}
+        />
+      ) : (
+        <SourceCell act={e.act} what={e.npc ?? 'vendor'} approx={e.fallback} later={later} />
+      )}
     </>
   )
 }
