@@ -49,6 +49,9 @@ export interface AcquisitionEntry {
   /** where this entry's quest falls within its act (lower = earlier), so the
    *  to-do list reads in the order you actually reach things. */
   questRank?: number
+  /** the gem's socket colour, so the to-do list can show the same pip the link
+   *  rows do. Absent only when gems.json failed to load. */
+  colored?: ColoredGem
 }
 
 export interface Acquisitions {
@@ -378,7 +381,24 @@ function upcomingRewards(
   return out
 }
 
+// Everything the acquisition list needs about one gem: where it comes from, plus
+// the socket colour. The colour is resolved here rather than in the renderer so
+// it comes from the same place as the pips on the link rows — including for
+// gems a later stage needs, which aren't in the current stage's socket groups
+// and so can't be looked up there at all.
 function classify(
+  entry: { gem: string; count?: number; source?: GemSource },
+  cls: CharClass,
+  gems?: GemData,
+  startingGems?: ReadonlySet<string>,
+  startingOwners?: ReadonlyMap<string, string[]>
+): AcquisitionEntry {
+  const acq = classifySource(entry, cls, gems, startingGems, startingOwners)
+  if (gems) acq.colored = gems.color(entry.gem)
+  return acq
+}
+
+function classifySource(
   entry: { gem: string; count?: number; source?: GemSource },
   cls: CharClass,
   gems?: GemData,

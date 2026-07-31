@@ -581,6 +581,38 @@ function GuideBody(): React.JSX.Element {
   )
 }
 
+// The socket-colour dot. Shared by the link rows and the to-do list so a gem
+// looks the same wherever it turns up. Renders an empty box of the same size
+// when the colour is unknown (gems.json failed to load), so nothing shifts.
+function Pip({ gem }: { gem?: ColoredGemBridge }): React.JSX.Element {
+  const box =
+    'inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-black/80 '
+  // A letterless pip still carries a zero-width space: an empty inline-flex box
+  // takes its baseline from its bottom edge instead of from text, which would
+  // park white pips a few pixels below the lettered ones in the to-do list.
+  if (!gem) return <span className={box}>{'\u200B'}</span>
+  return (
+    <span
+      title={
+        gem.unknown
+          ? 'Colour unknown — this gem is not in the gem data'
+          : gem.anyColor
+            ? 'No attribute requirement — fits a socket of any colour'
+            : undefined
+      }
+      className={
+        box +
+        PIP_CLASS[gem.color] +
+        // An "any colour" gem gets a dashed ring: white on purpose, not white
+        // for lack of data. Nothing else changes about the row.
+        (gem.anyColor ? ' border border-dashed border-white/50 bg-transparent' : '')
+      }
+    >
+      {gem.color === 'W' ? '\u200B' : gem.color}
+    </span>
+  )
+}
+
 // The acquisition list's left column: what a gem costs you, and how many you
 // need. Fixed width and right-aligned, so every gem name starts on one line and
 // the price keeps a constant distance from the gem it belongs to.
@@ -685,44 +717,79 @@ function RewardGroupRow({
     return (
       <>
         <CostCell free count={e.count} later={later} />
-        <span
-          title={later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}
-          className={
-            'min-w-0 text-xs ' +
-            (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text') +
-            (later ? ' opacity-50' : '')
-          }
-        >
-          {e.gem}
+        <GemCell entry={e} comingUpAt={comingUpAt} later={later}>
           {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
-          {comingUpAt != null && !e.fromLevel && (
-            <span className="text-overlay-muted"> · lvl {comingUpAt}</span>
-          )}
-        </span>
+        </GemCell>
         <SourceCell act={group.act} what={group.quest ?? 'quest'} later={later} />
       </>
     )
   }
-  const where = [group.act ? `Act ${group.act}` : null, group.quest].filter(Boolean).join(' · ')
+  // A choice, so it keeps its own box — but on the same three columns as every
+  // other row: the badge and the quest name take the header, and the gems start
+  // at the middle column's edge like the gems above and below them. They run on
+  // into the source column because nothing else is in it; a gem name plus its
+  // "for later" note doesn't fit 1fr alone.
   return (
     <div
       className={
-        'col-span-3 rounded border border-amber-400/30 bg-amber-400/5 p-1.5' +
+        'col-span-3 grid grid-cols-[3.5rem_1fr_6.5rem] items-baseline gap-x-1.5 rounded border border-amber-400/30 bg-amber-400/5 p-1.5' +
         (later ? ' opacity-50' : '')
       }
     >
-      <div className="mb-0.5 flex items-center gap-1.5">
-        <span className="rounded bg-amber-400/20 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-300">
-          Pick one
-        </span>
-        <span className="text-[10px] text-overlay-muted">{where} — take one, buy the rest</span>
-      </div>
+      <span className="col-span-2 mb-0.5 justify-self-start rounded bg-amber-400/20 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-300">
+        Pick one, buy rest
+      </span>
+      <SourceCell act={group.act} what={group.quest ?? 'quest'} />
       {group.gems.map((e) => (
-        <div key={e.gem} className={'pl-1 text-xs ' + (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')}>
-          • {e.gem}
-          {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+        <div
+          key={e.gem}
+          className={
+            'col-span-2 col-start-2 flex items-baseline gap-1.5 text-xs ' +
+            (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')
+          }
+        >
+          <Pip gem={e.colored} />
+          <span className="min-w-0">
+            {e.gem}
+            {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+          </span>
         </div>
       ))}
+    </div>
+  )
+}
+
+// The acquisition list's middle column: the pip, the gem, and whatever else
+// belongs to the gem itself (when it becomes relevant, how to mule it). The pip
+// is fixed-width, so the names line up under each other too.
+function GemCell({
+  entry: e,
+  comingUpAt,
+  later,
+  children
+}: {
+  entry: AcquisitionEntryBridge
+  comingUpAt?: number
+  later?: boolean
+  children?: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <div
+      title={later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}
+      className={
+        'flex min-w-0 items-baseline gap-1.5 text-xs ' +
+        (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text') +
+        (later ? ' opacity-50' : '')
+      }
+    >
+      <Pip gem={e.colored} />
+      <span className="min-w-0">
+        {e.gem}
+        {children}
+        {comingUpAt != null && !e.fromLevel && (
+          <span className="text-overlay-muted"> · lvl {comingUpAt}</span>
+        )}
+      </span>
     </div>
   )
 }
@@ -743,12 +810,7 @@ function BuyRow({
   return (
     <>
       <CostCell cost={e.cost} count={e.count} later={later} />
-      <span
-        title={later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}
-        className={'min-w-0 text-xs text-overlay-text' + (later ? ' opacity-50' : '')}
-      >
-        {e.gem}
-        {comingUpAt != null && <span className="text-overlay-muted"> · lvl {comingUpAt}</span>}
+      <GemCell entry={e} comingUpAt={comingUpAt} later={later}>
         {e.mule && e.mule.length > 0 && (
           <span
             className="text-sky-300/90"
@@ -758,7 +820,7 @@ function BuyRow({
             {e.mule.join('/')}
           </span>
         )}
-      </span>
+      </GemCell>
       <SourceCell act={e.act} what={e.npc ?? 'vendor'} approx={e.fallback} later={later} />
     </>
   )
@@ -819,24 +881,7 @@ function SocketGroup({
         const mark = sourceMark(acq.get(gem.name.toLowerCase()))
         return (
           <Fragment key={i}>
-            <span
-              title={
-                gem.unknown
-                  ? 'Colour unknown — this gem is not in the gem data'
-                  : gem.anyColor
-                    ? 'No attribute requirement — fits a socket of any colour'
-                    : undefined
-              }
-              className={
-                'inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-[8px] font-bold text-black/80 ' +
-                PIP_CLASS[gem.color] +
-                // An "any colour" gem gets a dashed ring: white on purpose, not
-                // white for lack of data. Nothing else changes about the row.
-                (gem.anyColor ? ' border border-dashed border-white/50 bg-transparent' : '')
-              }
-            >
-              {gem.color === 'W' ? '' : gem.color}
-            </span>
+            <Pip gem={gem} />
             <span className="min-w-0 truncate text-xs text-overlay-text">
               {gem.name}
               {/* Only a genuinely unrecognised gem is flagged. A gem with no
