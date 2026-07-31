@@ -30,6 +30,7 @@ import {
   buildSources,
   gemName,
   mergeGemData,
+  sourcelessCampaignGems,
   type CargoRow,
   type GemSourceInfo,
   type GemsFile
@@ -273,14 +274,27 @@ async function main(): Promise<void> {
     for (const [gem, srcs] of sample) console.log(`  ${gem}: ${JSON.stringify(srcs)}`)
   }
 
+  const merged = mergeGemData(existing, sources, basics, new Date().toISOString().slice(0, 10))
+
+  // A wiki schema drift returns HTTP 200 with rows that no longer carry what we
+  // read, and the merge then quietly leaves gems sourceless. This number is the
+  // canary: it should move by a handful between leagues, not by three hundred.
+  const before = sourcelessCampaignGems(existing)
+  const after = sourcelessCampaignGems(merged)
+  console.log(
+    `\nCampaign-level gems with no source at all: ${after.length} (was ${before.length}).` +
+      ' Vaal gems, Empower/Enhance/Enlighten and Portal belong here; a jump does not.'
+  )
+  const lost = after.filter((g) => !before.includes(g))
+  if (lost.length) console.log(`  LOST a source this run: ${lost.join(', ')}`)
+
   if (args.dryRun) {
     console.log('\n--dry-run: no files written.')
     return
   }
 
-  const merged = mergeGemData(existing, sources, basics)
   await writeFile(args.out, JSON.stringify(merged, null, 2) + '\n')
-  console.log(`\nWrote ${args.out}.`)
+  console.log(`\nWrote ${args.out} (fetchedAt ${merged.fetchedAt}).`)
 }
 
 main().catch(async (err) => {

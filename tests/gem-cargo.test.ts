@@ -11,6 +11,7 @@ import {
   vendorRowToSource,
   buildSources,
   mergeGemData,
+  sourcelessCampaignGems,
   type CargoRow,
   type GemsFile
 } from '../scripts/gem-cargo.ts'
@@ -220,4 +221,31 @@ test('mergeGemData applies wiki basics (wiki wins) while keeping curated extras'
   })
   assert.deepEqual(merged.gems.Frostblink, { attr: 'int', requiredLevel: 4 }) // new gem added
   assert.deepEqual(merged.gems['Custom Gem'], { attr: 'dex' })
+})
+
+test('mergeGemData stamps the fetch date and keeps the old one on a dry merge', () => {
+  const existing: GemsFile = { gems: { Fireball: { attr: 'int' } } }
+  const stamped = mergeGemData(existing, {}, undefined, '2026-07-31')
+  assert.equal(stamped.fetchedAt, '2026-07-31')
+  // Merging again without a date must not erase when the data is from.
+  assert.equal(mergeGemData(stamped, {}, undefined).fetchedAt, '2026-07-31')
+})
+
+test('sourcelessCampaignGems counts the gems a fetch failed to place', () => {
+  const file: GemsFile = {
+    gems: {
+      // no source, campaign level -> counted (this is the canary)
+      'Ancestral Warchief': { attr: 'str', requiredLevel: 28 },
+      // has a source -> fine
+      Fireball: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1 }] },
+      // transfigured and Awakened never have a campaign source -> excluded
+      'Fireball of Spellblade': { attr: 'int', requiredLevel: 1 },
+      'Awakened Brutality Support': { attr: 'str', requiredLevel: 72 },
+      // endgame level -> outside the campaign window
+      'Endgame Thing': { attr: 'int', requiredLevel: 72 },
+      // unknown level: assume endgame rather than cry wolf
+      Mystery: { attr: 'int' }
+    }
+  }
+  assert.deepEqual(sourcelessCampaignGems(file), ['Ancestral Warchief'])
 })

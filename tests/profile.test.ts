@@ -123,6 +123,38 @@ test('gem matching ignores case and a trailing " Support"', () => {
   assert.equal(gems.color('Arcane Surge').color, 'B')
 })
 
+test('a skill is not its like-named support gem', () => {
+  // Barrage is a level-12 bow skill Nessa sells in Act 1; Barrage Support is a
+  // level-38 Act 4 quest reward. Stripping " Support" unconditionally folded
+  // them into one entry, and the skill inherited the support's level, act and
+  // price — which also dimmed it as "for later" for twenty-odd levels.
+  const gems = new GemData({
+    Barrage: { attr: 'dex', requiredLevel: 12 },
+    'Barrage Support': { attr: 'dex', requiredLevel: 38 },
+    'Arcane Surge Support': { attr: 'int', requiredLevel: 1 }
+  })
+  assert.equal(gems.info('Barrage')?.requiredLevel, 12)
+  assert.equal(gems.info('Barrage Support')?.requiredLevel, 38)
+  assert.equal(gems.info('barrage')?.requiredLevel, 12, 'case still does not matter')
+  // The forgiving fallback is untouched where nothing owns the exact name.
+  assert.equal(gems.info('Arcane Surge')?.requiredLevel, 1)
+  // Declaration order must not decide it.
+  const reversed = new GemData({
+    'Barrage Support': { attr: 'dex', requiredLevel: 38 },
+    Barrage: { attr: 'dex', requiredLevel: 12 }
+  })
+  assert.equal(reversed.info('Barrage')?.requiredLevel, 12)
+})
+
+test('the shipped data resolves Barrage to the skill, not the support', () => {
+  const gems = exampleGems()
+  const skill = gems.info('Barrage')
+  const support = gems.info('Barrage Support')
+  assert.equal(skill?.requiredLevel, 12)
+  assert.equal(support?.requiredLevel, 38)
+  assert.equal(skill?.sources?.[0]?.npc, 'Nessa')
+})
+
 // ---------- stage selection ----------
 
 test('active stage tracks the character level and clamps at the ends', () => {

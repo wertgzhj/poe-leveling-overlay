@@ -108,7 +108,10 @@ export interface ColoredGem {
 }
 
 export class GemData {
+  /** exact name, lowercased. */
   private readonly byKey = new Map<string, GemInfo>()
+  /** trailing " Support" stripped — the forgiving fallback, never a shadow. */
+  private readonly byLoose = new Map<string, GemInfo>()
   /** "<act>|<quest>" -> the levels of the gems that quest hands out (see questRank). */
   private readonly questLevel = new Map<string, { min: number; sum: number; count: number }>()
   /** True when the dataset lists Siosa/Lilly stock per gem (i.e. the wiki fetch
@@ -118,7 +121,16 @@ export class GemData {
 
   constructor(gems: Record<string, GemInfo>) {
     for (const [name, info] of Object.entries(gems)) {
-      this.byKey.set(normalizeGemName(name), info)
+      this.byKey.set(exactGemKey(name), info)
+    }
+    // The forgiving pass comes second and never overwrites an exact name.
+    // "Barrage" and "Barrage Support" are two different gems — a level-12 bow
+    // skill Nessa sells in Act 1, and a level-38 Act 4 quest reward — and
+    // folding them together handed the skill the support's level, act and
+    // price, which then dimmed it as "for later" for twenty-odd levels.
+    for (const [name, info] of Object.entries(gems)) {
+      const loose = normalizeGemName(name)
+      if (!this.byKey.has(loose) && !this.byLoose.has(loose)) this.byLoose.set(loose, info)
     }
     let broadVendorRows = 0
     for (const info of this.byKey.values()) {
@@ -174,7 +186,9 @@ export class GemData {
   }
 
   info(gem: string): GemInfo | undefined {
-    return this.byKey.get(normalizeGemName(gem))
+    // Exact first, forgiving second: a profile that writes "Arcane Surge" still
+    // finds "Arcane Surge Support", without "Barrage" finding the support.
+    return this.byKey.get(exactGemKey(gem)) ?? this.byLoose.get(normalizeGemName(gem))
   }
 
   /** Socket colour for a gem. Three outcomes, deliberately distinct: a known
@@ -230,8 +244,16 @@ function questKey(act: number, quest: string): string {
   return `${act}|${quest.trim().toLowerCase()}`
 }
 
+/** Exact match, case- and whitespace-insensitive only. */
+export function exactGemKey(name: string): string {
+  return name.trim().toLowerCase()
+}
+
 /** Forgiving match: case-insensitive, trailing " Support" optional, so
- *  "Arcane Surge" and "Arcane Surge Support" resolve the same. */
+ *  "Arcane Surge" and "Arcane Surge Support" resolve the same.
+ *
+ *  Only ever a FALLBACK — see the GemData constructor. On its own it conflates
+ *  the handful of skills that share a name with a support gem ("Barrage"). */
 export function normalizeGemName(name: string): string {
   return name
     .trim()

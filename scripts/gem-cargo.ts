@@ -139,6 +139,10 @@ export function buildSources(questRows: CargoRow[], vendorRows: CargoRow[]): Rec
 
 export interface GemsFile {
   _note?: string
+  /** ISO date of the last successful wiki fetch. The data ages with each league
+   *  and nothing in the file used to say when it was pulled, so "is this from
+   *  before the league?" was unanswerable without digging through git. */
+  fetchedAt?: string
   gems: Record<string, { attr?: string; requiredLevel?: number; sources?: GemSourceInfo[] }>
 }
 
@@ -184,7 +188,8 @@ export function buildGemBasics(rows: CargoRow[]): Record<string, GemBasics> {
 export function mergeGemData(
   existing: GemsFile,
   sources: Record<string, GemSourceInfo[]>,
-  basics?: Record<string, GemBasics>
+  basics?: Record<string, GemBasics>,
+  fetchedAt?: string
 ): GemsFile {
   const gems: GemsFile['gems'] = {}
   for (const [name, info] of Object.entries(existing.gems)) gems[name] = { ...info }
@@ -199,5 +204,27 @@ export function mergeGemData(
   for (const [name, srcs] of Object.entries(sources)) {
     gems[name] = { ...(gems[name] ?? {}), sources: srcs }
   }
-  return { ...existing, gems }
+  return { ...existing, fetchedAt: fetchedAt ?? existing.fetchedAt, gems }
+}
+
+/** Gems the campaign can reach that came back with no source at all.
+ *
+ *  Some of these are correct — Vaal gems are corruption-only, Empower and
+ *  friends only drop — but a schema drift on the wiki looks exactly like a gem
+ *  legitimately having no source, and silently. Counting them after a fetch
+ *  turns that into a number worth looking at: it should move by a handful
+ *  between leagues, not by three hundred.
+ *
+ *  Transfigured gems (`… of …`) and Awakened supports are excluded: they come
+ *  from the Divine Font and the endgame, and never have a campaign source.
+ */
+export function sourcelessCampaignGems(file: GemsFile, maxLevel = 45): string[] {
+  return Object.entries(file.gems)
+    .filter(([name, info]) => {
+      if (info.sources?.length) return false
+      if (/ of /.test(name) || /^Awakened /.test(name)) return false
+      return (info.requiredLevel ?? 100) <= maxLevel
+    })
+    .map(([name]) => name)
+    .sort()
 }
