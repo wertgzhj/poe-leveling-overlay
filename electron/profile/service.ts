@@ -13,7 +13,7 @@
 import { app } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
-import { parseProfile, type Profile } from './profile.ts'
+import { parseProfile, baseClassOf, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
 import {
   activeStageIndex,
@@ -152,8 +152,16 @@ export class ProfileService {
       errors: this.errors,
       gemDataError: this.gemDataError,
       level,
+      // An ascended character logs its ascendancy, so "Elementalist" tracked
+      // against a "Witch" profile is the same character, not the wrong one.
+      // Compare base classes, and say nothing at all about a name we can't
+      // place — a localized log would otherwise cry wolf on every profile.
       classMismatch:
-        !!profile && !!trackedClass && trackedClass !== profile.meta.class ? trackedClass : null,
+        profile && trackedClass && baseClassOf(trackedClass)
+          ? baseClassOf(trackedClass) !== profile.meta.class
+            ? trackedClass
+            : null
+          : null,
       activeStage: stage ? resolveStage(stage, stageIndex, this.gems) : null,
       nextStage:
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length

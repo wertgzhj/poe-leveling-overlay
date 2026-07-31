@@ -9,9 +9,32 @@ import {
   moveStep,
   serializeRoute,
   blankStage,
+  ascendancyFor,
+  ascendancyOptions,
+  ASCENDANCIES as EDITOR_ASCENDANCIES,
   type RouteDraft
 } from '../editor/model.ts'
 import { validateRoute } from '../electron/guide/route.ts'
+import { ASCENDANCIES, CLASSES } from '../electron/profile/profile.ts'
+
+test('the editor mirrors the main process ascendancy table exactly', () => {
+  // Hand-mirrored across two build graphs, so drift is a matter of when, not if.
+  assert.deepEqual(EDITOR_ASCENDANCIES, ASCENDANCIES)
+})
+
+test('picking a class narrows the ascendancies to that class', () => {
+  assert.deepEqual(ascendancyOptions('Witch'), ['', 'Necromancer', 'Elementalist', 'Occultist'])
+  // Every class offers a real choice, and "" is always the first option.
+  for (const cls of CLASSES) assert.equal(ascendancyOptions(cls)[0], '')
+})
+
+test('switching class drops an ascendancy that no longer fits, keeps one that does', () => {
+  assert.equal(ascendancyFor('Witch', 'Elementalist'), 'Elementalist')
+  assert.equal(ascendancyFor('Duelist', 'Elementalist'), undefined)
+  assert.equal(ascendancyFor('Witch', undefined), undefined)
+  // A hand-written value survives as a listed option rather than vanishing.
+  assert.deepEqual(ascendancyOptions('Witch', 'Blood Mage').at(-1), 'Blood Mage')
+})
 
 function route(): RouteDraft {
   return {

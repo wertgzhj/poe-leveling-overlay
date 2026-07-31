@@ -14,6 +14,34 @@ export const CLASSES = [
 ] as const
 export type CharClass = (typeof CLASSES)[number]
 
+/**
+ * Ascendancies per base class. Client.txt reports the ASCENDANCY once you have
+ * ascended — a level-up line for this character says "Elementalist", not
+ * "Witch" — so without this table the overlay can't tell "you loaded the wrong
+ * profile" apart from "you ascended", and warns about a Witch build on a Witch.
+ */
+export const ASCENDANCIES: Record<CharClass, readonly string[]> = {
+  Marauder: ['Juggernaut', 'Berserker', 'Chieftain'],
+  Ranger: ['Deadeye', 'Raider', 'Pathfinder'],
+  Witch: ['Necromancer', 'Elementalist', 'Occultist'],
+  Duelist: ['Slayer', 'Gladiator', 'Champion'],
+  Templar: ['Inquisitor', 'Hierophant', 'Guardian'],
+  Shadow: ['Assassin', 'Saboteur', 'Trickster'],
+  Scion: ['Ascendant']
+}
+
+/** The base class a class name belongs to: itself when it already is one, else
+ *  the class whose ascendancy it is. null for anything unrecognised — a
+ *  localized log, say — where guessing would be worse than staying quiet. */
+export function baseClassOf(name: string): CharClass | null {
+  const found = CLASSES.find((c) => c.toLowerCase() === name.toLowerCase())
+  if (found) return found
+  for (const cls of CLASSES) {
+    if (ASCENDANCIES[cls].some((a) => a.toLowerCase() === name.toLowerCase())) return cls
+  }
+  return null
+}
+
 export const GEM_SOURCE_KINDS = ['questReward', 'vendor', 'drop', 'unobtainable'] as const
 export type GemSourceKind = (typeof GEM_SOURCE_KINDS)[number]
 

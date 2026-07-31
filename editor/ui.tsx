@@ -28,6 +28,9 @@ export function Select<T extends string>(props: {
   options: readonly T[]
   onChange: (v: T) => void
   className?: string
+  /** display text per option — an empty value needs a visible label ("none")
+   *  or the entry is an invisible blank row in the list. */
+  labelFor?: (v: T) => string
 }): React.JSX.Element {
   return (
     <select
@@ -40,7 +43,7 @@ export function Select<T extends string>(props: {
     >
       {props.options.map((o) => (
         <option key={o} value={o}>
-          {o}
+          {props.labelFor ? props.labelFor(o) : o}
         </option>
       ))}
     </select>
