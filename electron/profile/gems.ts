@@ -89,6 +89,10 @@ export function costRank(cost: string | undefined): number {
   return cost ? (COST_RANK.get(cost) ?? 0) : 0
 }
 
+/** Keeps the minimum dominant in a quest's rank: gem levels top out around 70,
+ *  so the average can never push a quest past one with a lower minimum. */
+const QUEST_RANK_SCALE = 128
+
 const ATTR_COLOR: Record<Attr, SocketColor> = { str: 'R', dex: 'G', int: 'B' }
 
 export interface ColoredGem {
@@ -105,8 +109,8 @@ export interface ColoredGem {
 
 export class GemData {
   private readonly byKey = new Map<string, GemInfo>()
-  /** "<act>|<quest>" -> lowest gem level that quest hands out. */
-  private readonly questLevel = new Map<string, number>()
+  /** "<act>|<quest>" -> the levels of the gems that quest hands out (see questRank). */
+  private readonly questLevel = new Map<string, { min: number; sum: number; count: number }>()
   /** True when the dataset lists Siosa/Lilly stock per gem (i.e. the wiki fetch
    *  has run). Then "no source" is an answer — they don't sell it — and the
    *  broad-vendor guess must stay quiet. */
@@ -124,9 +128,9 @@ export class GemData {
     }
     this.hasBroadVendorData = broadVendorRows >= BROAD_VENDOR_DATA_MIN
     // Chronological quest order, derived instead of hardcoded: a quest's gems
-    // scale with where it sits in the campaign, so the LOWEST gem level a quest
-    // rewards ranks it within its act (verified to reproduce the real order for
-    // every act with reward data). Self-updates with the wiki gem refresh.
+    // scale with where it sits in the campaign, so the levels it rewards rank it
+    // within its act (verified to reproduce the real order for every act with
+    // reward data). Self-updates with the wiki gem refresh.
     for (const info of this.byKey.values()) {
       const level = info.requiredLevel
       if (level == null) continue
@@ -137,16 +141,36 @@ export class GemData {
         if (s.kind !== 'quest' || !s.quest || s.act == null) continue
         const key = questKey(s.act, s.quest)
         const prev = this.questLevel.get(key)
-        if (prev == null || level < prev) this.questLevel.set(key, level)
+        if (prev) {
+          prev.min = Math.min(prev.min, level)
+          prev.sum += level
+          prev.count++
+        } else {
+          this.questLevel.set(key, { min: level, sum: level, count: 1 })
+        }
       }
     }
   }
 
-  /** Where a quest falls within its act (lower = earlier). Unknown quests sort
-   *  last so they never jump ahead of a quest we can actually place. */
+  /**
+   * Where a quest falls within its act (lower = earlier).
+   *
+   * The lowest gem level a quest rewards is the primary signal, and the average
+   * of them breaks a tie. Both quests that open Act 1 start at level 1, so on
+   * the minimum alone they tied and the order fell through to the alphabet —
+   * which put "Mercy Mission" above "Enemy at the Gate", the first quest of the
+   * game. The average separates them honestly: Enemy at the Gate hands out 24
+   * gems and every one is level 1, Mercy Mission 6 at level 1 and 8 at level 4.
+   *
+   * Unknown quests sort last so they never jump ahead of one we can place.
+   */
   questRank(act: number | undefined, quest: string | undefined): number {
     if (act == null || !quest) return Number.MAX_SAFE_INTEGER
-    return this.questLevel.get(questKey(act, quest)) ?? Number.MAX_SAFE_INTEGER
+    const stats = this.questLevel.get(questKey(act, quest))
+    if (!stats) return Number.MAX_SAFE_INTEGER
+    // One sortable number: the minimum stays dominant because no gem's level
+    // comes near the scale, and the average only ever decides ties.
+    return stats.min * QUEST_RANK_SCALE + stats.sum / stats.count
   }
 
   info(gem: string): GemInfo | undefined {

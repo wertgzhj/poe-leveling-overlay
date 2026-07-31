@@ -677,6 +677,30 @@ test('quest rank is derived from gem levels and orders an act chronologically', 
   })
   assert.ok(withVendor.questRank(3, 'Lost in Love') < withVendor.questRank(3, 'A Fixture of Fate'))
 
+  // Two quests that both start at level 1 used to tie, and the plan then fell
+  // through to the alphabet — which put Mercy Mission above the first quest of
+  // the game. The average level of what each hands out separates them: Enemy at
+  // the Gate gives level 1 and nothing else, Mercy Mission climbs to 4.
+  const tied = new GemData({
+    'Gate A': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    'Gate B': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    'Mercy A': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Mercy Mission', classes: ['Witch'] }] },
+    'Mercy B': { attr: 'int', requiredLevel: 4, sources: [{ kind: 'quest', act: 1, quest: 'Mercy Mission', classes: ['Witch'] }] }
+  })
+  assert.ok(tied.questRank(1, 'Enemy at the Gate') < tied.questRank(1, 'Mercy Mission'))
+  // A lower minimum still wins outright, whatever the averages do.
+  const spread = new GemData({
+    'Low then high': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'First', classes: ['Witch'] }] },
+    'Also high': { attr: 'int', requiredLevel: 60, sources: [{ kind: 'quest', act: 1, quest: 'First', classes: ['Witch'] }] },
+    'Steady': { attr: 'int', requiredLevel: 4, sources: [{ kind: 'quest', act: 1, quest: 'Second', classes: ['Witch'] }] }
+  })
+  assert.ok(spread.questRank(1, 'First') < spread.questRank(1, 'Second'))
+
+  // And on the shipped data the first quest of the game leads Act 1.
+  const real = exampleGems()
+  assert.ok(real.questRank(1, 'Enemy at the Gate') < real.questRank(1, 'Mercy Mission'))
+  assert.ok(real.questRank(1, 'Mercy Mission') < real.questRank(1, 'Breaking Some Eggs'))
+
   const profile = parseProfile(
     JSON.stringify({
       meta: { name: 'order', class: 'Witch' },
