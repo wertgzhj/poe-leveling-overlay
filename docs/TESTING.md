@@ -46,14 +46,24 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    around the panel must reach the game — only the visible panel captures the
    mouse.
 3. **Settings.** ⚙ → set the `Client.txt` path, rebind a hotkey, adjust opacity.
-   All take effect immediately.
+   All take effect immediately. The sections run in the order the work does:
+   Updates, the editor button, Build profile, Game log, Overlay, Hotkeys. The
+   three tabs split the window into equal thirds at any size — drag the resize
+   grip and they should stay even, with no dead space after "Trials".
 4. **Tracking.** The tracker strip shows the current zone and level while
    playing. Restart the overlay mid-session — it resumes both. With no character
    pinned, rolling a fresh character (entering the Twilight Strand) switches
    tracking to it on its first level-up. Pin a name in Settings → Game log only
-   when playing in a party. A zone whose monster level is far from yours adds a
-   tag — `zone 32 ▲` in red when it outpaces your safe range, `▼` when you have
-   outgrown it. It must **not** appear in towns.
+   when playing in a party — and while one is pinned, `⟳ character` must go
+   **amber** and name the pin rather than ticking, because tracking does not
+   move. A zone whose monster level is far from yours adds a tag — `zone 32 ▲`
+   in red when it outpaces your safe range, `▼` when you have outgrown it. It
+   must **not** appear in towns.
+   Swap characters and check both per-character stores follow **on the level-up**,
+   not a zone later: the Guide's ticks and the Trials list must both be the new
+   character's. Then save a route in the editor and confirm the first
+   character's progress is still intact — that pairing used to file one
+   character's steps under the other's name.
 5. **Guide.** Advances as zones are entered; a portal to town and back must not
    skip steps; `Ctrl+Shift+N/P` correct the cursor; it crosses act boundaries.
 6. **Gems.** Point Settings → Build profile at a profile, or paste a PoB code or
@@ -63,6 +73,23 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    and flips stages on level-up, the moment the level enters the next range.
    Close and reopen mid-session: it must show the correct stage immediately, not
    stage 1 until the next level-up.
+
+   The tab reads in three columns — cost, gem, source — and they are one set of
+   columns for the whole tab, so check them against each other rather than each
+   on its own:
+   - Prices end on one line, gem names start on one line, and the `A3 ·`
+     prefixes start on one line — across plain rows, the `PICK ONE, BUY REST`
+     box **and** the link boxes below.
+   - `2× Wisdom` is the widest price and must fit its column without wrapping.
+   - A long gem name (`Melee Physical Damage Support`) and a long quest name
+     (`The Siren's Cadence`) truncate with `…` and keep their row one line high;
+     hovering shows the full text.
+   - A mulable gem reads `Mule` in turquoise with the class to roll on the
+     right, in both the list and the links, and sits at the **top** of the list.
+   - A quest reward reads `Reward`, and one your build needs twice `Reward +1`.
+   - Ascend a character: the "wrong profile loaded?" banner must **not** appear
+     for an Elementalist on a Witch build. It should still appear for a genuinely
+     different base class.
 7. **Trials.** Entering a trial zone shows an amber "Trial of Ascendancy in this
    zone" hint on every tab. Finishing the trial auto-checks it — Izaro voices a
    plaque line only on completion, and the zone identifies which trial it was.
@@ -73,9 +100,12 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    including after a restart — while a later Labyrinth still announces itself.
 8. **Editor.** Tray → *Edit routes & profile…* opens a normal window. Add or edit
    a step, save, and the Guide tab reflects it without a restart. Same for the
-   profile and the Gems tab. **Share routes…** exports all ten acts into the box
-   (and onto the clipboard); pasting one back and pressing Import should write
-   the acts in the file, reload the overlay, and leave your other acts alone.
+   profile and the Gems tab. **Ascendancy** is a dropdown that offers only the
+   chosen class's three — switch the class and a pick that no longer fits must
+   clear itself rather than leave a Witch Slayer. **Share routes…** exports all
+   ten acts into the box (and onto the clipboard); pasting one back and pressing
+   Import should write the acts in the file, reload the overlay, and leave your
+   other acts alone.
 9. **Auto-update** (installed build only). Needs a published Release newer than
    the installed version. Launch an older build: within ~10s Settings → Updates
    shows it downloading, then the overlay offers *Restart & update*; one click
@@ -117,6 +147,18 @@ preview).
 A gem with no source is one no vendor sells — Vaal, Awakened and Transfigured
 gems, and drop-only supports like Empower — and reads "drop/trade" rather than
 naming a vendor. If a gem you *can* buy shows that way, refresh the data first.
+
+`fetchedAt` in `data/gems.json` says when the data was last pulled; it ages with
+every league.
+
+The fetch prints how many campaign-level gems came back with **no source at
+all**, before and after. That number is the canary for a wiki schema drift: the
+query returns HTTP 200 with rows that no longer carry the columns we read, the
+merge quietly leaves gems sourceless, and nothing else would say so. It is **61**
+today, 48 of them Vaal gems, which are corruption-only and belong there. Expect
+it to move by a handful between leagues — a jump of hundreds means the query
+broke, and anything that *lost* a source in a run is named outright. Don't
+commit a refresh that reports one without checking why.
 
 `data/starting-gems.json` (the skill and support gem each class begins with) is
 maintained by hand and not touched by the refresh; the overlay marks those "✓
