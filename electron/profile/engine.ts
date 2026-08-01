@@ -9,6 +9,7 @@ import {
   costRank,
   safeLevelRange,
   normalizeGemName,
+  needsLibrary,
   type ColoredGem
 } from './gems.ts'
 
@@ -89,7 +90,7 @@ export interface RewardGroup {
  *  single vendor purchase. */
 export type AcquisitionItem = (
   | { kind: 'reward'; group: RewardGroup }
-  | { kind: 'buy'; entry: AcquisitionEntry }
+  | { kind: 'buy'; entry: AcquisitionEntry; stop?: { key: string; label: string } }
 ) & {
   /** true when the gem is more than the XP safe-range above your level — show it
    *  dimmed as "coming up" rather than as an act-now item. */
@@ -170,6 +171,9 @@ export interface AcquisitionContext {
    *  it are dropped from the plan: at level 2 in Act 1, an Act 4 quest choice is
    *  not a preview, it is six hours of noise. null = unknown, show everything. */
   actReached?: number | null
+  /** Whether this character has been to Act 3's Library. Siosa is gated on it
+   *  separately from the act — see LIBRARY_VENDOR. null/undefined = unknown. */
+  reachedLibrary?: boolean | null
 }
 
 /**
@@ -186,7 +190,7 @@ export function acquisitionsForStage(
   gems?: GemData,
   ctx: AcquisitionContext = {}
 ): Acquisitions {
-  const { startingGems, playerLevel, startingOwners, actReached } = ctx
+  const { startingGems, playerLevel, startingOwners, actReached, reachedLibrary } = ctx
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
   // How many copies this stage needs: the same gem in two different links means
@@ -245,7 +249,8 @@ export function acquisitionsForStage(
     buildRewardGroups(rewards.filter(isNewThisStage), upcoming),
     purchases.filter(isNewThisStage),
     playerLevel,
-    actReached
+    actReached,
+    reachedLibrary
   )
   return { rewards, purchases, other, upcoming, rewardGroups, plan }
 }
@@ -260,7 +265,8 @@ function buildPlan(
   rewardGroups: RewardGroup[],
   purchases: AcquisitionEntry[],
   playerLevel?: number | null,
-  actReached?: number | null
+  actReached?: number | null,
+  reachedLibrary?: boolean | null
 ): AcquisitionItem[] {
   const minReq = (entries: AcquisitionEntry[]): number | undefined => {
     const levels = entries.map((e) => e.requiredLevel).filter((l): l is number => l != null)
@@ -277,12 +283,16 @@ function buildPlan(
   // blank the list because a signal is missing.
   const reachable = (act: number | undefined): boolean =>
     actReached == null || act == null || act <= actReached
+  // Siosa is gated on the Library rather than on Act 3 — walking into the act
+  // doesn't reach him, walking into that zone does. Unknown stays visible.
+  const shoppable = (entry: AcquisitionEntry): boolean =>
+    reachable(entry.act) && (reachedLibrary !== false || !needsLibrary(entry.npc))
   const raw: Raw[] = [
     ...rewardGroups
       .filter((group) => reachable(group.act))
       .map((group): Raw => ({ kind: 'reward', group, req: minReq(group.gems) })),
     ...purchases
-      .filter((entry) => reachable(entry.act))
+      .filter(shoppable)
       .map((entry): Raw => ({ kind: 'buy', entry, req: entry.requiredLevel }))
   ]
   // Muling comes first, whatever act the gem's vendor sits in. You roll the alt,
@@ -319,8 +329,28 @@ function buildPlan(
     const later = range != null && it.req != null && it.req > (playerLevel as number) + range
     return it.kind === 'reward'
       ? { kind: 'reward', group: it.group, later, atLevel: it.req }
-      : { kind: 'buy', entry: it.entry, later, atLevel: it.req }
+      : { kind: 'buy', entry: it.entry, later, atLevel: it.req, stop: shoppingStop(it.entry) }
   })
+}
+
+/**
+ * The shopping trip a purchase belongs to: an act and an NPC. Rewards get none —
+ * you pick those up as you go, they aren't a stop you stand at.
+ *
+ * A vendor recurs, because their stock grows with each quest you finish, so the
+ * same NPC legitimately heads more than one block. That's not a duplicate label:
+ * it is two visits, which is what actually happens.
+ */
+function shoppingStop(entry: AcquisitionEntry): { key: string; label: string } | undefined {
+  if (entry.mule?.length) return { key: 'mule', label: 'Roll a mule first' }
+  if (entry.bucket !== 'purchase' || !entry.npc) return undefined
+  const where = entry.act ? `A${entry.act} · ${entry.npc}` : entry.npc
+  return {
+    // The unlock quest is part of the key, not the label: it splits the visits
+    // apart without spending a line on a quest name nobody needs to read here.
+    key: `${where}|${entry.quest ?? ''}`,
+    label: needsLibrary(entry.npc) ? `${where} · Library` : where
+  }
 }
 
 /** Cheapest first, then earliest act, then alphabetical.

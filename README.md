@@ -225,6 +225,14 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
   left out entirely rather than dimmed — at level 2 in Act 1, an Act 4 quest is not a
   preview. It appears when you get there. Before the overlay has seen a zone it shows
   everything, and entering the Twilight Strand starts the count over.
+- Buys are headed by the **stop** you make them at — `A1 · Nessa`, `A3 · Siosa ·
+  Library` — so what you pick up in one visit reads as one block. A vendor's stock
+  grows with each quest you finish, so the same NPC can head two blocks: that's two
+  trips, not a duplicate.
+- **Siosa waits for the Library.** He's the earliest source for around 195 gems —
+  three times Nessa, the next biggest — but you reach him by walking into Act 3's
+  Library and handing over the Golden Page, not by entering the act. His stock stays
+  out of the list until you've been there.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
   gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`,
   filled from the Path of Exile Wiki. **Easiest way to (re)fill it:** repo → Actions →

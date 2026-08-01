@@ -987,3 +987,86 @@ test('the plan drops acts you have not reached, and only those', () => {
   // Unknown progress hides nothing — never blank the list on a missing signal.
   assert.deepEqual(gemsIn(null), ['Bane', 'Contagion', 'Decay', 'Flame Wall', 'Herald of Ice', 'Placeless'])
 })
+
+test('Siosa waits for the Library, not for Act 3', () => {
+  const gems = new GemData({
+    // Siosa is the earliest source for ~195 gems in the shipped data, so when
+    // he unlocks decides whether entering Act 3 dumps two hundred purchases in.
+    'Siosa Gem': {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }]
+    },
+    'Clarissa Gem': {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa', quest: 'Lost in Love' }]
+    }
+  })
+  const names = ['Siosa Gem', 'Clarissa Gem']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'library', class: 'Witch' },
+      stages: [{ range: [1, 90], socketGroups: [{ gems: names }] }],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const buys = (reachedLibrary: boolean | null): string[] =>
+    acquisitionsForStage(profile, 0, gems, { playerLevel: 30, actReached: 3, reachedLibrary })
+      .plan.flatMap((it) => (it.kind === 'buy' ? [it.entry.gem] : []))
+      .sort()
+
+  // In Act 3 but not yet at the Library: the other Act 3 vendor is fine, Siosa isn't.
+  assert.deepEqual(buys(false), ['Clarissa Gem'])
+  assert.deepEqual(buys(true), ['Clarissa Gem', 'Siosa Gem'])
+  // Unknown never hides — same rule as the act filter.
+  assert.deepEqual(buys(null), ['Clarissa Gem', 'Siosa Gem'])
+})
+
+test('purchases carry the shopping stop they belong to', () => {
+  const gems = new GemData({
+    Early: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', quest: 'Enemy at the Gate' }]
+    },
+    // Same vendor, later quest: a second visit, so a second block.
+    Later: {
+      attr: 'int',
+      requiredLevel: 8,
+      sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', quest: 'The Caged Brute' }]
+    },
+    Librarian: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }]
+    },
+    Gift: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'quest', act: 1, quest: 'Mercy Mission', classes: ['Witch'] }]
+    }
+  })
+  const names = ['Early', 'Later', 'Librarian', 'Gift']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'stops', class: 'Witch' },
+      stages: [{ range: [1, 90], socketGroups: [{ gems: names }] }],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const plan = acquisitionsForStage(profile, 0, gems, { playerLevel: 40 }).plan
+
+  const stops = new Map(
+    plan.flatMap((it) => (it.kind === 'buy' ? [[it.entry.gem, it.stop] as const] : []))
+  )
+  assert.equal(stops.get('Early')?.label, 'A1 · Nessa')
+  assert.equal(stops.get('Later')?.label, 'A1 · Nessa')
+  // Same label, different key: two visits to the same vendor, one block each.
+  assert.notEqual(stops.get('Early')?.key, stops.get('Later')?.key)
+  // The Library is named, because getting there is the trip.
+  assert.equal(stops.get('Librarian')?.label, 'A3 · Siosa · Library')
+  // A quest reward is not a stop you stand at.
+  const gift = plan.find((it) => it.kind === 'reward')
+  assert.ok(gift && !('stop' in gift && gift.stop))
+})
