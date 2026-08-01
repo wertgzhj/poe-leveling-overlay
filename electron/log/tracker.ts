@@ -9,7 +9,7 @@ import type { LogParser, ParsedLogEvent } from './parser.ts'
 // character — you can't go back. So entering it in auto-detect mode is an
 // unambiguous "different character now" signal: re-arm adoption so the new
 // character's first level-up binds instead of staying stuck on the old one.
-const TWILIGHT_STRAND_ID = '1_1_1'
+export const TWILIGHT_STRAND_ID = '1_1_1'
 
 export interface AreaState {
   /** Canonical act-scoped id ("1_1_town"); null when only a name was seen and it couldn't be resolved. */

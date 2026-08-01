@@ -59,6 +59,10 @@ interface StoreSchema extends AppSettings {
    *  switches profiles instead of making you go into Settings. Built from use;
    *  a profile that names its character (`meta.character`) declares its own. */
   profileByCharacter: Record<string, string>
+  /** character -> the furthest campaign act they have reached. The gem to-do
+   *  list drops anything from beyond it: at level 2 in Act 1, an Act 4 quest
+   *  choice is not a preview. Monotonic — portalling to town isn't a setback. */
+  actReached: Record<string, number>
 }
 
 const defaults: StoreSchema = {
@@ -82,7 +86,8 @@ const defaults: StoreSchema = {
   guideProgress: {},
   trialsProgress: {},
   trialsDismissedLabs: {},
-  profileByCharacter: {}
+  profileByCharacter: {},
+  actReached: {}
 }
 
 export const store = new Store<StoreSchema>({ name: 'settings', defaults })
