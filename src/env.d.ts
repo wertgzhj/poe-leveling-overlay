@@ -198,7 +198,7 @@ interface RewardGroupBridge {
 
 type AcquisitionItemBridge = (
   | { kind: 'reward'; group: RewardGroupBridge }
-  | { kind: 'buy'; entry: AcquisitionEntryBridge }
+  | { kind: 'buy'; entry: AcquisitionEntryBridge; stop?: { key: string; label: string } }
 ) & { later: boolean; atLevel?: number }
 
 interface AcquisitionsBridge {

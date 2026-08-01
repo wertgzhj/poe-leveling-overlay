@@ -36,6 +36,25 @@ export const BROAD_VENDORS: readonly GemSourceInfo[] = [
 /** NPCs whose stock the wiki lists per gem. Their presence in the data is what
  *  tells us the dataset can answer "does a broad vendor sell this?" itself. */
 const BROAD_VENDOR_NPCS = new Set(['siosa', 'lilly roth'])
+
+/**
+ * Siosa is a stop, not an act. He is the earliest source for 195 gems — three
+ * times Nessa, the next biggest — but he does not open with Act 3: you reach him
+ * by walking into The Library and handing over the Golden Page. Treating his
+ * stock as "available in Act 3" dumped two hundred purchases into the list the
+ * moment you entered the act, for gems you could not buy for another hour.
+ */
+export const LIBRARY_VENDOR = 'siosa'
+/** The zone that unlocks him. Matched by display name, like the trial zones —
+ *  which means English clients only, same as the rest of the localized paths. */
+export const LIBRARY_ZONE = 'The Library'
+
+/** True for the vendor you only reach by going to the Library. Takes the NPC
+ *  name rather than a whole source, because the two callers hold different
+ *  shapes of it. Case-insensitive: the name comes from the wiki. */
+export function needsLibrary(npc: string | undefined): boolean {
+  return npc?.trim().toLowerCase() === LIBRARY_VENDOR
+}
 /** How many explicit broad-vendor rows make the dataset authoritative. A couple
  *  of hand-written entries shouldn't flip it; the wiki fetch yields hundreds. */
 export const BROAD_VENDOR_DATA_MIN = 20

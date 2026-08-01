@@ -1116,23 +1116,42 @@ function GemBody(): React.JSX.Element {
             {/* Rows render bare cells into this grid, so the columns line up
                 across every row. Dimming a "later" row happens per cell: a
                 wrapper element here would become a grid item and break them. */}
-            {plan.map((item, i) =>
-              item.kind === 'reward' ? (
-                <RewardGroupRow
-                  key={i}
-                  group={item.group}
-                  comingUpAt={item.later ? item.atLevel : undefined}
-                  later={item.later}
-                />
-              ) : (
-                <BuyRow
-                  key={i}
-                  entry={item.entry}
-                  comingUpAt={item.later ? item.atLevel : undefined}
-                  later={item.later}
-                />
+            {plan.map((item, i) => {
+              // A heading each time the shopping stop changes, so what you pick
+              // up in one visit reads as one block. A vendor's stock grows with
+              // each quest, so the same NPC can head two blocks — that's two
+              // trips, not a duplicate.
+              const stop = item.kind === 'buy' ? item.stop : undefined
+              const prev = plan[i - 1]
+              const prevStop = prev?.kind === 'buy' ? prev.stop : undefined
+              return (
+                <Fragment key={i}>
+                  {stop && stop.key !== prevStop?.key && (
+                    <div
+                      className={
+                        'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-overlay-muted/70' +
+                        (item.later ? ' opacity-50' : '')
+                      }
+                    >
+                      {stop.label}
+                    </div>
+                  )}
+                  {item.kind === 'reward' ? (
+                    <RewardGroupRow
+                      group={item.group}
+                      comingUpAt={item.later ? item.atLevel : undefined}
+                      later={item.later}
+                    />
+                  ) : (
+                    <BuyRow
+                      entry={item.entry}
+                      comingUpAt={item.later ? item.atLevel : undefined}
+                      later={item.later}
+                    />
+                  )}
+                </Fragment>
               )
-            )}
+            })}
             {plan.some((it) => it.kind === 'buy' && it.entry.fallback) && (
               <p className="col-span-3 text-[10px] text-overlay-muted">
                 ≈ general vendor: Siosa (Act 3, after the Library) / Lilly Roth (Act 6+) sell most

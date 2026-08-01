@@ -63,6 +63,9 @@ interface StoreSchema extends AppSettings {
    *  list drops anything from beyond it: at level 2 in Act 1, an Act 4 quest
    *  choice is not a preview. Monotonic — portalling to town isn't a setback. */
   actReached: Record<string, number>
+  /** character -> has been to Act 3's Library. Siosa sells more gems than any
+   *  other vendor and unlocks there, not on entering the act. */
+  libraryReached: Record<string, boolean>
 }
 
 const defaults: StoreSchema = {
@@ -87,7 +90,8 @@ const defaults: StoreSchema = {
   trialsProgress: {},
   trialsDismissedLabs: {},
   profileByCharacter: {},
-  actReached: {}
+  actReached: {},
+  libraryReached: {}
 }
 
 export const store = new Store<StoreSchema>({ name: 'settings', defaults })

@@ -14,7 +14,7 @@ import { app } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
 import { parseProfile, baseClassOf, type Profile } from './profile.ts'
-import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
+import { GemData, normalizeGemName, LIBRARY_ZONE, type GemInfo } from './gems.ts'
 import {
   activeStageIndex,
   actFromAreaId,
@@ -84,7 +84,7 @@ export class ProfileService {
       const moved =
         area.areaId === TWILIGHT_STRAND_ID
           ? this.restartAct()
-          : this.noteAct(actFromAreaId(area.areaId))
+          : this.noteAct(actFromAreaId(area.areaId)) || this.noteLibrary(area.name)
       if (moved && !reloaded) this.push()
     })
   }
@@ -194,13 +194,15 @@ export class ProfileService {
    *  for an identical result. */
   private acquisitions(profile: Profile, stageIndex: number): Acquisitions {
     const act = this.actReached()
-    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}`
+    const library = this.character ? (store.get('libraryReached')[this.character] ?? false) : null
+    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}|${library}`
     if (this.acqCache?.key === key) return this.acqCache.value
     const value = acquisitionsForStage(profile, stageIndex, this.gems, {
       startingGems: this.startingByClass.get(profile.meta.class),
       playerLevel: this.level,
       startingOwners: this.startingOwners,
-      actReached: act
+      actReached: act,
+      reachedLibrary: library
     })
     this.acqCache = { key, value }
     return value
@@ -234,9 +236,25 @@ export class ProfileService {
    */
   private restartAct(): boolean {
     if (!this.character) return false
+    const changed = store.get('libraryReached')[this.character]
+    if (changed) {
+      const { [this.character]: _gone, ...rest } = store.get('libraryReached')
+      store.set('libraryReached', rest)
+    }
     const map = store.get('actReached')
-    if (map[this.character] === 1) return false
+    if (map[this.character] === 1 && !changed) return false
     store.set('actReached', { ...map, [this.character]: 1 })
+    return true
+  }
+
+  /** Siosa sells more gems than anyone else, and you reach him by walking into
+   *  the Library, not by entering Act 3. Matched on the display name, the way
+   *  the trial zones are — English clients only, like every localized path. */
+  private noteLibrary(zoneName: string): boolean {
+    if (!this.character || zoneName !== LIBRARY_ZONE) return false
+    const map = store.get('libraryReached')
+    if (map[this.character]) return false
+    store.set('libraryReached', { ...map, [this.character]: true })
     return true
   }
 

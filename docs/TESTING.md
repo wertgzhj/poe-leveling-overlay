@@ -92,6 +92,13 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      back to Act 1's town must not make them disappear again. Rolling a new
      character with a name you used last league starts the count over rather
      than inheriting that character's act.
+   - Buys are headed by their stop (`A1 · NESSA`). The same vendor heading twice
+     is correct — their stock grows per quest, so that's two visits.
+   - **Siosa is the one to watch.** Entering Act 3 must *not* bring his stock in;
+     walking into **The Library** must. He is the earliest source for around 195
+     gems, so the difference is a screenful. On a non-English client the zone
+     name won't match and his gems stay hidden for that character — the same
+     limitation as the trial zones.
    - Ascend a character: the "wrong profile loaded?" banner must **not** appear
      for an Elementalist on a Witch build. It should still appear for a genuinely
      different base class.
