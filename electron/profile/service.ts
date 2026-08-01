@@ -17,12 +17,14 @@ import { parseProfile, baseClassOf, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
 import {
   activeStageIndex,
+  actFromAreaId,
   stepStageView,
   resolveStage,
   acquisitionsForStage,
   type Acquisitions
 } from './engine.ts'
 import { store } from '../settings.ts'
+import { TWILIGHT_STRAND_ID } from '../log/tracker.ts'
 import { Channels, type ProfileSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
 import type { LogService } from '../log/service.ts'
@@ -75,14 +77,25 @@ export class ProfileService {
     })
     // The binding can also change without a level-up — the "⟳ character" button
     // and pinning a name in Settings both do it. Zone changes are the cheap,
-    // frequent tick that notices those; syncCharacter is a no-op when nothing moved.
-    log.addAreaListener(() => this.syncCharacter())
+    // frequent tick that notices those; syncCharacter is a no-op when nothing
+    // moved. They're also where campaign progress shows up.
+    log.addAreaListener((area) => {
+      const reloaded = this.syncCharacter()
+      const moved =
+        area.areaId === TWILIGHT_STRAND_ID
+          ? this.restartAct()
+          : this.noteAct(actFromAreaId(area.areaId))
+      if (moved && !reloaded) this.push()
+    })
   }
 
   start(): void {
     const state = this.log.getSnapshot().state
     this.level = state.level
     this.character = state.character
+    // Seed from the resumed area: the backscan doesn't emit area events, so
+    // without this the plan shows every act until the next zone load.
+    this.noteAct(actFromAreaId(state.area?.areaId))
     this.reload()
   }
 
@@ -180,15 +193,51 @@ export class ProfileService {
    *  level-ups stay inside the same stage, so the sorting work was being redone
    *  for an identical result. */
   private acquisitions(profile: Profile, stageIndex: number): Acquisitions {
-    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}`
+    const act = this.actReached()
+    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}`
     if (this.acqCache?.key === key) return this.acqCache.value
     const value = acquisitionsForStage(profile, stageIndex, this.gems, {
       startingGems: this.startingByClass.get(profile.meta.class),
       playerLevel: this.level,
-      startingOwners: this.startingOwners
+      startingOwners: this.startingOwners,
+      actReached: act
     })
     this.acqCache = { key, value }
     return value
+  }
+
+  /** The furthest act this character has reached, or null when we don't know
+   *  yet. Read fresh rather than cached: it moves at most nine times in a run. */
+  private actReached(): number | null {
+    if (!this.character) return null
+    return store.get('actReached')[this.character] ?? null
+  }
+
+  /**
+   * Record reaching an act. Persisted per character and monotonic on purpose:
+   * campaign progress doesn't go backwards, and portalling to Act 1's town must
+   * not hide the Act 5 shopping list. Returns true when it moved.
+   */
+  private noteAct(act: number | null): boolean {
+    if (act == null || !this.character) return false
+    const map = store.get('actReached')
+    if ((map[this.character] ?? 0) >= act) return false
+    store.set('actReached', { ...map, [this.character]: act })
+    return true
+  }
+
+  /**
+   * Entering the Twilight Strand means a brand-new character — you cannot go
+   * back to it. Names get reused every league, so without this a fresh Act 1
+   * character would inherit the Act 10 mark of last league's namesake and see
+   * the whole campaign's list again.
+   */
+  private restartAct(): boolean {
+    if (!this.character) return false
+    const map = store.get('actReached')
+    if (map[this.character] === 1) return false
+    store.set('actReached', { ...map, [this.character]: 1 })
+    return true
   }
 
   /** Page the viewed gem stage (◀/▶). Pins a manual view until it lands back on

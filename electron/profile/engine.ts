@@ -166,6 +166,10 @@ export interface AcquisitionContext {
   playerLevel?: number | null
   /** Normalized gem -> classes that start with it, for the mule hint. */
   startingOwners?: ReadonlyMap<string, string[]>
+  /** The furthest campaign act this character has reached. Entries from beyond
+   *  it are dropped from the plan: at level 2 in Act 1, an Act 4 quest choice is
+   *  not a preview, it is six hours of noise. null = unknown, show everything. */
+  actReached?: number | null
 }
 
 /**
@@ -182,7 +186,7 @@ export function acquisitionsForStage(
   gems?: GemData,
   ctx: AcquisitionContext = {}
 ): Acquisitions {
-  const { startingGems, playerLevel, startingOwners } = ctx
+  const { startingGems, playerLevel, startingOwners, actReached } = ctx
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
   // How many copies this stage needs: the same gem in two different links means
@@ -240,7 +244,8 @@ export function acquisitionsForStage(
   const plan = buildPlan(
     buildRewardGroups(rewards.filter(isNewThisStage), upcoming),
     purchases.filter(isNewThisStage),
-    playerLevel
+    playerLevel,
+    actReached
   )
   return { rewards, purchases, other, upcoming, rewardGroups, plan }
 }
@@ -254,7 +259,8 @@ export function acquisitionsForStage(
 function buildPlan(
   rewardGroups: RewardGroup[],
   purchases: AcquisitionEntry[],
-  playerLevel?: number | null
+  playerLevel?: number | null,
+  actReached?: number | null
 ): AcquisitionItem[] {
   const minReq = (entries: AcquisitionEntry[]): number | undefined => {
     const levels = entries.map((e) => e.requiredLevel).filter((l): l is number => l != null)
@@ -263,9 +269,21 @@ function buildPlan(
   type Raw = ({ kind: 'reward'; group: RewardGroup } | { kind: 'buy'; entry: AcquisitionEntry }) & {
     req?: number
   }
+  // Acts you haven't reached are dropped, not dimmed. The list is a to-do list,
+  // and an Act 4 quest choice at level 2 is not something you can do — it was
+  // six greyed-out boxes between you and the two gems you can actually pick up.
+  // Anything whose source names no act stays: we can't place it, so we can't
+  // rule it out either. Unknown progress likewise shows everything — never
+  // blank the list because a signal is missing.
+  const reachable = (act: number | undefined): boolean =>
+    actReached == null || act == null || act <= actReached
   const raw: Raw[] = [
-    ...rewardGroups.map((group): Raw => ({ kind: 'reward', group, req: minReq(group.gems) })),
-    ...purchases.map((entry): Raw => ({ kind: 'buy', entry, req: entry.requiredLevel }))
+    ...rewardGroups
+      .filter((group) => reachable(group.act))
+      .map((group): Raw => ({ kind: 'reward', group, req: minReq(group.gems) })),
+    ...purchases
+      .filter((entry) => reachable(entry.act))
+      .map((entry): Raw => ({ kind: 'buy', entry, req: entry.requiredLevel }))
   ]
   // Muling comes first, whatever act the gem's vendor sits in. You roll the alt,
   // stash its two starting gems and delete it before you take a step on the real

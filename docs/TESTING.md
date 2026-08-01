@@ -87,6 +87,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - A mulable gem reads `Mule` in turquoise with the class to roll on the
      right, in both the list and the links, and sits at the **top** of the list.
    - A quest reward reads `Reward`, and one your build needs twice `Reward +1`.
+   - On a **fresh character in Act 1** the list holds Act 1 only. Act 2's quest
+     choices must appear when you reach Act 2 and not before — and portalling
+     back to Act 1's town must not make them disappear again. Rolling a new
+     character with a name you used last league starts the count over rather
+     than inheriting that character's act.
    - Ascend a character: the "wrong profile loaded?" banner must **not** appear
      for an Elementalist on a Witch build. It should still appear for a genuinely
      different base class.

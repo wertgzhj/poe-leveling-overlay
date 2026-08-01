@@ -221,7 +221,10 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
 - A quest that offers several of your gems is one **pick**, so it gets its own box
   reading `PICK ONE, BUY REST` with the price of the ones you don't take.
 - Gems you'll want later are dimmed and marked `— for later (lvl 32+)`, ordered by
-  when you actually need them.
+  when you actually need them. A quest choice from an act you **haven't reached** is
+  left out entirely rather than dimmed — at level 2 in Act 1, an Act 4 quest is not a
+  preview. It appears when you get there. Before the overlay has seen a zone it shows
+  everything, and entering the Twilight Strand starts the count over.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
   gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`,
   filled from the Path of Exile Wiki. **Easiest way to (re)fill it:** repo → Actions →

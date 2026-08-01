@@ -934,3 +934,56 @@ test('every ascendancy belongs to exactly one class', () => {
   // ambiguous and the base-class branch would silently win.
   for (const cls of CLASSES) assert.equal(seen.has(cls), false, `${cls} is also an ascendancy`)
 })
+
+test('the plan drops acts you have not reached, and only those', () => {
+  const quest = (act: number, q: string): GemSourceInfo => ({
+    kind: 'quest',
+    act,
+    quest: q,
+    classes: ['Witch']
+  })
+  const gems = new GemData({
+    // Act 1, wanted now.
+    'Flame Wall': { attr: 'int', requiredLevel: 1, sources: [quest(1, 'Breaking Some Eggs')] },
+    // Act 1, but a later stage needs it — the "take it now, the quest won't come
+    // back" case. Must survive: you can act on it today.
+    Contagion: { attr: 'int', requiredLevel: 28, sources: [quest(1, 'Breaking Some Eggs')] },
+    // Act 3 and Act 4: hours away at level 2.
+    Bane: { attr: 'int', requiredLevel: 28, sources: [quest(3, 'Lost in Love')] },
+    Decay: { attr: 'int', requiredLevel: 28, sources: [quest(4, 'The Eternal Nightmare')] },
+    // An Act 2 vendor buy, likewise out of reach.
+    'Herald of Ice': { attr: 'int', requiredLevel: 16, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] },
+    Placeless: { attr: 'int', requiredLevel: 30 }
+  })
+  const names = ['Flame Wall', 'Contagion', 'Bane', 'Decay', 'Herald of Ice', 'Placeless']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'reach', class: 'Witch' },
+      stages: [
+        // Wanted now: an Act 1 reward, an Act 2 buy, and a buy with no act.
+        { range: [1, 27], socketGroups: [{ gems: ['Flame Wall', 'Herald of Ice', 'Placeless'] }] },
+        // Wanted later: quest rewards from Acts 1, 3 and 4. Only rewards reach
+        // the current stage's plan ("take it now, the quest won't come back").
+        { range: [28, 90], socketGroups: [{ gems: names }] }
+      ],
+      gemPlan: names.map((gem) =>
+        // An authored vendor source that names no act: we can't place it, so we
+        // can't rule it out either. It has to survive every filter.
+        gem === 'Placeless' ? { gem, source: { kind: 'vendor', npc: 'Someone' } } : { gem }
+      )
+    })
+  ).profile!
+
+  const gemsIn = (actReached: number | null): string[] =>
+    acquisitionsForStage(profile, 0, gems, { playerLevel: 2, actReached })
+      .plan.flatMap((it) => (it.kind === 'reward' ? it.group.gems.map((g) => g.gem) : [it.entry.gem]))
+      .sort()
+
+  // Level 2, still in Act 1: everything beyond Act 1 goes, including the Act 2
+  // buy — but the Act 1 group keeps its for-later gem, and the placeless one stays.
+  assert.deepEqual(gemsIn(1), ['Contagion', 'Flame Wall', 'Placeless'])
+  // Reaching Act 3 brings its quest along, Act 4 still waits.
+  assert.deepEqual(gemsIn(3), ['Bane', 'Contagion', 'Flame Wall', 'Herald of Ice', 'Placeless'])
+  // Unknown progress hides nothing — never blank the list on a missing signal.
+  assert.deepEqual(gemsIn(null), ['Bane', 'Contagion', 'Decay', 'Flame Wall', 'Herald of Ice', 'Placeless'])
+})
