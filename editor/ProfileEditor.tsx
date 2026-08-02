@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
+  BANDITS,
   CLASSES,
+  PANTHEON_MAJOR,
+  PANTHEON_MINOR,
+  optional,
   ascendancyFor,
   ascendancyOptions,
   blankStage,
@@ -22,6 +26,9 @@ function toDraft(p: ProfileFileBridge | null): ProfileDraft {
       name: p.meta.name,
       class: p.meta.class as CharClass,
       ascendancy: p.meta.ascendancy,
+      bandit: p.meta.bandit,
+      pantheonMajor: p.meta.pantheon?.major,
+      pantheonMinor: p.meta.pantheon?.minor,
       character: p.meta.character,
       pobSource: p.meta.pobSource
     },
@@ -113,6 +120,32 @@ export function ProfileEditor({
             labelFor={(v) => v || '— none —'}
             onChange={(v) => edit({ ...draft, meta: { ...draft.meta, ascendancy: v || undefined } })}
             className="w-40"
+          />
+        </Labeled>
+        <Labeled label="Bandits">
+          <Select
+            value={draft.meta.bandit ?? ''}
+            options={optional(BANDITS)}
+            labelFor={(v) => (v === '' ? '— none —' : v === 'Kill all' ? 'Kill all three' : `Help ${v}`)}
+            onChange={(v) => edit({ ...draft, meta: { ...draft.meta, bandit: v || undefined } })}
+          />
+        </Labeled>
+        <Labeled label="Pantheon (major)">
+          <Select
+            value={draft.meta.pantheonMajor ?? ''}
+            options={optional(PANTHEON_MAJOR)}
+            labelFor={(v) => v || '— none —'}
+            onChange={(v) => edit({ ...draft, meta: { ...draft.meta, pantheonMajor: v || undefined } })}
+            className="w-52"
+          />
+        </Labeled>
+        <Labeled label="Pantheon (minor)">
+          <Select
+            value={draft.meta.pantheonMinor ?? ''}
+            options={optional(PANTHEON_MINOR)}
+            labelFor={(v) => v || '— none —'}
+            onChange={(v) => edit({ ...draft, meta: { ...draft.meta, pantheonMinor: v || undefined } })}
+            className="w-52"
           />
         </Labeled>
         <div className="ml-auto flex items-center gap-2">

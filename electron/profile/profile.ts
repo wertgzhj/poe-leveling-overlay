@@ -75,6 +75,41 @@ export interface GemPlanEntry {
   source?: GemSource
 }
 
+/**
+ * The two one-shot build decisions the campaign asks you for, and the reason
+ * they live in the profile rather than in the app: which one is right depends
+ * entirely on the build, and getting it wrong is permanent for that character.
+ *
+ * Names only, no stat summaries. Those change between patches, and a reminder
+ * that quotes a stale number is worse than one that doesn't quote any: what you
+ * need at the moment is which of them you decided on, not what it grants.
+ */
+export const BANDITS = ['Alira', 'Kraityn', 'Oak', 'Kill all'] as const
+export type Bandit = (typeof BANDITS)[number]
+
+export const PANTHEON_MAJOR = [
+  'Soul of the Brine King',
+  'Soul of Lunaris',
+  'Soul of Solaris',
+  'Soul of Arakaali'
+] as const
+
+export const PANTHEON_MINOR = [
+  'Soul of Abberath',
+  'Soul of Garukhan',
+  'Soul of Gruthkul',
+  'Soul of Ralakesh',
+  'Soul of Ryslatha',
+  'Soul of Shakari',
+  'Soul of Tukohama',
+  'Soul of Yugul'
+] as const
+
+export interface Pantheon {
+  major?: (typeof PANTHEON_MAJOR)[number]
+  minor?: (typeof PANTHEON_MINOR)[number]
+}
+
 export interface ProfileMeta {
   name: string
   class: CharClass
@@ -82,6 +117,10 @@ export interface ProfileMeta {
   /** Optional in-game character this profile belongs to. */
   character?: string
   pobSource?: string
+  /** Act 2's "Deal with the Bandits" — the overlay reminds you when you get there. */
+  bandit?: Bandit
+  /** Chosen from Sin once the Pantheon opens up in Act 5. */
+  pantheon?: Pantheon
 }
 
 export interface Profile {
@@ -139,8 +178,39 @@ function validateMeta(raw: unknown, errors: string[]): ProfileMeta | null {
     class: cls as CharClass,
     ascendancy: str(m['ascendancy']),
     character: str(m['character']),
-    pobSource: str(m['pobSource'])
+    pobSource: str(m['pobSource']),
+    bandit: oneOf(m['bandit'], BANDITS, 'meta.bandit', errors),
+    pantheon: validatePantheon(m['pantheon'], errors)
   }
+}
+
+/** A misspelled bandit is a silent no-op otherwise — the reminder just never
+ *  fires — so it's reported the way a bad class is. */
+function oneOf<T extends string>(
+  raw: unknown,
+  allowed: readonly T[],
+  field: string,
+  errors: string[]
+): T | undefined {
+  const value = str(raw)
+  if (value === undefined) return undefined
+  if (!allowed.includes(value as T)) {
+    errors.push(`${field} must be one of ${allowed.join(', ')}`)
+    return undefined
+  }
+  return value as T
+}
+
+function validatePantheon(raw: unknown, errors: string[]): Pantheon | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (typeof raw !== 'object' || Array.isArray(raw)) {
+    errors.push('meta.pantheon must be an object with "major" and/or "minor"')
+    return undefined
+  }
+  const p = raw as Record<string, unknown>
+  const major = oneOf(p['major'], PANTHEON_MAJOR, 'meta.pantheon.major', errors)
+  const minor = oneOf(p['minor'], PANTHEON_MINOR, 'meta.pantheon.minor', errors)
+  return major || minor ? { major, minor } : undefined
 }
 
 function validateStages(raw: unknown, errors: string[]): Stage[] | null {

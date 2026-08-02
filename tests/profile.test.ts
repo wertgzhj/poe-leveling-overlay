@@ -1139,3 +1139,35 @@ test('the vendor named is the one who has them all, not the first', () => {
   assert.equal(group.buyRest?.npc, 'Clarissa')
   assert.equal(group.buyRest?.act, 3)
 })
+
+test('the one-shot build decisions validate against their real option lists', () => {
+  const base = {
+    stages: [{ range: [1, 90], socketGroups: [{ gems: ['Fireball'] }] }],
+    gemPlan: [{ gem: 'Fireball' }]
+  }
+  const meta = (extra: object): string =>
+    JSON.stringify({ ...base, meta: { name: 'x', class: 'Witch', ...extra } })
+
+  const ok = parseProfile(
+    meta({ bandit: 'Alira', pantheon: { major: 'Soul of Lunaris', minor: 'Soul of Shakari' } })
+  )
+  assert.deepEqual(ok.errors, [])
+  assert.equal(ok.profile?.meta.bandit, 'Alira')
+  assert.equal(ok.profile?.meta.pantheon?.major, 'Soul of Lunaris')
+
+  // "Kill all" is a decision too, not the absence of one.
+  assert.equal(parseProfile(meta({ bandit: 'Kill all' })).profile?.meta.bandit, 'Kill all')
+  // Saying nothing is fine — the app has no opinion, so no reminder.
+  assert.equal(parseProfile(meta({})).profile?.meta.bandit, undefined)
+  assert.equal(parseProfile(meta({})).profile?.meta.pantheon, undefined)
+
+  // A typo would otherwise be a reminder that silently never fires.
+  assert.ok(parseProfile(meta({ bandit: 'Alria' })).errors.some((e) => e.includes('meta.bandit')))
+  assert.ok(
+    parseProfile(meta({ pantheon: { major: 'Soul of Lunaris', minor: 'Soul of Lunaris' } })).errors.some(
+      (e) => e.includes('meta.pantheon.minor')
+    ),
+    'a major soul is not a minor one'
+  )
+  assert.ok(parseProfile(meta({ pantheon: 'Lunaris' })).errors.some((e) => e.includes('meta.pantheon')))
+})

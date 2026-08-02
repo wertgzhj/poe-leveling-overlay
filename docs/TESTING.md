@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 170 tests: parser, tracker, watcher, guide, profile,
+npm test        # 174 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough
 npm run typecheck
 npm run build
@@ -105,7 +105,13 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - Ascend a character: the "wrong profile loaded?" banner must **not** appear
      for an Elementalist on a Witch build. It should still appear for a genuinely
      different base class.
-7. **Trials.** Entering a trial zone shows an amber "Trial of Ascendancy in this
+7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a violet
+   bar naming your choice; with `meta.pantheon` set, **Act 5** does the same. The
+   bar outranks the Labyrinth and trial notices — those come round again, the
+   bandits do not. ✕ dismisses it for that character, including after a restart.
+   A profile that names neither must show nothing at all. Importing a PoB build
+   should fill the bandit in by itself (PoB's `None` means "kill all three").
+8. **Trials.** Entering a trial zone shows an amber "Trial of Ascendancy in this
    zone" hint on every tab. Finishing the trial auto-checks it — Izaro voices a
    plaque line only on completion, and the zone identifies which trial it was.
    Confirm the **right** one is ticked, especially in **Act 7's Chamber of Sins
@@ -113,15 +119,17 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    When the last trial of a Labyrinth is checked, the same bar switches to
    "**Normal Labyrinth unlocked**". Dismiss it with ✕ and it must stay gone —
    including after a restart — while a later Labyrinth still announces itself.
-8. **Editor.** Tray → *Edit routes & profile…* opens a normal window. Add or edit
+9. **Editor.** Tray → *Edit routes & profile…* opens a normal window. Add or edit
    a step, save, and the Guide tab reflects it without a restart. Same for the
    profile and the Gems tab. **Ascendancy** is a dropdown that offers only the
    chosen class's three — switch the class and a pick that no longer fits must
-   clear itself rather than leave a Witch Slayer. **Share routes…** exports all
+   clear itself rather than leave a Witch Slayer. **Bandits** and the two
+   **Pantheon** fields are dropdowns too; leaving them at "— none —" must write
+   no key at all rather than an empty object. **Share routes…** exports all
    ten acts into the box (and onto the clipboard); pasting one back and pressing
    Import should write the acts in the file, reload the overlay, and leave your
    other acts alone.
-9. **Auto-update** (installed build only). Needs a published Release newer than
+10. **Auto-update** (installed build only). Needs a published Release newer than
    the installed version. Launch an older build: within ~10s Settings → Updates
    shows it downloading, then the overlay offers *Restart & update*; one click
    reinstalls silently and reopens on the new version. The bottom-right version

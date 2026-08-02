@@ -223,6 +223,14 @@ interface ProfileMetaBridge {
   ascendancy?: string
   character?: string
   pobSource?: string
+  bandit?: string
+  pantheon?: { major?: string; minor?: string }
+}
+
+interface ChoiceDueBridge {
+  id: 'bandit' | 'pantheon'
+  wants: string
+  options: string[]
 }
 
 interface ProfileSnapshotBridge {
@@ -237,6 +245,7 @@ interface ProfileSnapshotBridge {
   stageCount: number
   viewedIndex: number
   liveIndex: number
+  choiceDue: ChoiceDueBridge | null
 }
 
 interface PobImportResponseBridge {
@@ -348,6 +357,7 @@ interface OverlayBridge {
   onProfileState(cb: (snap: ProfileSnapshotBridge) => void): () => void
   stageStep(delta: number): void
   stageToLive(): void
+  dismissChoice(id: string): void
   pickProfile(): Promise<string | null>
   importPob(input: string): Promise<PobImportResponseBridge>
   getTrials(): Promise<TrialsSnapshotBridge>

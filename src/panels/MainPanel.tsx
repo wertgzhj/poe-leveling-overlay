@@ -366,12 +366,44 @@ function Tab({
   )
 }
 
-// The trials notice bar, shown on every tab. Two things can claim it, and a
-// finished Labyrinth outranks a trial you're standing in: the trial will still
-// be there in a minute, whereas "you can run the Labyrinth now" is the thing
-// you'd otherwise miss for an hour. Only one bar, so it never stacks.
+// The notice bar, shown on every tab. Three things can claim it, ranked by how
+// costly missing one is: a one-shot build decision (permanent), then a finished
+// Labyrinth (an hour of not knowing), then a trial you're standing in (it comes
+// round again). Only one bar, so it never stacks.
 function TrialHint(): React.JSX.Element | null {
-  const trials = useOverlayStore((s) => s.trials)
+  const { trials, choice } = useOverlayStore(
+    useShallow((s) => ({ trials: s.trials, choice: s.profile?.choiceDue ?? null }))
+  )
+
+  // A bandit or pantheon choice outranks both. It is one-shot and permanent for
+  // the character — miss the bandits and that's it — whereas a Labyrinth waits
+  // and a trial zone comes round again.
+  if (choice) {
+    return (
+      <div className="flex items-center gap-2 border-b border-violet-400/40 bg-violet-400/10 px-3 py-1.5">
+        <span className="text-violet-300">◆</span>
+        <span
+          className="min-w-0 flex-1 truncate text-[11px] text-violet-200"
+          title={
+            choice.id === 'bandit'
+              ? `Act 2, "Deal with the Bandits" — your profile says ${choice.wants}. The alternatives: ${choice.options.join(', ')}. It cannot be changed afterwards.`
+              : `Act 5 — the Pantheon opens up at Sin. Your profile wants ${choice.wants}. This one you can change later.`
+          }
+        >
+          {choice.id === 'bandit' ? 'Bandits: ' : 'Pantheon: '}
+          {choice.wants}
+        </span>
+        <button
+          className="shrink-0 text-overlay-muted hover:text-overlay-text"
+          title="Done — don't remind me again on this character"
+          onClick={() => window.overlay?.dismissChoice(choice.id)}
+        >
+          ✕
+        </button>
+      </div>
+    )
+  }
+
   const unlocked = trials?.unlockedLabs?.[0]
   if (unlocked) {
     return (

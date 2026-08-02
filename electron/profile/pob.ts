@@ -12,7 +12,8 @@ import {
   type Stage,
   type SocketGroup,
   type GemPlanEntry,
-  type CharClass
+  type CharClass,
+  type Bandit
 } from './profile.ts'
 
 export interface PobImportResult {
@@ -100,6 +101,7 @@ export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImpor
       name: opts.name?.trim() || `${ascend && ascend !== 'None' ? ascend : className} (imported)`,
       class: className as CharClass,
       ascendancy: ascend && ascend !== 'None' ? ascend : undefined,
+      bandit: banditFromPob(attr(build, 'bandit')),
       pobSource: 'pob-import'
     },
     stages,
@@ -251,6 +253,15 @@ export function parseStageTitle(title: string | undefined): [number, number] | n
 function attr(obj: Record<string, unknown> | undefined, name: string): string | undefined {
   const v = obj?.[`@_${name}`]
   return typeof v === 'string' ? v : typeof v === 'number' ? String(v) : undefined
+}
+
+/** PoB records the bandit choice on the Build element. "None" there means you
+ *  killed all three for the two passive points, which is a decision, not an
+ *  absent one — anything else unrecognised is left unset rather than guessed. */
+function banditFromPob(raw: string | undefined): Bandit | undefined {
+  if (!raw) return undefined
+  if (raw === 'None') return 'Kill all'
+  return raw === 'Alira' || raw === 'Kraityn' || raw === 'Oak' ? raw : undefined
 }
 
 function intAttr(obj: Record<string, unknown> | undefined, name: string): number | undefined {
