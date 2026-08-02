@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 150 tests: parser, tracker, watcher, guide, profile,
+npm test        # 170 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough
 npm run typecheck
 npm run build
@@ -94,6 +94,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      than inheriting that character's act.
    - Buys are headed by their stop (`A1 · NESSA`). The same vendor heading twice
      is correct — their stock grows per quest, so that's two visits.
+   - A `PICK ONE, BUY REST` box names where to buy the ones you don't take —
+     e.g. Act 2's *Intruders in Black* (Herald of Ice / Herald of Thunder /
+     Cold Snap) should point at **A2 · Yeena**, who stocks all three.
    - **Siosa is the one to watch.** Entering Act 3 must *not* bring his stock in;
      walking into **The Library** must. He is the earliest source for around 195
      gems, so the difference is a screenful. On a non-English client the zone
