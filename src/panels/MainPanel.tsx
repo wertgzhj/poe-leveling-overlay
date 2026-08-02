@@ -50,6 +50,25 @@ const COST_SHORT: Record<string, string> = {
   Alchemy: 'Alch'
 }
 
+// What the data calls a source, and what you'd rather read. The wiki names the
+// quest; what you need is where you stand or who you fight.
+const SOURCE_ALIAS: Record<string, string> = {
+  // Siosa never comes up in conversation — "the Library" is the trip you make,
+  // and the trip is what unlocks his stock (see LIBRARY_VENDOR in gems.ts).
+  Siosa: 'Library',
+  // You clear this one by killing Gravicius, and enough builds skip him that
+  // the name of the fight beats the name of the quest.
+  'Sever the Right Hand': 'Gravicius'
+}
+
+/** Sources that get their own colour, so they don't read as ordinary shopping —
+ *  the same reason muling is turquoise. */
+const SOURCE_TONE: Record<string, string> = { Library: 'text-violet-300' }
+
+function sourceName(what: string): string {
+  return SOURCE_ALIAS[what] ?? what
+}
+
 // One hue, rising intensity: the pricier the gem, the brighter the gold. A ramp
 // rather than a palette — "this one actually costs something" reads at a glance
 // without having to learn five colours, and the word carries the meaning anyway.
@@ -727,11 +746,20 @@ function SourceCell({
   title?: string
   later?: boolean
 }): React.JSX.Element {
-  const text = [act ? `A${act}` : null, what].filter(Boolean).join(' · ')
+  const named = sourceName(what)
+  const text = [act ? `A${act}` : null, named].filter(Boolean).join(' · ')
   return (
     <span
-      title={title ?? text + (approx ? ' — general vendor, may show up earlier as a quest reward' : '')}
-      className={'truncate text-[10px] ' + (tone ?? 'text-overlay-muted') + (later ? ' opacity-50' : '')}
+      title={
+        title ??
+        (named === what ? text : `${text} (${what})`) +
+          (approx ? ' — general vendor, may show up earlier as a quest reward' : '')
+      }
+      className={
+        'truncate text-[10px] ' +
+        (tone ?? SOURCE_TONE[named] ?? 'text-overlay-muted') +
+        (later ? ' opacity-50' : '')
+      }
     >
       {text}
       {approx && ' ≈'}
@@ -816,6 +844,27 @@ function RewardGroupRow({
           </span>
         </div>
       ))}
+      {/* Where "buy rest" actually happens. Every gem in here is filed as a
+          quest reward — a quest is its earliest source — so none of them ever
+          reached the shopping list, and the instruction had no address. */}
+      {rest && (rest.npc || rest.partial) && (
+        <div className="col-span-2 col-start-2 text-[10px] text-overlay-muted">
+          ↳ the rest:{' '}
+          {rest.npc ? (
+            <span className={SOURCE_TONE[sourceName(rest.npc)] ?? 'text-overlay-text'}>
+              {[rest.act ? `A${rest.act}` : null, sourceName(rest.npc)].filter(Boolean).join(' · ')}
+            </span>
+          ) : (
+            <span title="No vendor we know of stocks them — a drop or a trade">nobody sells them</span>
+          )}
+          {rest.npc && rest.partial && (
+            <span title="At least one of these isn't sold by any vendor in the gem data">
+              {' '}
+              · not all of them
+            </span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -926,19 +975,20 @@ function sourceMark(
   if (e.bucket === 'reward') {
     const quest = e.quest ?? 'quest'
     return {
-      label: [act, quest].filter(Boolean).join(' · '),
+      label: [act, sourceName(quest)].filter(Boolean).join(' · '),
       title: `Free quest reward${inAct}: ${quest}`,
       tone: muted
     }
   }
   if (e.bucket === 'purchase') {
     const npc = e.npc ?? 'vendor'
+    const named = sourceName(npc)
     return {
-      label: [act, npc].filter(Boolean).join(' · '),
+      label: [act, named].filter(Boolean).join(' · '),
       title:
         `Buy from ${npc}${inAct}${e.cost ? ` · ${e.cost}` : ''}` +
         (e.fallback ? ' — general vendor, may show up earlier as a quest reward' : ''),
-      tone: muted
+      tone: SOURCE_TONE[named] ?? muted
     }
   }
   const note = e.note ?? 'drop/trade'
@@ -1129,11 +1179,18 @@ function GemBody(): React.JSX.Element {
                   {stop && stop.key !== prevStop?.key && (
                     <div
                       className={
-                        'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-overlay-muted/70' +
+                        'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider ' +
+                        (stop.npc
+                          ? (SOURCE_TONE[sourceName(stop.npc)] ?? 'text-overlay-muted/70')
+                          : 'text-overlay-muted/70') +
                         (item.later ? ' opacity-50' : '')
                       }
                     >
-                      {stop.label}
+                      {stop.npc
+                        ? [stop.act ? `A${stop.act}` : null, sourceName(stop.npc)]
+                            .filter(Boolean)
+                            .join(' · ')
+                        : stop.label}
                     </div>
                   )}
                   {item.kind === 'reward' ? (

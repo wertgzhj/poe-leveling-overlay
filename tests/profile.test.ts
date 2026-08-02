@@ -547,9 +547,16 @@ test('a pick-one group prices the copies the quest does not give you', () => {
   const byQuest = new Map(groups.map((g) => [g.quest, g]))
 
   // Four gems, one free: three buys at the shared tier.
-  assert.deepEqual(byQuest.get('Breaking the Seal')?.buyRest, { count: 3, cost: 'Alchemy' })
+  const seal = byQuest.get('Breaking the Seal')?.buyRest
+  assert.equal(seal?.count, 3)
+  assert.equal(seal?.cost, 'Alchemy')
+  // This fixture lists no vendor stock at all, so the dataset can't answer
+  // "who sells it" — and the documented fallback is the broad vendor.
+  assert.equal(seal?.npc, 'Siosa')
   // Mixed tiers: you take the dearest free, so what is left is the cheap one.
-  assert.deepEqual(byQuest.get('Mercy Mission')?.buyRest, { count: 1, cost: 'Wisdom' })
+  const mercy = byQuest.get('Mercy Mission')?.buyRest
+  assert.equal(mercy?.count, 1)
+  assert.equal(mercy?.cost, 'Wisdom')
 })
 
 test('a pick-one group counts copies, not gems', () => {
@@ -580,7 +587,8 @@ test('a pick-one group counts copies, not gems', () => {
   ).profile!
   const g = acquisitionsForStage(profile, 0, gems).rewardGroups[0]
   assert.equal(g.pickOne, true)
-  assert.deepEqual(g.buyRest, { count: 2, cost: 'Alteration' })
+  assert.equal(g.buyRest?.count, 2)
+  assert.equal(g.buyRest?.cost, 'Alteration')
 })
 
 test('purchases sort by cost tier, then act, then name', () => {
@@ -1064,9 +1072,70 @@ test('purchases carry the shopping stop they belong to', () => {
   assert.equal(stops.get('Later')?.label, 'A1 · Nessa')
   // Same label, different key: two visits to the same vendor, one block each.
   assert.notEqual(stops.get('Early')?.key, stops.get('Later')?.key)
-  // The Library is named, because getting there is the trip.
-  assert.equal(stops.get('Librarian')?.label, 'A3 · Siosa · Library')
+  // The engine stays data-faithful and hands the NPC over separately; renaming
+  // Siosa to "Library" is the renderer's job, so it can colour it too.
+  assert.equal(stops.get('Librarian')?.label, 'A3 · Siosa')
+  assert.equal(stops.get('Librarian')?.npc, 'Siosa')
+  assert.equal(stops.get('Librarian')?.act, 3)
   // A quest reward is not a stop you stand at.
   const gift = plan.find((it) => it.kind === 'reward')
   assert.ok(gift && !('stop' in gift && gift.stop))
+})
+
+test('a "buy the rest" says where, on the real gem data', () => {
+  // The reported case: Intruders in Black offers Herald of Ice, Herald of
+  // Thunder and Cold Snap, so two of the three have to be bought — and the
+  // overlay never said where, because a gem whose earliest source is a quest
+  // is filed as a reward and never reaches the shopping list at all.
+  const gems = exampleGems()
+  const names = ['Herald of Ice', 'Herald of Thunder', 'Cold Snap']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'heralds', class: 'Witch' },
+      stages: [{ range: [1, 90], socketGroups: [{ gems: names }] }],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const group = acquisitionsForStage(profile, 0, gems).rewardGroups.find(
+    (g) => g.quest === 'Intruders in Black'
+  )
+  assert.ok(group?.pickOne, 'one quest, three of your gems -> a choice')
+  assert.equal(group.buyRest?.count, 2)
+  // All three are on Yeena's Act 2 shelf, so that's the address.
+  assert.equal(group.buyRest?.npc, 'Yeena')
+  assert.equal(group.buyRest?.act, 2)
+  assert.equal(group.buyRest?.partial, undefined, 'she stocks all of them')
+})
+
+test('the vendor named is the one who has them all, not the first', () => {
+  const gems = new GemData({
+    Soon: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] },
+        { kind: 'vendor', act: 1, npc: 'Nessa' }
+      ]
+    },
+    // Same quest, but nobody sells this one until Act 3 — naming Nessa would
+    // send you shopping for something she doesn't have.
+    Late: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] },
+        { kind: 'vendor', act: 3, npc: 'Clarissa' }
+      ]
+    }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'latest', class: 'Witch' },
+      stages: [{ range: [1, 90], socketGroups: [{ gems: ['Soon', 'Late'] }] }],
+      gemPlan: [{ gem: 'Soon' }, { gem: 'Late' }]
+    })
+  ).profile!
+  const group = acquisitionsForStage(profile, 0, gems).rewardGroups[0]
+  assert.equal(group.buyRest?.npc, 'Clarissa')
+  assert.equal(group.buyRest?.act, 3)
 })

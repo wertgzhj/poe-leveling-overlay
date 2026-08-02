@@ -193,12 +193,19 @@ interface RewardGroupBridge {
   act?: number
   pickOne: boolean
   gems: AcquisitionEntryBridge[]
-  buyRest?: { count: number; cost?: string }
+  buyRest?: { count: number; cost?: string; act?: number; npc?: string; partial?: boolean }
+}
+
+interface ShoppingStopBridge {
+  key: string
+  label: string
+  act?: number
+  npc?: string
 }
 
 type AcquisitionItemBridge = (
   | { kind: 'reward'; group: RewardGroupBridge }
-  | { kind: 'buy'; entry: AcquisitionEntryBridge; stop?: { key: string; label: string } }
+  | { kind: 'buy'; entry: AcquisitionEntryBridge; stop?: ShoppingStopBridge }
 ) & { later: boolean; atLevel?: number }
 
 interface AcquisitionsBridge {

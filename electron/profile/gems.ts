@@ -253,6 +253,19 @@ export class GemData {
     if (this.info(gem)?.attr) return BROAD_VENDORS[0]
     return null
   }
+
+  /**
+   * The earliest vendor who sells this gem — regardless of whether a quest hands
+   * it over sooner. A quest reward is ONE pick, so for every other gem in that
+   * choice the vendor is the actual answer, and `earliestSource` hides it behind
+   * the quest. Null when nobody sells it and the dataset is authoritative.
+   */
+  earliestVendor(gem: string, cls?: CharClass | null): GemSourceInfo | null {
+    const vendors = this.sourcesFor(gem, cls).filter((s) => s.kind === 'vendor')
+    if (vendors.length > 0) return [...vendors].sort((a, b) => a.act - b.act)[0]
+    if (this.hasBroadVendorData) return null
+    return this.info(gem)?.attr ? BROAD_VENDORS[0] : null
+  }
 }
 
 function rank(kind: GemSourceInfo['kind']): number {

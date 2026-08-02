@@ -10,7 +10,8 @@ import {
   safeLevelRange,
   normalizeGemName,
   needsLibrary,
-  type ColoredGem
+  type ColoredGem,
+  type GemSourceInfo
 } from './gems.ts'
 
 export interface ColoredSocketGroup {
@@ -80,9 +81,26 @@ export interface RewardGroup {
   /** several gems from the same quest reward — the player must choose one. */
   pickOne: boolean
   gems: AcquisitionEntry[]
-  /** the copies you DON'T get free, and what the dearest of them costs. Only
-   *  set on a pickOne group — see buyRest(). */
-  buyRest?: { count: number; cost?: string }
+  /** the copies you DON'T get free, what the dearest of them costs, and where
+   *  you can buy them. Only set on a pickOne group — see buyRest(). */
+  buyRest?: {
+    count: number
+    cost?: string
+    /** the vendor by whom all of them are available. */
+    act?: number
+    npc?: string
+    /** at least one of them isn't sold by any vendor we know of. */
+    partial?: boolean
+  }
+}
+
+/** A shopping trip a purchase belongs to. `label` is the fallback text; `npc`
+ *  lets the renderer name it its own way. */
+export interface ShoppingStop {
+  key: string
+  label: string
+  act?: number
+  npc?: string
 }
 
 /** A single line in the acquisition to-do list — either a quest-reward group
@@ -90,7 +108,7 @@ export interface RewardGroup {
  *  single vendor purchase. */
 export type AcquisitionItem = (
   | { kind: 'reward'; group: RewardGroup }
-  | { kind: 'buy'; entry: AcquisitionEntry; stop?: { key: string; label: string } }
+  | { kind: 'buy'; entry: AcquisitionEntry; stop?: ShoppingStop }
 ) & {
   /** true when the gem is more than the XP safe-range above your level — show it
    *  dimmed as "coming up" rather than as an act-now item. */
@@ -242,11 +260,11 @@ export function acquisitionsForStage(
 
   const upcoming = upcomingRewards(profile, stageIndex, used, planByGem, gems, startingGems, startingOwners)
   upcoming.sort(acquisitionOrder)
-  const rewardGroups = buildRewardGroups(rewards, upcoming)
+  const rewardGroups = buildRewardGroups(rewards, upcoming, gems, profile.meta.class)
   // Only the to-do plan is deduped against the previous stage; rewardGroups and
   // the reward/purchase lists (which drive the link-overview tags) stay full.
   const plan = buildPlan(
-    buildRewardGroups(rewards.filter(isNewThisStage), upcoming),
+    buildRewardGroups(rewards.filter(isNewThisStage), upcoming, gems, profile.meta.class),
     purchases.filter(isNewThisStage),
     playerLevel,
     actReached,
@@ -341,7 +359,7 @@ function buildPlan(
  * same NPC legitimately heads more than one block. That's not a duplicate label:
  * it is two visits, which is what actually happens.
  */
-function shoppingStop(entry: AcquisitionEntry): { key: string; label: string } | undefined {
+function shoppingStop(entry: AcquisitionEntry): ShoppingStop | undefined {
   if (entry.mule?.length) return { key: 'mule', label: 'Roll a mule first' }
   if (entry.bucket !== 'purchase' || !entry.npc) return undefined
   const where = entry.act ? `A${entry.act} · ${entry.npc}` : entry.npc
@@ -349,7 +367,11 @@ function shoppingStop(entry: AcquisitionEntry): { key: string; label: string } |
     // The unlock quest is part of the key, not the label: it splits the visits
     // apart without spending a line on a quest name nobody needs to read here.
     key: `${where}|${entry.quest ?? ''}`,
-    label: needsLibrary(entry.npc) ? `${where} · Library` : where
+    label: where,
+    // Handed over separately so the renderer can rename the vendor (Siosa reads
+    // as "Library" — it's the trip, not the man) without parsing the label back.
+    act: entry.act,
+    npc: entry.npc
   }
 }
 
@@ -366,7 +388,12 @@ function acquisitionOrder(a: AcquisitionEntry, b: AcquisitionEntry): number {
 /** Group reward + upcoming gems by the quest that offers them. A quest reward
  *  is ONE pick in game, so a group with several of your gems is a choice —
  *  take one, buy the rest. Singleton groups are plain "take it". */
-function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEntry[]): RewardGroup[] {
+function buildRewardGroups(
+  rewards: AcquisitionEntry[],
+  upcoming: AcquisitionEntry[],
+  gemData?: GemData,
+  cls?: CharClass
+): RewardGroup[] {
   const byQuest = new Map<string, AcquisitionEntry[]>()
   const order: string[] = []
   for (const e of [...rewards, ...upcoming]) {
@@ -391,7 +418,7 @@ function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEnt
       act: gems[0].act,
       pickOne: gems.length > 1,
       gems,
-      buyRest: gems.length > 1 ? buyRest(gems) : undefined
+      buyRest: gems.length > 1 ? buyRest(gems, gemData, cls) : undefined
     }
   })
   // Choices first (they need a decision), then by act, then quest name.
@@ -416,7 +443,11 @@ function buildRewardGroups(rewards: AcquisitionEntry[], upcoming: AcquisitionEnt
  * would take; the price quoted is the dearest of what's left, so the number is
  * never an underestimate of a single purchase.
  */
-function buyRest(gems: AcquisitionEntry[]): { count: number; cost?: string } | undefined {
+function buyRest(
+  gems: AcquisitionEntry[],
+  gemData?: GemData,
+  cls?: CharClass
+): RewardGroup['buyRest'] {
   const copies = gems.reduce((n, g) => n + (g.count ?? 1), 0)
   if (copies < 2) return undefined
   // Cheapest first, so dropping the last one drops the free pick.
@@ -424,7 +455,31 @@ function buyRest(gems: AcquisitionEntry[]): { count: number; cost?: string } | u
     .flatMap((g) => Array<string | undefined>((g.count ?? 1)).fill(vendorCostFor(g.requiredLevel)))
     .sort((a, b) => costRank(a) - costRank(b))
   tiers.pop()
-  return { count: copies - 1, cost: tiers[tiers.length - 1] }
+
+  // Where you actually buy them. Every gem here is filed as a quest reward,
+  // because a quest is its earliest source — so nothing ever put it on the
+  // shopping list, and "buy the rest" was an instruction with no address. The
+  // answer is the point by which a vendor sells ALL of them: the latest of
+  // their earliest vendors, since anything sooner leaves one behind.
+  let at: GemSourceInfo | null = null
+  let missing = false
+  for (const g of gems) {
+    const vendor = gemData?.earliestVendor(g.gem, cls) ?? null
+    if (!vendor) {
+      missing = true
+      continue
+    }
+    if (!at || vendor.act > at.act) at = vendor
+  }
+  return {
+    count: copies - 1,
+    cost: tiers[tiers.length - 1],
+    act: at?.act,
+    npc: at?.npc,
+    // One of them isn't sold anywhere we know of — say so rather than let the
+    // named vendor imply he stocks the lot.
+    partial: missing || undefined
+  }
 }
 
 /** A group's place in its act = the earliest rank among its gems. */
