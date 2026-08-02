@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 174 tests: parser, tracker, watcher, guide, profile,
+npm test        # 176 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough
 npm run typecheck
 npm run build
@@ -97,6 +97,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - A `PICK ONE, BUY REST` box names where to buy the ones you don't take —
      e.g. Act 2's *Intruders in Black* (Herald of Ice / Herald of Thunder /
      Cold Snap) should point at **A2 · Yeena**, who stocks all three.
+   - And once that stage rolls over, those gems must **still be on the list**,
+     now as buys marked `(if not picked)`. The quest gave you one of them; the
+     overlay can't see which, so it can't quietly assume they're all handled.
+     A gem from a quest that offered only *one* of your gems must NOT come back
+     that way — you took it, it's done.
    - **Siosa is the one to watch.** Entering Act 3 must *not* bring his stock in;
      walking into **The Library** must. He is the earliest source for around 195
      gems, so the difference is a screenful. On a non-English client the zone

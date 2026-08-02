@@ -1171,3 +1171,68 @@ test('the one-shot build decisions validate against their real option lists', ()
   )
   assert.ok(parseProfile(meta({ pantheon: 'Lunaris' })).errors.some((e) => e.includes('meta.pantheon')))
 })
+
+test('a gem you lost a quest choice on stays on the list as a buy', () => {
+  // The reported case, on the real data. Cold Snap comes from Intruders in
+  // Black, which offers several of this build's gems — so at most one of them
+  // was free. Deduping against the previous stage assumed the whole group was
+  // settled there, and every loser dropped out of the list for good.
+  const gems = exampleGems()
+  const names = ['Cold Snap', 'Herald of Ice', 'Herald of Thunder']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'carry', class: 'Witch' },
+      // The same links in both stages: nothing was acquired in between.
+      stages: [
+        { range: [1, 27], socketGroups: [{ gems: names }] },
+        { range: [28, 90], socketGroups: [{ gems: names }] }
+      ],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+
+  // Stage 0: one quest, three of your gems -> a choice, not three buys.
+  const first = acquisitionsForStage(profile, 0, gems, { playerLevel: 20, actReached: 2 })
+  const group = first.plan.find((it) => it.kind === 'reward')
+  assert.ok(group?.kind === 'reward' && group.group.pickOne)
+  assert.equal(first.plan.some((it) => it.kind === 'buy'), false, 'nothing to buy yet — you pick first')
+
+  // Stage 1: the quest is behind you and gave you exactly one. The other two
+  // are purchases now, at the vendor who stocks them.
+  const later = acquisitionsForStage(profile, 1, gems, { playerLevel: 32, actReached: 3 })
+  const buys = later.plan.flatMap((it) => (it.kind === 'buy' ? [it.entry] : []))
+  assert.deepEqual(buys.map((e) => e.gem).sort(), ['Cold Snap', 'Herald of Ice', 'Herald of Thunder'])
+  for (const e of buys) {
+    assert.equal(e.bucket, 'purchase')
+    assert.equal(e.npc, 'Yeena')
+    assert.equal(e.fromPickOne, true, 'the row has to admit you may already own it')
+    assert.ok(e.cost, 'a purchase without a price is not a shopping list entry')
+  }
+})
+
+test('an ordinary reward is still assumed handled by the stage that offered it', () => {
+  // The carry-forward must not turn every reward into a permanent buy — only
+  // the ones that competed for a single pick.
+  const gems = new GemData({
+    Solo: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] },
+        { kind: 'vendor', act: 1, npc: 'Nessa' }
+      ]
+    }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'solo', class: 'Witch' },
+      stages: [
+        { range: [1, 27], socketGroups: [{ gems: ['Solo'] }] },
+        { range: [28, 90], socketGroups: [{ gems: ['Solo'] }] }
+      ],
+      gemPlan: [{ gem: 'Solo' }]
+    })
+  ).profile!
+  const later = acquisitionsForStage(profile, 1, gems, { playerLevel: 32, actReached: 3 })
+  assert.deepEqual(later.plan, [], 'one quest, one gem — you took it, it is done')
+})

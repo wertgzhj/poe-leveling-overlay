@@ -54,6 +54,9 @@ export interface AcquisitionEntry {
   /** the gem's socket colour, so the to-do list can show the same pip the link
    *  rows do. Absent only when gems.json failed to load. */
   colored?: ColoredGem
+  /** a purchase only because a quest choice went the other way — you may
+   *  already own it. Listed anyway: nothing in the log says which you picked. */
+  fromPickOne?: boolean
 }
 
 export interface Acquisitions {
@@ -261,11 +264,30 @@ export function acquisitionsForStage(
   const upcoming = upcomingRewards(profile, stageIndex, used, planByGem, gems, startingGems, startingOwners)
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming, gems, profile.meta.class)
+
+  // Deduping against the previous stage assumes you dealt with it there. That
+  // holds for a lone reward or a plain buy — and NOT for a gem from a quest that
+  // offered several of yours: the quest hands over exactly one, so the rest are
+  // still purchases, and nothing in a log tells us which you took. Dropping them
+  // silently is why Cold Snap and Controlled Destruction vanished from the list
+  // the moment their stage rolled over, never to be mentioned again.
+  //
+  // So they carry forward as buys instead, with the vendor who has them.
+  const pickOne = new Set(
+    rewardGroups
+      .filter((g) => g.pickOne)
+      .flatMap((g) => g.gems.map((e) => e.gem.toLowerCase()))
+  )
+  const stillOwed = rewards
+    .filter((e) => !isNewThisStage(e) && pickOne.has(e.gem.toLowerCase()))
+    .map((e) => asPurchase(e, gems, profile.meta.class))
+    .filter((e): e is AcquisitionEntry => e !== null)
+
   // Only the to-do plan is deduped against the previous stage; rewardGroups and
   // the reward/purchase lists (which drive the link-overview tags) stay full.
   const plan = buildPlan(
     buildRewardGroups(rewards.filter(isNewThisStage), upcoming, gems, profile.meta.class),
-    purchases.filter(isNewThisStage),
+    [...purchases.filter(isNewThisStage), ...stillOwed],
     playerLevel,
     actReached,
     reachedLibrary
@@ -372,6 +394,35 @@ function shoppingStop(entry: AcquisitionEntry): ShoppingStop | undefined {
     // as "Library" — it's the trip, not the man) without parsing the label back.
     act: entry.act,
     npc: entry.npc
+  }
+}
+
+/**
+ * Re-file a quest reward as the purchase it has become. Used for the losers of
+ * a "pick one": the quest is behind you and gave you one gem, so the others are
+ * shopping now. Null when no vendor sells it — then there is nothing useful to
+ * say, and inventing a shop would be worse than staying quiet.
+ */
+function asPurchase(
+  e: AcquisitionEntry,
+  gems?: GemData,
+  cls?: CharClass
+): AcquisitionEntry | null {
+  const vendor = gems?.earliestVendor(e.gem, cls)
+  if (!vendor) return null
+  return {
+    ...e,
+    bucket: 'purchase',
+    act: vendor.act,
+    npc: vendor.npc,
+    quest: vendor.quest,
+    note: undefined,
+    fallback: vendor.fallback,
+    cost: vendorCostFor(e.requiredLevel),
+    questRank: gems?.questRank(vendor.act, vendor.quest),
+    // You may well have picked this one. The row has to say so, or it reads as
+    // "go buy this" for a gem already in your inventory.
+    fromPickOne: true
   }
 }
 

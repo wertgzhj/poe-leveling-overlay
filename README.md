@@ -229,7 +229,9 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
 - A quest that offers several of your gems is one **pick**, so it gets its own box
   reading `PICK ONE, BUY REST` — with the price of the ones you don't take **and the
   vendor who has them all**. Those gems are quest rewards, so nothing else on the tab
-  would ever have told you where to buy them.
+  would ever have told you where to buy them. Once you've moved on they reappear as
+  ordinary buys marked `(if not picked)`: the quest handed over exactly one, and the
+  overlay can't see your inventory, so it lists them rather than assuming.
 - Gems you'll want later are dimmed and marked `— for later (lvl 32+)`, ordered by
   when you actually need them. A quest choice from an act you **haven't reached** is
   left out entirely rather than dimmed — at level 2 in Act 1, an Act 4 quest is not a
