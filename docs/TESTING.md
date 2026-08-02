@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 176 tests: parser, tracker, watcher, guide, profile,
+npm test        # 180 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough
 npm run typecheck
 npm run build
@@ -102,6 +102,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      overlay can't see which, so it can't quietly assume they're all handled.
      A gem from a quest that offered only *one* of your gems must NOT come back
      that way — you took it, it's done.
+   - `A3 · Library` is violet and `A3 · Gravicius` rose, in the shopping rows,
+     the stop headings **and** the link rows below — a rename that only colours
+     in one of the three is the failure mode here.
    - **Siosa is the one to watch.** Entering Act 3 must *not* bring his stock in;
      walking into **The Library** must. He is the earliest source for around 195
      gems, so the difference is a screenful. On a non-English client the zone

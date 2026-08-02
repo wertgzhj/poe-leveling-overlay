@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
+import { sourceMark, sourceName, sourceTone } from '../lib/sources'
 import { UpdateBanner } from './UpdateBanner'
 import { VersionBadge } from './VersionBadge'
 
@@ -48,30 +49,6 @@ const COST_SHORT: Record<string, string> = {
   Alteration: 'Alt',
   Chance: 'Chance',
   Alchemy: 'Alch'
-}
-
-// What the data calls a source, and what you'd rather read. The wiki names the
-// quest; what you need is where you stand or who you fight.
-const SOURCE_ALIAS: Record<string, string> = {
-  // Siosa never comes up in conversation — "the Library" is the trip you make,
-  // and the trip is what unlocks his stock (see LIBRARY_VENDOR in gems.ts).
-  Siosa: 'Library',
-  // You clear this one by killing Gravicius, and enough builds skip him that
-  // the name of the fight beats the name of the quest.
-  'Sever the Right Hand': 'Gravicius'
-}
-
-/** Sources that get their own colour, so they don't read as ordinary shopping —
- *  the same reason muling is turquoise. The Library is a trip you have to make;
- *  Gravicius is a fight you have to win, and plenty of routes skip him, so both
- *  are worth spotting before you walk past them. */
-const SOURCE_TONE: Record<string, string> = {
-  Library: 'text-violet-300',
-  Gravicius: 'text-rose-300'
-}
-
-function sourceName(what: string): string {
-  return SOURCE_ALIAS[what] ?? what
 }
 
 // One hue, rising intensity: the pricier the gem, the brighter the gold. A ramp
@@ -794,7 +771,7 @@ function SourceCell({
       }
       className={
         'truncate text-[10px] ' +
-        (tone ?? SOURCE_TONE[named] ?? 'text-overlay-muted') +
+        (tone ?? sourceTone(named)) +
         (later ? ' opacity-50' : '')
       }
     >
@@ -888,7 +865,7 @@ function RewardGroupRow({
         <div className="col-span-2 col-start-2 text-[10px] text-overlay-muted">
           ↳ the rest:{' '}
           {rest.npc ? (
-            <span className={SOURCE_TONE[sourceName(rest.npc)] ?? 'text-overlay-text'}>
+            <span className={sourceTone(sourceName(rest.npc))}>
               {[rest.act ? `A${rest.act}` : null, sourceName(rest.npc)].filter(Boolean).join(' · ')}
             </span>
           ) : (
@@ -993,56 +970,6 @@ function BuyRow({
   )
 }
 
-/**
- * Short "where it comes from" tag for a gem line (sources visible right at the
- * links, not only in the lists). Same shape as the acquisition list's source
- * column — "A<N> · where" — so both share one left edge and one width.
- *
- * The full story (quest name in full, price, note) lives in the tooltip. In the
- * row itself it was a third variable-width thing competing for the tightest
- * cell on screen, and it is the reason the right-hand side used to jump between
- * "✓ start" and "🎁 A1 Enemy at the Gate".
- */
-function sourceMark(
-  e: AcquisitionEntryBridge | undefined
-): { label: string; title: string; tone: string } | null {
-  if (!e) return null
-  const muted = 'text-overlay-muted'
-  if (e.starting)
-    return { label: '✓ start', title: 'You start with this gem', tone: 'text-emerald-400/90' }
-  const act = e.act ? `A${e.act}` : null
-  const inAct = e.act ? ` in Act ${e.act}` : ''
-  // Muling wins over the vendor even here: quoting Siosa's price next to a gem
-  // an alt hands you for nothing is the one thing the links should not do.
-  if (e.mule?.length) {
-    return {
-      label: `Mule · ${e.mule.join('/')}`,
-      title: `Roll a level-1 ${e.mule.join(' or ')}, stash its starting gems, delete it. Otherwise ${e.npc ?? 'a vendor'}${inAct} sells it${e.cost ? ` for ${e.cost}` : ''}.`,
-      tone: 'text-sky-300/90'
-    }
-  }
-  if (e.bucket === 'reward') {
-    const quest = e.quest ?? 'quest'
-    return {
-      label: [act, sourceName(quest)].filter(Boolean).join(' · '),
-      title: `Free quest reward${inAct}: ${quest}`,
-      tone: muted
-    }
-  }
-  if (e.bucket === 'purchase') {
-    const npc = e.npc ?? 'vendor'
-    const named = sourceName(npc)
-    return {
-      label: [act, named].filter(Boolean).join(' · '),
-      title:
-        `Buy from ${npc}${inAct}${e.cost ? ` · ${e.cost}` : ''}` +
-        (e.fallback ? ' — general vendor, may show up earlier as a quest reward' : ''),
-      tone: SOURCE_TONE[named] ?? muted
-    }
-  }
-  const note = e.note ?? 'drop/trade'
-  return { label: note, title: note, tone: muted }
-}
 
 // The build's links, on the tab's shared columns. The pip and the gem take the
 // first two together — a link row has no price, and giving up the whole cost
@@ -1230,7 +1157,7 @@ function GemBody(): React.JSX.Element {
                       className={
                         'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider ' +
                         (stop.npc
-                          ? (SOURCE_TONE[sourceName(stop.npc)] ?? 'text-overlay-muted/70')
+                          ? sourceTone(sourceName(stop.npc))
                           : 'text-overlay-muted/70') +
                         (item.later ? ' opacity-50' : '')
                       }
