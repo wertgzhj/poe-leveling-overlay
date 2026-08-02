@@ -67,6 +67,8 @@ export const Channels = {
   profileStageStep: 'profile:stage-step',
   /** renderer -> main: drop the manual gem-stage view, resume auto-follow. */
   profileStageLive: 'profile:stage-live',
+  /** renderer -> main: acknowledge a build-decision reminder (bandit/pantheon) */
+  profileDismissChoice: 'profile:dismiss-choice',
   /** renderer -> main (invoke): import a PoB code/link into an active profile */
   pobImport: 'pob:import',
   /** renderer -> main: open the editor window */
@@ -186,6 +188,18 @@ export interface ProfileSnapshot {
   /** Index of the stage the tracked level maps to, -1 if none. When it differs
    *  from viewedIndex you're looking at a manually-paged stage, not the live one. */
   liveIndex: number
+  /** a bandit/pantheon reminder that is due and not yet acknowledged. */
+  choiceDue: ChoiceDue | null
+}
+
+/** A one-shot build decision the profile names and you've now reached the point
+ *  for. Shown once in the notice bar, then dismissed for good. */
+export interface ChoiceDue {
+  id: 'bandit' | 'pantheon'
+  /** what the profile decided, already phrased for the bar. */
+  wants: string
+  /** the alternatives, for the tooltip — you're choosing, so they matter. */
+  options: string[]
 }
 
 export interface PobImportResponse {

@@ -187,7 +187,15 @@ yourself for now.
 - Point **Settings → Build profile** at your file (or edit the bundled
   `data/profiles/example.json`); it **hot-reloads on save** with validation shown in
   the panel. Leave the setting empty to use the example.
-- `meta` sets `name` + `class` (one of the seven classes). `stages` list `range`
+- `meta` sets `name` + `class` (one of the seven classes). It can also record the
+  two **one-shot decisions** the campaign asks for — `bandit` (`Alira` / `Kraityn` /
+  `Oak` / `Kill all`) and `pantheon` (`major` / `minor`, e.g. `Soul of Lunaris`). Both
+  are optional; when set, the overlay reminds you at the point you reach them (Act 2
+  and Act 5) and you dismiss it with ✕. Which one is right depends entirely on the
+  build and the bandits can't be changed afterwards, so the choice lives in your
+  profile — the app has no opinion, and it deliberately quotes **no stats**, because
+  those change between patches and a stale number is worse than none. A PoB import
+  brings the bandit choice across on its own. `stages` list `range`
   (`[minLevel, maxLevel]`) and `socketGroups` (each a link of gem names) — the active
   stage switches automatically as you level. `gemPlan` records where each gem comes
   from (`questReward` / `vendor` / `drop`), which feeds the reward + buy hints.

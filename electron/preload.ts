@@ -54,6 +54,7 @@ const api = {
     subscribe(Channels.profileState, cb),
   stageStep: (delta: number): void => ipcRenderer.send(Channels.profileStageStep, delta),
   stageToLive: (): void => ipcRenderer.send(Channels.profileStageLive),
+  dismissChoice: (id: string): void => ipcRenderer.send(Channels.profileDismissChoice, id),
   pickProfile: (): Promise<string | null> => ipcRenderer.invoke(Channels.dialogPickProfile),
   importPob: (input: string): Promise<PobImportResponse> =>
     ipcRenderer.invoke(Channels.pobImport, input),

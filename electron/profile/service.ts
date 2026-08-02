@@ -13,7 +13,7 @@
 import { app } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
-import { parseProfile, baseClassOf, type Profile } from './profile.ts'
+import { parseProfile, baseClassOf, BANDITS, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, LIBRARY_ZONE, type GemInfo } from './gems.ts'
 import {
   activeStageIndex,
@@ -25,10 +25,14 @@ import {
 } from './engine.ts'
 import { store } from '../settings.ts'
 import { TWILIGHT_STRAND_ID } from '../log/tracker.ts'
-import { Channels, type ProfileSnapshot } from '../channels.ts'
+import { Channels, type ChoiceDue, type ProfileSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
 import type { LogService } from '../log/service.ts'
 import startingGemsJson from '../../data/starting-gems.json'
+
+/** Act 2 asks you to deal with the bandits; the Pantheon opens up in Act 5. */
+const BANDIT_ACT = 2
+const PANTHEON_ACT = 5
 
 export class ProfileService {
   private readonly overlay: OverlayController
@@ -183,7 +187,8 @@ export class ProfileService {
       acquisitions: profile ? this.acquisitions(profile, stageIndex) : null,
       stageCount: profile ? profile.stages.length : 0,
       viewedIndex: stageIndex,
-      liveIndex
+      liveIndex,
+      choiceDue: this.choiceDue()
     }
   }
 
@@ -245,6 +250,49 @@ export class ProfileService {
     if (map[this.character] === 1 && !changed) return false
     store.set('actReached', { ...map, [this.character]: 1 })
     return true
+  }
+
+  /**
+   * A build decision the profile named and you've now reached the point for.
+   * Both are one-shot and permanent for the character, which is exactly why a
+   * reminder is worth a bar: forgetting the bandits costs you the choice for
+   * good. A profile that says nothing gets no notice — the app has no opinion
+   * on which is right, that's the whole reason the field exists.
+   */
+  private choiceDue(): ChoiceDue | null {
+    const meta = this.profile?.meta
+    const act = this.actReached()
+    if (!meta || act == null) return null
+    const done = new Set(this.character ? (store.get('dismissedChoices')[this.character] ?? []) : [])
+
+    // Bandits first: Act 2 comes first, and once you're past it the pantheon is
+    // the only one left to nag about. Only one bar, so only one claim.
+    if (meta.bandit && act >= BANDIT_ACT && !done.has('bandit')) {
+      return {
+        id: 'bandit',
+        wants: meta.bandit === 'Kill all' ? 'kill all three' : `help ${meta.bandit}`,
+        options: BANDITS.map((b) => (b === 'Kill all' ? 'kill all three' : `help ${b}`))
+      }
+    }
+    const pantheon = meta.pantheon
+    if (pantheon && act >= PANTHEON_ACT && !done.has('pantheon')) {
+      return {
+        id: 'pantheon',
+        wants: [pantheon.major, pantheon.minor].filter(Boolean).join(' + '),
+        options: []
+      }
+    }
+    return null
+  }
+
+  /** Acknowledge a reminder. One-shot decisions, so it never comes back. */
+  dismissChoice(id: string): void {
+    if (!this.character || (id !== 'bandit' && id !== 'pantheon')) return
+    const map = store.get('dismissedChoices')
+    const done = map[this.character] ?? []
+    if (done.includes(id)) return
+    store.set('dismissedChoices', { ...map, [this.character]: [...done, id] })
+    this.push()
   }
 
   /** Siosa sells more gems than anyone else, and you reach him by walking into

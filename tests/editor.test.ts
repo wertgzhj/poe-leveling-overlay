@@ -11,11 +11,21 @@ import {
   blankStage,
   ascendancyFor,
   ascendancyOptions,
+  serializeProfile,
+  BANDITS as EDITOR_BANDITS,
+  PANTHEON_MAJOR as EDITOR_MAJOR,
+  PANTHEON_MINOR as EDITOR_MINOR,
   ASCENDANCIES as EDITOR_ASCENDANCIES,
   type RouteDraft
 } from '../editor/model.ts'
 import { validateRoute } from '../electron/guide/route.ts'
-import { ASCENDANCIES, CLASSES } from '../electron/profile/profile.ts'
+import {
+  ASCENDANCIES,
+  BANDITS,
+  CLASSES,
+  PANTHEON_MAJOR,
+  PANTHEON_MINOR
+} from '../electron/profile/profile.ts'
 
 test('the editor mirrors the main process ascendancy table exactly', () => {
   // Hand-mirrored across two build graphs, so drift is a matter of when, not if.
@@ -120,4 +130,26 @@ test('blankStage produces a sane, non-overlapping starting range', () => {
   const s = blankStage(12)
   assert.deepEqual(s.range, [12, 22])
   assert.equal(s.socketGroups.length, 1)
+})
+
+test('the editor mirrors the bandit and pantheon lists exactly', () => {
+  // Same drift risk as the ascendancy table: two build graphs, one hand copy.
+  assert.deepEqual(EDITOR_BANDITS, BANDITS)
+  assert.deepEqual(EDITOR_MAJOR, PANTHEON_MAJOR)
+  assert.deepEqual(EDITOR_MINOR, PANTHEON_MINOR)
+})
+
+test('an undecided pantheon is left out of the saved profile entirely', () => {
+  const base = { stages: [], gemPlan: [] }
+  const meta = (extra: object) =>
+    (serializeProfile({ ...base, meta: { name: 'x', class: 'Witch' as const, ...extra } }) as {
+      meta: Record<string, unknown>
+    }).meta
+
+  // An empty pantheon object would read as "decided on nothing".
+  assert.equal('pantheon' in meta({}), false)
+  assert.equal('bandit' in meta({}), false)
+  assert.deepEqual(meta({ pantheonMajor: 'Soul of Lunaris' }).pantheon, { major: 'Soul of Lunaris' })
+  assert.deepEqual(meta({ pantheonMinor: 'Soul of Yugul' }).pantheon, { minor: 'Soul of Yugul' })
+  assert.equal(meta({ bandit: 'Kill all' }).bandit, 'Kill all')
 })

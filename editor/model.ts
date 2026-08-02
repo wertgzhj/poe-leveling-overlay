@@ -52,6 +52,36 @@ export function ascendancyFor(cls: CharClass, current?: string): string | undefi
   return current && ASCENDANCIES[cls].includes(current) ? current : undefined
 }
 
+// Bandit and Pantheon options. Mirrored by hand from electron/profile/profile.ts
+// — the editor and main build graphs are intentionally decoupled (see env.d.ts).
+// Names only: the stats change between patches, and the profile records which
+// one you decided on, not what it grants.
+export const BANDITS = ['Alira', 'Kraityn', 'Oak', 'Kill all'] as const
+export type Bandit = (typeof BANDITS)[number]
+
+export const PANTHEON_MAJOR = [
+  'Soul of the Brine King',
+  'Soul of Lunaris',
+  'Soul of Solaris',
+  'Soul of Arakaali'
+] as const
+
+export const PANTHEON_MINOR = [
+  'Soul of Abberath',
+  'Soul of Garukhan',
+  'Soul of Gruthkul',
+  'Soul of Ralakesh',
+  'Soul of Ryslatha',
+  'Soul of Shakari',
+  'Soul of Tukohama',
+  'Soul of Yugul'
+] as const
+
+/** Options with "" first, for a field that is allowed to stay undecided. */
+export function optional<T extends string>(values: readonly T[]): (T | '')[] {
+  return ['', ...values]
+}
+
 export interface StepDraft {
   id: string
   type: StepType
@@ -86,6 +116,9 @@ export interface ProfileMetaDraft {
   ascendancy?: string
   character?: string
   pobSource?: string
+  bandit?: string
+  pantheonMajor?: string
+  pantheonMinor?: string
 }
 
 export interface GemPlanDraft {
@@ -179,7 +212,18 @@ export function serializeProfile(profile: ProfileDraft): unknown {
       class: profile.meta.class,
       ...(profile.meta.ascendancy?.trim() ? { ascendancy: profile.meta.ascendancy.trim() } : {}),
       ...(profile.meta.character?.trim() ? { character: profile.meta.character.trim() } : {}),
-      ...(profile.meta.pobSource ? { pobSource: profile.meta.pobSource } : {})
+      ...(profile.meta.pobSource ? { pobSource: profile.meta.pobSource } : {}),
+      ...(profile.meta.bandit ? { bandit: profile.meta.bandit } : {}),
+      // Only written when something was chosen — an empty object would read as
+      // "decided on nothing" rather than "not decided".
+      ...(profile.meta.pantheonMajor || profile.meta.pantheonMinor
+        ? {
+            pantheon: {
+              ...(profile.meta.pantheonMajor ? { major: profile.meta.pantheonMajor } : {}),
+              ...(profile.meta.pantheonMinor ? { minor: profile.meta.pantheonMinor } : {})
+            }
+          }
+        : {})
     },
     stages: profile.stages.map((st) => ({
       range: st.range,

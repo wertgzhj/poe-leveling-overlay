@@ -143,3 +143,17 @@ test('a non-PoB document is rejected cleanly', () => {
   assert.ok(importPobXml('<html><body>nope</body></html>').errors.length >= 1)
   assert.ok(importPobXml('<PathOfBuilding><Build className="Sorceress"/></PathOfBuilding>').errors[0].includes('class'))
 })
+
+test('the bandit choice comes across from PoB, including "kill all"', () => {
+  const xml = (bandit: string): string =>
+    `<PathOfBuilding><Build level="90" className="Witch" ascendClassName="Occultist" bandit="${bandit}">
+     </Build><Skills><SkillSet title="Level 1-11"><Skill><Gem nameSpec="Fireball"/></Skill></SkillSet></Skills>
+     </PathOfBuilding>`
+
+  assert.equal(importPobXml(xml('Alira')).profile?.meta.bandit, 'Alira')
+  assert.equal(importPobXml(xml('Oak')).profile?.meta.bandit, 'Oak')
+  // PoB writes "None" for killing all three, which is a choice, not a blank.
+  assert.equal(importPobXml(xml('None')).profile?.meta.bandit, 'Kill all')
+  // Anything we don't recognise is left unset rather than guessed at.
+  assert.equal(importPobXml(xml('Someone Else')).profile?.meta.bandit, undefined)
+})
