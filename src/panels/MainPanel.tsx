@@ -62,8 +62,13 @@ const SOURCE_ALIAS: Record<string, string> = {
 }
 
 /** Sources that get their own colour, so they don't read as ordinary shopping —
- *  the same reason muling is turquoise. */
-const SOURCE_TONE: Record<string, string> = { Library: 'text-violet-300' }
+ *  the same reason muling is turquoise. The Library is a trip you have to make;
+ *  Gravicius is a fight you have to win, and plenty of routes skip him, so both
+ *  are worth spotting before you walk past them. */
+const SOURCE_TONE: Record<string, string> = {
+  Library: 'text-violet-300',
+  Gravicius: 'text-rose-300'
+}
 
 function sourceName(what: string): string {
   return SOURCE_ALIAS[what] ?? what
@@ -930,6 +935,18 @@ function GemCell({
           text is in the tooltip. */}
       <span className="min-w-0 truncate">
         {e.gem}
+        {/* You may already own this one — it lost a quest choice, and nothing
+            in the log says which of them you took. Marked rather than hidden:
+            a gem you still need must not vanish, and one you have shouldn't
+            read as an order to go and buy it. */}
+        {e.fromPickOne && (
+          <span
+            className="ml-1 text-[9px] text-overlay-muted"
+            title="Only if you didn't pick it — it was one of the choices at that quest, and the overlay can't see your inventory."
+          >
+            (if not picked)
+          </span>
+        )}
         {children}
         {comingUpAt != null && !e.fromLevel && (
           <span className="text-overlay-muted"> · lvl {comingUpAt}</span>
