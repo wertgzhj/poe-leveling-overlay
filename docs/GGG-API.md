@@ -222,21 +222,24 @@ be merged to `main` and shipped in a normal release without any user seeing it.
 Long-lived branches rot; dark code doesn't.
 
 **2. A side-by-side beta build.** Same source, different identity — overridden on
-the electron-builder command line rather than duplicated into a second config:
+the electron-builder command line rather than duplicated into a second config.
+See the beta branch of `.github/workflows/build-windows.yml` for the live list.
 
-```
-electron-builder --win \
-  -c.appId=com.poelevelingoverlay.beta \
-  -c.productName="PoE Leveling Overlay Beta" \
-  -c.win.artifactName=PoE-Leveling-Overlay-Beta-${version}-setup.${ext} \
-  -c.portable.artifactName=PoE-Leveling-Overlay-Beta-${version}-portable.exe \
-  -c.nsis.shortcutName="PoE Leveling Overlay Beta"
-```
+The point of it is a **separate userData folder**, so an experimental build
+cannot corrupt the settings and per-character progress of the one you actually
+play with. Getting that right needs three different overrides, and only one of
+them is the obvious one:
 
-A different `appId` means a **different userData folder**, which is the real
-reason to bother: an experimental build cannot corrupt the settings and
-per-character progress of the one you actually play with. The cost is honest —
-the beta starts empty, so `Client.txt` and the profile have to be pointed at once.
+- `appId` separates the **Windows installation**, so the beta installs beside
+  the stable build instead of upgrading over it.
+- `productName` separates what the **installer and shortcut** say.
+- `extraMetadata.name` separates the **userData folder** — and this is the one
+  that matters. Electron derives `userData` from `app.getName()`, which reads
+  the packaged `package.json`, not the appId. Override only the first two and
+  the beta writes its settings straight into the real ones.
+
+The cost is honest: the beta starts empty, so `Client.txt` and the profile have
+to be pointed at once.
 
 Keep the artifact names **hyphenated**. `electron-builder.yml` explains why at
 length: GitHub collapses spaces in asset names differently than electron-updater

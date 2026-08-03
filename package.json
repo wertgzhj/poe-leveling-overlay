@@ -17,7 +17,8 @@
     "sanitize": "node --experimental-strip-types scripts/sanitize-fixtures.ts",
     "import-pob": "node --experimental-strip-types scripts/import-pob.ts",
     "fetch-gems": "node --experimental-strip-types scripts/fetch-gem-data.ts",
-    "package:win": "npm run build && electron-builder --win --config electron-builder.yml"
+    "package:win": "npm run build && electron-builder --win --config electron-builder.yml",
+    "package:win:beta": "npm run build && electron-builder --win --config electron-builder.yml -c.appId=com.poelevelingoverlay.beta -c.productName='PoE Leveling Overlay Beta' -c.extraMetadata.name=poe-leveling-overlay-beta -c.nsis.shortcutName='PoE Leveling Overlay Beta' -c.publish.channel=beta -c.win.artifactName='PoE-Leveling-Overlay-Beta-${version}-setup.${ext}' -c.portable.artifactName='PoE-Leveling-Overlay-Beta-${version}-portable.exe'"
   },
   "dependencies": {
     "electron-store": "^11.0.2",
