@@ -103,14 +103,51 @@ either way (the updater always targets the newest non-prerelease).
   `publish.repo` at a separate public releases repo.
 - **Pre-releases are skipped** by the updater by default — only tick
   "Set as a pre-release" for a beta you _don't_ want auto-shipped to everyone.
+  That box is what keeps the Beta app (below) off everyone else's install, so a
+  `-beta.N` tag published *without* it ships an experiment to every user.
 
-## Optional: a beta channel (for later)
+## The Beta app (a second install, next to the real one)
 
-When you have outside testers, publish a test build as a GitHub **pre-release**
-with a `-beta.N` suffix (e.g. `v0.3.0-beta.1`). Stable installs skip pre-releases
-automatically; only a build configured with `allowPrerelease` picks them up.
-Overkill for a solo dev today — the portable-artifact test above is simpler and
-just as safe.
+For work that spans weeks — the GGG API check is the first
+([`docs/GGG-API.md`](docs/GGG-API.md)) — the throwaway artifact above isn't
+enough: you want to *play* with it while the stable build keeps getting fixes.
+So there's a second app.
+
+**Cut one exactly like a release, with a `-beta.N` suffix and the pre-release box
+ticked:** tag `v0.15.0-beta.1`, **Set as a pre-release ✓**, publish. It installs
+**beside** your stable overlay ("PoE Leveling Overlay Beta" in the Start menu)
+and keeps its own settings and per-character progress, so nothing it does can
+touch the install you actually level with. The flip side: it starts empty —
+point it at `Client.txt` and your profile once.
+
+Three things make that separation work, and it's worth knowing which is which,
+because two of them are cosmetic and one isn't:
+
+| Override | What it separates |
+|---|---|
+| `appId` | the Windows **installation** — beta installs beside, not over |
+| `productName` | what the **installer and shortcut** say |
+| `extraMetadata.name` | the **userData folder** — settings and progress |
+
+The last one is the one that matters. Electron derives `userData` from
+`app.getName()`, which reads the packaged `package.json` — *not* the appId. Set
+only the first two and the beta writes into your real settings.
+
+Updates take care of themselves: electron-updater turns on `allowPrerelease` by
+itself when the running version has a prerelease suffix, so the beta follows
+betas and **stable installs never see them**. Promoting the work is then a normal
+`v0.15.0` release with the box unticked.
+
+Manual runs can build it too — **Actions → Build Windows → Run workflow → Beta
+✓** — for an artifact you can install without publishing anything. Locally it's
+`npm run package:win:beta`, which needs a POSIX-ish shell (Git Bash) on Windows:
+the artifact names contain electron-builder's `${version}` placeholder and cmd
+would mangle it.
+
+> **Unverified until the first beta tag.** Nobody has cut one yet. If the beta's
+> auto-update doesn't find anything, the channel file is the first suspect: a
+> `0.15.0-beta.1` build asks its feed for **`beta.yml`**, so check that the
+> release actually has a `beta.yml` and not just a `latest.yml`.
 
 ## Your content stays yours
 

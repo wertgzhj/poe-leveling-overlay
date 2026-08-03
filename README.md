@@ -39,6 +39,8 @@ Only English game clients are supported today — see [Setup](#setup).
 How it's built and why: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 What's verified and what still needs checking in game:
 [`docs/TESTING.md`](docs/TESTING.md).
+Not built yet — the plan for checking your real sockets against the plan via
+GGG's API: [`docs/GGG-API.md`](docs/GGG-API.md).
 Third-party data attribution: [`NOTICE`](NOTICE).
 Security and the app's network behaviour: [`SECURITY.md`](SECURITY.md).
 
