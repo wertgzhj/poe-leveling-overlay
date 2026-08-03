@@ -32,6 +32,7 @@ export function SettingsPanel(): React.JSX.Element {
     profilePath,
     characterName,
     visibleTabs,
+    experimental,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -42,6 +43,7 @@ export function SettingsPanel(): React.JSX.Element {
       profilePath: s.profilePath,
       characterName: s.characterName,
       visibleTabs: s.visibleTabs,
+      experimental: s.experimental,
       patch: s.patch
     }))
   )
@@ -106,6 +108,11 @@ export function SettingsPanel(): React.JSX.Element {
   const setVisibleTabs = (value: VisibleTabsBridge): void => {
     patch({ visibleTabs: value })
     void window.overlay?.setSettings({ visibleTabs: value })
+  }
+
+  const setExperimental = (value: ExperimentalFlagsBridge): void => {
+    patch({ experimental: value })
+    void window.overlay?.setSettings({ experimental: value })
   }
 
   const commitPath = (value: string): void => {
@@ -376,6 +383,23 @@ export function SettingsPanel(): React.JSX.Element {
               {recording
                 ? 'Press a combo (Esc to cancel). A modifier is recommended so it does not clash with the game.'
                 : 'Click a binding to change it. Conflicts are shown if the combo is already taken.'}
+            </p>
+          </Section>
+
+          <Section title="Experimental">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-overlay-text">Check my real gems</span>
+              <Toggle
+                on={experimental.gggApi}
+                onChange={(v) => setExperimental({ ...experimental, gggApi: v })}
+              />
+            </div>
+            <p className="mt-1.5 text-[10px] text-overlay-muted">
+              Compares the gems actually socketed on your character against your plan, using
+              Path of Exile&apos;s official API. <b className="text-overlay-text">Half-built:</b>{' '}
+              the comparison works, connecting your account does not — Grinding Gear Games has
+              to grant access first, and nothing is sent anywhere until you connect. Switching
+              this on today changes nothing you can see.
             </p>
           </Section>
         </div>

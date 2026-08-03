@@ -6,8 +6,9 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 180 tests: parser, tracker, watcher, guide, profile,
-                # PoB import, trials, editor ops, gem data, mouse passthrough
+npm test        # 206 tests: parser, tracker, watcher, guide, profile,
+                # PoB import, trials, editor ops, gem data, mouse passthrough,
+                # the GGG plan-vs-socketed diff
 npm run typecheck
 npm run build
 ```
@@ -137,13 +138,37 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    ten acts into the box (and onto the clipboard); pasting one back and pressing
    Import should write the acts in the file, reload the overlay, and leave your
    other acts alone.
-10. **Auto-update** (installed build only). Needs a published Release newer than
+10. **Experimental flags.** Settings ends with an **Experimental** section.
+   *Check my real gems* is off by default and, switched on, must change
+   **nothing you can see** — the connection to GGG doesn't exist yet
+   ([`GGG-API.md`](GGG-API.md)), and a flag that is off has to mean invisible
+   rather than merely disabled. Toggle it, reopen the overlay, and confirm it
+   remembered — and that the Gems tab looks identical either way.
+11. **Auto-update** (installed build only). Needs a published Release newer than
    the installed version. Launch an older build: within ~10s Settings → Updates
    shows it downloading, then the overlay offers *Restart & update*; one click
    reinstalls silently and reopens on the new version. The bottom-right version
    badge tracks the same flow and is clickable once ready. Dev and unpackaged
    runs report updates as *disabled*; an unreachable feed reports *Couldn't
    check* and never nags.
+
+## The Beta app
+
+Never cut yet — the first `v*-beta.N` tag is the test
+([`../CONTRIBUTING.md`](../CONTRIBUTING.md#the-beta-app-a-second-install-next-to-the-real-one)).
+Four things have to hold, and the ones that don't will not announce themselves:
+
+1. It installs **beside** the stable overlay, not over it — both in the Start
+   menu, both launchable.
+2. Its settings are **its own**. Launch it and it should ask for the
+   `Client.txt` path as if new; set a different profile in it and the stable
+   build must still have yours. That's `extraMetadata.name`, and it is the one
+   that silently doesn't work if you only override `appId` and `productName`.
+3. The stable build **never offers the beta as an update**, even while a newer
+   `-beta.N` release exists. This is the one that reaches other people if it's
+   wrong.
+4. The beta **does** update to a newer beta. If it doesn't, look for `beta.yml`
+   on the release — a `0.15.0-beta.1` build asks for that, not `latest.yml`.
 
 ## Known limitations
 
