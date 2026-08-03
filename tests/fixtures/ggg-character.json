@@ -1,0 +1,60 @@
+{
+  "_fixture": "HAND-AUTHORED, not a capture. Nothing in this repo has met GGG's live API yet (see docs/GGG-API.md): the shape below is what the documentation led us to expect, so these tests prove the parser's LOGIC and not its agreement with the endpoint. Replace this file with a sanitized real response as soon as an OAuth client exists, and expect the parser to need changes when you do.",
+  "name": "FixtureCharacter",
+  "class": "Witch",
+  "level": 34,
+  "league": "Standard",
+  "equipment": [
+    {
+      "inventoryId": "BodyArmour",
+      "sockets": [{ "group": 0 }, { "group": 0 }, { "group": 0 }, { "group": 1 }],
+      "socketedItems": [
+        {
+          "socket": 0,
+          "typeLine": "Freezing Pulse",
+          "properties": [
+            { "name": "Level", "values": [["12", 0]] },
+            { "name": "Quality", "values": [["+8%", 1]] }
+          ]
+        },
+        {
+          "socket": 1,
+          "typeLine": "Added Cold Damage Support",
+          "properties": [{ "name": "Level", "values": [["11", 0]] }]
+        },
+        { "socket": 2, "typeLine": "Inspiration Support" },
+        { "socket": 3, "typeLine": "Herald of Ice" }
+      ]
+    },
+    {
+      "inventoryId": "Weapon",
+      "sockets": [{ "group": 0 }, { "group": 0 }, { "group": 0 }],
+      "socketedItems": [
+        { "socket": 0, "typeLine": "Vaal Storm Call" },
+        {
+          "socket": 1,
+          "typeLine": "Arcane Surge Support",
+          "properties": [{ "name": "Level", "values": [["20 (Max)", 0]] }]
+        },
+        { "socket": 2, "typeLine": "Cobalt Jewel" }
+      ]
+    },
+    {
+      "inventoryId": "Helm",
+      "sockets": [{ "group": 0 }, { "group": 0 }],
+      "socketedItems": [
+        { "socket": 0, "typeLine": "Frostbite" },
+        { "socket": 1, "typeLine": "Clarity" }
+      ]
+    },
+    {
+      "inventoryId": "Gloves",
+      "sockets": [{ "group": 0 }, { "group": 0 }],
+      "socketedItems": [
+        { "socket": 0, "typeLine": "Frost Bomb" },
+        { "socket": 1, "typeLine": "Ghastly Eye Jewel", "abyssJewel": true },
+        { "socket": 5, "typeLine": "Orb of Storms" }
+      ]
+    }
+  ]
+}
