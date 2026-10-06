@@ -140,9 +140,10 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    other acts alone.
 10. **Experimental flags.** Settings ends with an **Experimental** section.
    *Check my real gems* is off by default and, switched on, must change
-   **nothing you can see** — the connection to GGG doesn't exist yet
-   ([`GGG-API.md`](GGG-API.md)), and a flag that is off has to mean invisible
-   rather than merely disabled. Toggle it, reopen the overlay, and confirm it
+   **nothing you can see** — the connection to GGG doesn't exist and isn't
+   coming soon ([`GGG-API.md`](GGG-API.md): they're not taking new API
+   applications), and a flag that is off has to mean invisible rather than
+   merely disabled. Toggle it, reopen the overlay, and confirm it
    remembered — and that the Gems tab looks identical either way.
 11. **Auto-update** (installed build only). Needs a published Release newer than
    the installed version. Launch an older build: within ~10s Settings → Updates

@@ -82,8 +82,32 @@ requests) and **no polling** — refresh on an event or a click, never on a time
 
 ## Registering with GGG
 
-Registration is a request by email to **oauth@grindinggear.com** — confirm the
-address on the authorization docs page before sending, it's the page that governs.
+> **Blocked, as of October 2026: GGG is not taking new OAuth applications.**
+>
+> That makes steps 4–6 below indefinite rather than merely slow. It does not
+> make the rest of this document stale, and it does not strand any of the work
+> that is already merged — the order was chosen for exactly this case, and steps
+> 1–3 cost a feature flag that is switched off.
+>
+> There is no second route to the same answer, and it's worth writing down why
+> rather than rediscovering it:
+>
+> - **A `POESESSID` session cookie** against the old endpoints would work today.
+>   It is also the thing this project exists not to do, and the thing that gets
+>   tools into trouble. No.
+> - **Reading the game's memory, or OCR of the inventory screen.** Both break the
+>   guardrails in `README.md` outright. No.
+> - **Asking the player to tick off what they socketed.** Honest, and it defeats
+>   the purpose: the value here is catching the support gem you *didn't notice*
+>   was missing. A checklist needs you to notice first.
+>
+> So the feature waits, and the flag stays off. Re-check the authorization docs
+> page now and then; when it reopens, step 4 is the ten-minute spike and nothing
+> before it needs redoing.
+
+Registration, when it reopens, is a request by email to
+**oauth@grindinggear.com** — confirm the address on the authorization docs page
+before sending, it's the page that governs.
 
 Two things GGG states about these requests, both of which shape how you write it:
 
@@ -258,17 +282,18 @@ Deliberately arranged so that only step 4 waits on GGG.
 
 | # | Step | Blocked by |
 | --- | --- | --- |
-| 0 | Send the registration request | — |
+| 0 | Send the registration request | **GGG (closed)** |
 | 1 | `parse.ts` + `diff.ts` + fixtures + tests, behind the flag | — |
 | 2 | Feature flag, Settings section, the tab's UI states | — |
 | 3 | Beta build overrides + workflow, prerelease channel verified | — |
-| 4 | **Freshness spike** with real credentials — go / no-go | GGG |
-| 5 | `auth.ts`, `tokens.ts`, `client.ts` | GGG |
+| 4 | **Freshness spike** with real credentials — go / no-go | **GGG (closed)** |
+| 5 | `auth.ts`, `tokens.ts`, `client.ts` | **GGG (closed)** |
 | 6 | Wire it up, refresh policy, docs and privacy text | 4, 5 |
 
-Steps 1–3 are real work with real tests and no external dependency. If GGG never
-replies, they cost a feature flag left switched off — and the diff engine is
-still the thing that would have to be right anyway.
+Steps 1–3 are real work with real tests and no external dependency, and they are
+done. With applications closed, that is where this stops: the diff engine is the
+thing that would have to be right whenever the door opens, and it is written and
+tested against everything except the schema.
 
 ## Open decisions
 

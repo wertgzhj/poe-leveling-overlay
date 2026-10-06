@@ -396,10 +396,10 @@ export function SettingsPanel(): React.JSX.Element {
             </div>
             <p className="mt-1.5 text-[10px] text-overlay-muted">
               Compares the gems actually socketed on your character against your plan, using
-              Path of Exile&apos;s official API. <b className="text-overlay-text">Half-built:</b>{' '}
-              the comparison works, connecting your account does not — Grinding Gear Games has
-              to grant access first, and nothing is sent anywhere until you connect. Switching
-              this on today changes nothing you can see.
+              Path of Exile&apos;s official API. <b className="text-overlay-text">On hold:</b>{' '}
+              the comparison works, connecting your account does not — that needs API access
+              from Grinding Gear Games, and they are not taking new applications. Nothing is
+              sent anywhere, and switching this on changes nothing you can see.
             </p>
           </Section>
         </div>
