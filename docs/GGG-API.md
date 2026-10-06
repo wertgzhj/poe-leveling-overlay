@@ -82,7 +82,14 @@ requests) and **no polling** — refresh on an event or a click, never on a time
 
 ## Registering with GGG
 
-> **Blocked, as of October 2026: GGG is not taking new OAuth applications.**
+> **Blocked.** The developer docs' *Registering your Application* section reads,
+> in full:
+>
+> > We are currently unable to process new applications.
+>
+> Read first-hand on 6 October 2026. No reason given and no timeframe, so treat
+> it as indefinite rather than imminent, and re-read the page rather than this
+> paragraph.
 >
 > That makes steps 4–6 below indefinite rather than merely slow. It does not
 > make the rest of this document stale, and it does not strand any of the work
@@ -105,11 +112,19 @@ requests) and **no polling** — refresh on an event or a click, never on a time
 > page now and then; when it reopens, step 4 is the ten-minute spike and nothing
 > before it needs redoing.
 
-Registration, when it reopens, is a request by email to
-**oauth@grindinggear.com** — confirm the address on the authorization docs page
-before sending, it's the page that governs.
+**How you register, when it reopens, is not settled.** The docs point at a
+*Manage applications* link in your account profile, which suggests registering is
+self-serve on the site rather than a mail to a person. Older guidance — and what
+the search engines still surface — says to email **oauth@grindinggear.com**.
+Don't take either from this file: the page is what governs, and it is the first
+thing to re-read when the door opens.
 
-Two things GGG states about these requests, both of which shape how you write it:
+Before that, the docs ask you to have read their sections on OAuth client types,
+grant types and scopes, and to have confirmed the scopes cover what you want.
+That is worth doing properly — unknown 2 above is exactly one of those questions.
+
+Two things attributed to GGG about these requests, both of which shape how you
+ask — **second-hand**, unlike the quote above, so check them on the page too:
 
 - They're **low priority**, especially around a league launch. Plan for weeks,
   and possibly for no answer at all. Nothing below is allowed to block on it.
