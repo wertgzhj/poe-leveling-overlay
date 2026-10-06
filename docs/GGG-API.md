@@ -31,12 +31,15 @@ instead of the Trials tab believing whatever you last ticked.
 Everything else people ask an API for (levelling speed, item value, XP/h) is a
 different product. Not planned.
 
-## Three things we don't know yet
+## Three things we didn't know — one still open
 
-Each of these can change the design; two of them can kill it. None can be settled
-from here — `pathofexile.com/developer/docs` is unreachable from this build
-environment (HTTP 403), so **read the authorization page yourself and correct
-this document** where it's wrong.
+Each of these could change the design and two could have killed it. Two are now
+answered from the docs themselves, read on 6 October 2026. The one that decides
+whether the feature is worth having is still open, and only the game can answer it.
+
+The docs are unreachable from this build environment (HTTP 403), so everything
+quoted here was read by a person and pasted in. Quotes are marked as quotes;
+anything else is inference and should be checked against the page.
 
 ### 1. Freshness — the one that decides everything
 
@@ -51,34 +54,86 @@ logout, on every zone change, or continuously.
   much weaker feature. That's the point to stop and decide whether to build it
   at all rather than ship something that quietly lies about being current.
 
+The docs touch it without settling it. The Introduction says this access is
+
+> almost always a read-only snapshot of data stored on the game servers
+
+which tells you the data is the game's own state rather than something the
+website derives — and says nothing about when that state is written. There is no
+staleness note, no "updated on logout", nothing in the error list for it.
+
 **How we settle it:** with credentials in hand, a throwaway script — log in,
 socket a gem, walk into a new zone, call the endpoint, diff. Ten minutes. It is
-the first thing to do once GGG replies, before any UI exists.
+the first thing to do once registration reopens, before any UI exists.
 
-### 2. Public client or confidential client
+### 2. ~~Public client or confidential client~~ — settled
 
-The overlay is a Windows binary on a user's machine. It **cannot keep a secret**:
-anything compiled into it is readable by anyone who downloads it. The correct
-shape is therefore a **public client with PKCE** and a loopback redirect
-(RFC 8252), which is what native apps are supposed to use.
+**Answered by the docs, 6 October 2026. It was the risk that could have made this
+a different project, and it didn't.**
 
-If GGG only issues confidential clients, the client secret has to live on a
-server we'd have to run — which means hosting, an operator who can see who
-connects and when, and the end of "no server, no account, no telemetry" as a
-plain statement. That's not a small implementation detail; it's a different
-project. **Ask this in the registration request** and take the answer seriously.
+Under *API Policies and Third-Party Requirements*, GGG classify application types.
+Ours is "executable apps that run independently from the game", and of those:
 
-### 3. Rate limits
+> While not encouraged, these are permitted. They must use a **public OAuth
+> client** if interacting with our APIs.
 
-GGG publishes limits in response headers (`X-Rate-Limit-*`, `Retry-After`) and
-expects clients to obey them rather than hardcode a number. So: parse the
-headers, keep the budget in memory, back off on 429, and never fire a request the
-budget doesn't have room for. The refresh cadence is then whatever's left over,
-not whatever feels responsive.
+So a public client isn't merely available, it's **required** for this shape of
+app — which is also what the Developer Guidelines demand from the other side:
 
-Two rules that fall out of that and are worth writing down before the code exists:
-**single-flight** (a zone change and a manual refresh must not become two
-requests) and **no polling** — refresh on an event or a click, never on a timer.
+> Don't embed keys or credentials in a distributed binary.
+
+That removes the server. No hosting, no operator who can see who connects, and
+"no server, no account, no telemetry" survives as a sentence with one honest
+exception written next to it. PKCE follows from OAuth 2.1, which the docs say
+they implement.
+
+Two things to read with it, neither a blocker:
+
+- **"While not encouraged."** GGG would rather this were a website — they say
+  outright that a site is "the safest kind of application for our players",
+  because a binary on someone's machine can change after review. Our kind is
+  permitted, not welcomed, and a registration request should expect to argue it.
+- **Log reading is explicitly fine.** The same list says: "Reading the game's log
+  files is okay as long as the user is aware of what you are doing with that
+  data." That is the overlay's entire existing mechanism, blessed in writing.
+
+### 3. ~~Rate limits~~ — documented, and stricter than "retry on 429"
+
+Limits are per-policy and **dynamic** — "these limits are dynamic and can change
+at any time" — so they are published in response headers and nothing may be
+hardcoded:
+
+```
+X-Rate-Limit-Policy: ladder-view        the policy this request falls under
+X-Rate-Limit-Rules: client              which rules apply; keys the next two
+                                        headers. Common: ip, account, client
+X-Rate-Limit-Client: 10:5:10            max hits : period tested (s) : penalty (s)
+X-Rate-Limit-Client-State: 1:5:0        current hits : period (s) : restricted (s)
+Retry-After: 10                         only when limited
+```
+
+So the client reads `Rules`, then builds the header name per rule, then compares
+state against limit. Several rules can apply at once and all must pass.
+
+**The part that changes the design** is not the limits themselves:
+
+> Applications (and users) that make too many invalid requests in a short period
+> of time will be restricted from further access to our service. Invalid requests
+> include any response codes in the HTTP 4xx range. This includes common codes
+> such as 401 (Unauthorized), 403 (Forbidden), and 429 (Too Many Requests).
+> Reasonable attempts **must** be made in order to avoid passing the threshold.
+
+A 429 is itself an invalid request. So "fire and back off on 429" is not an
+acceptable strategy here — the backoff is the punishment, and collecting them
+gets access revoked ("exceeding these limits frequently will result in your
+application access being revoked"). The budget has to be checked *before* the
+request, not learned from the rejection.
+
+Three rules that fall out of it, worth writing down before the code exists:
+**never spend the last hit** (leave headroom, because the published limit can
+change under you), **single-flight** (a zone change and a manual refresh must not
+become two requests), and **no polling** — refresh on an event or a click, never
+on a timer.
 
 ## Registering with GGG
 
@@ -100,10 +155,16 @@ requests) and **no polling** — refresh on an event or a click, never on a time
 > rather than rediscovering it:
 >
 > - **A `POESESSID` session cookie** against the old endpoints would work today.
->   It is also the thing this project exists not to do, and the thing that gets
->   tools into trouble. No.
-> - **Reading the game's memory, or OCR of the inventory screen.** Both break the
->   guardrails in `README.md` outright. No.
+>   It is also the thing this project exists not to do — and, it turns out, not
+>   merely a matter of taste: *Available Resources* says "requests for access to
+>   any other internal website APIs or in-game resources will be denied. It is
+>   against our Terms of Use (section 7i) to reverse-engineer endpoints outside
+>   of this documentation." No.
+> - **Reading the game's memory, or touching the game's files.** The docs are
+>   blunt about this category: "strictly against our Terms of Use (sections 7b,
+>   7c, 7i)" and "will result in immediate account termination" — yours *and*
+>   your users'. OCR of the inventory screen avoids the files and still fails the
+>   guardrails in `README.md`. No.
 > - **Asking the player to tick off what they socketed.** Honest, and it defeats
 >   the purpose: the value here is catching the support gem you *didn't notice*
 >   was missing. A checklist needs you to notice first.
@@ -112,16 +173,15 @@ requests) and **no polling** — refresh on an event or a click, never on a time
 > page now and then; when it reopens, step 4 is the ten-minute spike and nothing
 > before it needs redoing.
 
-**How you register, when it reopens, is not settled.** The docs point at a
-*Manage applications* link in your account profile, which suggests registering is
-self-serve on the site rather than a mail to a person. Older guidance — and what
-the search engines still surface — says to email **oauth@grindinggear.com**.
-Don't take either from this file: the page is what governs, and it is the first
-thing to re-read when the door opens.
+**Registering is a request by email to `oauth@grindinggear.com`.** The *Manage
+applications* link the docs point at is for applications you already own, and the
+account's *Authorised Apps* page is where a player revokes an app's access — both
+are managing what exists, not creating it. Re-read the page when the door opens
+anyway; it is what governs.
 
-Before that, the docs ask you to have read their sections on OAuth client types,
-grant types and scopes, and to have confirmed the scopes cover what you want.
-That is worth doing properly — unknown 2 above is exactly one of those questions.
+The docs ask you to arrive having read their sections on OAuth client types,
+grant types and scopes, and having confirmed the scopes cover what you want.
+Unknown 2 above was exactly one of those questions, and reading it answered it.
 
 Two things attributed to GGG about these requests, both of which shape how you
 ask — **second-hand**, unlike the quote above, so check them on the page too:
@@ -137,13 +197,15 @@ ask — **second-hand**, unlike the quote above, so check them on the page too:
 | --- | --- |
 | What the app is | Free, MIT-licensed, open-source levelling overlay for PoE 1. No ads, no monetisation, no accounts. `github.com/wertgzhj/poe-leveling-overlay` |
 | What you want the data for | Compare the gems actually socketed on the user's own character against the gem plan they wrote themselves, and show what's missing |
-| Scope | `account:characters`, read-only. Nothing else |
+| Scope | The characters one, read-only. Nothing else. A player sees it as "view your characters; including their inventories and passive skill trees" on their Authorised Apps page, so it covers what we need; the literal scope string is in the docs' scope list and is not quoted here because nobody has read it yet |
 | Client type | Desktop binary, cannot hold a secret → public client with PKCE |
 | Redirect URI | Loopback: `http://127.0.0.1:<ephemeral port>/callback` |
 | Who it runs as | One installation per user, each authorising their own account. No shared credential, no server, no proxying |
 | Request volume | Single digits per play session per user: on a zone change, debounced, plus a manual refresh button |
 | Rate limits | Parsed from the response headers and obeyed; 429 backs off on `Retry-After` |
-| User-Agent | Descriptive, with a contact address — confirm the exact format they want |
+| User-Agent | Fixed format, below |
+| One product | "One product per registered application" — this is the one product |
+| Money | None. "As a general rule, we cannot allow our Intellectual Property to be used to generate commercial revenue" — MIT, no ads, no donations tied to it |
 
 And three questions worth asking outright, because the answers change the build:
 
@@ -151,6 +213,32 @@ And three questions worth asking outright, because the answers change the build:
    and how soon after they change gems? (See unknown 1.)
 2. Is a **public client with PKCE** available, or confidential only?
 3. Anything they want stated in the app's UI about the connection.
+
+### What the docs require, whatever they answer
+
+Not negotiable and cheap to get right, so get them right the first time:
+
+**The User-Agent has a fixed shape.** "Any application that interacts with our
+API must set an identifiable User Agent header prefixed using the following
+format":
+
+```
+User-Agent: OAuth {$clientId}/{$version} (contact: {$contact}) ...
+```
+
+Their example: `OAuth mypoeapp/1.0.0 (contact: mypoeapp@gmail.com)
+SomeOptionalThingHere`. Note `{$version}` is the *app's* version, which this
+project takes from the release tag while `package.json` stays `0.0.0` — so it
+has to come from `app.getVersion()`, not from the manifest.
+
+**Credentials never ship.** "Don't include any application keys or credentials in
+your code" and "don't embed keys or credentials in a distributed binary". With a
+public client there is no secret to leak, but the refresh token is per-user and
+belongs in `safeStorage`, never in the settings JSON.
+
+**Only documented resources.** "We can only support resources defined in our API
+Reference or listed in our Data Exports." If the character endpoint doesn't carry
+something, that is the answer — not a prompt to go looking elsewhere.
 
 ## Architecture
 
@@ -293,7 +381,8 @@ rather than trusting this paragraph.
 
 ## Order of work
 
-Deliberately arranged so that only step 4 waits on GGG.
+Deliberately arranged so that only the last three wait on GGG. They now wait
+indefinitely; 1–3 are done and shipped dark.
 
 | # | Step | Blocked by |
 | --- | --- | --- |
@@ -312,10 +401,12 @@ tested against everything except the schema.
 
 ## Open decisions
 
-- **Which branch.** Standing rule in this repo is that work lands on the one
-  designated branch. A feature this size either needs an exception, or leans
-  entirely on the feature flag and lands in small pieces on the usual branch.
-  The flag makes the second genuinely viable, and it's the recommendation.
-- **Whether step 4 is a veto.** If the data turns out to be logout-only, is a
-  post-session review still worth building? Decide that *before* step 5, not
-  after, or the sunk cost will decide it instead.
+- **Whether step 4 is a veto.** The only one left that matters. If the data turns
+  out to be logout-only, is a post-session review still worth building? Decide
+  that *before* step 5, not after, or the sunk cost will decide it instead.
+  Nothing in the docs answers it, so nobody can decide it until the spike runs.
+
+Settled, and recorded so they don't get re-opened: the branch question (the flag
+made small pieces on the usual branch viable, and that is what happened), and
+whether a server is needed (no — a public client is mandatory for this shape of
+app, see unknown 2).
