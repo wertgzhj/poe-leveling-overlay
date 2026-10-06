@@ -131,6 +131,8 @@ export class GemData {
   private readonly byKey = new Map<string, GemInfo>()
   /** trailing " Support" stripped — the forgiving fallback, never a shadow. */
   private readonly byLoose = new Map<string, GemInfo>()
+  /** the same fallback, but to the gem's exact key — see canonicalKey(). */
+  private readonly looseToKey = new Map<string, string>()
   /** "<act>|<quest>" -> the levels of the gems that quest hands out (see questRank). */
   private readonly questLevel = new Map<string, { min: number; sum: number; count: number }>()
   /** True when the dataset lists Siosa/Lilly stock per gem (i.e. the wiki fetch
@@ -149,7 +151,10 @@ export class GemData {
     // price, which then dimmed it as "for later" for twenty-odd levels.
     for (const [name, info] of Object.entries(gems)) {
       const loose = normalizeGemName(name)
-      if (!this.byKey.has(loose) && !this.byLoose.has(loose)) this.byLoose.set(loose, info)
+      if (!this.byKey.has(loose) && !this.byLoose.has(loose)) {
+        this.byLoose.set(loose, info)
+        this.looseToKey.set(loose, exactGemKey(name))
+      }
     }
     let broadVendorRows = 0
     for (const info of this.byKey.values()) {
@@ -208,6 +213,26 @@ export class GemData {
     // Exact first, forgiving second: a profile that writes "Arcane Surge" still
     // finds "Arcane Surge Support", without "Barrage" finding the support.
     return this.byKey.get(exactGemKey(gem)) ?? this.byLoose.get(normalizeGemName(gem))
+  }
+
+  /**
+   * The one key two spellings of the same gem agree on — resolved the same way
+   * `info` resolves data, so they can never disagree about what a name means.
+   *
+   * For comparing two names against each other (a profile's "Melee Physical
+   * Damage" against the API's "Melee Physical Damage Support"), normalizing both
+   * with `normalizeGemName` looks equivalent and isn't: it also equates the
+   * skill gem "Barrage" with "Barrage Support". Going through the dataset keeps
+   * the exact names exact, because a name that IS a gem never falls through to
+   * the forgiving pass.
+   *
+   * An unknown name is returned as its own key rather than dropped — two
+   * unknowns that are spelled the same still match.
+   */
+  canonicalKey(gem: string): string {
+    const exact = exactGemKey(gem)
+    if (this.byKey.has(exact)) return exact
+    return this.looseToKey.get(normalizeGemName(gem)) ?? exact
   }
 
   /** Socket colour for a gem. Three outcomes, deliberately distinct: a known

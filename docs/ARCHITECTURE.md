@@ -29,8 +29,28 @@ system-wide before the game sees it, so the defaults avoid PoE's own binds and
 everything is rebindable.
 
 Path of Exile must run in **Windowed Fullscreen**; exclusive fullscreen covers
-overlays. This mirrors long-tolerated tools like Awakened PoE Trade and Exile
-Leveling.
+overlays.
+
+This used to rest on comparison — other overlays do it and are tolerated. It
+doesn't have to. GGG's developer documentation classifies application types, and
+under "executable apps that run independently from the game" it says, in order:
+
+> While not encouraged, these are permitted. […] Reading the game's log files is
+> okay as long as the user is aware of what you are doing with that data.
+
+That is this app, and that is its only input. The sentence after it is where the
+line sits: automating keystrokes that affect the game is governed by macro rules
+— manual invocation only, one action each, no timers and nothing "reacting to
+file changes". The overlay does none of it; its hotkeys are consumed by the
+overlay and never reach the game, and the log watcher only advances a cursor in
+the UI. The category below ours — "executable apps that interact with the game or
+game files" — is "strictly against our Terms of Use" and terminates the account,
+**and its users' accounts**, which is why the right column of that table is
+absolute rather than a matter of taste.
+
+"Not encouraged" is worth keeping in view: GGG would rather tools were websites,
+because a binary can change after review. Permitted, not welcomed.
+[`GGG-API.md`](GGG-API.md) quotes the rest.
 
 ## Stack
 

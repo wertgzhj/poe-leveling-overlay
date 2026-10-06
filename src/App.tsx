@@ -25,7 +25,8 @@ export function App(): React.JSX.Element {
         clientTxtPath: s.clientTxtPath,
         profilePath: s.profilePath,
         characterName: s.characterName,
-        visibleTabs: s.visibleTabs
+        visibleTabs: s.visibleTabs,
+        experimental: s.experimental
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()

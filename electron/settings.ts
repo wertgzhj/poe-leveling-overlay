@@ -28,6 +28,20 @@ export interface VisibleTabs {
   trials: boolean
 }
 
+/**
+ * Work that is in the build but not finished, switched off until it is.
+ *
+ * The alternative is a long-lived branch, which rots against every fix that
+ * ships in the meantime. Anything behind one of these flags may be incomplete
+ * or absent — and must be invisible while the flag is off, not merely disabled.
+ */
+export interface ExperimentalFlags {
+  /** Check the gems you actually have socketed against the plan, via GGG's API.
+   *  Half-built: the comparison exists and is tested, the connection to GGG
+   *  does not (see docs/GGG-API.md). */
+  gggApi: boolean
+}
+
 export interface AppSettings {
   bounds: OverlayBounds
   /** 0.4–1.0, applied to the overlay panel */
@@ -45,6 +59,8 @@ export interface AppSettings {
   logLanguage: string
   /** tabs to show in the overlay (hide the ones you don't use) */
   visibleTabs: VisibleTabs
+  /** unfinished features, off by default */
+  experimental: ExperimentalFlags
 }
 
 /** Everything persisted, including non-setting state: the resume snapshot and
@@ -88,6 +104,7 @@ const defaults: StoreSchema = {
   characterName: null,
   logLanguage: 'en',
   visibleTabs: { guide: true, gems: true, trials: true },
+  experimental: { gggApi: false },
   progress: null,
   guideProgress: {},
   trialsProgress: {},
@@ -125,6 +142,19 @@ export function sanitizeVisibleTabs(next: Partial<VisibleTabs> | undefined): Vis
   return tabs.guide || tabs.gems || tabs.trials ? tabs : { ...tabs, guide: true }
 }
 
+/** Stored flags merged over defaults (same nested-merge gap as hotkeys). A flag
+ *  added after a settings.json was written must read as OFF, not undefined —
+ *  that's the difference between a hidden feature and a crash. */
+export function getExperimental(): ExperimentalFlags {
+  return sanitizeExperimental(store.get('experimental'))
+}
+
+/** Only ever `true` when it's literally `true`. A flag is opt-in, so anything
+ *  else — missing, a leftover string from a hand-edited file — is off. */
+export function sanitizeExperimental(next: Partial<ExperimentalFlags> | undefined): ExperimentalFlags {
+  return { gggApi: next?.gggApi === true }
+}
+
 export function getSettings(): AppSettings {
   return {
     bounds: store.get('bounds'),
@@ -135,6 +165,7 @@ export function getSettings(): AppSettings {
     profilePath: store.get('profilePath'),
     characterName: store.get('characterName'),
     logLanguage: store.get('logLanguage'),
-    visibleTabs: getVisibleTabs()
+    visibleTabs: getVisibleTabs(),
+    experimental: getExperimental()
   }
 }

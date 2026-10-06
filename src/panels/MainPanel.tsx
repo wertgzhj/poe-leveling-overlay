@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
 import { sourceMark, sourceName, sourceTone } from '../lib/sources'
+import { socketMark, type GroupCheckInput } from '../lib/socketCheck'
 import { UpdateBanner } from './UpdateBanner'
 import { VersionBadge } from './VersionBadge'
 
@@ -977,11 +978,17 @@ function BuyRow({
 // source sits in the same column as everywhere else, which is the point.
 function SocketGroup({
   group,
-  acq
+  acq,
+  check
 }: {
   group: ColoredSocketGroupBridge
   acq: Map<string, AcquisitionEntryBridge>
+  /** How this link compares to what's actually socketed. Undefined whenever the
+   *  overlay doesn't know — which is always, until the GGG connection exists
+   *  (docs/GGG-API.md) — and undefined must render nothing at all. */
+  check?: GroupCheckInput
 }): React.JSX.Element {
+  const verdict = socketMark(check)
   return (
     <div className="col-span-3 mb-1.5 grid grid-cols-subgrid items-center gap-x-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
       {group.gems.map((gem, i) => {
@@ -1011,13 +1018,28 @@ function SocketGroup({
         )
       })}
       {group.note && <div className="col-span-3 mt-0.5 pl-4 text-[10px] text-overlay-muted">{group.note}</div>}
+      {verdict && (
+        <div
+          title={verdict.title}
+          className={'col-span-3 mt-0.5 flex items-center justify-end gap-1 text-[9px] ' + verdict.tone}
+        >
+          <span aria-hidden>●</span>
+          <span className="truncate">{verdict.label}</span>
+        </div>
+      )}
     </div>
   )
 }
 
 function GemBody(): React.JSX.Element {
-  const { profile, guide } = useOverlayStore(
-    useShallow((s) => ({ profile: s.profile, guide: s.guide }))
+  const { profile, guide, socketCheck } = useOverlayStore(
+    useShallow((s) => ({
+      profile: s.profile,
+      guide: s.guide,
+      // Gated here rather than at the render: a flag that is off has to mean
+      // the data never reaches the tab, not that the tab declines to draw it.
+      socketCheck: s.experimental.gggApi ? s.socketCheck : null
+    }))
   )
 
   if (profile?.errors && profile.errors.length > 0 && !profile.activeStage) {
@@ -1197,7 +1219,7 @@ function GemBody(): React.JSX.Element {
         {stage ? (
           <>
             {stage.groups.map((group, i) => (
-              <SocketGroup key={i} group={group} acq={acqByGem} />
+              <SocketGroup key={i} group={group} acq={acqByGem} check={socketCheck?.groups[i]} />
             ))}
             {stage.note && (
               <div className="col-span-3 mb-2 px-1 text-[10px] text-overlay-muted">{stage.note}</div>
