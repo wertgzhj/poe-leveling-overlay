@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 200 tests: parser, tracker, watcher, guide, profile,
+npm test        # 208 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
@@ -122,6 +122,12 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - Ascend a character: the "wrong profile loaded?" banner must **not** appear
      for an Elementalist on a Witch build. It should still appear for a genuinely
      different base class.
+   - **Mule a gem the tab tells you to** (e.g. Momentum from a Ranger on a
+     Marauder build): while you're on the mule, the amber banner is replaced by a
+     turquoise "Muling on a Ranger?" note. Then go back to your main: the moment
+     it **levels up**, the strip, the stage and the Gems tab must be your main's
+     again — not the mule's level 2. That used to stick until a restart. A
+     partymate's level-up must still never move tracking.
 7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a violet
    bar naming your choice; with `meta.pantheon` set, **Act 5** does the same. The
    bar outranks the Labyrinth and trial notices — those come round again, the

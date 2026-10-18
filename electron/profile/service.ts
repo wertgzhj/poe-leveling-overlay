@@ -22,6 +22,7 @@ import {
   stepStageView,
   resolveStage,
   acquisitionsForStage,
+  mulingClass,
   type Acquisitions
 } from './engine.ts'
 import {
@@ -329,21 +330,24 @@ export class ProfileService {
           : liveIndex
     const stage = profile && stageIndex >= 0 ? profile.stages[stageIndex] : null
 
+    // An ascended character logs its ascendancy, so "Elementalist" tracked
+    // against a "Witch" profile is the same character, not the wrong one.
+    // Compare base classes, and say nothing at all about a name we can't
+    // place — a localized log would otherwise cry wolf on every profile.
+    const trackedBase = trackedClass ? baseClassOf(trackedClass) : null
+    const mismatch = profile && trackedClass && trackedBase && trackedBase !== profile.meta.class ? trackedClass : null
+    // ...unless it's a mule: low level, and a class whose starting gems this
+    // build uses. The Gems tab told you to roll exactly that; warning you
+    // about it a moment later is the overlay arguing with itself.
+    const muling = mismatch && profile ? mulingClass(profile, trackedClass, level, this.startingOwners) : null
+
     return {
       meta: profile?.meta ?? null,
       errors: this.errors,
       gemDataError: this.gemDataError,
       level,
-      // An ascended character logs its ascendancy, so "Elementalist" tracked
-      // against a "Witch" profile is the same character, not the wrong one.
-      // Compare base classes, and say nothing at all about a name we can't
-      // place — a localized log would otherwise cry wolf on every profile.
-      classMismatch:
-        profile && trackedClass && baseClassOf(trackedClass)
-          ? baseClassOf(trackedClass) !== profile.meta.class
-            ? trackedClass
-            : null
-          : null,
+      classMismatch: muling ? null : mismatch,
+      muling,
       activeStage: stage ? resolveStage(stage, stageIndex, this.gems) : null,
       nextStage:
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length

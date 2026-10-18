@@ -68,7 +68,14 @@ export interface TrackerSnapshot {
   character: string | null
   charClass: string | null
   level: number | null
+  /** Characters this install has tracked as you, most recent last — see
+   *  ProgressTracker.own. Persisted with the rest so a restart keeps them. */
+  own?: string[]
 }
+
+/** How many of your characters are remembered. Enough for a league's worth of
+ *  alts and mules; old ones fall off the front. */
+const OWN_LIMIT = 20
 
 export interface TrackerCallbacks {
   onArea?: (area: AreaState) => void
@@ -109,6 +116,18 @@ export class ProgressTracker {
   /** Name from the most recent level-up (backscan tail + live) — the "who am I
    *  playing now" signal for the manual detect-character action. */
   private lastLevelUpName: string | null = null
+  /**
+   * Characters that have been tracked as YOU, most recent last.
+   *
+   * The binding exists so a partymate's level-up can't move your progress. But
+   * it also held on to a mule: roll a level-1 Ranger for its starting gems, it
+   * enters the Twilight Strand (which releases your main) and levels once on
+   * Hillock (which binds it), and from then on your main's level-ups counted as
+   * a stranger's. A character on this list is never a stranger — one account
+   * can't have two characters online, so a level-up from one of them means
+   * you're playing it again. A partymate never gets on the list.
+   */
+  private own: string[] = []
 
   private area: AreaState | null = null
   /** A Generating line was seen and its localized "You have entered" is still expected. */
@@ -152,7 +171,7 @@ export class ProgressTracker {
   } | null {
     const name = this.lastLevelUpName
     if (!name) return null
-    this.adoptedBinding = name
+    this.adopt(name)
     const seen = this.lastSeen.get(name)
     return {
       name,
@@ -170,15 +189,26 @@ export class ProgressTracker {
       area: this.area,
       character: bound,
       charClass: seen?.charClass ?? null,
-      level: seen?.level ?? null
+      level: seen?.level ?? null,
+      own: [...this.own]
     }
+  }
+
+  /** Bind to a character in auto mode, and remember it as one of yours. */
+  private adopt(name: string): void {
+    this.adoptedBinding = name
+    this.own = [...this.own.filter((n) => n !== name), name].slice(-OWN_LIMIT)
   }
 
   /** Restore persisted state (used when the log yields nothing, e.g. deleted). */
   hydrate(snap: TrackerSnapshot): void {
     if (!this.area && snap.area) this.area = snap.area
+    // Who you are doesn't depend on what this log window happened to contain:
+    // merge the remembered characters in, ahead of anything the backscan found.
+    const recent = new Set(this.own)
+    this.own = [...(snap.own ?? []).filter((n) => !recent.has(n)), ...this.own].slice(-OWN_LIMIT)
     if (!this.explicitBinding && !this.adoptedBinding && snap.character) {
-      this.adoptedBinding = snap.character
+      this.adopt(snap.character)
       if (snap.level != null && !this.lastSeen.has(snap.character)) {
         this.lastSeen.set(snap.character, {
           level: snap.level,
@@ -216,7 +246,7 @@ export class ProgressTracker {
           bestCount = count
         }
       }
-      this.adoptedBinding = best
+      if (best) this.adopt(best)
     }
     return counts
   }
@@ -276,9 +306,15 @@ export class ProgressTracker {
         this.lastLevelUpName = ev.name
         this.levelUpCounts.set(ev.name, (this.levelUpCounts.get(ev.name) ?? 0) + 1)
         this.lastSeen.set(ev.name, { level: ev.level, charClass: ev.charClass })
-        if (!this.explicitBinding && !this.adoptedBinding && emit) {
-          // First live level-up adopts the character (confirm toast is P3).
-          this.adoptedBinding = ev.name
+        if (!this.explicitBinding && emit) {
+          if (!this.adoptedBinding) {
+            // First live level-up adopts the character (confirm toast is P3).
+            this.adopt(ev.name)
+          } else if (ev.name !== this.adoptedBinding && this.own.includes(ev.name)) {
+            // One of yours, levelling while another is bound: you've switched
+            // back to it — after muling, typically. See `own`.
+            this.adopt(ev.name)
+          }
         }
         if (emit) {
           this.callbacks.onLevelUp?.({

@@ -283,3 +283,74 @@ test('towns, hideouts and nameless zones are excluded — the comparison would l
   // No level tracked yet.
   assert.equal(fit('2_1_3', 40, null), null)
 })
+
+// --- Muling ---------------------------------------------------------------
+// Roll a level-1 alt for its starting gems: it enters the Twilight Strand,
+// which releases your main, and levels once on Hillock, which binds it. Your
+// main's level-ups then counted as a partymate's and the overlay sat on the
+// mule. A character that has been tracked as you is never a stranger.
+
+const STRAND = '… [DEBUG Client 1] Generating level 1 area "1_1_1" with seed 5'
+
+test('after muling, your main levelling takes tracking back', () => {
+  const { tracker, levels } = makeTracker()
+  feed(tracker, '… [INFO Client 1] : Brutus (Marauder) is now level 14')
+  feed(tracker, STRAND)
+  feed(tracker, '… [INFO Client 1] : sakdillas (Ranger) is now level 2')
+  assert.equal(tracker.snapshot().character, 'sakdillas', 'the mule is tracked while you play it')
+
+  feed(tracker, '… [INFO Client 1] : Brutus (Marauder) is now level 15')
+  const snap = tracker.snapshot()
+  assert.equal(snap.character, 'Brutus')
+  assert.equal(snap.charClass, 'Marauder')
+  assert.equal(snap.level, 15)
+  // And that level-up counts as yours, so the Gems tab moves on it.
+  assert.equal(levels.at(-1)?.isBound, true)
+})
+
+test('a partymate never gets on the list, so party play is as safe as before', () => {
+  const { tracker, levels } = makeTracker()
+  feed(tracker, '… [INFO Client 1] : Brutus (Marauder) is now level 14')
+  feed(tracker, '… [INFO Client 1] : Friend (Witch) is now level 30')
+  feed(tracker, '… [INFO Client 1] : Friend (Witch) is now level 31')
+  assert.equal(tracker.snapshot().character, 'Brutus')
+  assert.equal(levels.at(-1)?.isBound, false)
+  assert.deepEqual(tracker.snapshot().own, ['Brutus'])
+})
+
+test('your characters survive a restart, even when the log window only has the mule', () => {
+  // Session 1: main, then the mule.
+  const first = makeTracker().tracker
+  feed(first, '… [INFO Client 1] : Brutus (Marauder) is now level 14')
+  feed(first, STRAND)
+  feed(first, '… [INFO Client 1] : sakdillas (Ranger) is now level 2')
+  const persisted = first.snapshot()
+
+  // Session 2: the retained log holds only the mule's level-up.
+  const { tracker } = makeTracker()
+  tracker.backscan(['… [INFO Client 1] : sakdillas (Ranger) is now level 2'], parser)
+  tracker.hydrate(persisted)
+  assert.equal(tracker.snapshot().character, 'sakdillas')
+  feed(tracker, '… [INFO Client 1] : Brutus (Marauder) is now level 15')
+  assert.equal(tracker.snapshot().character, 'Brutus')
+})
+
+test('a pinned character is never moved, not even by one of your own', () => {
+  const { tracker } = makeTracker('Brutus')
+  feed(tracker, '… [INFO Client 1] : Brutus (Marauder) is now level 14')
+  tracker.hydrate({ area: null, character: null, charClass: null, level: null, own: ['sakdillas', 'Brutus'] })
+  feed(tracker, '… [INFO Client 1] : sakdillas (Ranger) is now level 2')
+  assert.equal(tracker.snapshot().character, 'Brutus')
+})
+
+test('the remembered characters are capped, oldest first out', () => {
+  const { tracker } = makeTracker()
+  for (let i = 0; i < 25; i++) {
+    feed(tracker, STRAND)
+    feed(tracker, `… [INFO Client 1] : Alt${i} (Witch) is now level 2`)
+  }
+  const own = tracker.snapshot().own ?? []
+  assert.equal(own.length, 20)
+  assert.equal(own[0], 'Alt5')
+  assert.equal(own.at(-1), 'Alt24')
+})

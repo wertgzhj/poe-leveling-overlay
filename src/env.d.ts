@@ -241,6 +241,7 @@ interface ProfileSnapshotBridge {
   gemDataError: string | null
   level: number | null
   classMismatch: string | null
+  muling: string | null
   activeStage: ResolvedStageBridge | null
   nextStage: ResolvedStageBridge | null
   acquisitions: AcquisitionsBridge | null
