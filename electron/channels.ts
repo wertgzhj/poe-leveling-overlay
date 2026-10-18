@@ -277,4 +277,7 @@ export type UpdateStatus =
   | { state: 'current'; version: string }
   | { state: 'downloading'; version: string; percent: number }
   | { state: 'ready'; version: string }
+  /** A newer release exists but its files aren't attached yet (the build is
+   *  still running). Retried on the next check; not a failure. */
+  | { state: 'publishing'; version: string | null }
   | { state: 'error'; message: string }
