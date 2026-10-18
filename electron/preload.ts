@@ -33,6 +33,7 @@ const api = {
   getLogSnapshot: (): Promise<LogSnapshot> => ipcRenderer.invoke(Channels.logGetSnapshot),
   detectCharacter: (): Promise<DetectedCharacter | null> =>
     ipcRenderer.invoke(Channels.logDetectCharacter),
+  copySearchRegex: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopySearchRegex),
   onLogStatus: (cb: (status: unknown) => void): (() => void) =>
     subscribe(Channels.logStatus, cb),
   onLogSnapshot: (cb: (snap: LogSnapshot) => void): (() => void) =>

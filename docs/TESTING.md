@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 206 tests: parser, tracker, watcher, guide, profile,
+npm test        # 209 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # the GGG plan-vs-socketed diff
 npm run typecheck
@@ -48,9 +48,19 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    mouse.
 3. **Settings.** ⚙ → set the `Client.txt` path, rebind a hotkey, adjust opacity.
    All take effect immediately. The sections run in the order the work does:
-   Updates, the editor button, Build profile, Game log, Overlay, Hotkeys. The
-   three tabs split the window into equal thirds at any size — drag the resize
-   grip and they should stay even, with no dead space after "Trials".
+   Updates, the editor button, Build profile, Game log, Overlay, Search regex,
+   Hotkeys, Experimental. The three tabs split the window into equal thirds at
+   any size — drag the resize grip and they should stay even, with no dead space
+   after "Trials".
+
+   **Search regex.** With the field empty there is **no** Regex button in the
+   header. Paste a string (a trailing line break from a web page must vanish on
+   save), and the button appears beside ⚙. In interactive mode, click it: it
+   reads `✓ copied` for a moment *without* nudging ⚙ sideways, and Ctrl+V in a
+   stash or vendor search box pastes exactly the string. Confirm the **50
+   character** figure while you're there — paste something longer and check
+   where the game cuts it off. The counter turns amber past 50, and that number
+   comes from community regex tools, not from the game.
 4. **Tracking.** The tracker strip shows the current zone and level while
    playing. Restart the overlay mid-session — it resumes both. With no character
    pinned, rolling a fresh character (entering the Twilight Strand) switches

@@ -27,6 +27,9 @@ semi-automatically from a Path of Building import.
   link and it writes the stages for you.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
   you finish it, and telling you when a Labyrinth is ready to run.
+- **Keeps your search regex one click away.** Store a stash or vendor search
+  string in Settings, and a **Regex** button in the header copies it — paste it
+  into the game yourself. The overlay never types into the game.
 - **Updates itself.** One click when a new version is ready.
 - **A route guide you write yourself** — the app ships the engine and an in-app
   editor; the campaign route is yours (see [Author your route](#author-your-route)).

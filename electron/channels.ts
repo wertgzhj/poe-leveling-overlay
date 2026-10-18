@@ -50,6 +50,10 @@ export const Channels = {
   /** renderer -> main (invoke): re-detect + track the character from the most
    *  recent level-up in the log; returns the detected character or null. */
   logDetectCharacter: 'log:detect-character',
+  /** renderer -> main (invoke): put the stored search regex on the clipboard.
+   *  Copies what's in Settings, never text the renderer supplies — this channel
+   *  can't be used to write arbitrary content to the clipboard. */
+  clipboardCopySearchRegex: 'clipboard:copy-search-regex',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
   /** renderer -> main (invoke): current guide state */

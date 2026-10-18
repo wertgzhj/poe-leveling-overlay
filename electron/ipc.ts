@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain } from 'electron'
+import { app, clipboard, dialog, ipcMain } from 'electron'
 import { Channels, type AppInfo, type SettingsSetResult } from './channels'
 import {
   getHotkeys,
@@ -10,6 +10,7 @@ import {
   type HotkeyBindings
 } from './settings'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
+import { normalizeSearchRegex } from './search-regex.ts'
 import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
 import type { GuideService } from './guide/service.ts'
@@ -86,6 +87,9 @@ export function registerIpc(
     if (patch.experimental && typeof patch.experimental === 'object') {
       store.set('experimental', sanitizeExperimental(patch.experimental))
     }
+    if ('searchRegex' in patch) {
+      store.set('searchRegex', normalizeSearchRegex(patch.searchRegex))
+    }
 
     let failed: string[] = []
     if (patch.hotkeys) {
@@ -115,6 +119,15 @@ export function registerIpc(
 
   ipcMain.handle(Channels.logGetSnapshot, () => log.getSnapshot())
   ipcMain.handle(Channels.logDetectCharacter, () => log.detectCharacter())
+
+  // Clipboard only. Pasting into the game is the player's own keystroke — the
+  // overlay never types into it (docs/ARCHITECTURE.md#tos-position).
+  ipcMain.handle(Channels.clipboardCopySearchRegex, (): boolean => {
+    const regex = store.get('searchRegex')
+    if (!regex) return false
+    clipboard.writeText(regex)
+    return true
+  })
 
   ipcMain.handle(Channels.guideGet, () => guide.snapshot())
   ipcMain.on(Channels.guideToggleStep, (_e, stepId: unknown) => {
