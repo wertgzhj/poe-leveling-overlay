@@ -29,27 +29,6 @@ interface VisibleTabsBridge {
   trials: boolean
 }
 
-/** Unfinished features, off by default — see ExperimentalFlags in
- *  electron/settings.ts. While a flag is off its feature must be invisible,
- *  not merely disabled. */
-interface ExperimentalFlagsBridge {
-  gggApi: boolean
-}
-
-/** Per-link verdict from electron/ggg/diff.ts. Mirrored by hand like every
- *  other bridge type — the main and renderer build graphs are decoupled.
- *  Null everywhere until the GGG connection exists (docs/GGG-API.md). */
-interface SocketCheckBridge {
-  groups: {
-    state: 'ok' | 'incomplete' | 'unequipped'
-    slot?: string | null
-    missing?: string[]
-    elsewhere?: { gem: string; slot: string }[]
-    variants?: { planned: string; socketed: string }[]
-    extra?: string[]
-  }[]
-}
-
 interface AppSettingsBridge {
   bounds: { x?: number; y?: number; width: number; height: number }
   opacity: number
@@ -60,7 +39,6 @@ interface AppSettingsBridge {
   characterName: string | null
   logLanguage: string
   visibleTabs: VisibleTabsBridge
-  experimental: ExperimentalFlagsBridge
   searchRegex: string
 }
 
@@ -72,7 +50,6 @@ interface SettingsPatchBridge {
   profilePath?: string | null
   characterName?: string | null
   visibleTabs?: VisibleTabsBridge
-  experimental?: ExperimentalFlagsBridge
   searchRegex?: string
 }
 

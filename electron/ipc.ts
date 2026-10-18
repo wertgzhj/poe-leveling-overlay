@@ -3,7 +3,6 @@ import { Channels, type AppInfo, type SettingsSetResult } from './channels'
 import {
   getHotkeys,
   getSettings,
-  sanitizeExperimental,
   sanitizeVisibleTabs,
   store,
   type AppSettings,
@@ -83,9 +82,6 @@ export function registerIpc(
     }
     if (patch.visibleTabs && typeof patch.visibleTabs === 'object') {
       store.set('visibleTabs', sanitizeVisibleTabs(patch.visibleTabs))
-    }
-    if (patch.experimental && typeof patch.experimental === 'object') {
-      store.set('experimental', sanitizeExperimental(patch.experimental))
     }
     if ('searchRegex' in patch) {
       store.set('searchRegex', normalizeSearchRegex(patch.searchRegex))

@@ -15,8 +15,6 @@ interface OverlayStore {
   profilePath: string | null
   characterName: string | null
   visibleTabs: VisibleTabsBridge
-  /** Unfinished features, off by default. Off must mean invisible. */
-  experimental: ExperimentalFlagsBridge
   /** Stash/vendor search string; '' hides the copy button. */
   searchRegex: string
   // log tracking
@@ -31,9 +29,6 @@ interface OverlayStore {
   guide: GuideStateBridge | null
   // build profile
   profile: ProfileSnapshotBridge | null
-  /** Plan vs. what's actually socketed. Null until the overlay is connected to
-   *  GGG — and null must render nothing, not a prompt to connect. */
-  socketCheck: SocketCheckBridge | null
   // trials
   trials: TrialsSnapshotBridge | null
   // auto-update
@@ -63,7 +58,6 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   profilePath: null,
   characterName: null,
   visibleTabs: { guide: true, gems: true, trials: true },
-  experimental: { gggApi: false },
   searchRegex: '',
   logStatus: null,
   tracked: null,
@@ -72,7 +66,6 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   debugOpen: false,
   guide: null,
   profile: null,
-  socketCheck: null,
   trials: null,
   update: null,
   updateDismissed: false,
