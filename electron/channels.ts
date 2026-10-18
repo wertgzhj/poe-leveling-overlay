@@ -196,6 +196,10 @@ export interface ProfileSnapshot {
   level: number | null
   /** The tracked class when it differs from the profile's class, else null. */
   classMismatch: string | null
+  /** The tracked character looks like a mule for this build (low level, a
+   *  class whose starting gems the profile uses): its class. Replaces the
+   *  mismatch warning rather than adding to it. */
+  muling: string | null
   /** The stage being shown (the viewed one — see viewedIndex vs liveIndex). */
   activeStage: ResolvedStage | null
   nextStage: ResolvedStage | null

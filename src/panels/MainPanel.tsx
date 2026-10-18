@@ -1109,6 +1109,15 @@ function GemBody(): React.JSX.Element {
           for a {profile.meta.class}. Wrong profile loaded?
         </div>
       )}
+      {/* Turquoise like every "Mule" in this tab: it's the same plan, not a
+          problem. And it says what happens next, so nobody goes looking for
+          a button to switch back. */}
+      {profile.muling && (
+        <div className="mb-2 rounded-md border border-sky-300/30 bg-sky-300/10 p-1.5 text-[10px] text-sky-300/90">
+          Muling on {article(profile.muling)} {profile.muling}? Stash its starting gems, then go back to your{' '}
+          {profile.meta.class} — the overlay follows on its next level-up.
+        </div>
+      )}
 
       {/* Stage navigation sits ABOVE the acquisition list so it keeps a fixed
           position — a longer or shorter buy list must not move the controls. */}

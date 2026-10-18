@@ -18,6 +18,8 @@ import {
   acquisitionsForStage
 } from '../electron/profile/engine.ts'
 import { repoPath } from './helpers.ts'
+import { mulingClass, MULE_MAX_LEVEL } from '../electron/profile/engine.ts'
+import { normalizeGemName as normalizeForMule } from '../electron/profile/gems.ts'
 
 function exampleProfile(): Profile {
   const { profile, errors } = parseProfile(readFileSync(repoPath('data/profiles/example.json'), 'utf8'))
@@ -1235,4 +1237,59 @@ test('an ordinary reward is still assumed handled by the stage that offered it',
   ).profile!
   const later = acquisitionsForStage(profile, 1, gems, { playerLevel: 32, actReached: 3 })
   assert.deepEqual(later.plan, [], 'one quest, one gem — you took it, it is done')
+})
+
+// --- Muling -----------------------------------------------------------------
+
+
+function realStartingOwners(): Map<string, string[]> {
+  const json = JSON.parse(readFileSync(repoPath('data/starting-gems.json'), 'utf8')) as {
+    classes: Record<string, string[]>
+  }
+  const owners = new Map<string, string[]>()
+  for (const [cls, names] of Object.entries(json.classes)) {
+    for (const name of names) {
+      const key = normalizeForMule(name)
+      owners.set(key, [...(owners.get(key) ?? []), cls])
+    }
+  }
+  return owners
+}
+
+const marauderWithMomentum: Profile = {
+  meta: { name: 'Berserker', class: 'Marauder' },
+  stages: [{ range: [1, 10], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support'] }] }],
+  gemPlan: []
+}
+
+test('a low-level alt of a class this build mules from is a mule, not the wrong profile', () => {
+  // The report: a Marauder profile that wants Momentum (a Ranger starting gem),
+  // a level-2 Ranger rolled for it, and an amber "wrong profile loaded?".
+  const owners = realStartingOwners()
+  assert.equal(mulingClass(marauderWithMomentum, 'Ranger', 2, owners), 'Ranger')
+  assert.equal(mulingClass(marauderWithMomentum, 'Ranger', 1, owners), 'Ranger')
+})
+
+test('anything that is not plausibly a mule keeps the warning', () => {
+  const owners = realStartingOwners()
+  // Past a mule's level, it's a character you're actually playing.
+  assert.equal(mulingClass(marauderWithMomentum, 'Ranger', MULE_MAX_LEVEL + 1, owners), null)
+  // A class this build takes nothing from: a genuine wrong profile.
+  assert.equal(mulingClass(marauderWithMomentum, 'Witch', 2, owners), null)
+  // The profile's own class is not a mule at any level.
+  assert.equal(mulingClass(marauderWithMomentum, 'Marauder', 2, owners), null)
+  // An ascended name is read by its base class.
+  assert.equal(mulingClass(marauderWithMomentum, 'Deadeye', 2, owners), 'Ranger')
+  // Nothing known: no verdict.
+  assert.equal(mulingClass(marauderWithMomentum, null, 2, owners), null)
+  assert.equal(mulingClass(marauderWithMomentum, 'Ranger', null, owners), null)
+})
+
+test('a gem the build only plans to buy still makes its class worth muling', () => {
+  const profile: Profile = {
+    ...marauderWithMomentum,
+    stages: [{ range: [1, 10], socketGroups: [{ gems: ['Ground Slam'] }] }],
+    gemPlan: [{ gem: 'Momentum Support' }]
+  }
+  assert.equal(mulingClass(profile, 'Ranger', 2, realStartingOwners()), 'Ranger')
 })

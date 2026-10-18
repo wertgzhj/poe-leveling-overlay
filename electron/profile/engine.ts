@@ -2,7 +2,7 @@
 // active stage for the current level, colours its socket groups, and derives
 // acquisition views (reward picks / vendor shopping list) from the gemPlan.
 
-import type { Profile, Stage, CharClass, GemSource, GemPlanEntry } from './profile.ts'
+import { baseClassOf, type Profile, type Stage, type CharClass, type GemSource, type GemPlanEntry } from './profile.ts'
 import {
   GemData,
   vendorCostFor,
@@ -658,4 +658,33 @@ function classifySource(
     requiredLevel,
     mule: mule?.length ? mule : undefined
   }
+}
+
+/** A mule is rolled for its starting gems and deleted, usually after levelling
+ *  once on Hillock — so it never gets far. Past this it's a real character. */
+export const MULE_MAX_LEVEL = 3
+
+/**
+ * The tracked character's class when it looks like a mule for this build, else
+ * null: low level, a different base class, and one that starts with a gem the
+ * profile uses somewhere — exactly what the Gems tab's "Mule · <class>" rows
+ * told you to roll. Anything else of another class is a real mismatch and keeps
+ * its warning.
+ *
+ * `startingOwners` maps a normalized gem name to the classes that start with it.
+ */
+export function mulingClass(
+  profile: Profile,
+  trackedClass: string | null,
+  level: number | null,
+  startingOwners: ReadonlyMap<string, readonly string[]>
+): string | null {
+  if (!trackedClass || level == null || level > MULE_MAX_LEVEL) return null
+  const base = baseClassOf(trackedClass)
+  if (!base || base === profile.meta.class) return null
+  const gems = [
+    ...profile.stages.flatMap((s) => s.socketGroups.flatMap((g) => g.gems)),
+    ...profile.gemPlan.map((e) => e.gem)
+  ]
+  return gems.some((gem) => (startingOwners.get(normalizeGemName(gem)) ?? []).includes(base)) ? base : null
 }
