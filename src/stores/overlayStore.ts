@@ -17,6 +17,8 @@ interface OverlayStore {
   visibleTabs: VisibleTabsBridge
   /** Unfinished features, off by default. Off must mean invisible. */
   experimental: ExperimentalFlagsBridge
+  /** Stash/vendor search string; '' hides the copy button. */
+  searchRegex: string
   // log tracking
   logStatus: WatcherStatusBridge | null
   tracked: TrackerStateBridge | null
@@ -62,6 +64,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   characterName: null,
   visibleTabs: { guide: true, gems: true, trials: true },
   experimental: { gggApi: false },
+  searchRegex: '',
   logStatus: null,
   tracked: null,
   languageMismatch: false,

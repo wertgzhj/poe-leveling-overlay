@@ -61,6 +61,7 @@ interface AppSettingsBridge {
   logLanguage: string
   visibleTabs: VisibleTabsBridge
   experimental: ExperimentalFlagsBridge
+  searchRegex: string
 }
 
 interface SettingsPatchBridge {
@@ -72,6 +73,7 @@ interface SettingsPatchBridge {
   characterName?: string | null
   visibleTabs?: VisibleTabsBridge
   experimental?: ExperimentalFlagsBridge
+  searchRegex?: string
 }
 
 interface SettingsSetResultBridge {
@@ -369,6 +371,8 @@ interface OverlayBridge {
   onState(cb: (state: OverlayStateBridge) => void): () => void
   getLogSnapshot(): Promise<LogSnapshotBridge>
   detectCharacter(): Promise<DetectedCharacterBridge | null>
+  /** Copies the search regex stored in Settings; false when none is set. */
+  copySearchRegex(): Promise<boolean>
   onLogStatus(cb: (status: WatcherStatusBridge) => void): () => void
   onLogSnapshot(cb: (snap: LogSnapshotBridge) => void): () => void
   onAreaEntered(cb: (area: AreaStateBridge) => void): () => void

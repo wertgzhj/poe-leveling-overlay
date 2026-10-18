@@ -61,6 +61,9 @@ export interface AppSettings {
   visibleTabs: VisibleTabs
   /** unfinished features, off by default */
   experimental: ExperimentalFlags
+  /** A search string for the game's stash/vendor search box, copied from the
+   *  overlay with one click. '' = none, and none means no button. */
+  searchRegex: string
 }
 
 /** Everything persisted, including non-setting state: the resume snapshot and
@@ -105,6 +108,7 @@ const defaults: StoreSchema = {
   logLanguage: 'en',
   visibleTabs: { guide: true, gems: true, trials: true },
   experimental: { gggApi: false },
+  searchRegex: '',
   progress: null,
   guideProgress: {},
   trialsProgress: {},
@@ -166,6 +170,7 @@ export function getSettings(): AppSettings {
     characterName: store.get('characterName'),
     logLanguage: store.get('logLanguage'),
     visibleTabs: getVisibleTabs(),
-    experimental: getExperimental()
+    experimental: getExperimental(),
+    searchRegex: store.get('searchRegex')
   }
 }

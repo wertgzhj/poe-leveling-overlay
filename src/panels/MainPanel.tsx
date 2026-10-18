@@ -117,6 +117,40 @@ function DetectCharButton(): React.JSX.Element {
   )
 }
 
+// One click puts the search regex from Settings on the clipboard; paste it into
+// a stash or vendor search box yourself. Copying is all the overlay does — it
+// never types into the game (docs/ARCHITECTURE.md#tos-position). Absent until a
+// regex is set, rather than a button that explains it has nothing to do.
+function RegexButton(): React.JSX.Element | null {
+  const regex = useOverlayStore((s) => s.searchRegex)
+  const [flash, setFlash] = useState<'copied' | 'failed' | null>(null)
+  if (!regex) return null
+  const onClick = (): void => {
+    void window.overlay?.copySearchRegex().then((ok) => {
+      setFlash(ok ? 'copied' : 'failed')
+      window.setTimeout(() => setFlash(null), 1500)
+    })
+  }
+  return (
+    <button
+      onClick={onClick}
+      title={`Copy to clipboard, then paste into a stash or vendor search:\n${regex}`}
+      className={
+        // Fixed width: "✓ copied" is wider than "Regex", and the flash must not
+        // shove the ⚙ next to it sideways.
+        'no-drag min-w-[3.75rem] rounded bg-white/10 px-1.5 py-0.5 text-center text-[11px] hover:text-overlay-text ' +
+        (flash === 'copied'
+          ? 'text-emerald-400'
+          : flash === 'failed'
+            ? 'text-amber-300'
+            : 'text-overlay-muted')
+      }
+    >
+      {flash === 'copied' ? '✓ copied' : flash === 'failed' ? 'not set' : 'Regex'}
+    </button>
+  )
+}
+
 function trackerLine(
   logStatus: WatcherStatusBridge | null,
   tracked: TrackerStateBridge | null,
@@ -258,6 +292,7 @@ export function MainPanel(): React.JSX.Element {
                 🐞
               </button>
             )}
+            <RegexButton />
             <button
               className="no-drag rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
               title="Settings"

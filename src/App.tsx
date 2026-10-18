@@ -26,7 +26,8 @@ export function App(): React.JSX.Element {
         profilePath: s.profilePath,
         characterName: s.characterName,
         visibleTabs: s.visibleTabs,
-        experimental: s.experimental
+        experimental: s.experimental,
+        searchRegex: s.searchRegex
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()

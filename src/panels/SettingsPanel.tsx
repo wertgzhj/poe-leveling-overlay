@@ -19,6 +19,11 @@ const TAB_FIELDS: ReadonlyArray<readonly [keyof VisibleTabsBridge, string]> = [
   ['trials', 'Trials']
 ]
 
+// The game's stash/vendor search box length. PROVISIONAL: it's the figure the
+// community regex tools build around, not one verified in game from here — see
+// docs/TESTING.md. Only drives a warning colour, never a block.
+const SEARCH_BOX_LIMIT = 50
+
 function hasModifier(accelerator: string): boolean {
   return /(CommandOrControl|CmdOrCtrl|Control|Ctrl|Alt|AltGr|Shift|Super|Meta)/.test(accelerator)
 }
@@ -33,6 +38,7 @@ export function SettingsPanel(): React.JSX.Element {
     characterName,
     visibleTabs,
     experimental,
+    searchRegex,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -44,6 +50,7 @@ export function SettingsPanel(): React.JSX.Element {
       characterName: s.characterName,
       visibleTabs: s.visibleTabs,
       experimental: s.experimental,
+      searchRegex: s.searchRegex,
       patch: s.patch
     }))
   )
@@ -52,6 +59,7 @@ export function SettingsPanel(): React.JSX.Element {
   const [pathDraft, setPathDraft] = useState(clientTxtPath ?? '')
   const [charDraft, setCharDraft] = useState(characterName ?? '')
   const [profileDraft, setProfileDraft] = useState(profilePath ?? '')
+  const [regexDraft, setRegexDraft] = useState(searchRegex)
   const [pobInput, setPobInput] = useState('')
   const [pobBusy, setPobBusy] = useState(false)
   const [pobResult, setPobResult] = useState<PobImportResponseBridge | null>(null)
@@ -59,6 +67,7 @@ export function SettingsPanel(): React.JSX.Element {
   useEffect(() => setPathDraft(clientTxtPath ?? ''), [clientTxtPath])
   useEffect(() => setCharDraft(characterName ?? ''), [characterName])
   useEffect(() => setProfileDraft(profilePath ?? ''), [profilePath])
+  useEffect(() => setRegexDraft(searchRegex), [searchRegex])
 
   // Re-register hotkeys from stored settings when the panel closes (covers
   // closing mid-capture, which leaves them paused).
@@ -128,6 +137,16 @@ export function SettingsPanel(): React.JSX.Element {
         commitPath(p)
       }
     })
+  }
+
+  // Same rule as normalizeSearchRegex (electron/search-regex.ts), which is the
+  // one that's stored: line breaks out, inner spaces kept — a space is part of
+  // the pattern. Mirrored here so the field shows what was actually saved.
+  const commitRegex = (value: string): void => {
+    const v = value.replace(/[\r\n]+/g, '').trim()
+    setRegexDraft(v)
+    patch({ searchRegex: v })
+    void window.overlay?.setSettings({ searchRegex: v })
   }
 
   const commitCharacter = (value: string): void => {
@@ -346,6 +365,38 @@ export function SettingsPanel(): React.JSX.Element {
                   </div>
                 )
               })}
+            </div>
+          </Section>
+
+          <Section title="Search regex">
+            <input
+              type="text"
+              spellCheck={false}
+              value={regexDraft}
+              placeholder='e.g. "r-g-b|b-r-g"'
+              onChange={(e) => setRegexDraft(e.target.value)}
+              onBlur={() => commitRegex(regexDraft)}
+              onKeyDown={(e) => e.key === 'Enter' && commitRegex(regexDraft)}
+              className="w-full rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
+            />
+            <div className="mt-1 flex items-start justify-between gap-2">
+              <p className="text-[10px] text-overlay-muted">
+                Adds a <b className="text-overlay-text">Regex</b> button to the overlay&apos;s header.
+                Click it, then paste into a stash or vendor search box. The overlay only copies — the
+                paste is yours.
+              </p>
+              {/* The game cuts the search box off; past the limit the end of the
+                  pattern silently stops applying. Warn, never block — a
+                  string that's too long is still yours to keep. */}
+              <span
+                title={`The game's search box takes ${SEARCH_BOX_LIMIT} characters; anything past that is cut off.`}
+                className={
+                  'shrink-0 font-mono text-[10px] ' +
+                  (regexDraft.length > SEARCH_BOX_LIMIT ? 'text-amber-300' : 'text-overlay-muted')
+                }
+              >
+                {regexDraft.length}/{SEARCH_BOX_LIMIT}
+              </span>
             </div>
           </Section>
 
