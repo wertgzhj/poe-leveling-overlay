@@ -372,6 +372,7 @@ type UpdateStatusBridge =
   | { state: 'current'; version: string }
   | { state: 'downloading'; version: string; percent: number }
   | { state: 'ready'; version: string }
+  | { state: 'publishing'; version: string | null }
   | { state: 'error'; message: string }
 
 interface OverlayBridge {

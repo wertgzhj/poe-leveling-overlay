@@ -456,6 +456,8 @@ function UpdateRow(): React.JSX.Element {
         return `Downloading v${update.version}… ${update.percent}%`
       case 'ready':
         return `v${update.version} downloaded — restart to finish.`
+      case 'publishing':
+        return `${update.version ? `v${update.version}` : 'A new version'} is still being published — check again in a few minutes.`
       case 'error':
         return `Couldn't check: ${update.message}`
       default:

@@ -13,6 +13,7 @@
 import { app } from 'electron'
 import electronUpdater from 'electron-updater'
 import { Channels, type UpdateStatus } from '../channels.ts'
+import { classifyUpdateError } from './errors.ts'
 import type { OverlayController } from '../overlay.ts'
 
 const { autoUpdater } = electronUpdater
@@ -54,9 +55,7 @@ export class UpdateService {
     autoUpdater.on('update-downloaded', (info) =>
       this.set({ state: 'ready', version: info.version })
     )
-    autoUpdater.on('error', (err) =>
-      this.set({ state: 'error', message: err == null ? 'unknown error' : String(err.message ?? err) })
-    )
+    autoUpdater.on('error', (err) => this.fail(err))
 
     this.firstTimer = setTimeout(() => this.check(), FIRST_CHECK_MS)
     this.timer = setInterval(() => this.check(), RECHECK_MS)
@@ -78,9 +77,7 @@ export class UpdateService {
     if (!app.isPackaged) return
     // Don't stack checks on top of an in-flight download/ready state.
     if (this.status.state === 'downloading' || this.status.state === 'ready') return
-    autoUpdater.checkForUpdates().catch((err: unknown) =>
-      this.set({ state: 'error', message: err instanceof Error ? err.message : String(err) })
-    )
+    autoUpdater.checkForUpdates().catch((err: unknown) => this.fail(err))
   }
 
   /** Quit and install a downloaded update. Only valid in the `ready` state. */
@@ -89,6 +86,16 @@ export class UpdateService {
     // Per-user install (perMachine: false) needs no UAC, so a silent reinstall +
     // relaunch is the "effortless" path: click Restart, it swaps and reopens.
     autoUpdater.quitAndInstall(true, true)
+  }
+
+  /** A failed check, said the way a player can use it (see errors.ts). */
+  private fail(err: unknown): void {
+    const problem = classifyUpdateError(err)
+    this.set(
+      problem.kind === 'publishing'
+        ? { state: 'publishing', version: problem.version }
+        : { state: 'error', message: problem.message }
+    )
   }
 
   private versionOf(): string {

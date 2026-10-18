@@ -6,9 +6,9 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 196 tests: parser, tracker, watcher, guide, profile,
+npm test        # 200 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
-                # search regex, profile library
+                # search regex, profile library, update errors
 npm run typecheck
 npm run build
 ```
@@ -174,6 +174,12 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    badge tracks the same flow and is clickable once ready. Dev and unpackaged
    runs report updates as *disabled*; an unreachable feed reports *Couldn't
    check* and never nags.
+
+   Check for updates in the few minutes **after publishing a release, before
+   its build finishes**: Settings must say *vX is still being published* in
+   ordinary text — not red, no `!` on the version badge. And whatever goes
+   wrong, the line is one short sentence: no HTTP headers, no stack trace, no
+   `C:\Users\…` path. Those all used to be shown in full.
 
 ## Known limitations
 
