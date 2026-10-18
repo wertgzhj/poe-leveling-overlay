@@ -19,10 +19,12 @@ const TAB_FIELDS: ReadonlyArray<readonly [keyof VisibleTabsBridge, string]> = [
   ['trials', 'Trials']
 ]
 
-// The game's stash/vendor search box length. PROVISIONAL: it's the figure the
-// community regex tools build around, not one verified in game from here — see
-// docs/TESTING.md. Only drives a warning colour, never a block.
-const SEARCH_BOX_LIMIT = 50
+// The game's stash/vendor search box length — 250 characters, confirmed in game
+// (October 2026): a 250-character paste went in whole, and that is where the box
+// stops. The community regex tools still quote 50, which is five times too
+// tight: a typical levelling regex is ~49 characters on its own. Only drives a
+// warning colour, never a block.
+const SEARCH_BOX_LIMIT = 250
 
 // One shared empty list, so the store selector's shallow compare doesn't see a
 // "new" library on every render before the first profile snapshot arrives.

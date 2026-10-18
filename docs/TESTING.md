@@ -56,10 +56,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    header. Paste a string (a trailing line break from a web page must vanish on
    save), and the button appears beside ⚙. In interactive mode, click it: it
    reads `✓ copied` for a moment *without* nudging ⚙ sideways, and Ctrl+V in a
-   stash or vendor search box pastes exactly the string. Confirm the **50
-   character** figure while you're there — paste something longer and check
-   where the game cuts it off. The counter turns amber past 50, and that number
-   comes from community regex tools, not from the game.
+   stash or vendor search box pastes exactly the string. The counter turns amber
+   past **250** characters — the game's search box limit, confirmed in game. (The
+   community regex tools say 50; that is wrong by a factor of five.)
 4. **Tracking.** The tracker strip shows the current zone and level while
    playing. Restart the overlay mid-session — it resumes both. With no character
    pinned, rolling a fresh character (entering the Twilight Strand) switches
