@@ -4,8 +4,10 @@ import {
   type AppInfo,
   type DetectedCharacter,
   type EditorLoad,
+  type EditorProfileLoad,
   type EditorSaveResult,
   type GuideState,
+  type LibraryResult,
   type LogSnapshot,
   type OverlayState,
   type PobImportResponse,
@@ -56,7 +58,14 @@ const api = {
   stageStep: (delta: number): void => ipcRenderer.send(Channels.profileStageStep, delta),
   stageToLive: (): void => ipcRenderer.send(Channels.profileStageLive),
   dismissChoice: (id: string): void => ipcRenderer.send(Channels.profileDismissChoice, id),
-  pickProfile: (): Promise<string | null> => ipcRenderer.invoke(Channels.dialogPickProfile),
+  activateProfile: (id: string): Promise<boolean> => ipcRenderer.invoke(Channels.profilesActivate, id),
+  createProfile: (name: string, charClass: string): Promise<LibraryResult> =>
+    ipcRenderer.invoke(Channels.profilesCreate, { name, charClass }),
+  duplicateProfile: (id: string): Promise<LibraryResult> => ipcRenderer.invoke(Channels.profilesDuplicate, id),
+  renameProfile: (id: string, name: string): Promise<LibraryResult> =>
+    ipcRenderer.invoke(Channels.profilesRename, { id, name }),
+  deleteProfile: (id: string): Promise<LibraryResult> => ipcRenderer.invoke(Channels.profilesDelete, id),
+  importProfileFile: (): Promise<LibraryResult | null> => ipcRenderer.invoke(Channels.profilesImportFile),
   importPob: (input: string): Promise<PobImportResponse> =>
     ipcRenderer.invoke(Channels.pobImport, input),
 
@@ -73,12 +82,15 @@ const api = {
   checkForUpdates: (): void => ipcRenderer.send(Channels.updateCheck),
   installUpdate: (): void => ipcRenderer.send(Channels.updateInstall),
 
-  openEditor: (): void => ipcRenderer.send(Channels.editorOpen),
+  openEditor: (tab?: string): void => ipcRenderer.send(Channels.editorOpen, tab),
+  onEditorFocusTab: (cb: (tab: string) => void): (() => void) => subscribe(Channels.editorFocusTab, cb),
+  editorLoadProfile: (id: string): Promise<EditorProfileLoad | null> =>
+    ipcRenderer.invoke(Channels.editorLoadProfile, id),
   editorLoad: (): Promise<EditorLoad> => ipcRenderer.invoke(Channels.editorLoad),
   editorSaveRoute: (act: number, json: unknown): Promise<EditorSaveResult> =>
     ipcRenderer.invoke(Channels.editorSaveRoute, { act, json }),
-  editorSaveProfile: (json: unknown): Promise<EditorSaveResult> =>
-    ipcRenderer.invoke(Channels.editorSaveProfile, json),
+  editorSaveProfile: (id: string, json: unknown): Promise<EditorSaveResult> =>
+    ipcRenderer.invoke(Channels.editorSaveProfile, { id, json }),
   editorExportRoutes: (): Promise<string> => ipcRenderer.invoke(Channels.editorExportRoutes),
   editorImportRoutes: (text: string): Promise<RouteImportResult> =>
     ipcRenderer.invoke(Channels.editorImportRoutes, text),

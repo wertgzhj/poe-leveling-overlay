@@ -1,4 +1,4 @@
-import { app, clipboard, dialog, ipcMain } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron'
 import { Channels, type AppInfo, type SettingsSetResult } from './channels'
 import {
   getHotkeys,
@@ -18,14 +18,13 @@ import type { TrialsService } from './trials/service.ts'
 import type { UpdateService } from './update/service.ts'
 import { importPobCode, importPobXml } from './profile/pob.ts'
 import { resolvePobInput } from './profile/pobbin.ts'
-import type { EditorSaveResult, PobImportResponse, RouteImportResult } from './channels'
+import type { EditorSaveResult, LibraryResult, PobImportResponse, RouteImportResult } from './channels'
 import type { EditorWindow } from './editor-window.ts'
 import {
   loadForEditor,
   routesForExport,
   importRoutes,
   saveRoute as saveRouteFile,
-  saveProfile as saveProfileFile
 } from './editor/io.ts'
 import { exportRoutes } from './guide/share.ts'
 
@@ -71,11 +70,6 @@ export function registerIpc(
       const next = typeof c === 'string' && c.trim().length > 0 ? c.trim() : null
       store.set('characterName', next)
       log.setCharacter(next)
-    }
-    if ('profilePath' in patch) {
-      const p = patch.profilePath
-      const next = typeof p === 'string' && p.trim().length > 0 ? p.trim() : null
-      if (next !== store.get('profilePath')) profile.setPath(next)
     }
     if (typeof patch.clickThrough === 'boolean') {
       overlay.setClickThrough(patch.clickThrough)
@@ -140,17 +134,53 @@ export function registerIpc(
     if (typeof id === 'string') profile.dismissChoice(id)
   })
 
-  ipcMain.on(Channels.editorOpen, () => editor.open())
+  ipcMain.on(Channels.editorOpen, (_e, tab: unknown) => editor.open(typeof tab === 'string' ? tab : undefined))
   ipcMain.handle(Channels.editorLoad, () => loadForEditor())
   ipcMain.handle(Channels.editorSaveRoute, (_e, payload: { act: number; json: unknown }): EditorSaveResult => {
     if (!payload || typeof payload.act !== 'number') return { ok: false, errors: ['bad payload'] }
     // The guide watches the override path, so writing it hot-reloads the overlay.
     return saveRouteFile(payload.act, payload.json)
   })
-  ipcMain.handle(Channels.editorSaveProfile, (_e, json: unknown): EditorSaveResult => {
-    const result = saveProfileFile(json)
-    if (result.ok && result.path) profile.setPath(result.path) // activate + reload
-    return result
+  ipcMain.handle(Channels.editorLoadProfile, (_e, id: unknown) =>
+    typeof id === 'string' ? profile.forEditor(id) : null
+  )
+  ipcMain.handle(Channels.editorSaveProfile, (_e, payload: { id?: unknown; json?: unknown }): EditorSaveResult => {
+    if (!payload || typeof payload.id !== 'string') return { ok: false, errors: ['bad payload'] }
+    return profile.saveFromEditor(payload.id, payload.json)
+  })
+
+  // The profile library. Every call names a profile by its library id — never
+  // by path — so the renderer can't point any of these at a file elsewhere.
+  ipcMain.handle(Channels.profilesActivate, (_e, id: unknown): boolean =>
+    typeof id === 'string' ? profile.activate(id) : false
+  )
+  ipcMain.handle(Channels.profilesCreate, (_e, p: { name?: unknown; charClass?: unknown }): LibraryResult => {
+    if (!p || typeof p.name !== 'string' || typeof p.charClass !== 'string') {
+      return { ok: false, errors: ['bad payload'] }
+    }
+    return profile.create(p.name, p.charClass)
+  })
+  ipcMain.handle(Channels.profilesDuplicate, (_e, id: unknown): LibraryResult =>
+    typeof id === 'string' ? profile.duplicate(id) : { ok: false, errors: ['bad payload'] }
+  )
+  ipcMain.handle(Channels.profilesRename, (_e, p: { id?: unknown; name?: unknown }): LibraryResult => {
+    if (!p || typeof p.id !== 'string' || typeof p.name !== 'string') return { ok: false, errors: ['bad payload'] }
+    return profile.rename(p.id, p.name)
+  })
+  ipcMain.handle(Channels.profilesDelete, (_e, id: unknown): Promise<LibraryResult> | LibraryResult =>
+    typeof id === 'string' ? profile.remove(id) : { ok: false, errors: ['bad payload'] }
+  )
+  ipcMain.handle(Channels.profilesImportFile, async (e): Promise<LibraryResult | null> => {
+    // The dialog belongs to whichever window asked — the editor, normally.
+    const owner = BrowserWindow.fromWebContents(e.sender)
+    const opts: Electron.OpenDialogOptions = {
+      title: 'Import a build profile',
+      properties: ['openFile'],
+      filters: [{ name: 'Profile JSON', extensions: ['json'] }]
+    }
+    const picked = owner ? await dialog.showOpenDialog(owner, opts) : await dialog.showOpenDialog(opts)
+    if (picked.canceled || !picked.filePaths[0]) return null
+    return profile.importFile(picked.filePaths[0])
   })
 
   ipcMain.handle(Channels.editorExportRoutes, (): string => exportRoutes(routesForExport()))
@@ -183,17 +213,15 @@ export function registerIpc(
     if (resolved.error) return { ok: false, warnings: [], errors: [resolved.error] }
     const result = resolved.xml ? importPobXml(resolved.xml) : importPobCode(resolved.code as string)
     if (!result.profile) return { ok: false, warnings: result.warnings, errors: result.errors }
-    const path = profile.applyImport(result.profile)
-    return { ok: true, path, warnings: result.warnings, errors: [] }
+    const added = profile.applyImport(result.profile)
+    if (!added.ok) return { ok: false, warnings: result.warnings, errors: added.errors }
+    return { ok: true, path: added.entry?.path, warnings: result.warnings, errors: [] }
   })
 
   ipcMain.handle(Channels.dialogPickClientTxt, async (): Promise<string | null> => {
     return pickFile(overlay, 'Select Client.txt', [{ name: 'Client log', extensions: ['txt'] }])
   })
 
-  ipcMain.handle(Channels.dialogPickProfile, async (): Promise<string | null> => {
-    return pickFile(overlay, 'Select build profile', [{ name: 'Profile JSON', extensions: ['json'] }])
-  })
 }
 
 async function pickFile(

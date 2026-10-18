@@ -152,9 +152,9 @@ move mode, click-through, and **Quit**.
 ## Author your route
 
 **Editor:** open **Edit routes & profile…** from the tray (or the button in overlay
-Settings) for a visual editor — add/edit/reorder route steps per act and edit the
-build profile's stages/links, with the same validation the app loads with; saves go to
-your editable copies and the overlay hot-reloads. Or edit the JSON directly, as below.
+Settings) for a visual editor — add/edit/reorder route steps per act, manage your
+build profiles and edit their stages/links, with the same validation the app loads
+with; a profile saves back to its own file, and the overlay hot-reloads. Or edit the JSON directly, as below.
 
 **Swapping routes with someone:** *Share routes…* in the editor exports every act as
 JSON you can paste anywhere, and imports the same back. Nothing is uploaded — it's
@@ -184,12 +184,19 @@ save** and shows validation problems in the panel.
 
 The **Gems** tab shows the gems to have socketed at your current level, with socket
 colours computed automatically (Str = red, Dex = green, Int = blue), plus what to buy
-or take as a quest reward. It's driven by a profile JSON — like routes, you write it
-yourself for now.
+or take as a quest reward. It's driven by a build profile — like routes, you write it
+yourself (or import it from Path of Building, below).
 
-- Point **Settings → Build profile** at your file (or edit the bundled
-  `data/profiles/example.json`); it **hot-reloads on save** with validation shown in
-  the panel. Leave the setting empty to use the example.
+- **Keep as many profiles as you have builds.** Switch between them in
+  **Settings → Build profile**; create, duplicate, rename and delete them under
+  **Manage… → Profiles** in the editor. Each is its own file in your app data, so a
+  second build never overwrites the first, and a deleted one goes to the recycle bin.
+  Each character remembers the profile it was last played with and switches back
+  to it by itself.
+- **New profile** starts from your class's two starting gems; **Import file…** copies
+  a profile JSON from anywhere into your profiles (the original is left alone). The
+  bundled example is read-only — saving it in the editor makes a copy of your own.
+- The active profile **hot-reloads on save** with validation shown in the panel.
 - `meta` sets `name` + `class` (one of the seven classes). It can also record the
   two **one-shot decisions** the campaign asks for — `bandit` (`Alira` / `Kraityn` /
   `Oak` / `Kill all`) and `pantheon` (`major` / `minor`, e.g. `Soul of Lunaris`). Both
@@ -268,8 +275,9 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
 **Import from Path of Building** instead of writing stages by hand: in
 **Settings → Build profile → Import from Path of Building**, paste a PoB export
 code or a `pobb.in` / `pastebin` link and hit **Import** — it decodes the build,
-reads the class and the per-level-range skill sets, and writes an active profile
-(reviewing any warnings it shows). Gem *sources* are left blank for you to fill
+reads the class and the per-level-range skill sets, and adds it as a **new** profile
+and makes it active — importing another build never replaces this one (reviewing any
+warnings it shows). Gem *sources* are left blank for you to fill
 (full gem data is a later phase). Headless equivalent:
 
 ```bash

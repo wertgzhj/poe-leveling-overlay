@@ -124,6 +124,21 @@ error if it can't be read.
 
 ### Build profiles — JSON, one per build
 
+**Where they live.** Every profile is its own file in `userData/profiles/`,
+named once from its name when created (`cyclone-slayer.json`, then
+`cyclone-slayer-2.json`) and never renamed — renaming changes `meta.name` inside,
+so nothing that remembers a profile by path can be left pointing at nothing. The
+active one is `settings.profilePath` (null = the bundled, read-only example), and
+`profileByCharacter` remembers each character's. `electron/profile/library.ts`
+owns the folder and takes it as a parameter, so it is tested against a real temp
+dir; the renderer only ever names a profile by id, never by path.
+
+It used to be two fixed files on a last-write-wins basis — every PoB import went
+to `pob-import.json`, every editor save to `profile.json` — which made a second
+character's import silently replace the first one's build. Profiles that older
+versions referenced from elsewhere on disk are copied in on launch and the
+references repointed.
+
 Two independent axes: `stages` is the **loadout per level range**, `gemPlan` is
 the **acquisition timeline** — where each gem comes from.
 

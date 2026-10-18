@@ -20,6 +20,7 @@ const guideService = new GuideService(overlay, logService)
 const profileService = new ProfileService(overlay, logService)
 const trialsService = new TrialsService(overlay, logService)
 const editorWindow = new EditorWindow()
+profileService.attachEditor(editorWindow)
 const updateService = new UpdateService(overlay)
 let tray: ReturnType<typeof createTray> = null
 

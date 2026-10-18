@@ -24,6 +24,17 @@ const TAB_FIELDS: ReadonlyArray<readonly [keyof VisibleTabsBridge, string]> = [
 // docs/TESTING.md. Only drives a warning colour, never a block.
 const SEARCH_BOX_LIMIT = 50
 
+// One shared empty list, so the store selector's shallow compare doesn't see a
+// "new" library on every render before the first profile snapshot arrives.
+const NO_PROFILES: LibraryEntryBridge[] = []
+
+/** How a profile reads in the dropdown: its name, then what it's for. */
+function profileLabel(e: LibraryEntryBridge): string {
+  if (e.errors.length > 0) return `${e.name} — won't load`
+  const what = e.bundled ? 'example' : (e.ascendancy ?? e.charClass)
+  return what ? `${e.name} — ${what}` : e.name
+}
+
 function hasModifier(accelerator: string): boolean {
   return /(CommandOrControl|CmdOrCtrl|Control|Ctrl|Alt|AltGr|Shift|Super|Meta)/.test(accelerator)
 }
@@ -34,7 +45,8 @@ export function SettingsPanel(): React.JSX.Element {
     opacity,
     clickThrough,
     clientTxtPath,
-    profilePath,
+    library,
+    activeId,
     characterName,
     visibleTabs,
     searchRegex,
@@ -45,7 +57,8 @@ export function SettingsPanel(): React.JSX.Element {
       opacity: s.opacity,
       clickThrough: s.clickThrough,
       clientTxtPath: s.clientTxtPath,
-      profilePath: s.profilePath,
+      library: s.profile?.library ?? NO_PROFILES,
+      activeId: s.profile?.activeId ?? null,
       characterName: s.characterName,
       visibleTabs: s.visibleTabs,
       searchRegex: s.searchRegex,
@@ -56,7 +69,6 @@ export function SettingsPanel(): React.JSX.Element {
   const [failed, setFailed] = useState<Set<string>>(new Set())
   const [pathDraft, setPathDraft] = useState(clientTxtPath ?? '')
   const [charDraft, setCharDraft] = useState(characterName ?? '')
-  const [profileDraft, setProfileDraft] = useState(profilePath ?? '')
   const [regexDraft, setRegexDraft] = useState(searchRegex)
   const [pobInput, setPobInput] = useState('')
   const [pobBusy, setPobBusy] = useState(false)
@@ -64,7 +76,6 @@ export function SettingsPanel(): React.JSX.Element {
 
   useEffect(() => setPathDraft(clientTxtPath ?? ''), [clientTxtPath])
   useEffect(() => setCharDraft(characterName ?? ''), [characterName])
-  useEffect(() => setProfileDraft(profilePath ?? ''), [profilePath])
   useEffect(() => setRegexDraft(searchRegex), [searchRegex])
 
   // Re-register hotkeys from stored settings when the panel closes (covers
@@ -148,20 +159,6 @@ export function SettingsPanel(): React.JSX.Element {
     void window.overlay?.setSettings({ characterName: v.length ? v : null })
   }
 
-  const commitProfile = (value: string): void => {
-    const v = value.trim()
-    patch({ profilePath: v.length ? v : null })
-    void window.overlay?.setSettings({ profilePath: v.length ? v : null })
-  }
-
-  const browseProfile = (): void => {
-    void window.overlay?.pickProfile().then((p) => {
-      if (p) {
-        setProfileDraft(p)
-        commitProfile(p)
-      }
-    })
-  }
 
   const importPob = (): void => {
     const input = pobInput.trim()
@@ -171,10 +168,8 @@ export function SettingsPanel(): React.JSX.Element {
     void window.overlay?.importPob(input).then((r) => {
       setPobBusy(false)
       setPobResult(r)
-      if (r?.ok) {
-        setPobInput('')
-        if (r.path) patch({ profilePath: r.path })
-      }
+      // The new profile arrives with the next profile snapshot, dropdown and all.
+      if (r?.ok) setPobInput('')
     })
   }
 
@@ -211,28 +206,33 @@ export function SettingsPanel(): React.JSX.Element {
           </button>
 
           <Section title="Build profile">
-            <label className="text-[11px] text-overlay-muted">Profile JSON path</label>
+            <label className="text-[11px] text-overlay-muted">Active profile</label>
             <div className="mt-1 flex gap-1.5">
-              <input
-                type="text"
-                spellCheck={false}
-                value={profileDraft}
-                placeholder="bundled example (leave empty)"
-                onChange={(e) => setProfileDraft(e.target.value)}
-                onBlur={() => commitProfile(profileDraft)}
-                className="min-w-0 flex-1 rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
-              />
-              <button
-                onClick={browseProfile}
-                className="shrink-0 rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15"
+              <select
+                value={activeId ?? ''}
+                onChange={(e) => e.target.value && void window.overlay?.activateProfile(e.target.value)}
+                className="min-w-0 flex-1 rounded border border-overlay-border bg-black/30 px-2 py-1 text-[11px] text-overlay-text outline-none focus:border-overlay-accent"
               >
-                Browse…
+                {/* Only after a profile file went missing — say so instead of
+                    showing some other profile as if it were active. */}
+                {activeId == null && <option value="">— not in your profiles —</option>}
+                {library.map((e) => (
+                  <option key={e.id} value={e.id} disabled={e.errors.length > 0}>
+                    {profileLabel(e)}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => window.overlay?.openEditor('profiles')}
+                className="shrink-0 rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15"
+                title="New, duplicate, rename, delete — in the editor window"
+              >
+                Manage…
               </button>
             </div>
             <p className="mt-1 text-[10px] text-overlay-muted">
-              Drives the Gems tab. Hot-reloads on save. Leave empty for the bundled example.
+              Drives the Gems tab. A character switches back to the profile it was last played with.
             </p>
-
             <label className="mt-2 block text-[11px] text-overlay-muted">
               Import from Path of Building
             </label>
@@ -252,7 +252,7 @@ export function SettingsPanel(): React.JSX.Element {
               >
                 {pobBusy ? 'Importing…' : 'Import'}
               </button>
-              <span className="text-[10px] text-overlay-muted">creates + activates a profile</span>
+              <span className="text-[10px] text-overlay-muted">adds a new profile and makes it active</span>
             </div>
             {pobResult && (
               <div
@@ -264,7 +264,7 @@ export function SettingsPanel(): React.JSX.Element {
                 }
               >
                 {pobResult.ok ? (
-                  <div>Imported — now the active profile. See the Gems tab.</div>
+                  <div>Imported as a new profile — now active. See the Gems tab.</div>
                 ) : (
                   pobResult.errors.map((e, i) => <div key={i}>· {e}</div>)
                 )}

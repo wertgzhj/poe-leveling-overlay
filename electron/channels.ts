@@ -7,8 +7,9 @@ import type { Route } from './guide/route.ts'
 import type { ProfileMeta, Profile } from './profile/profile.ts'
 import type { ResolvedStage, Acquisitions } from './profile/engine.ts'
 import type { TrialsSnapshot } from './trials/engine.ts'
+import type { LibraryEntry, LibraryResult } from './profile/library.ts'
 
-export type { TrialsSnapshot }
+export type { TrialsSnapshot, LibraryEntry, LibraryResult }
 
 export const Channels = {
   /** main -> renderer: overlay interaction state changed */
@@ -33,8 +34,18 @@ export const Channels = {
   hotkeysResume: 'hotkeys:resume',
   /** renderer -> main (invoke): native file picker for the Client.txt path */
   dialogPickClientTxt: 'dialog:pick-client-txt',
-  /** renderer -> main (invoke): native file picker for the build profile path */
-  dialogPickProfile: 'dialog:pick-profile',
+  /** renderer -> main (invoke): switch the active profile by library id */
+  profilesActivate: 'profiles:activate',
+  /** editor -> main (invoke): a new profile from a name + class */
+  profilesCreate: 'profiles:create',
+  /** editor -> main (invoke): copy a profile as a new one */
+  profilesDuplicate: 'profiles:duplicate',
+  /** editor -> main (invoke): rename a profile (its meta.name) */
+  profilesRename: 'profiles:rename',
+  /** editor -> main (invoke): move a profile to the recycle bin */
+  profilesDelete: 'profiles:delete',
+  /** editor -> main (invoke): pick an outside JSON file and copy it in */
+  profilesImportFile: 'profiles:import-file',
   /** renderer -> main (invoke): app/runtime info for the panel */
   appGetInfo: 'app:get-info',
   /** main -> renderer: log watcher status changed */
@@ -81,8 +92,12 @@ export const Channels = {
   editorLoad: 'editor:load',
   /** editor -> main (invoke): validate + save one act route to the userData override */
   editorSaveRoute: 'editor:save-route',
-  /** editor -> main (invoke): validate + save + activate the profile */
+  /** editor -> main (invoke): one library profile, parsed, for editing */
+  editorLoadProfile: 'editor:load-profile',
+  /** editor -> main (invoke): validate + save a profile back to its own file */
   editorSaveProfile: 'editor:save-profile',
+  /** main -> editor: bring a tab to the front ("Manage profiles…") */
+  editorFocusTab: 'editor:focus-tab',
   /** editor -> main (invoke): the routes in effect, serialized for sharing */
   editorExportRoutes: 'editor:export-routes',
   /** editor -> main (invoke): validate shared routes and write them as overrides */
@@ -194,6 +209,10 @@ export interface ProfileSnapshot {
   liveIndex: number
   /** a bandit/pantheon reminder that is due and not yet acknowledged. */
   choiceDue: ChoiceDue | null
+  /** Every profile you have, bundled example first. */
+  library: LibraryEntry[]
+  /** The active profile's library id; null if it isn't in the library. */
+  activeId: string | null
 }
 
 /** A one-shot build decision the profile names and you've now reached the point
@@ -223,7 +242,16 @@ export interface EditorRouteEntry {
 
 export interface EditorLoad {
   routes: EditorRouteEntry[]
-  profile: { profile: Profile | null; errors: string[]; path: string | null }
+}
+
+/** One profile opened in the editor. */
+export interface EditorProfileLoad {
+  id: string
+  path: string
+  /** the bundled example: saving it creates a new profile of yours */
+  bundled: boolean
+  profile: Profile | null
+  errors: string[]
 }
 
 /** Outcome of importing shared routes: which acts landed, and everything that
@@ -237,6 +265,8 @@ export interface EditorSaveResult {
   ok: boolean
   errors: string[]
   path?: string
+  /** a profile save: the id it landed under (new when the example was saved) */
+  id?: string
 }
 
 /** Auto-update state machine, pushed to the renderer as it changes. */

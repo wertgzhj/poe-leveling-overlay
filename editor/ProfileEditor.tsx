@@ -43,25 +43,36 @@ function toDraft(p: ProfileFileBridge | null): ProfileDraft {
 }
 
 export function ProfileEditor({
-  profile,
-  path,
-  errors,
+  id,
+  isActive,
   onSaved
 }: {
-  profile: ProfileFileBridge | null
-  path: string | null
-  errors: string[]
-  onSaved: () => void
+  /** The library profile being edited — saving writes back to exactly it. */
+  id: string
+  isActive: boolean
+  /** Told the id the save landed under: a new one when the example was saved. */
+  onSaved: (savedId?: string) => void
 }): React.JSX.Element {
-  const [draft, setDraft] = useState<ProfileDraft>(() => toDraft(profile))
+  const [loaded, setLoaded] = useState<EditorProfileLoadBridge | null>(null)
+  const [draft, setDraft] = useState<ProfileDraft>(() => toDraft(null))
   const [dirty, setDirty] = useState(false)
   const [result, setResult] = useState<EditorSaveResultBridge | null>(null)
 
   useEffect(() => {
-    setDraft(toDraft(profile))
-    setDirty(false)
-    setResult(null)
-  }, [profile])
+    let stale = false
+    void window.overlay?.editorLoadProfile(id).then((res) => {
+      if (stale) return
+      setLoaded(res)
+      setDraft(toDraft(res?.profile ?? null))
+      setDirty(false)
+      setResult(null)
+    })
+    return () => {
+      stale = true
+    }
+  }, [id])
+
+  const errors = loaded?.errors ?? []
 
   const edit = (next: ProfileDraft): void => {
     setDraft(next)
@@ -73,11 +84,11 @@ export function ProfileEditor({
     edit({ ...draft, stages: draft.stages.map((s, j) => (j === i ? { ...s, ...patch } : s)) })
 
   const save = (): void => {
-    void window.overlay?.editorSaveProfile(serializeProfile(draft)).then((res) => {
+    void window.overlay?.editorSaveProfile(id, serializeProfile(draft)).then((res) => {
       setResult(res ?? null)
       if (res?.ok) {
         setDirty(false)
-        onSaved()
+        onSaved(res.id)
       }
     })
   }
@@ -89,9 +100,15 @@ export function ProfileEditor({
 
   return (
     <div className="flex flex-col gap-3">
+      {loaded?.bundled && (
+        <div className="rounded border border-overlay-border bg-white/5 p-2 text-xs text-overlay-muted">
+          This is the bundled example, which can’t be changed. Saving makes it a profile of your own and
+          switches to it.
+        </div>
+      )}
       {errors.length > 0 && (
         <div className="rounded border border-red-400/40 bg-red-400/10 p-2 text-xs text-red-300">
-          The current profile file has problems: {errors.join('; ')}
+          This profile file has problems: {errors.join('; ')}
         </div>
       )}
 
@@ -149,15 +166,25 @@ export function ProfileEditor({
           />
         </Labeled>
         <div className="ml-auto flex items-center gap-2">
-          <SaveResult result={result} />
-          <Btn variant="primary" onClick={save} disabled={!dirty} title="Validate + save and make active">
+          <SaveResult
+            result={result}
+            okText={
+              loaded?.bundled
+                ? 'Saved as a profile of your own — now active.'
+                : isActive
+                  ? 'Saved — the overlay reloaded.'
+                  : 'Saved.'
+            }
+          />
+          <Btn variant="primary" onClick={save} disabled={!dirty} title="Validate, then save to this profile's own file">
             Save profile
           </Btn>
         </div>
       </div>
       <div className="text-xs text-overlay-muted">
-        {path ? `Editing: ${path}` : 'Editing the bundled example'} · saving writes an editable copy and
-        makes it the active profile. {dirty && <span className="text-overlay-accent">● unsaved</span>}
+        {loaded ? `Editing: ${loaded.path}` : 'Loading…'}
+        {loaded && !loaded.bundled && (isActive ? ' · the active profile' : ' · not active — saving won’t change the overlay')}{' '}
+        {dirty && <span className="text-overlay-accent">● unsaved</span>}
       </div>
 
       <div className="flex flex-col gap-2">
