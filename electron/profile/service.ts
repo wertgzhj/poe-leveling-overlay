@@ -1,7 +1,8 @@
 // Glue between the pure profile engine and the Electron app: profile file load
 // with hot reload, gem data, live active-stage tracking from the bound
-// character's level, and IPC pushes. Profiles resolve from settings.profilePath
-// (a file you point at) or the bundled example.
+// character's level, and IPC pushes. Profiles live in the library
+// (userData/profiles, see library.ts); settings.profilePath names the active one,
+// and null means the bundled example.
 //
 // gems.json is READ AT RUNTIME rather than imported. It's ~370 KB, and an import
 // makes the bundler inline it as a JavaScript object literal that V8 has to
@@ -10,10 +11,10 @@
 // can go missing, so a failure to load is reported loudly (`gemDataError`)
 // instead of degrading into "every gem is unknown".
 
-import { app } from 'electron'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
+import { app, shell } from 'electron'
+import { existsSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
-import { parseProfile, baseClassOf, BANDITS, type Profile } from './profile.ts'
+import { parseProfile, validateProfile, baseClassOf, BANDITS, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, LIBRARY_ZONE, type GemInfo } from './gems.ts'
 import {
   activeStageIndex,
@@ -23,10 +24,28 @@ import {
   acquisitionsForStage,
   type Acquisitions
 } from './engine.ts'
+import {
+  BUNDLED_ID,
+  addProfile,
+  adoptExternal,
+  blankProfile,
+  deleteProfile,
+  dropReferences,
+  duplicateProfile,
+  importProfileFile,
+  isInLibrary,
+  listLibrary,
+  readEntry,
+  remapReferences,
+  renameProfile,
+  type LibraryEntry,
+  type LibraryResult
+} from './library.ts'
 import { store } from '../settings.ts'
 import { TWILIGHT_STRAND_ID } from '../log/tracker.ts'
-import { Channels, type ChoiceDue, type ProfileSnapshot } from '../channels.ts'
+import { Channels, type ChoiceDue, type EditorProfileLoad, type EditorSaveResult, type ProfileSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
+import type { EditorWindow } from '../editor-window.ts'
 import type { LogService } from '../log/service.ts'
 import startingGemsJson from '../../data/starting-gems.json'
 
@@ -59,6 +78,10 @@ export class ProfileService {
   /** The character the loaded profile is currently associated with, so a switch
    *  can be noticed. */
   private character: string | null = null
+  /** Every profile you have, bundled example first — re-read on each reload. */
+  private library: LibraryEntry[] = []
+  /** The editor window, when there is one: it lists the same library. */
+  private editor: EditorWindow | null = null
 
   constructor(overlay: OverlayController, log: LogService) {
     this.overlay = overlay
@@ -100,7 +123,33 @@ export class ProfileService {
     // Seed from the resumed area: the backscan doesn't emit area events, so
     // without this the plan shows every act until the next zone load.
     this.noteAct(actFromAreaId(state.area?.areaId))
+    this.adoptExternalProfiles()
     this.reload()
+  }
+
+  attachEditor(editor: EditorWindow): void {
+    this.editor = editor
+  }
+
+  /**
+   * Profiles used to be any file anywhere ("Browse…"). Copy the ones still in
+   * use into the library and repoint the active profile and every character at
+   * the copies, so each profile is one the library can rename, duplicate and
+   * delete. Runs every launch and is a no-op once nothing points outside.
+   */
+  private adoptExternalProfiles(): void {
+    const dir = libraryDir()
+    const bundled = bundledProfilePath()
+    const active = store.get('profilePath')
+    const byCharacter = store.get('profileByCharacter')
+    const outside = [active, ...Object.values(byCharacter)].filter(
+      (p): p is string => typeof p === 'string' && p !== bundled && !isInLibrary(dir, p)
+    )
+    if (outside.length === 0) return
+    const moved = adoptExternal(dir, outside)
+    if (moved.size === 0) return
+    if (active && moved.has(active)) store.set('profilePath', moved.get(active)!)
+    store.set('profileByCharacter', remapReferences(byCharacter, moved))
   }
 
   /** Follow the tracked character: when it changes to one that has a remembered
@@ -139,14 +188,130 @@ export class ProfileService {
     this.reload()
   }
 
-  /** Persist an imported profile into userData and make it the active file. */
-  applyImport(profile: Profile): string {
-    const dir = join(app.getPath('userData'), 'profiles')
-    mkdirSync(dir, { recursive: true })
-    const path = join(dir, 'pob-import.json')
-    writeFileSync(path, JSON.stringify(profile, null, 2) + '\n')
-    this.setPath(path)
-    return path
+  /** Add an imported build to the library as a NEW profile and make it the
+   *  active one. Never overwrites: a second import is a second profile. */
+  applyImport(profile: Profile): LibraryResult {
+    const result = addProfile(libraryDir(), profile)
+    if (result.ok && result.entry) this.setPath(result.entry.path)
+    return result
+  }
+
+  // --- The library ---------------------------------------------------------
+
+  /** Switch to a profile by id. The switch is also what binds it to the
+   *  tracked character (rememberProfile), exactly as picking a file did. */
+  activate(id: string): boolean {
+    if (id === BUNDLED_ID) {
+      this.setPath(null)
+      return true
+    }
+    const entry = this.entry(id)
+    if (!entry || entry.errors.length > 0) return false
+    this.setPath(entry.path)
+    return true
+  }
+
+  /** A new profile for `charClass`, starting from that class's own gems. Not
+   *  activated: you're about to edit it, not play it. */
+  create(name: string, charClass: string): LibraryResult {
+    const starting = (startingGemsJson.classes as Record<string, string[]>)[charClass] ?? []
+    return this.changed(addProfile(libraryDir(), blankProfile(name, charClass, starting)))
+  }
+
+  duplicate(id: string): LibraryResult {
+    const entry = this.entry(id)
+    if (!entry) return { ok: false, errors: ['no such profile'] }
+    return this.changed(duplicateProfile(libraryDir(), entry.path, entry.bundled === true))
+  }
+
+  rename(id: string, name: string): LibraryResult {
+    const entry = this.entry(id)
+    if (!entry || entry.bundled) return { ok: false, errors: ['the bundled example cannot be renamed'] }
+    return this.changed(renameProfile(entry.path, name), entry.path)
+  }
+
+  /** To the recycle bin, not gone: a deleted build should be one click from
+   *  coming back. Every character that used it forgets it, and if it was the
+   *  active one the overlay falls back to the example rather than to nothing. */
+  async remove(id: string): Promise<LibraryResult> {
+    const entry = this.entry(id)
+    if (!entry || entry.bundled) return { ok: false, errors: ['the bundled example cannot be deleted'] }
+    const result = await deleteProfile(libraryDir(), entry.path, (p) => shell.trashItem(p))
+    if (!result.ok) return result
+    store.set('profileByCharacter', dropReferences(store.get('profileByCharacter'), entry.path))
+    if (store.get('profilePath') === entry.path) this.setPath(null)
+    else this.changed(result)
+    return result
+  }
+
+  /** Copy an outside file into the library (the original is left alone). */
+  importFile(path: string): LibraryResult {
+    return this.changed(importProfileFile(libraryDir(), path))
+  }
+
+  /** One profile, parsed, for the editor. */
+  forEditor(id: string): EditorProfileLoad | null {
+    const entry = this.entry(id)
+    if (!entry) return null
+    let text: string
+    try {
+      text = readFileSync(entry.path, 'utf8')
+    } catch (e) {
+      return { id, path: entry.path, bundled: entry.bundled === true, profile: null, errors: [(e as Error).message] }
+    }
+    const { profile, errors } = parseProfile(text)
+    return { id, path: entry.path, bundled: entry.bundled === true, profile, errors }
+  }
+
+  /**
+   * Save an edit back to the file it came from. The editor used to write every
+   * profile to `profile.json`, whichever one you had open — so editing a second
+   * profile replaced the first. The bundled example can't be written, so
+   * saving it makes a new profile of yours and switches to it.
+   */
+  saveFromEditor(id: string, json: unknown): EditorSaveResult & { id?: string } {
+    const entry = this.entry(id)
+    if (!entry) return { ok: false, errors: ['that profile no longer exists'] }
+    if (entry.bundled) {
+      const created = addProfile(libraryDir(), json)
+      if (!created.ok || !created.entry) return { ok: false, errors: created.errors }
+      this.setPath(created.entry.path)
+      return { ok: true, errors: [], path: created.entry.path, id: created.entry.id }
+    }
+    const { profile, errors } = validateProfile(json)
+    if (!profile) return { ok: false, errors }
+    writeFileSync(entry.path, JSON.stringify(json, null, 2) + '\n')
+    // The active file is watched and reloads by itself; this just doesn't wait
+    // for the poll. Any other file only needs the list to catch up.
+    if (entry.path === store.get('profilePath')) this.reload()
+    else this.changed({ ok: true, errors: [] })
+    return { ok: true, errors: [], path: entry.path, id }
+  }
+
+  private entry(id: string): LibraryEntry | undefined {
+    return this.library.find((e) => e.id === id)
+  }
+
+  /** After a library change: re-read it and tell both windows. A change to the
+   *  active file itself goes through reload() instead, which does both. */
+  private changed(result: LibraryResult, touched?: string): LibraryResult {
+    if (!result.ok) return result
+    if (touched && touched === store.get('profilePath')) this.reload()
+    else {
+      this.refreshLibrary()
+      this.push()
+    }
+    return result
+  }
+
+  private refreshLibrary(): void {
+    this.library = [readEntry(bundledProfilePath(), true), ...listLibrary(libraryDir())]
+  }
+
+  private activeId(): string | null {
+    const configured = store.get('profilePath')
+    if (!configured) return BUNDLED_ID
+    return this.library.find((e) => e.path === configured)?.id ?? null
   }
 
   snapshot(): ProfileSnapshot {
@@ -188,7 +353,9 @@ export class ProfileService {
       stageCount: profile ? profile.stages.length : 0,
       viewedIndex: stageIndex,
       liveIndex,
-      choiceDue: this.choiceDue()
+      choiceDue: this.choiceDue(),
+      library: this.library,
+      activeId: this.activeId()
     }
   }
 
@@ -327,6 +494,7 @@ export class ProfileService {
     this.viewIndex = null
     this.profileRevision++
     this.acqCache = null
+    this.refreshLibrary()
     const path = this.resolvePath()
     this.watch(path)
 
@@ -354,11 +522,7 @@ export class ProfileService {
   }
 
   private resolvePath(): string {
-    const configured = store.get('profilePath')
-    if (configured) return configured
-    return app.isPackaged
-      ? join(process.resourcesPath, 'profiles', 'example.json')
-      : join(app.getAppPath(), 'data', 'profiles', 'example.json')
+    return store.get('profilePath') ?? bundledProfilePath()
   }
 
   // watchFile tolerates a missing file and fires when it appears, so pointing at
@@ -376,8 +540,22 @@ export class ProfileService {
   }
 
   private push(): void {
-    this.overlay.window?.webContents.send(Channels.profileState, this.snapshot())
+    const snap = this.snapshot()
+    this.overlay.window?.webContents.send(Channels.profileState, snap)
+    this.editor?.send(Channels.profileState, snap)
   }
+}
+
+/** Where your profiles live: one file each. */
+function libraryDir(): string {
+  return join(app.getPath('userData'), 'profiles')
+}
+
+/** The bundled example — read-only, and what an unset profilePath means. */
+function bundledProfilePath(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'profiles', 'example.json')
+    : join(app.getAppPath(), 'data', 'profiles', 'example.json')
 }
 
 /** Read gems.json from the app's resources (packaged) or the repo (dev). Never

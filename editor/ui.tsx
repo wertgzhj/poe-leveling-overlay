@@ -76,10 +76,17 @@ export function Btn(props: {
   )
 }
 
-export function SaveResult({ result }: { result: EditorSaveResultBridge | null }): React.JSX.Element | null {
+export function SaveResult({
+  result,
+  okText = 'Saved — the overlay reloaded.'
+}: {
+  result: EditorSaveResultBridge | null
+  /** What a successful save means here — not every save reloads the overlay. */
+  okText?: string
+}): React.JSX.Element | null {
   if (!result) return null
   if (result.ok) {
-    return <span className="text-xs text-emerald-400">Saved — the overlay reloaded.</span>
+    return <span className="text-xs text-emerald-400">{okText}</span>
   }
   return (
     <span className="text-xs text-red-300">

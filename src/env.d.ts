@@ -47,7 +47,6 @@ interface SettingsPatchBridge {
   clickThrough?: boolean
   hotkeys?: HotkeyBindingsBridge
   clientTxtPath?: string | null
-  profilePath?: string | null
   characterName?: string | null
   visibleTabs?: VisibleTabsBridge
   searchRegex?: string
@@ -249,6 +248,29 @@ interface ProfileSnapshotBridge {
   viewedIndex: number
   liveIndex: number
   choiceDue: ChoiceDueBridge | null
+  /** Every profile you have, bundled example first. */
+  library: LibraryEntryBridge[]
+  /** The active profile's id; null if it isn't in the library. */
+  activeId: string | null
+}
+
+/** One profile in the library — mirrors LibraryEntry in electron/profile/library.ts. */
+interface LibraryEntryBridge {
+  id: string
+  path: string
+  name: string
+  charClass?: string
+  ascendancy?: string
+  character?: string
+  stages: number
+  bundled?: boolean
+  errors: string[]
+}
+
+interface LibraryResultBridge {
+  ok: boolean
+  errors: string[]
+  entry?: LibraryEntryBridge
 }
 
 interface PobImportResponseBridge {
@@ -320,7 +342,14 @@ interface EditorRouteEntryBridge {
 
 interface EditorLoadBridge {
   routes: EditorRouteEntryBridge[]
-  profile: { profile: ProfileFileBridge | null; errors: string[]; path: string | null }
+}
+
+interface EditorProfileLoadBridge {
+  id: string
+  path: string
+  bundled: boolean
+  profile: ProfileFileBridge | null
+  errors: string[]
 }
 
 interface RouteImportResultBridge {
@@ -332,6 +361,8 @@ interface EditorSaveResultBridge {
   ok: boolean
   errors: string[]
   path?: string
+  /** a profile save: the id it landed under (new when the example was saved) */
+  id?: string
 }
 
 type UpdateStatusBridge =
@@ -363,7 +394,15 @@ interface OverlayBridge {
   stageStep(delta: number): void
   stageToLive(): void
   dismissChoice(id: string): void
-  pickProfile(): Promise<string | null>
+  /** Switch the active profile; false if it doesn't exist or won't load. */
+  activateProfile(id: string): Promise<boolean>
+  createProfile(name: string, charClass: string): Promise<LibraryResultBridge>
+  duplicateProfile(id: string): Promise<LibraryResultBridge>
+  renameProfile(id: string, name: string): Promise<LibraryResultBridge>
+  /** To the recycle bin. */
+  deleteProfile(id: string): Promise<LibraryResultBridge>
+  /** Pick an outside file and copy it in; null when the dialog was cancelled. */
+  importProfileFile(): Promise<LibraryResultBridge | null>
   importPob(input: string): Promise<PobImportResponseBridge>
   getTrials(): Promise<TrialsSnapshotBridge>
   onTrialsState(cb: (snap: TrialsSnapshotBridge) => void): () => void
@@ -380,10 +419,12 @@ interface OverlayBridge {
   resumeHotkeys(): void
   pickClientTxt(): Promise<string | null>
   getAppInfo(): Promise<AppInfoBridge>
-  openEditor(): void
+  openEditor(tab?: string): void
+  onEditorFocusTab(cb: (tab: string) => void): () => void
+  editorLoadProfile(id: string): Promise<EditorProfileLoadBridge | null>
   editorLoad(): Promise<EditorLoadBridge>
   editorSaveRoute(act: number, json: unknown): Promise<EditorSaveResultBridge>
-  editorSaveProfile(json: unknown): Promise<EditorSaveResultBridge>
+  editorSaveProfile(id: string, json: unknown): Promise<EditorSaveResultBridge>
   editorExportRoutes(): Promise<string>
   editorImportRoutes(text: string): Promise<RouteImportResultBridge>
   getUpdateStatus(): Promise<UpdateStatusBridge>

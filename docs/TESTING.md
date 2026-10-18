@@ -6,9 +6,9 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 183 tests: parser, tracker, watcher, guide, profile,
+npm test        # 196 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
-                # search regex
+                # search regex, profile library
 npm run typecheck
 npm run build
 ```
@@ -76,10 +76,10 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    character's steps under the other's name.
 5. **Guide.** Advances as zones are entered; a portal to town and back must not
    skip steps; `Ctrl+Shift+N/P` correct the cursor; it crosses act boundaries.
-6. **Gems.** Point Settings → Build profile at a profile, or paste a PoB code or
-   link into the importer. Play a second character and point the tab at its own
-   profile: switching back to the first should restore the first profile without
-   a trip to Settings. The tab shows the current stage's links with colours
+6. **Gems.** Pick a profile under Settings → Build profile, or paste a PoB code or
+   link into the importer. Play a second character and give it a profile of its
+   own: switching back to the first should restore the first profile without a
+   trip to Settings. The tab shows the current stage's links with colours
    and flips stages on level-up, the moment the level enters the next range.
    Close and reopen mid-session: it must show the correct stage immediately, not
    stage 1 until the next level-up.
@@ -139,7 +139,27 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    including after a restart — while a later Labyrinth still announces itself.
 9. **Editor.** Tray → *Edit routes & profile…* opens a normal window. Add or edit
    a step, save, and the Guide tab reflects it without a restart. Same for the
-   profile and the Gems tab. **Ascendancy** is a dropdown that offers only the
+   profile and the Gems tab.
+
+   **Profiles.** Settings → Build profile → *Manage…* must open the editor **on
+   the Profiles tab** — and bring it forward on that tab if it's already open.
+   The things that used to go wrong, each worth one check:
+   - **Import two different PoB builds.** Both must be in the list afterwards. The
+     first import used to be overwritten by the second, and with it the build of
+     every character that used it.
+   - **Edit a profile that isn't the active one**, save, then open it again: the
+     change is in *that* profile, the active one is untouched, and the overlay
+     didn't switch. Saves used to land in one shared file whatever you opened.
+   - **Save the bundled example** in the editor: it becomes a new profile of
+     yours and becomes active; the example itself stays as it was.
+   - **Delete** asks once inline (no dialog), the file is in the **recycle bin**,
+     and deleting the active profile switches the overlay to the example rather
+     than to nothing.
+   - **New profile** for a Marauder starts with Heavy Strike + Ruthless; a
+     duplicate is named "(copy)" and is bound to **no** character.
+   - **Upgrading from v0.15.0** with a profile picked via the old *Browse…* from
+     some other folder: after the update it is in the list as a copy, still
+     active, and still remembered by its character. The original file is untouched. **Ascendancy** is a dropdown that offers only the
    chosen class's three — switch the class and a pick that no longer fits must
    clear itself rather than leave a Witch Slayer. **Bandits** and the two
    **Pantheon** fields are dropdowns too; leaving them at "— none —" must write

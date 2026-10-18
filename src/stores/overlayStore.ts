@@ -12,7 +12,6 @@ interface OverlayStore {
   opacity: number
   hotkeys: HotkeyBindingsBridge
   clientTxtPath: string | null
-  profilePath: string | null
   characterName: string | null
   visibleTabs: VisibleTabsBridge
   /** Stash/vendor search string; '' hides the copy button. */
@@ -55,7 +54,6 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     stepBack: 'CommandOrControl+Shift+P'
   },
   clientTxtPath: null,
-  profilePath: null,
   characterName: null,
   visibleTabs: { guide: true, gems: true, trials: true },
   searchRegex: '',

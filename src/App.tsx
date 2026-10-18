@@ -23,7 +23,6 @@ export function App(): React.JSX.Element {
         clickThrough: s.clickThrough,
         hotkeys: s.hotkeys,
         clientTxtPath: s.clientTxtPath,
-        profilePath: s.profilePath,
         characterName: s.characterName,
         visibleTabs: s.visibleTabs,
         searchRegex: s.searchRegex
