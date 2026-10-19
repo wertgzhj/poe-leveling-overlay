@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 220 tests: parser, tracker, watcher, guide, profile,
+npm test        # 223 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
@@ -93,8 +93,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - A long gem name (`Melee Physical Damage Support`) and a long quest name
      (`The Siren's Cadence`) truncate with `…` and keep their row one line high;
      hovering shows the full text.
-   - **One mule per character, your choice.** A *Mule* dropdown sits under "Get
-     these gems" whenever the build has a gem another class gets by clearing the
+   - **One mule per character, your choice.** A *Mule* dropdown sits under the
+     class/level line — above the stage arrows, so paging stages never moves
+     it — whenever the build has a gem another class gets by clearing the
      Twilight Strand — its starting gems, Hillock's reward, or Nessa's first
      stock — that yours doesn't. On a fresh character it defaults to
      **Momentum** (else the gem the build needs first). The chosen gem reads
@@ -104,12 +105,16 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      "pick one". Pick Chance to Bleed instead and they swap. **No mule** turns
      it off for that character: Mercy Mission is a pick between both again, and
      no `Mule` appears anywhere. The choice is per character and survives a
-     restart; another character keeps its own.
+     restart; another character keeps its own. The `Mule` row is on the
+     **first stage only** — later stages don't repeat it, even when the gem is
+     first slotted there. The open dropdown is dark with readable text.
    - A quest reward reads `Reward`, and one your build needs twice `Reward +1`.
    - **The Caged Brute gives two rewards** — a support and a skill, each its own
      pick. A Marauder build with Faster Attacks, Leap Slam and Intimidating Cry
      must show Faster Attacks as a plain `Reward` and a separate *pick one* box
-     for Leap Slam / Intimidating Cry — never one box for all three. Every other
+     for Leap Slam / Intimidating Cry — never one box for all three. Same with
+     a Path of Building import, which spells it `Faster Attacks` (no
+     "Support"), and no later stage lists Faster Attacks as `(if not picked)`. Every other
      quest is one reward; a quest seen in game to give two goes in
      `TWO_REWARD_QUESTS` (`electron/profile/engine.ts`).
    - On a **fresh character in Act 1** the list holds Act 1 only. Act 2's quest

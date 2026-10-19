@@ -210,6 +210,17 @@ export class GemData {
     return this.byKey.get(exactGemKey(gem)) ?? this.byLoose.get(normalizeGemName(gem))
   }
 
+  /** Whether a gem is a support, decided by the dataset's own name for it, not
+   *  by how the profile spells it: Path of Building writes "Faster Attacks",
+   *  the data says "Faster Attacks Support". An exact name wins, so "Barrage"
+   *  stays the skill. Undefined for a gem the data doesn't know. */
+  isSupport(gem: string): boolean | undefined {
+    const exact = exactGemKey(gem)
+    if (this.byKey.has(exact)) return /\ssupport$/.test(exact)
+    if (this.byKey.has(`${normalizeGemName(gem)} support`)) return true
+    return undefined
+  }
+
   /** Socket colour for a gem. Three outcomes, deliberately distinct: a known
    *  attribute gives its colour; a known gem with no attribute requirement gives
    *  a white "any socket" pip (that's an answer, not a gap); an unknown name
