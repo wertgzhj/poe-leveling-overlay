@@ -1363,9 +1363,55 @@ test('a mule for a later stage is still done first, before the run', () => {
   assert.deepEqual(first?.kind === 'buy' ? first.entry.mule : null, ['Duelist'])
   const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
   assert.deepEqual(mercy?.gems.map((e) => e.gem), ['Momentum Support'])
-  // Once its stage has come and gone, it's done.
+  // And it is done then: the stage that first slots it doesn't send you back.
   const later = acquisitionsForStage(profile, 1, gems, { mule: bleed, playerLevel: 9 })
-  assert.ok(later.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
+  assert.ok(!later.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
+})
+
+test('the mule trip stays on the opening stages, however finely they are sliced', () => {
+  // Levels 1-2 and 3-4 as two stages: still the run's opening, still muling.
+  // From level 5 on, it's done.
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'B', class: 'Marauder' },
+      stages: [
+        { range: [1, 2], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] },
+        { range: [3, 4], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] },
+        { range: [5, 9], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Momentum Support'].map((gem) => ({ gem }))
+    })
+  ).profile!
+  const gems = exampleGems()
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const muled = (i: number): boolean =>
+    acquisitionsForStage(profile, i, gems, { mule: momentum, playerLevel: 3 }).plan.some(
+      (it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'
+    )
+  assert.deepEqual([0, 1, 2].map(muled), [true, true, false])
+})
+
+test('the mule trip is not carried through every stage', () => {
+  // Momentum first slotted in the third stage: muled before the run, and the
+  // stages in between don't repeat it.
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'B', class: 'Marauder' },
+      stages: [
+        { range: [1, 4], socketGroups: [{ gems: ['Ground Slam'] }] },
+        { range: [5, 9], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support'] }] },
+        { range: [10, 20], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Ruthless Support', 'Momentum Support'].map((gem) => ({ gem }))
+    })
+  ).profile!
+  const gems = exampleGems()
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const muled = (i: number): boolean =>
+    acquisitionsForStage(profile, i, gems, { mule: momentum, playerLevel: 12 }).plan.some(
+      (it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'
+    )
+  assert.deepEqual([0, 1, 2].map(muled), [true, false, false])
 })
 
 test('no mule makes every gem a quest or a buy again', () => {
@@ -1418,17 +1464,35 @@ test('a low-level alt of a class this build mules from is a mule, not the wrong 
 // "pick Faster Attacks, Leap Slam or Intimidating Cry, buy the rest". In game the
 // support window offers Faster Attacks and the skill window Leap Slam — both free.
 
-function cagedBrute(): Profile {
+function cagedBrute(faster = 'Faster Attacks Support'): Profile {
   return parseProfile(
     JSON.stringify({
       meta: { name: 'Berserker', class: 'Marauder' },
       stages: [
-        { range: [1, 20], socketGroups: [{ gems: ['Ground Slam', 'Faster Attacks Support', 'Leap Slam', 'Intimidating Cry'] }] }
+        { range: [1, 20], socketGroups: [{ gems: ['Ground Slam', faster, 'Leap Slam', 'Intimidating Cry'] }] }
       ],
-      gemPlan: ['Ground Slam', 'Faster Attacks Support', 'Leap Slam', 'Intimidating Cry'].map((gem) => ({ gem }))
+      gemPlan: ['Ground Slam', faster, 'Leap Slam', 'Intimidating Cry'].map((gem) => ({ gem }))
     })
   ).profile!
 }
+
+test('the support pick is found by the gem, not by a " Support" in its name', () => {
+  // Path of Building writes "Faster Attacks": still the support window.
+  const groups = acquisitionsForStage(cagedBrute('Faster Attacks'), 0, exampleGems(), { playerLevel: 9 }).rewardGroups.filter(
+    (g) => g.quest === 'The Caged Brute'
+  )
+  assert.deepEqual(groups.find((g) => g.slot === 'support')?.gems.map((e) => e.gem), ['Faster Attacks'])
+  assert.deepEqual(groups.find((g) => g.slot === 'skill')?.gems.map((e) => e.gem).sort(), ['Intimidating Cry', 'Leap Slam'])
+})
+
+test('a skill that shares a support\'s name stays a skill', () => {
+  const gems = exampleGems()
+  assert.equal(gems.isSupport('Faster Attacks'), true)
+  assert.equal(gems.isSupport('Faster Attacks Support'), true)
+  assert.equal(gems.isSupport('Leap Slam'), false)
+  assert.equal(gems.isSupport('Barrage'), false)
+  assert.equal(gems.isSupport('Not A Gem'), undefined)
+})
 
 test("The Caged Brute's support and skill are two picks, not one", () => {
   const groups = acquisitionsForStage(cagedBrute(), 0, exampleGems(), { playerLevel: 9 }).rewardGroups.filter(

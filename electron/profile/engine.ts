@@ -283,9 +283,14 @@ export function acquisitionsForStage(
     else if (acq.bucket === 'purchase') purchases.push(acq)
     else other.push(acq)
   }
-  // You mule before the run, not when the gem's stage comes round: from the
-  // first stage on, until the stage that first uses it is behind you.
-  if (mule) {
+  // You mule once, before the run — not when the gem's stage comes round, and
+  // not again on every stage until then. So the trip sits on the stages of the
+  // run's first levels (see MULE_TRIP_LAST_START), even for a gem the build
+  // slots much later — by level, not by "the first stage", because a profile
+  // may well slice levels 1-4 into two stages.
+  const muleTrip =
+    !!mule && (stageIndex === 0 || (stage != null && stage.range[0] <= MULE_TRIP_LAST_START))
+  if (mule && muleTrip) {
     const key = normalizeGemName(mule.gem)
     const firstUse = profile.stages.findIndex((s) =>
       s.socketGroups.some((g) => g.gems.some((gem) => normalizeGemName(gem) === key))
@@ -336,7 +341,9 @@ export function acquisitionsForStage(
   // the reward/purchase lists (which drive the link-overview tags) stay full.
   const plan = buildPlan(
     buildRewardGroups(rewards.filter(isNewThisStage), upcoming, gems, profile.meta.class),
-    [...purchases.filter(isNewThisStage), ...stillOwed],
+    // The mule trip belongs to the early stages — each of them, even when the
+    // one before already slotted the gem; past them, the gem is already yours.
+    [...purchases.filter((e) => (e.mule?.length ? muleTrip : isNewThisStage(e))), ...stillOwed],
     playerLevel,
     actReached,
     reachedLibrary
@@ -517,9 +524,11 @@ function acquisitionOrder(a: AcquisitionEntry, b: AcquisitionEntry): number {
 const TWO_REWARD_QUESTS: ReadonlySet<string> = new Set(['the caged brute'])
 
 /** Which of a two-reward quest's picks a gem belongs to; undefined otherwise. */
-function rewardSlot(e: AcquisitionEntry): RewardGroup['slot'] {
+function rewardSlot(e: AcquisitionEntry, gemData?: GemData): RewardGroup['slot'] {
   if (!e.quest || !TWO_REWARD_QUESTS.has(e.quest.toLowerCase())) return undefined
-  return /\sSupport$/.test(e.gem) ? 'support' : 'skill'
+  // The gem data decides: a PoB profile spells supports without " Support".
+  const support = gemData?.isSupport(e.gem) ?? /\sSupport$/i.test(e.gem)
+  return support ? 'support' : 'skill'
 }
 
 function buildRewardGroups(
@@ -532,7 +541,7 @@ function buildRewardGroups(
   const order: string[] = []
   for (const e of [...rewards, ...upcoming]) {
     // Rewards without a quest name can't be a shared choice — keep them separate.
-    const slot = rewardSlot(e)
+    const slot = rewardSlot(e, gemData)
     const key = e.quest
       ? `${e.act ?? '?'}|${e.quest.toLowerCase()}${slot ? `|${slot}` : ''}`
       : `__solo__${e.gem.toLowerCase()}`
@@ -554,7 +563,7 @@ function buildRewardGroups(
       quest: gems[0].quest,
       act: gems[0].act,
       pickOne: gems.length > 1,
-      slot: rewardSlot(gems[0]),
+      slot: rewardSlot(gems[0], gemData),
       gems,
       buyRest: gems.length > 1 ? buyRest(gems, gemData, cls) : undefined
     }
@@ -750,6 +759,11 @@ function classifySource(
 /** A mule is rolled for its starting gems and deleted, usually after levelling
  *  once on Hillock — so it never gets far. Past this it's a real character. */
 export const MULE_MAX_LEVEL = 3
+
+/** The mule trip stays on every stage that starts at or below this level: the
+ *  run's opening, up to Mercy Mission — the quest a mule typically stands in
+ *  for. A stage starting later is past the point where an alt still pays. */
+export const MULE_TRIP_LAST_START = 4
 
 /** The quest that clears the Twilight Strand (Hillock). A fresh alt finishes
  *  it in minutes, so its reward and the stock it unlocks at Nessa are as much a

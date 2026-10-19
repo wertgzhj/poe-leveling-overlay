@@ -711,8 +711,13 @@ function Pip({ gem }: { gem?: ColoredGemBridge }): React.JSX.Element {
 /** "Mule — what this alt is for": one gem per character, picked from what a
  *  fresh alt of another class gets on the Twilight Strand. On by default
  *  (Momentum, else the first gem the build needs); "No mule" turns it off for
- *  this character — in a party, an alt may not be worth it. A whole row inside
- *  the plan box, because the header next to "Get these gems" has no room. */
+ *  this character — in a party, an alt may not be worth it. Its own row under
+ *  the character line: a choice for the whole run, so outside the stage pages. */
+// The open list is drawn by the OS, not inside the select: it inherits the
+// select's colour on a light system background unless each option says
+// otherwise — which is how "No mule" turned grey on grey.
+const OPTION = 'bg-overlay-panel text-overlay-text'
+
 function MulePicker({
   choice
 }: {
@@ -721,7 +726,7 @@ function MulePicker({
   const chosen = choice.options.find((o) => o.gem === choice.chosen) ?? null
   const short = (gem: string): string => gem.replace(/ Support$/, '')
   return (
-    <div className="col-span-3 flex items-center gap-1.5 text-[10px]">
+    <div className="mb-2 flex items-center gap-1.5 px-1 text-[10px]">
       <span className={'shrink-0 ' + (chosen ? 'text-sky-300/90' : 'text-overlay-muted')}>Mule</span>
       <select
         value={choice.chosen ?? ''}
@@ -732,17 +737,19 @@ function MulePicker({
             : 'Not muling on this character: every gem comes from a quest or a vendor.'
         }
         className={
-          'min-w-0 flex-1 truncate rounded border border-overlay-border bg-black/30 px-1 py-0.5 text-[10px] outline-none focus:border-overlay-accent ' +
+          'min-w-0 flex-1 truncate rounded border border-overlay-border bg-black/30 px-1 py-0.5 text-[10px] outline-none [color-scheme:dark] focus:border-overlay-accent ' +
           (chosen ? 'text-sky-300/90' : 'text-overlay-muted')
         }
       >
         {choice.options.map((o) => (
-          <option key={o.gem} value={o.gem}>
+          <option key={o.gem} value={o.gem} className={OPTION}>
             {short(o.gem)} — {o.classes[0]}
             {o.classes.length > 1 ? ` +${o.classes.length - 1}` : ''}
           </option>
         ))}
-        <option value="">No mule</option>
+        <option value="" className={OPTION}>
+          No mule
+        </option>
       </select>
     </div>
   )
@@ -1141,6 +1148,9 @@ function GemBody(): React.JSX.Element {
         {profile.meta.ascendancy && <span>· {profile.meta.ascendancy}</span>}
         {profile.level != null && <span>· level {profile.level}</span>}
       </div>
+      {/* Per character, not per stage: it sits with the character line, above
+          the stage navigation, so paging through stages never moves it. */}
+      {profile.muleChoice && <MulePicker choice={profile.muleChoice} />}
 
       {/* Only fires across base classes now — an Elementalist on a Witch build
           is the same character, ascended. "an Assassin" needs its own article. */}
@@ -1224,7 +1234,6 @@ function GemBody(): React.JSX.Element {
             >
               Get these gems{atReward ? ' — take rewards now' : ''}
             </div>
-            {profile.muleChoice && <MulePicker choice={profile.muleChoice} />}
             {/* Rows render bare cells into this grid, so the columns line up
                 across every row. Dimming a "later" row happens per cell: a
                 wrapper element here would become a grid item and break them. */}
