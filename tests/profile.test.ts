@@ -1411,3 +1411,55 @@ test('a low-level alt of a class this build mules from is a mule, not the wrong 
   assert.equal(mulingClass(profile, 'Marauder', 2, classes), null)
   assert.equal(mulingClass(profile, null, 2, classes), null)
 })
+
+// --- Quests with two rewards ----------------------------------------------------
+// The Caged Brute hands a Marauder a support AND a skill gem, each its own pick.
+// The wiki lists all nine under the one quest, and the tab made one box of them:
+// "pick Faster Attacks, Leap Slam or Intimidating Cry, buy the rest". In game the
+// support window offers Faster Attacks and the skill window Leap Slam — both free.
+
+function cagedBrute(): Profile {
+  return parseProfile(
+    JSON.stringify({
+      meta: { name: 'Berserker', class: 'Marauder' },
+      stages: [
+        { range: [1, 20], socketGroups: [{ gems: ['Ground Slam', 'Faster Attacks Support', 'Leap Slam', 'Intimidating Cry'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Faster Attacks Support', 'Leap Slam', 'Intimidating Cry'].map((gem) => ({ gem }))
+    })
+  ).profile!
+}
+
+test("The Caged Brute's support and skill are two picks, not one", () => {
+  const groups = acquisitionsForStage(cagedBrute(), 0, exampleGems(), { playerLevel: 9 }).rewardGroups.filter(
+    (g) => g.quest === 'The Caged Brute'
+  )
+  assert.equal(groups.length, 2)
+  const support = groups.find((g) => g.slot === 'support')
+  const skill = groups.find((g) => g.slot === 'skill')
+  // The support window holds only Faster Attacks of this build: just take it.
+  assert.deepEqual(support?.gems.map((e) => e.gem), ['Faster Attacks Support'])
+  assert.equal(support?.pickOne, false)
+  // The skill window offers both skills: that one IS a choice, and only the
+  // other skill is left to buy — not Faster Attacks as well.
+  assert.deepEqual(skill?.gems.map((e) => e.gem).sort(), ['Intimidating Cry', 'Leap Slam'])
+  assert.equal(skill?.pickOne, true)
+  assert.equal(skill?.buyRest?.count, 1)
+})
+
+test('every other quest is still one reward', () => {
+  // Mercy Mission offers two supports here: still a single pick, and no slot.
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'x', class: 'Marauder' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support', 'Chance to Bleed Support'] }] }],
+      gemPlan: ['Ground Slam', 'Momentum Support', 'Chance to Bleed Support'].map((gem) => ({ gem }))
+    })
+  ).profile!
+  const mercy = acquisitionsForStage(profile, 0, exampleGems(), { playerLevel: 5 }).rewardGroups.filter(
+    (g) => g.quest === 'Mercy Mission'
+  )
+  assert.equal(mercy.length, 1)
+  assert.equal(mercy[0]?.pickOne, true)
+  assert.equal(mercy[0]?.slot, undefined)
+})

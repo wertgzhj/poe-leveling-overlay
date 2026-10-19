@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 216 tests: parser, tracker, watcher, guide, profile,
+npm test        # 220 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
@@ -106,6 +106,12 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      no `Mule` appears anywhere. The choice is per character and survives a
      restart; another character keeps its own.
    - A quest reward reads `Reward`, and one your build needs twice `Reward +1`.
+   - **The Caged Brute gives two rewards** — a support and a skill, each its own
+     pick. A Marauder build with Faster Attacks, Leap Slam and Intimidating Cry
+     must show Faster Attacks as a plain `Reward` and a separate *pick one* box
+     for Leap Slam / Intimidating Cry — never one box for all three. Every other
+     quest is one reward; a quest seen in game to give two goes in
+     `TWO_REWARD_QUESTS` (`electron/profile/engine.ts`).
    - On a **fresh character in Act 1** the list holds Act 1 only. Act 2's quest
      choices must appear when you reach Act 2 and not before — and portalling
      back to Act 1's town must not make them disappear again. Rolling a new
