@@ -191,8 +191,26 @@ export function mergeGemData(
   basics?: Record<string, GemBasics>,
   fetchedAt?: string
 ): GemsFile {
+  // The wiki can spell one gem two ways — the October fetch had "Pact of
+  // K'Tash" on the gem's own page and "Pact of K'tash" in a reward row. Gem
+  // lookup ignores case, so two keys would collide and one would silently win.
+  // Every name is folded onto one spelling: the gem page's (basics) first,
+  // since that is the gem's title, then whatever gems.json already used.
+  const spelling = new Map<string, string>()
+  const canonical = (name: string): string => {
+    const key = name.toLowerCase()
+    const known = spelling.get(key)
+    if (known) return known
+    spelling.set(key, name)
+    return name
+  }
+  for (const name of Object.keys(basics ?? {})) canonical(name)
+
   const gems: GemsFile['gems'] = {}
-  for (const [name, info] of Object.entries(existing.gems)) gems[name] = { ...info }
+  for (const [name, info] of Object.entries(existing.gems)) {
+    const to = canonical(name)
+    gems[to] = { ...(gems[to] ?? {}), ...info }
+  }
   for (const [name, b] of Object.entries(basics ?? {})) {
     const prev = gems[name] ?? {}
     gems[name] = {
@@ -201,8 +219,22 @@ export function mergeGemData(
       requiredLevel: b.requiredLevel ?? prev.requiredLevel
     }
   }
+  // Sources replace what was there, but two spellings in one fetch are the
+  // same gem's sources — those are combined, once each.
+  const fetched = new Map<string, Map<string, GemSourceInfo>>()
   for (const [name, srcs] of Object.entries(sources)) {
-    gems[name] = { ...(gems[name] ?? {}), sources: srcs }
+    const to = canonical(name)
+    const into = fetched.get(to) ?? new Map<string, GemSourceInfo>()
+    for (const src of srcs) into.set(sourceKey(src), src)
+    fetched.set(to, into)
+  }
+  for (const [name, srcs] of fetched) {
+    gems[name] = {
+      ...(gems[name] ?? {}),
+      sources: [...srcs.values()].sort(
+        (a, b) => a.act - b.act || (a.kind === b.kind ? 0 : a.kind === 'quest' ? -1 : 1)
+      )
+    }
   }
   return { ...existing, fetchedAt: fetchedAt ?? existing.fetchedAt, gems }
 }
