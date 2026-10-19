@@ -86,6 +86,9 @@ export interface RewardGroup {
   act?: number
   /** several gems from the same quest reward — the player must choose one. */
   pickOne: boolean
+  /** which of a quest's two rewards this is, for the quests that give two
+   *  (see TWO_REWARD_QUESTS); absent for every other quest. */
+  slot?: 'support' | 'skill'
   gems: AcquisitionEntry[]
   /** the copies you DON'T get free, what the dearest of them costs, and where
    *  you can buy them. Only set on a pickOne group — see buyRest(). */
@@ -496,6 +499,29 @@ function acquisitionOrder(a: AcquisitionEntry, b: AcquisitionEntry): number {
 /** Group reward + upcoming gems by the quest that offers them. A quest reward
  *  is ONE pick in game, so a group with several of your gems is a choice —
  *  take one, buy the rest. Singleton groups are plain "take it". */
+/**
+ * Quests that hand out TWO rewards — a support gem and a skill gem, each its own
+ * pick — where every other quest hands out one.
+ *
+ * The wiki lists both under the one quest name, so the data alone can't tell
+ * them apart, and the tab made one "pick one" box of all nine of The Caged
+ * Brute's gems: take Faster Attacks or Leap Slam, buy the rest. In the game you
+ * get both. Confirmed in game for The Caged Brute; checked against the data, it
+ * is the only quest whose reward list mixes supports and skills for every
+ * class. (The Eternal Nightmare mixes them for the Templar only, and that's one
+ * window: Arcanist Brand is a skill gem that sits among the supports.)
+ *
+ * Keyed by quest name, lowercased. Add a quest here only once its two windows
+ * have been seen in game.
+ */
+const TWO_REWARD_QUESTS: ReadonlySet<string> = new Set(['the caged brute'])
+
+/** Which of a two-reward quest's picks a gem belongs to; undefined otherwise. */
+function rewardSlot(e: AcquisitionEntry): RewardGroup['slot'] {
+  if (!e.quest || !TWO_REWARD_QUESTS.has(e.quest.toLowerCase())) return undefined
+  return /\sSupport$/.test(e.gem) ? 'support' : 'skill'
+}
+
 function buildRewardGroups(
   rewards: AcquisitionEntry[],
   upcoming: AcquisitionEntry[],
@@ -506,7 +532,10 @@ function buildRewardGroups(
   const order: string[] = []
   for (const e of [...rewards, ...upcoming]) {
     // Rewards without a quest name can't be a shared choice — keep them separate.
-    const key = e.quest ? `${e.act ?? '?'}|${e.quest.toLowerCase()}` : `__solo__${e.gem.toLowerCase()}`
+    const slot = rewardSlot(e)
+    const key = e.quest
+      ? `${e.act ?? '?'}|${e.quest.toLowerCase()}${slot ? `|${slot}` : ''}`
+      : `__solo__${e.gem.toLowerCase()}`
     if (!byQuest.has(key)) {
       byQuest.set(key, [])
       order.push(key)
@@ -525,6 +554,7 @@ function buildRewardGroups(
       quest: gems[0].quest,
       act: gems[0].act,
       pickOne: gems.length > 1,
+      slot: rewardSlot(gems[0]),
       gems,
       buyRest: gems.length > 1 ? buyRest(gems, gemData, cls) : undefined
     }
