@@ -130,6 +130,9 @@ export function registerIpc(
     if (typeof delta === 'number') profile.stageStep(delta)
   })
   ipcMain.on(Channels.profileStageLive, () => profile.stageToLive())
+  ipcMain.on(Channels.profileSetMule, (_e, gem: unknown) => {
+    if (gem === null || typeof gem === 'string') profile.setMule(gem)
+  })
   ipcMain.on(Channels.profileDismissChoice, (_e, id: unknown) => {
     if (typeof id === 'string') profile.dismissChoice(id)
   })

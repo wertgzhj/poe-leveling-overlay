@@ -72,6 +72,10 @@ interface StoreSchema extends AppSettings {
   /** character -> build decisions whose reminder was acknowledged ("bandit",
    *  "pantheon"). One-shot choices, so the notice must not come back. */
   dismissedChoices: Record<string, string[]>
+  /** character -> the gem you mule on it, or null for none. Absent = the
+   *  default (Momentum, else the build's first): muling generally beats a quest
+   *  reward, but whether it's worth an alt is the player's call per character. */
+  muleByCharacter: Record<string, string | null>
 }
 
 const defaults: StoreSchema = {
@@ -99,7 +103,8 @@ const defaults: StoreSchema = {
   profileByCharacter: {},
   actReached: {},
   libraryReached: {},
-  dismissedChoices: {}
+  dismissedChoices: {},
+  muleByCharacter: {}
 }
 
 export const store = new Store<StoreSchema>({ name: 'settings', defaults })

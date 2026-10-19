@@ -18,8 +18,7 @@ import {
   acquisitionsForStage
 } from '../electron/profile/engine.ts'
 import { repoPath } from './helpers.ts'
-import { mulingClass, MULE_MAX_LEVEL } from '../electron/profile/engine.ts'
-import { normalizeGemName as normalizeForMule } from '../electron/profile/gems.ts'
+import { defaultMule, muleOptions, mulingClass, MULE_MAX_LEVEL } from '../electron/profile/engine.ts'
 
 function exampleProfile(): Profile {
   const { profile, errors } = parseProfile(readFileSync(repoPath('data/profiles/example.json'), 'utf8'))
@@ -781,7 +780,7 @@ test('a gem needed in two different links is counted (x2)', () => {
   assert.equal(acq.purchases.find((e) => e.gem === 'Once')?.count, undefined)
 })
 
-test('a gem another class STARTS with is flagged as mulable', () => {
+test('the gem you mule is flagged with the class that hands it over', () => {
   const gems = new GemData({
     'Ruthless Support': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
     Fireball: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
@@ -802,7 +801,7 @@ test('a gem another class STARTS with is flagged as mulable', () => {
   const acq = acquisitionsForStage(profile, 0, gems, {
     startingGems: starting,
     playerLevel: 10,
-    startingOwners
+    mule: { gem: 'Ruthless Support', classes: startingOwners.get(normalizeGemName('Ruthless Support'))! }
   })
 
   // A Witch can't quest Ruthless Support, but a level-1 Marauder starts with it.
@@ -828,7 +827,7 @@ test('mulable gems head the plan, whatever act their vendor sits in', () => {
   ).profile!
   const plan = acquisitionsForStage(profile, 0, gems, {
     playerLevel: 10,
-    startingOwners: new Map([[normalizeGemName('Ruthless Support'), ['Marauder']]])
+    mule: { gem: 'Ruthless Support', classes: ['Marauder'] }
   }).plan
 
   assert.deepEqual(
@@ -1240,56 +1239,175 @@ test('an ordinary reward is still assumed handled by the stage that offered it',
 })
 
 // --- Muling -----------------------------------------------------------------
+// One gem per character, chosen by the player: what a fresh alt of another class
+// gets by clearing the Twilight Strand — its starting gems, Hillock's reward, or
+// Nessa's first stock — that your own class doesn't. Default: Momentum.
 
-
-function realStartingOwners(): Map<string, string[]> {
-  const json = JSON.parse(readFileSync(repoPath('data/starting-gems.json'), 'utf8')) as {
-    classes: Record<string, string[]>
-  }
-  const owners = new Map<string, string[]>()
-  for (const [cls, names] of Object.entries(json.classes)) {
-    for (const name of names) {
-      const key = normalizeForMule(name)
-      owners.set(key, [...(owners.get(key) ?? []), cls])
-    }
-  }
-  return owners
+function startingClasses(): Record<string, string[]> {
+  return JSON.parse(readFileSync(repoPath('data/starting-gems.json'), 'utf8')).classes
 }
 
-const marauderWithMomentum: Profile = {
-  meta: { name: 'Berserker', class: 'Marauder' },
-  stages: [{ range: [1, 10], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support'] }] }],
-  gemPlan: []
+// The build from the report, against the shipped data: Momentum in the first
+// links, Chance to Bleed from level 8.
+function berserker(): Profile {
+  return parseProfile(
+    JSON.stringify({
+      meta: { name: 'Berserker', class: 'Marauder', ascendancy: 'Berserker' },
+      stages: [
+        { range: [1, 7], label: 'After Hillock', socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support'] }] },
+        { range: [8, 20], label: 'After Hailrake', socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Chance to Bleed Support'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Chance to Bleed Support'].map((gem) => ({ gem }))
+    })
+  ).profile!
 }
+
+test('the mule options are what another class gets on the Strand and yours does not', () => {
+  const options = muleOptions(berserker(), exampleGems(), startingClasses())
+  // Momentum: a Ranger starts with it. Chance to Bleed: a Duelist does. Both
+  // only reach a Marauder at Mercy Mission, so both are options — in the order
+  // the build first needs them.
+  assert.deepEqual(
+    options.map((o) => [o.gem, o.classes[0], o.how]),
+    [
+      ['Momentum Support', 'Ranger', 'start'],
+      ['Chance to Bleed Support', 'Duelist', 'start']
+    ]
+  )
+  // Ground Slam is Hillock's reward for a Marauder anyway; Ruthless is its own
+  // starting gem. Neither is worth an alt.
+  assert.ok(!options.some((o) => o.gem === 'Ground Slam' || o.gem === 'Ruthless Support'))
+})
+
+test('Hillock reward and Nessa stock count, not only starting gems', () => {
+  // A gem no class starts with, sold by Nessa to a Witch after Hillock, and
+  // only reachable for this Marauder much later.
+  const gems = new GemData({
+    'Ground Slam': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Marauder'] }] },
+    'Arcane Surge Support': {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'vendor', act: 1, npc: 'Nessa', quest: 'Enemy at the Gate', classes: ['Witch'] },
+        { kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }
+      ]
+    },
+    'Holy Flame Totem': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Templar'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'x', class: 'Marauder' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Ground Slam', 'Arcane Surge Support', 'Holy Flame Totem'] }] }],
+      gemPlan: []
+    })
+  ).profile!
+  const options = muleOptions(profile, gems, { Marauder: ['Heavy Strike'], Witch: ['Fireball'], Templar: ['Glacial Hammer'] })
+  assert.deepEqual(
+    options.map((o) => [o.gem, o.classes, o.how]).sort(),
+    [
+      ['Arcane Surge Support', ['Witch'], 'vendor'],
+      ['Holy Flame Totem', ['Templar'], 'reward']
+    ]
+  )
+})
+
+test('the default mule is Momentum, or else the gem needed first', () => {
+  const options = muleOptions(berserker(), exampleGems(), startingClasses())
+  assert.equal(defaultMule(options)?.gem, 'Momentum Support')
+  assert.equal(defaultMule(options.filter((o) => o.gem !== 'Momentum Support'))?.gem, 'Chance to Bleed Support')
+  assert.equal(defaultMule([]), null)
+})
+
+test('the muled gem leaves the quest pick, and the pick goes to the next gem', () => {
+  // Mercy Mission offers this Marauder Momentum and Chance to Bleed. Mule
+  // Momentum and the quest hands over Chance to Bleed — no choice left to make.
+  const profile = berserker()
+  const gems = exampleGems()
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const acq = acquisitionsForStage(profile, 0, gems, { mule: momentum, playerLevel: 2 })
+
+  const first = acq.plan[0]
+  assert.equal(first?.kind === 'buy' ? first.entry.gem : null, 'Momentum Support')
+  assert.equal(first?.kind === 'buy' ? first.stop?.key : null, 'mule')
+  assert.ok(!acq.rewards.some((e) => e.gem === 'Momentum Support'), 'never also the quest pick')
+  const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
+  assert.deepEqual(mercy?.gems.map((e) => e.gem), ['Chance to Bleed Support'])
+  assert.equal(mercy?.pickOne, false)
+})
+
+test('only the chosen gem is muled — never two alts', () => {
+  // Chance to Bleed could come from a Duelist too, but Momentum is the mule:
+  // Chance to Bleed stays the quest's.
+  const profile = berserker()
+  const gems = exampleGems()
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const acq = acquisitionsForStage(profile, 1, gems, { mule: momentum, playerLevel: 9 })
+  const all = [...acq.rewards, ...acq.purchases, ...acq.other, ...acq.upcoming]
+  // Momentum keeps its "Mule · Ranger" tag in the links — that's where it came
+  // from — and nothing else gets one.
+  assert.deepEqual([...new Set(all.filter((e) => e.mule).map((e) => e.gem))], ['Momentum Support'])
+  assert.ok(acq.rewards.some((e) => e.gem === 'Chance to Bleed Support'))
+  // And the mule trip itself is behind you: it isn't on the to-do list again.
+  assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.mule))
+})
+
+test('a mule for a later stage is still done first, before the run', () => {
+  // Choose Chance to Bleed (needed from level 8): it's muled at the start, and
+  // Mercy Mission hands over Momentum instead.
+  const profile = berserker()
+  const gems = exampleGems()
+  const bleed = muleOptions(profile, gems, startingClasses()).find((o) => o.gem === 'Chance to Bleed Support')!
+  const acq = acquisitionsForStage(profile, 0, gems, { mule: bleed, playerLevel: 2 })
+  const first = acq.plan[0]
+  assert.equal(first?.kind === 'buy' ? first.entry.gem : null, 'Chance to Bleed Support')
+  assert.deepEqual(first?.kind === 'buy' ? first.entry.mule : null, ['Duelist'])
+  const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
+  assert.deepEqual(mercy?.gems.map((e) => e.gem), ['Momentum Support'])
+  // Once its stage has come and gone, it's done.
+  const later = acquisitionsForStage(profile, 1, gems, { mule: bleed, playerLevel: 9 })
+  assert.ok(later.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
+})
+
+test('no mule makes every gem a quest or a buy again', () => {
+  const profile = berserker()
+  const acq = acquisitionsForStage(profile, 0, exampleGems(), { mule: null, playerLevel: 2 })
+  const all = [...acq.rewards, ...acq.purchases, ...acq.other, ...acq.upcoming]
+  assert.ok(all.every((e) => !e.mule))
+  const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
+  assert.equal(mercy?.pickOne, true, 'Momentum and Chance to Bleed: pick one')
+})
+
+test('a mule is never hidden behind act progress', () => {
+  // The vendor that would otherwise sell it is in Act 3 and you are in Act 1 —
+  // but the mule is done at level 1, before the run, so it shows.
+  const gems = new GemData({
+    'Momentum Support': { attr: 'dex', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
+    'Ground Slam': { attr: 'str', requiredLevel: 1 }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'B', class: 'Marauder' },
+      stages: [{ range: [1, 10], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] }],
+      gemPlan: [{ gem: 'Ground Slam' }, { gem: 'Momentum Support' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems, {
+    mule: { gem: 'Momentum Support', classes: ['Ranger'] },
+    actReached: 1,
+    reachedLibrary: false
+  })
+  assert.ok(acq.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'))
+})
 
 test('a low-level alt of a class this build mules from is a mule, not the wrong profile', () => {
-  // The report: a Marauder profile that wants Momentum (a Ranger starting gem),
-  // a level-2 Ranger rolled for it, and an amber "wrong profile loaded?".
-  const owners = realStartingOwners()
-  assert.equal(mulingClass(marauderWithMomentum, 'Ranger', 2, owners), 'Ranger')
-  assert.equal(mulingClass(marauderWithMomentum, 'Ranger', 1, owners), 'Ranger')
-})
-
-test('anything that is not plausibly a mule keeps the warning', () => {
-  const owners = realStartingOwners()
-  // Past a mule's level, it's a character you're actually playing.
-  assert.equal(mulingClass(marauderWithMomentum, 'Ranger', MULE_MAX_LEVEL + 1, owners), null)
-  // A class this build takes nothing from: a genuine wrong profile.
-  assert.equal(mulingClass(marauderWithMomentum, 'Witch', 2, owners), null)
-  // The profile's own class is not a mule at any level.
-  assert.equal(mulingClass(marauderWithMomentum, 'Marauder', 2, owners), null)
-  // An ascended name is read by its base class.
-  assert.equal(mulingClass(marauderWithMomentum, 'Deadeye', 2, owners), 'Ranger')
-  // Nothing known: no verdict.
-  assert.equal(mulingClass(marauderWithMomentum, null, 2, owners), null)
-  assert.equal(mulingClass(marauderWithMomentum, 'Ranger', null, owners), null)
-})
-
-test('a gem the build only plans to buy still makes its class worth muling', () => {
-  const profile: Profile = {
-    ...marauderWithMomentum,
-    stages: [{ range: [1, 10], socketGroups: [{ gems: ['Ground Slam'] }] }],
-    gemPlan: [{ gem: 'Momentum Support' }]
-  }
-  assert.equal(mulingClass(profile, 'Ranger', 2, realStartingOwners()), 'Ranger')
+  const profile = berserker()
+  const classes = muleOptions(profile, exampleGems(), startingClasses()).flatMap((o) => o.classes)
+  assert.equal(mulingClass(profile, 'Ranger', 2, classes), 'Ranger')
+  assert.equal(mulingClass(profile, 'Deadeye', 1, classes), 'Ranger', 'an ascended name reads as its base class')
+  // Past a mule's level, a class this build takes nothing from, or your own
+  // class: not a mule, and the warning stays.
+  assert.equal(mulingClass(profile, 'Ranger', MULE_MAX_LEVEL + 1, classes), null)
+  assert.equal(mulingClass(profile, 'Witch', 2, classes), null)
+  assert.equal(mulingClass(profile, 'Marauder', 2, classes), null)
+  assert.equal(mulingClass(profile, null, 2, classes), null)
 })

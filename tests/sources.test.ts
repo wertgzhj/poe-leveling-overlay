@@ -73,3 +73,22 @@ test('the act prefix is dropped rather than faked when there is no act', () => {
     /general vendor/
   )
 })
+
+test("a muled quest reward says it's a quest reward, not a vendor buy", () => {
+  // Momentum on a Marauder: a Ranger starts with it, and Mercy Mission hands it
+  // over too. The fallback is the quest — not "a vendor sells it".
+  const mark = sourceMark({ bucket: 'reward', act: 1, quest: 'Mercy Mission', mule: ['Ranger'] })
+  assert.equal(mark?.label, 'Mule · Ranger')
+  assert.match(mark?.title ?? '', /free quest reward in Act 1: Mercy Mission/)
+  assert.match(mark?.title ?? '', /frees that pick/)
+  assert.doesNotMatch(mark?.title ?? '', /vendor/)
+})
+
+test('the mule instruction says how the alt gets it, and whether it costs anything', () => {
+  // Not every mule just starts with the gem — and only a Nessa buy costs.
+  assert.match(sourceMark({ bucket: 'purchase', mule: ['Ranger'], muleHow: 'start' })?.title ?? '', /starts with this gem.*Free/)
+  assert.match(sourceMark({ bucket: 'purchase', mule: ['Templar'], muleHow: 'reward' })?.title ?? '', /Hillock's reward.*Free/)
+  const vendor = sourceMark({ bucket: 'purchase', mule: ['Witch'], muleHow: 'vendor' })?.title ?? ''
+  assert.match(vendor, /buy it from Nessa/)
+  assert.doesNotMatch(vendor, /Free/)
+})

@@ -54,6 +54,27 @@ export interface SourceInput {
   fallback?: boolean
   starting?: boolean
   mule?: string[]
+  muleHow?: MuleHow
+}
+
+export type MuleHow = 'start' | 'reward' | 'vendor'
+
+/**
+ * What to do with the alt, in one sentence — the cost column and the source
+ * column both say it, so it's written once. A mule doesn't always just start
+ * with the gem: it can take it as Hillock's reward, or buy it from Nessa, and
+ * only the last one costs anything (a Scroll of Wisdom from the shared stash).
+ */
+export function muleInstruction(classes: readonly string[], how: MuleHow | undefined): string {
+  const alt = `Roll a level-1 ${classes.join(' or ')}`
+  switch (how) {
+    case 'reward':
+      return `${alt}, clear the Twilight Strand and take it as Hillock's reward (Enemy at the Gate). Stash it, delete the alt. Free.`
+    case 'vendor':
+      return `${alt}, clear the Twilight Strand and buy it from Nessa — a Scroll of Wisdom from your stash. Stash it, delete the alt.`
+    default:
+      return `${alt}: it starts with this gem. Stash it, delete the alt. Free.`
+  }
 }
 
 export interface SourceMark {
@@ -83,9 +104,16 @@ export function sourceMark(e: SourceInput | undefined): SourceMark | null {
   // Muling wins over the vendor even here: quoting Siosa's price next to a gem
   // an alt hands you for nothing is the one thing the links should not do.
   if (e.mule?.length) {
+    // The fallback is whatever you'd do without the alt: a quest that hands it
+    // over, or a vendor. Saying "a vendor sells it" about a quest reward sent
+    // people shopping for a gem they'd get for free.
+    const otherwise =
+      e.bucket === 'reward'
+        ? `Otherwise it's a free quest reward${inAct}: ${e.quest ?? 'a quest'} — and muling it frees that pick for another gem.`
+        : `Otherwise ${e.npc ?? 'a vendor'}${inAct} sells it${e.cost ? ` for ${e.cost}` : ''}.`
     return {
       label: `Mule · ${e.mule.join('/')}`,
-      title: `Roll a level-1 ${e.mule.join(' or ')}, stash its starting gems, delete it. Otherwise ${e.npc ?? 'a vendor'}${inAct} sells it${e.cost ? ` for ${e.cost}` : ''}.`,
+      title: `${muleInstruction(e.mule, e.muleHow)} ${otherwise}`,
       tone: 'text-sky-300/90'
     }
   }

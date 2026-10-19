@@ -57,6 +57,7 @@ const api = {
     subscribe(Channels.profileState, cb),
   stageStep: (delta: number): void => ipcRenderer.send(Channels.profileStageStep, delta),
   stageToLive: (): void => ipcRenderer.send(Channels.profileStageLive),
+  setMule: (gem: string | null): void => ipcRenderer.send(Channels.profileSetMule, gem),
   dismissChoice: (id: string): void => ipcRenderer.send(Channels.profileDismissChoice, id),
   activateProfile: (id: string): Promise<boolean> => ipcRenderer.invoke(Channels.profilesActivate, id),
   createProfile: (name: string, charClass: string): Promise<LibraryResult> =>
