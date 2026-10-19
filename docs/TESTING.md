@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 223 tests: parser, tracker, watcher, guide, profile,
+npm test        # 224 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
@@ -106,8 +106,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      it off for that character: Mercy Mission is a pick between both again, and
      no `Mule` appears anywhere. The choice is per character and survives a
      restart; another character keeps its own. The `Mule` row is on the
-     **first stage only** — later stages don't repeat it, even when the gem is
-     first slotted there. The open dropdown is dark with readable text.
+     **opening stages only** — every stage that starts at level 4 or below
+     (split 1-2 / 3-4, both show it); a stage from level 5 on doesn't repeat
+     it, even when the gem is first slotted there. The open dropdown is dark with readable text.
    - A quest reward reads `Reward`, and one your build needs twice `Reward +1`.
    - **The Caged Brute gives two rewards** — a support and a skill, each its own
      pick. A Marauder build with Faster Attacks, Leap Slam and Intimidating Cry

@@ -1368,7 +1368,30 @@ test('a mule for a later stage is still done first, before the run', () => {
   assert.ok(!later.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
 })
 
-test('the mule trip is on the first stage only, not carried through every stage', () => {
+test('the mule trip stays on the opening stages, however finely they are sliced', () => {
+  // Levels 1-2 and 3-4 as two stages: still the run's opening, still muling.
+  // From level 5 on, it's done.
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'B', class: 'Marauder' },
+      stages: [
+        { range: [1, 2], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] },
+        { range: [3, 4], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] },
+        { range: [5, 9], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Momentum Support'].map((gem) => ({ gem }))
+    })
+  ).profile!
+  const gems = exampleGems()
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const muled = (i: number): boolean =>
+    acquisitionsForStage(profile, i, gems, { mule: momentum, playerLevel: 3 }).plan.some(
+      (it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'
+    )
+  assert.deepEqual([0, 1, 2].map(muled), [true, true, false])
+})
+
+test('the mule trip is not carried through every stage', () => {
   // Momentum first slotted in the third stage: muled before the run, and the
   // stages in between don't repeat it.
   const profile = parseProfile(

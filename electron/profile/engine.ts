@@ -284,15 +284,19 @@ export function acquisitionsForStage(
     else other.push(acq)
   }
   // You mule once, before the run — not when the gem's stage comes round, and
-  // not again on every stage until then. So the trip sits on the first stage
-  // only, even for a gem the build slots much later.
-  if (mule && stageIndex === 0) {
+  // not again on every stage until then. So the trip sits on the stages of the
+  // run's first levels (see MULE_TRIP_LAST_START), even for a gem the build
+  // slots much later — by level, not by "the first stage", because a profile
+  // may well slice levels 1-4 into two stages.
+  const muleTrip =
+    !!mule && (stageIndex === 0 || (stage != null && stage.range[0] <= MULE_TRIP_LAST_START))
+  if (mule && muleTrip) {
     const key = normalizeGemName(mule.gem)
     const firstUse = profile.stages.findIndex((s) =>
       s.socketGroups.some((g) => g.gems.some((gem) => normalizeGemName(gem) === key))
     )
     const listed = [...rewards, ...purchases, ...other].some((e) => normalizeGemName(e.gem) === key)
-    if (firstUse > 0 && !listed) {
+    if (firstUse > stageIndex && !listed) {
       const planned = profile.gemPlan.find((e) => normalizeGemName(e.gem) === key)
       const acq = classify(planned ?? { gem: mule.gem }, profile.meta.class, gems, startingGems, startingOwners)
       if (acq.mule?.length) purchases.push(acq)
@@ -337,8 +341,9 @@ export function acquisitionsForStage(
   // the reward/purchase lists (which drive the link-overview tags) stay full.
   const plan = buildPlan(
     buildRewardGroups(rewards.filter(isNewThisStage), upcoming, gems, profile.meta.class),
-    // The mule trip is the first stage's; past it, the gem is already yours.
-    [...purchases.filter((e) => isNewThisStage(e) && (stageIndex === 0 || !e.mule?.length)), ...stillOwed],
+    // The mule trip belongs to the early stages — each of them, even when the
+    // one before already slotted the gem; past them, the gem is already yours.
+    [...purchases.filter((e) => (e.mule?.length ? muleTrip : isNewThisStage(e))), ...stillOwed],
     playerLevel,
     actReached,
     reachedLibrary
@@ -754,6 +759,11 @@ function classifySource(
 /** A mule is rolled for its starting gems and deleted, usually after levelling
  *  once on Hillock — so it never gets far. Past this it's a real character. */
 export const MULE_MAX_LEVEL = 3
+
+/** The mule trip stays on every stage that starts at or below this level: the
+ *  run's opening, up to Mercy Mission — the quest a mule typically stands in
+ *  for. A stage starting later is past the point where an alt still pays. */
+export const MULE_TRIP_LAST_START = 4
 
 /** The quest that clears the Twilight Strand (Hillock). A fresh alt finishes
  *  it in minutes, so its reward and the stock it unlocks at Nessa are as much a
