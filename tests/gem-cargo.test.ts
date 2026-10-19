@@ -249,3 +249,34 @@ test('sourcelessCampaignGems counts the gems a fetch failed to place', () => {
   }
   assert.deepEqual(sourcelessCampaignGems(file), ['Ancestral Warchief'])
 })
+
+test('one gem spelled two ways on the wiki is one gem', () => {
+  // The October fetch: the gem's own page says "Pact of K'Tash", a reward row
+  // says "Pact of K'tash". Gem lookup ignores case, so two keys would collide
+  // and one would silently win — the data test blocked the commit on exactly
+  // this.
+  const existing = { gems: { Fireball: { attr: 'int' } } }
+  const merged = mergeGemData(
+    existing,
+    {
+      "Pact of K'tash": [{ kind: 'quest', act: 2, quest: 'Through Sacred Ground', classes: ['Witch'] }],
+      "Pact of K'TASH": [{ kind: 'vendor', act: 2, npc: 'Yeena', quest: 'Through Sacred Ground' }]
+    },
+    { "Pact of K'Tash": { attr: 'int', requiredLevel: 12 } }
+  )
+  const names = Object.keys(merged.gems).filter((n) => n.toLowerCase().startsWith('pact of'))
+  // The spelling of the gem's own page wins: it is the gem's title.
+  assert.deepEqual(names, ["Pact of K'Tash"])
+  const pact = merged.gems["Pact of K'Tash"]
+  assert.equal(pact?.requiredLevel, 12)
+  // Both spellings' sources survive, once each.
+  assert.deepEqual(pact?.sources?.map((s) => s.kind).sort(), ['quest', 'vendor'])
+})
+
+test('an old gems.json key in another case folds into the wiki spelling', () => {
+  const existing = { gems: { "pact of k'tash": { attr: 'int' as const, requiredLevel: 99 } } }
+  const merged = mergeGemData(existing, {}, { "Pact of K'Tash": { requiredLevel: 12 } })
+  assert.deepEqual(Object.keys(merged.gems), ["Pact of K'Tash"])
+  assert.equal(merged.gems["Pact of K'Tash"]?.requiredLevel, 12)
+  assert.equal(merged.gems["Pact of K'Tash"]?.attr, 'int', 'curated values the wiki lacks are kept')
+})
