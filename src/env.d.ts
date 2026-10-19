@@ -185,6 +185,7 @@ interface AcquisitionEntryBridge {
   cost?: string
   starting?: boolean
   mule?: string[]
+  muleHow?: 'start' | 'reward' | 'vendor'
   requiredLevel?: number
   colored?: ColoredGemBridge
   fromPickOne?: boolean
@@ -253,6 +254,16 @@ interface ProfileSnapshotBridge {
   library: LibraryEntryBridge[]
   /** The active profile's id; null if it isn't in the library. */
   activeId: string | null
+  /** What this build could mule, and the gem you mule on the tracked
+   *  character (null = none); null altogether = no choice to offer. */
+  muleChoice: { options: MuleOptionBridge[]; chosen: string | null } | null
+}
+
+/** A gem a fresh alt of another class gets on the Twilight Strand. */
+interface MuleOptionBridge {
+  gem: string
+  classes: string[]
+  how: 'start' | 'reward' | 'vendor'
 }
 
 /** One profile in the library — mirrors LibraryEntry in electron/profile/library.ts. */
@@ -396,6 +407,8 @@ interface OverlayBridge {
   stageStep(delta: number): void
   stageToLive(): void
   dismissChoice(id: string): void
+  /** The gem to mule on the tracked character; null = none. */
+  setMule(gem: string | null): void
   /** Switch the active profile; false if it doesn't exist or won't load. */
   activateProfile(id: string): Promise<boolean>
   createProfile(name: string, charClass: string): Promise<LibraryResultBridge>

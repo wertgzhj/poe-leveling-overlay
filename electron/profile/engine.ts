@@ -43,9 +43,12 @@ export interface AcquisitionEntry {
   cost?: string
   /** the class's starting gem — already in inventory, so don't buy/quest it. */
   starting?: boolean
-  /** other classes that START with this gem: roll a level-1 mule of one of them
-   *  and stash its two starting gems instead of buying this. */
+  /** the gem you chose to mule, and the classes whose fresh character hands it
+   *  over on the Twilight Strand (see muleOptions). */
   mule?: string[]
+  /** how that mule gets it: it starts with it, takes it as Hillock's reward, or
+   *  buys it from Nessa. Decides whether the mule is free. */
+  muleHow?: MuleHow
   /** the gem's level requirement (gems.json) — drives the now/coming-up split. */
   requiredLevel?: number
   /** where this entry's quest falls within its act (lower = earlier), so the
@@ -186,8 +189,6 @@ export interface AcquisitionContext {
   startingGems?: ReadonlySet<string>
   /** Tracked character level — drives the now/coming-up split. */
   playerLevel?: number | null
-  /** Normalized gem -> classes that start with it, for the mule hint. */
-  startingOwners?: ReadonlyMap<string, string[]>
   /** The furthest campaign act this character has reached. Entries from beyond
    *  it are dropped from the plan: at level 2 in Act 1, an Act 4 quest choice is
    *  not a preview, it is six hours of noise. null = unknown, show everything. */
@@ -195,6 +196,20 @@ export interface AcquisitionContext {
   /** Whether this character has been to Act 3's Library. Siosa is gated on it
    *  separately from the act — see LIBRARY_VENDOR. null/undefined = unknown. */
   reachedLibrary?: boolean | null
+  /**
+   * The one gem you mule on this character, and the classes that can hand it
+   * over (see muleOptions). null/undefined = no mule: every gem comes from its
+   * quest or its vendor. Whether rolling an alt is worth it — in a party, say —
+   * is the player's call, so this is chosen per character, never assumed.
+   */
+  mule?: MuleChoice | null
+}
+
+/** A gem to mule, and the classes that get it by clearing the Twilight Strand. */
+export interface MuleChoice {
+  gem: string
+  classes: string[]
+  how?: MuleHow
 }
 
 /**
@@ -211,7 +226,13 @@ export function acquisitionsForStage(
   gems?: GemData,
   ctx: AcquisitionContext = {}
 ): Acquisitions {
-  const { startingGems, playerLevel, startingOwners, actReached, reachedLibrary } = ctx
+  const { startingGems, playerLevel, actReached, reachedLibrary, mule } = ctx
+  // The mule lookup classify() reads, holding only the one gem you chose — so
+  // every other gem a different class could hand you stays a quest or a buy,
+  // and the plan never sends you off to roll two alts.
+  const startingOwners = mule
+    ? new Map([[normalizeGemName(mule.gem), mule.classes]])
+    : undefined
   const stage = profile.stages[stageIndex]
   const used = new Set<string>()
   // How many copies this stage needs: the same gem in two different links means
@@ -249,10 +270,31 @@ export function acquisitionsForStage(
     // The stage's socket groups are the truth for how many you need.
     const needed = copies.get(entry.gem.toLowerCase())
     if (needed != null && needed > (acq.count ?? 1)) acq.count = needed
-    if (acq.bucket === 'reward') rewards.push(acq)
+    // A gem you mule leaves the quest's pick: it's yours before the quest, and
+    // the pick goes to the next gem you want from it — on a Marauder, Mercy
+    // Mission hands over Chance to Bleed instead of the Momentum a Ranger alt
+    // already gave you. It lands with the mule trip, still saying what the quest
+    // would have been (see sourceMark).
+    if (acq.bucket === 'reward' && acq.mule?.length) purchases.push(acq)
+    else if (acq.bucket === 'reward') rewards.push(acq)
     else if (acq.bucket === 'purchase') purchases.push(acq)
     else other.push(acq)
   }
+  // You mule before the run, not when the gem's stage comes round: from the
+  // first stage on, until the stage that first uses it is behind you.
+  if (mule) {
+    const key = normalizeGemName(mule.gem)
+    const firstUse = profile.stages.findIndex((s) =>
+      s.socketGroups.some((g) => g.gems.some((gem) => normalizeGemName(gem) === key))
+    )
+    const listed = [...rewards, ...purchases, ...other].some((e) => normalizeGemName(e.gem) === key)
+    if (firstUse > stageIndex && !listed) {
+      const planned = profile.gemPlan.find((e) => normalizeGemName(e.gem) === key)
+      const acq = classify(planned ?? { gem: mule.gem }, profile.meta.class, gems, startingGems, startingOwners)
+      if (acq.mule?.length) purchases.push(acq)
+    }
+  }
+
   // Owner-specified priority: cost tier, then act (1→10), then alphabet.
   rewards.sort(acquisitionOrder)
   purchases.sort(acquisitionOrder)
@@ -261,7 +303,11 @@ export function acquisitionsForStage(
   const planByGem = new Map<string, GemPlanEntry>()
   for (const entry of profile.gemPlan) planByGem.set(entry.gem.toLowerCase(), entry)
 
-  const upcoming = upcomingRewards(profile, stageIndex, used, planByGem, gems, startingGems, startingOwners)
+  // A gem you'll mule isn't an upcoming quest pick either; it joins the mule
+  // trip when its stage comes round.
+  const upcoming = upcomingRewards(profile, stageIndex, used, planByGem, gems, startingGems, startingOwners).filter(
+    (e) => !e.mule?.length
+  )
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming, gems, profile.meta.class)
 
@@ -292,6 +338,14 @@ export function acquisitionsForStage(
     actReached,
     reachedLibrary
   )
+  // Say how the mule gets it wherever the gem is listed, so the instruction is
+  // right for a Nessa buy as much as for a starting gem.
+  if (mule?.how) {
+    const key = normalizeGemName(mule.gem)
+    for (const e of [...rewards, ...purchases, ...other, ...upcoming]) {
+      if (e.mule?.length && normalizeGemName(e.gem) === key) e.muleHow = mule.how
+    }
+  }
   return { rewards, purchases, other, upcoming, rewardGroups, plan }
 }
 
@@ -325,8 +379,11 @@ function buildPlan(
     actReached == null || act == null || act <= actReached
   // Siosa is gated on the Library rather than on Act 3 — walking into the act
   // doesn't reach him, walking into that zone does. Unknown stays visible.
+  // A mule is the exception to both: it's done at level 1, before the run, so
+  // where the gem would otherwise come from is beside the point.
   const shoppable = (entry: AcquisitionEntry): boolean =>
-    reachable(entry.act) && (reachedLibrary !== false || !needsLibrary(entry.npc))
+    (entry.mule?.length ?? 0) > 0 ||
+    (reachable(entry.act) && (reachedLibrary !== false || !needsLibrary(entry.npc)))
   const raw: Raw[] = [
     ...rewardGroups
       .filter((group) => reachable(group.act))
@@ -664,27 +721,111 @@ function classifySource(
  *  once on Hillock — so it never gets far. Past this it's a real character. */
 export const MULE_MAX_LEVEL = 3
 
+/** The quest that clears the Twilight Strand (Hillock). A fresh alt finishes
+ *  it in minutes, so its reward and the stock it unlocks at Nessa are as much a
+ *  mule's to hand over as the gems the class starts with. */
+export const STRAND_QUEST = 'Enemy at the Gate'
+
+/** How a mule of a class gets a gem — the cheapest way it can. */
+export type MuleHow = 'start' | 'reward' | 'vendor'
+
+export interface MuleOption {
+  gem: string
+  /** Classes whose fresh character gets it, cheapest way first. */
+  classes: string[]
+  how: MuleHow
+}
+
+const HOW_RANK: Record<MuleHow, number> = { start: 0, reward: 1, vendor: 2 }
+
+/**
+ * What a level-1 alt of `cls` gets by clearing the Twilight Strand: the gems it
+ * starts with, the Strand quest's reward options, and what Nessa sells it once
+ * that quest is done. Normalized gem -> how. Everything else is past a mule.
+ */
+function strandGems(cls: string, starting: readonly string[], gems: GemData | undefined, wanted: Iterable<string>): Map<string, MuleHow> {
+  const got = new Map<string, MuleHow>()
+  const note = (key: string, how: MuleHow): void => {
+    const had = got.get(key)
+    if (!had || HOW_RANK[how] < HOW_RANK[had]) got.set(key, how)
+  }
+  for (const gem of starting) note(normalizeGemName(gem), 'start')
+  for (const gem of wanted) {
+    for (const src of gems?.info(gem)?.sources ?? []) {
+      if (src.act !== 1 || src.quest !== STRAND_QUEST) continue
+      if (src.classes && !src.classes.includes(cls as CharClass)) continue
+      note(normalizeGemName(gem), src.kind === 'quest' ? 'reward' : 'vendor')
+    }
+  }
+  return got
+}
+
+/**
+ * The gems of this build worth muling: any gem a fresh character of another
+ * class gets on the Twilight Strand that yours doesn't. In the order the build
+ * first uses them.
+ *
+ * Not tied to any one gem. Momentum is the usual answer — a Ranger starts with
+ * it, and Nessa sells it to a Ranger after Hillock — but a Duelist hands over
+ * Chance to Bleed the same way, and which one is worth an alt is the player's
+ * call. `starting` is class -> the gems that class starts with.
+ */
+export function muleOptions(
+  profile: Profile,
+  gems: GemData | undefined,
+  starting: Readonly<Record<string, readonly string[]>>
+): MuleOption[] {
+  // First stage each gem appears in, so options follow the run.
+  const firstUse = new Map<string, { gem: string; at: number }>()
+  profile.stages.forEach((stage, i) => {
+    for (const g of stage.socketGroups) {
+      for (const gem of g.gems) {
+        const key = normalizeGemName(gem)
+        if (!firstUse.has(key)) firstUse.set(key, { gem, at: i })
+      }
+    }
+  })
+  const wanted = [...firstUse.values()].map((v) => v.gem)
+  const own = strandGems(profile.meta.class, starting[profile.meta.class] ?? [], gems, wanted)
+
+  const options: (MuleOption & { at: number })[] = []
+  for (const [key, { gem, at }] of firstUse) {
+    if (own.has(key)) continue // your own class gets it on the Strand anyway
+    const offers: { cls: string; how: MuleHow }[] = []
+    for (const cls of Object.keys(starting)) {
+      if (cls === profile.meta.class) continue
+      const how = strandGems(cls, starting[cls] ?? [], gems, [gem]).get(key)
+      if (how) offers.push({ cls, how })
+    }
+    if (offers.length === 0) continue
+    offers.sort((a, b) => HOW_RANK[a.how] - HOW_RANK[b.how] || a.cls.localeCompare(b.cls))
+    options.push({ gem, classes: offers.map((o) => o.cls), how: offers[0]!.how, at })
+  }
+  options.sort((a, b) => a.at - b.at || a.gem.localeCompare(b.gem))
+  return options.map(({ at: _at, ...o }) => o)
+}
+
+/** The mule you get unless you pick another: Momentum when the build has it
+ *  — the classic, and what you'd mule if you mule anything — otherwise the
+ *  gem the build needs first. */
+export function defaultMule(options: readonly MuleOption[]): MuleOption | null {
+  return options.find((o) => normalizeGemName(o.gem) === 'momentum') ?? options[0] ?? null
+}
+
 /**
  * The tracked character's class when it looks like a mule for this build, else
- * null: low level, a different base class, and one that starts with a gem the
- * profile uses somewhere — exactly what the Gems tab's "Mule · <class>" rows
- * told you to roll. Anything else of another class is a real mismatch and keeps
- * its warning.
- *
- * `startingOwners` maps a normalized gem name to the classes that start with it.
+ * null: low level, a different base class, and one of the classes this build
+ * could mule from (see muleOptions). Anything else of another class is a real
+ * mismatch and keeps its warning.
  */
 export function mulingClass(
   profile: Profile,
   trackedClass: string | null,
   level: number | null,
-  startingOwners: ReadonlyMap<string, readonly string[]>
+  muleClasses: readonly string[]
 ): string | null {
   if (!trackedClass || level == null || level > MULE_MAX_LEVEL) return null
   const base = baseClassOf(trackedClass)
   if (!base || base === profile.meta.class) return null
-  const gems = [
-    ...profile.stages.flatMap((s) => s.socketGroups.flatMap((g) => g.gems)),
-    ...profile.gemPlan.map((e) => e.gem)
-  ]
-  return gems.some((gem) => (startingOwners.get(normalizeGemName(gem)) ?? []).includes(base)) ? base : null
+  return muleClasses.includes(base) ? base : null
 }

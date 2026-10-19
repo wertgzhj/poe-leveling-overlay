@@ -23,6 +23,9 @@ import {
   resolveStage,
   acquisitionsForStage,
   mulingClass,
+  muleOptions,
+  defaultMule,
+  type MuleOption,
   type Acquisitions
 } from './engine.ts'
 import {
@@ -70,12 +73,10 @@ export class ProfileService {
   /** Bumped on every (re)load so the acquisition cache can't outlive its profile. */
   private profileRevision = 0
   private acqCache: { key: string; value: Acquisitions } | null = null
+  private muleCache: { revision: number; options: MuleOption[] } | null = null
 
   /** class -> normalized set of its starting gems (already in inventory). */
   private readonly startingByClass = new Map<string, Set<string>>()
-  /** normalized gem -> classes that START with it, for the muling hint (roll a
-   *  level-1 alt of that class and stash its two starting gems). */
-  private readonly startingOwners = new Map<string, string[]>()
   /** The character the loaded profile is currently associated with, so a switch
    *  can be noticed. */
   private character: string | null = null
@@ -92,10 +93,6 @@ export class ProfileService {
     this.gemDataError = loaded.error
     for (const [cls, names] of Object.entries(startingGemsJson.classes as Record<string, string[]>)) {
       this.startingByClass.set(cls, new Set(names.map(normalizeGemName)))
-      for (const name of names) {
-        const key = normalizeGemName(name)
-        this.startingOwners.set(key, [...(this.startingOwners.get(key) ?? []), cls])
-      }
     }
     log.addLevelListener((level) => {
       this.level = level
@@ -339,7 +336,9 @@ export class ProfileService {
     // ...unless it's a mule: low level, and a class whose starting gems this
     // build uses. The Gems tab told you to roll exactly that; warning you
     // about it a moment later is the overlay arguing with itself.
-    const muling = mismatch && profile ? mulingClass(profile, trackedClass, level, this.startingOwners) : null
+    const options = profile ? this.muleOptionsFor(profile) : []
+    const muling =
+      mismatch && profile ? mulingClass(profile, trackedClass, level, [...new Set(options.flatMap((o) => o.classes))]) : null
 
     return {
       meta: profile?.meta ?? null,
@@ -359,7 +358,13 @@ export class ProfileService {
       liveIndex,
       choiceDue: this.choiceDue(),
       library: this.library,
-      activeId: this.activeId()
+      activeId: this.activeId(),
+      // Per character, so only once we know who you are — and only when this
+      // build has anything another class starts with.
+      muleChoice:
+        profile && this.character && options.length > 0
+          ? { options, chosen: this.chosenMule(profile)?.gem ?? null }
+          : null
     }
   }
 
@@ -371,17 +376,50 @@ export class ProfileService {
   private acquisitions(profile: Profile, stageIndex: number): Acquisitions {
     const act = this.actReached()
     const library = this.character ? (store.get('libraryReached')[this.character] ?? false) : null
-    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}|${library}`
+    const mule = this.chosenMule(profile)
+    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}|${library}|${mule?.gem ?? ''}`
     if (this.acqCache?.key === key) return this.acqCache.value
     const value = acquisitionsForStage(profile, stageIndex, this.gems, {
       startingGems: this.startingByClass.get(profile.meta.class),
       playerLevel: this.level,
-      startingOwners: this.startingOwners,
       actReached: act,
-      reachedLibrary: library
+      reachedLibrary: library,
+      mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null
     })
     this.acqCache = { key, value }
     return value
+  }
+
+  /** The gems this build could mule, recomputed only when the profile changes. */
+  private muleOptionsFor(profile: Profile): MuleOption[] {
+    if (this.muleCache?.revision === this.profileRevision) return this.muleCache.options
+    const options = muleOptions(profile, this.gems, startingGemsJson.classes as Record<string, string[]>)
+    this.muleCache = { revision: this.profileRevision, options }
+    return options
+  }
+
+  /**
+   * The gem you mule on the tracked character. Unset means the default
+   * (Momentum, else the first gem the build needs); null means you chose not
+   * to mule. A stored gem the profile no longer has falls back to the default
+   * rather than to nothing.
+   */
+  private chosenMule(profile: Profile): MuleOption | null {
+    const options = this.muleOptionsFor(profile)
+    const stored = this.character ? store.get('muleByCharacter')[this.character] : undefined
+    if (stored === null) return null
+    if (typeof stored === 'string') {
+      const picked = options.find((o) => normalizeGemName(o.gem) === normalizeGemName(stored))
+      if (picked) return picked
+    }
+    return defaultMule(options)
+  }
+
+  /** Choose the gem to mule on the tracked character, or null for none. */
+  setMule(gem: string | null): void {
+    if (!this.character) return
+    store.set('muleByCharacter', { ...store.get('muleByCharacter'), [this.character]: gem })
+    this.push()
   }
 
   /** The furthest act this character has reached, or null when we don't know

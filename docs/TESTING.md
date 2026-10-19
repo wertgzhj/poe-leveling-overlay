@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 208 tests: parser, tracker, watcher, guide, profile,
+npm test        # 216 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
@@ -93,8 +93,18 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - A long gem name (`Melee Physical Damage Support`) and a long quest name
      (`The Siren's Cadence`) truncate with `…` and keep their row one line high;
      hovering shows the full text.
-   - A mulable gem reads `Mule` in turquoise with the class to roll on the
-     right, in both the list and the links, and sits at the **top** of the list.
+   - **One mule per character, your choice.** A *Mule* dropdown sits under "Get
+     these gems" whenever the build has a gem another class gets by clearing the
+     Twilight Strand — its starting gems, Hillock's reward, or Nessa's first
+     stock — that yours doesn't. On a fresh character it defaults to
+     **Momentum** (else the gem the build needs first). The chosen gem reads
+     `Mule` in turquoise with the class to roll, in the list **and** the links,
+     at the top of the list — and never *also* as a quest pick: on a Marauder
+     muling Momentum, Mercy Mission must hand over Chance to Bleed, with no
+     "pick one". Pick Chance to Bleed instead and they swap. **No mule** turns
+     it off for that character: Mercy Mission is a pick between both again, and
+     no `Mule` appears anywhere. The choice is per character and survives a
+     restart; another character keeps its own.
    - A quest reward reads `Reward`, and one your build needs twice `Reward +1`.
    - On a **fresh character in Act 1** the list holds Act 1 only. Act 2's quest
      choices must appear when you reach Act 2 and not before — and portalling

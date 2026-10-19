@@ -5,7 +5,7 @@ import type { TrackerSnapshot, ZoneFit } from './log/tracker.ts'
 import type { WatcherStatus } from './log/watcher.ts'
 import type { Route } from './guide/route.ts'
 import type { ProfileMeta, Profile } from './profile/profile.ts'
-import type { ResolvedStage, Acquisitions } from './profile/engine.ts'
+import type { ResolvedStage, Acquisitions, MuleOption } from './profile/engine.ts'
 import type { TrialsSnapshot } from './trials/engine.ts'
 import type { LibraryEntry, LibraryResult } from './profile/library.ts'
 
@@ -34,6 +34,8 @@ export const Channels = {
   hotkeysResume: 'hotkeys:resume',
   /** renderer -> main (invoke): native file picker for the Client.txt path */
   dialogPickClientTxt: 'dialog:pick-client-txt',
+  /** renderer -> main: the gem to mule on the tracked character (null = none) */
+  profileSetMule: 'profile:set-mule',
   /** renderer -> main (invoke): switch the active profile by library id */
   profilesActivate: 'profiles:activate',
   /** editor -> main (invoke): a new profile from a name + class */
@@ -217,6 +219,10 @@ export interface ProfileSnapshot {
   library: LibraryEntry[]
   /** The active profile's library id; null if it isn't in the library. */
   activeId: string | null
+  /** What this build could mule and which gem you mule on the tracked
+   *  character (null = none) — null altogether when there's no character yet or
+   *  nothing to mule. */
+  muleChoice: { options: MuleOption[]; chosen: string | null } | null
 }
 
 /** A one-shot build decision the profile names and you've now reached the point

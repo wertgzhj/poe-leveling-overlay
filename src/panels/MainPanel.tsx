@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
-import { sourceMark, sourceName, sourceTone } from '../lib/sources'
+import { muleInstruction, sourceMark, sourceName, sourceTone, type MuleHow } from '../lib/sources'
 import { UpdateBanner } from './UpdateBanner'
 import { VersionBadge } from './VersionBadge'
 
@@ -708,19 +708,60 @@ function Pip({ gem }: { gem?: ColoredGemBridge }): React.JSX.Element {
 // The acquisition list's left column: what a gem costs you, and how many you
 // need. Fixed width and right-aligned, so every gem name starts on one line and
 // the price keeps a constant distance from the gem it belongs to.
+/** "Mule — what this alt is for": one gem per character, picked from what a
+ *  fresh alt of another class gets on the Twilight Strand. On by default
+ *  (Momentum, else the first gem the build needs); "No mule" turns it off for
+ *  this character — in a party, an alt may not be worth it. A whole row inside
+ *  the plan box, because the header next to "Get these gems" has no room. */
+function MulePicker({
+  choice
+}: {
+  choice: { options: MuleOptionBridge[]; chosen: string | null }
+}): React.JSX.Element {
+  const chosen = choice.options.find((o) => o.gem === choice.chosen) ?? null
+  const short = (gem: string): string => gem.replace(/ Support$/, '')
+  return (
+    <div className="col-span-3 flex items-center gap-1.5 text-[10px]">
+      <span className={'shrink-0 ' + (chosen ? 'text-sky-300/90' : 'text-overlay-muted')}>Mule</span>
+      <select
+        value={choice.chosen ?? ''}
+        onChange={(e) => window.overlay?.setMule(e.target.value || null)}
+        title={
+          chosen
+            ? `${muleInstruction(chosen.classes, chosen.how)} Per character — pick another gem, or "No mule".`
+            : 'Not muling on this character: every gem comes from a quest or a vendor.'
+        }
+        className={
+          'min-w-0 flex-1 truncate rounded border border-overlay-border bg-black/30 px-1 py-0.5 text-[10px] outline-none focus:border-overlay-accent ' +
+          (chosen ? 'text-sky-300/90' : 'text-overlay-muted')
+        }
+      >
+        {choice.options.map((o) => (
+          <option key={o.gem} value={o.gem}>
+            {short(o.gem)} — {o.classes[0]}
+            {o.classes.length > 1 ? ` +${o.classes.length - 1}` : ''}
+          </option>
+        ))}
+        <option value="">No mule</option>
+      </select>
+    </div>
+  )
+}
+
 function CostCell({
   cost,
   count,
   free,
   mule,
+  muleHow,
   later
 }: {
   cost?: string
   count?: number
   free?: boolean
-  /** the classes that START with this gem — a level-1 alt hands it over, so
-   *  there is no price to put here. */
+  /** the classes whose level-1 alt hands this gem over — no price to put here */
   mule?: string[]
+  muleHow?: MuleHow
   later?: boolean
 }): React.JSX.Element {
   const n = count ?? 1
@@ -730,7 +771,7 @@ function CostCell({
     return (
       <span
         className={cls + 'text-sky-300/90'}
-        title={`A level-1 ${mule[0]} starts with this gem — roll one, stash it, delete the mule. Free.`}
+        title={muleInstruction(mule, muleHow)}
       >
         {n > 1 && `${n}× `}
         Mule
@@ -989,7 +1030,7 @@ function BuyRow({
   const mule = e.mule?.length ? e.mule : undefined
   return (
     <>
-      <CostCell cost={e.cost} count={e.count} mule={mule} later={later} />
+      <CostCell cost={e.cost} count={e.count} mule={mule} muleHow={e.muleHow} later={later} />
       <GemCell entry={e} comingUpAt={comingUpAt} later={later} />
       {mule ? (
         <SourceCell
@@ -1183,6 +1224,7 @@ function GemBody(): React.JSX.Element {
             >
               Get these gems{atReward ? ' — take rewards now' : ''}
             </div>
+            {profile.muleChoice && <MulePicker choice={profile.muleChoice} />}
             {/* Rows render bare cells into this grid, so the columns line up
                 across every row. Dimming a "later" row happens per cell: a
                 wrapper element here would become a grid item and break them. */}
@@ -1196,7 +1238,10 @@ function GemBody(): React.JSX.Element {
               const prevStop = prev?.kind === 'buy' ? prev.stop : undefined
               return (
                 <Fragment key={i}>
-                  {stop && stop.key !== prevStop?.key && (
+                  {/* No heading for the mule: the Mule picker right above says
+                      it already, and a heading made the rewards after it read
+                      as part of the mule trip. */}
+                  {stop && stop.key !== 'mule' && stop.key !== prevStop?.key && (
                     <div
                       className={
                         'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider ' +
