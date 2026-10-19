@@ -980,6 +980,29 @@ function GemCell({
   later?: boolean
   children?: React.ReactNode
 }): React.JSX.Element {
+  // One row for a whole quest pick: the gems stacked, one per line — "A or B"
+  // on one line truncates to "A or…" in a narrow panel — and a line under
+  // them that says which to buy.
+  if (e.anyOf) {
+    const n = e.count ?? 1
+    return (
+      <div
+        title={`Only the ${n > 1 ? `${n} you didn't pick` : "one you didn't pick"} — the quest gave you one of these, and the overlay can't see your inventory.`}
+        className={'flex min-w-0 flex-col text-xs text-overlay-text' + (later ? ' opacity-50' : '')}
+      >
+        {e.anyOf.map((g) => (
+          <span key={g.gem} className="flex min-w-0 items-baseline gap-1.5">
+            <Pip gem={g.colored} />
+            <span className="min-w-0 truncate">{g.gem}</span>
+          </span>
+        ))}
+        <span className="text-[10px] text-overlay-muted">
+          ↳ {n > 1 ? `the ${n} you didn't pick` : "whichever you didn't pick"}
+          {children}
+        </span>
+      </div>
+    )
+  }
   return (
     <div
       title={later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}

@@ -189,6 +189,7 @@ interface AcquisitionEntryBridge {
   requiredLevel?: number
   colored?: ColoredGemBridge
   fromPickOne?: boolean
+  anyOf?: { gem: string; colored?: ColoredGemBridge }[]
 }
 
 interface RewardGroupBridge {

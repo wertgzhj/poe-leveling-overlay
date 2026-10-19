@@ -60,6 +60,10 @@ export interface AcquisitionEntry {
   /** a purchase only because a quest choice went the other way — you may
    *  already own it. Listed anyway: nothing in the log says which you picked. */
   fromPickOne?: boolean
+  /** set on one row standing for several gems that lost the same quest pick:
+   *  buy the ones you didn't take. `gem` then reads "A or B", and `count` is
+   *  how many of them to buy. */
+  anyOf?: { gem: string; colored?: ColoredGem }[]
 }
 
 export interface Acquisitions {
@@ -126,11 +130,13 @@ export type AcquisitionItem = (
   atLevel?: number
 }
 
-/** Campaign act from a numeric area id ("2_1_3" -> 2). Word ids (hideouts,
+/** Campaign act from a numeric area id ("1_2_7_1" -> 2, "2_6_town" -> 6). Word ids (hideouts,
  *  maps) and unknown shapes give null — keep the last known act instead. */
 export function actFromAreaId(areaId: string | null | undefined): number | null {
   if (!areaId) return null
-  const m = /^(\d+)_/.exec(areaId)
+  // "<part>_<act>_<zone>": The Crypt is 1_2_…, Act 6's town 2_6_town. Reading
+  // the first number made Acts 1-5 all "Act 1" and 6-10 all "Act 2".
+  const m = /^\d+_(\d+)_/.exec(areaId)
   if (!m) return null
   const act = Number(m[1])
   return act >= 1 && act <= 10 ? act : null
@@ -332,10 +338,21 @@ export function acquisitionsForStage(
       .filter((g) => g.pickOne)
       .flatMap((g) => g.gems.map((e) => e.gem.toLowerCase()))
   )
-  const stillOwed = rewards
-    .filter((e) => !isNewThisStage(e) && pickOne.has(e.gem.toLowerCase()))
-    .map((e) => asPurchase(e, gems, profile.meta.class))
-    .filter((e): e is AcquisitionEntry => e !== null)
+  //
+  // Once, though: on the stage right after the pick, not on every stage after
+  // it. One stage later you've either bought it or decided not to, and a row
+  // that never leaves is a row nobody reads.
+  const twoBack = new Set<string>()
+  if (stageIndex > 1) {
+    const s2 = profile.stages[stageIndex - 2]
+    if (s2) for (const g of s2.socketGroups) for (const gem of g.gems) twoBack.add(gem.toLowerCase())
+  }
+  const justPicked = new Set(
+    rewards
+      .filter((e) => !isNewThisStage(e) && !twoBack.has(e.gem.toLowerCase()) && pickOne.has(e.gem.toLowerCase()))
+      .map((e) => e.gem.toLowerCase())
+  )
+  const stillOwed = owedFromPicks(rewardGroups, justPicked, gems, profile.meta.class)
 
   // Only the to-do plan is deduped against the previous stage; rewardGroups and
   // the reward/purchase lists (which drive the link-overview tags) stay full.
@@ -491,6 +508,47 @@ function asPurchase(
     // "go buy this" for a gem already in your inventory.
     fromPickOne: true
   }
+}
+
+/**
+ * What a quest pick left you to buy, one row per pick: the quest handed over
+ * one of its gems and you buy the rest — "Leap Slam or Intimidating Cry", not
+ * two rows that read as two purchases. Gems sold by different vendors can't
+ * share a row; they stay one row each, each saying it may be the one you took.
+ */
+function owedFromPicks(
+  groups: RewardGroup[],
+  owed: ReadonlySet<string>,
+  gems?: GemData,
+  cls?: CharClass
+): AcquisitionEntry[] {
+  const out: AcquisitionEntry[] = []
+  for (const group of groups) {
+    if (!group.pickOne) continue
+    const current = group.gems.filter((e) => !e.fromLevel)
+    const buys = current
+      .filter((e) => owed.has(e.gem.toLowerCase()))
+      .map((e) => asPurchase(e, gems, cls))
+      .filter((e): e is AcquisitionEntry => e !== null)
+    if (buys.length === 0) continue
+    const oneShop = buys.every((e) => e.npc === buys[0].npc && e.act === buys[0].act)
+    if (buys.length === 1 || !oneShop) {
+      out.push(...buys)
+      continue
+    }
+    // Every gem of the pick is here, so the quest gave you one of them.
+    const count = buys.length - (buys.length === current.length ? 1 : 0)
+    const priciest = buys.reduce((a, b) => (costRank(b.cost) > costRank(a.cost) ? b : a))
+    out.push({
+      ...buys[0],
+      gem: buys.map((e) => e.gem).join(' or '),
+      count,
+      cost: priciest.cost,
+      requiredLevel: Math.min(...buys.map((e) => e.requiredLevel ?? 1)),
+      anyOf: buys.map((e) => ({ gem: e.gem, colored: e.colored }))
+    })
+  }
+  return out
 }
 
 /** Cheapest first, then earliest act, then alphabetical.
