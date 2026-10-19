@@ -230,8 +230,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
   Transmutation / Alteration / Chance / Alchemy) is derived from its level
   requirement; the boundaries live in `COST_TIERS`
   (`electron/profile/gems.ts`). Wisdom (1-7), Transmutation (8-15) and
-  Alteration (16-23) are confirmed in game; Chance (24-33, Act 3) and Alchemy
-  (34+, Act 4) still need a look at a vendor.
+  Alteration (16-27; Punishment at 24 included) are confirmed in game; Chance
+  (28-33 — e.g. Earthquake 28, Fortify 31) and Alchemy (34+, Act 4) still need
+  a look at a vendor.
 - **Routes ship as placeholders.** Acts 1–10 contain thin skeletons meant to be
   replaced — in `data/campaign/actN.json`, as per-act overrides in the userData
   `routes/` folder, or in the visual editor.

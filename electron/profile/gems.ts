@@ -69,11 +69,12 @@ export interface GemInfo {
 // Vendor gem prices by the gem's level requirement. The tiers follow the acts'
 // quest rewards (Act 1: 1-12, Act 2: 16-18, Act 3: 24-31, Act 4: 34-38).
 // Checked in game: Dash (4) Wisdom, Faster Attacks (8) and Sunder (12)
-// Transmutation, Seismic Cry / Molten Shell (16) and Cruelty (18) Alteration.
-// Chance and Alchemy are still unconfirmed (TESTING has the checklist item).
+// Transmutation, Seismic Cry / Molten Shell (16), Cruelty (18) and Punishment
+// (24, Act 3's first quest) Alteration. Chance and Alchemy are still
+// unconfirmed (TESTING has the checklist item).
 const COST_TIERS: ReadonlyArray<[minLevel: number, cost: string]> = [
   [34, 'Alchemy'],
-  [24, 'Chance'],
+  [28, 'Chance'],
   [16, 'Alteration'],
   [8, 'Transmutation'],
   [1, 'Wisdom']
