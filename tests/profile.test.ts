@@ -434,12 +434,16 @@ test('upcoming lists later-stage quest-reward gems with their start level', () =
 })
 
 test('actFromAreaId reads the act from numeric ids and ignores word ids', () => {
+  // <part>_<act>_<zone>: the act is the SECOND number.
   assert.equal(actFromAreaId('1_1_2'), 1)
-  assert.equal(actFromAreaId('2_6_town'), 2)
-  assert.equal(actFromAreaId('10_1_1'), 10)
+  assert.equal(actFromAreaId('1_2_7_1'), 2, 'The Crypt Level 1 is Act 2, not Act 1')
+  assert.equal(actFromAreaId('1_5_town'), 5)
+  assert.equal(actFromAreaId('2_6_town'), 6)
+  assert.equal(actFromAreaId('2_10_town'), 10)
   assert.equal(actFromAreaId('HideoutWorldTurtle'), null)
   assert.equal(actFromAreaId('MapWorldsCitySquare'), null)
   assert.equal(actFromAreaId(null), null)
+  assert.equal(actFromAreaId('1_99_1'), null)
   assert.equal(actFromAreaId('99_1'), null)
 })
 
@@ -1199,16 +1203,43 @@ test('a gem you lost a quest choice on stays on the list as a buy', () => {
   assert.equal(first.plan.some((it) => it.kind === 'buy'), false, 'nothing to buy yet — you pick first')
 
   // Stage 1: the quest is behind you and gave you exactly one. The other two
-  // are purchases now, at the vendor who stocks them.
+  // are purchases now, at the vendor who stocks them — one row for the pick,
+  // "buy two of these three", not three rows that read as three buys.
   const later = acquisitionsForStage(profile, 1, gems, { playerLevel: 32, actReached: 3 })
   const buys = later.plan.flatMap((it) => (it.kind === 'buy' ? [it.entry] : []))
-  assert.deepEqual(buys.map((e) => e.gem).sort(), ['Cold Snap', 'Herald of Ice', 'Herald of Thunder'])
-  for (const e of buys) {
-    assert.equal(e.bucket, 'purchase')
-    assert.equal(e.npc, 'Yeena')
-    assert.equal(e.fromPickOne, true, 'the row has to admit you may already own it')
-    assert.ok(e.cost, 'a purchase without a price is not a shopping list entry')
-  }
+  assert.equal(buys.length, 1)
+  const row = buys[0]!
+  assert.deepEqual(row.anyOf?.map((e) => e.gem).sort(), ['Cold Snap', 'Herald of Ice', 'Herald of Thunder'])
+  assert.equal(row.count, 2, 'the quest gave you one of the three')
+  assert.equal(row.bucket, 'purchase')
+  assert.equal(row.npc, 'Yeena')
+  assert.equal(row.fromPickOne, true, 'the row has to admit you may already own them')
+  assert.ok(row.cost, 'a purchase without a price is not a shopping list entry')
+})
+
+test('what a pick left to buy is listed on the next stage only', () => {
+  // The Caged Brute's skill pick, from the report: Leap Slam or Intimidating
+  // Cry, then three more stages of the same links. Listed once, after the
+  // pick — not on every stage until the end of the profile.
+  const gems = exampleGems()
+  const names = ['Ground Slam', 'Leap Slam', 'Intimidating Cry']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'brute', class: 'Marauder' },
+      stages: [
+        { range: [1, 12], socketGroups: [{ gems: names }] },
+        { range: [13, 21], socketGroups: [{ gems: names }] },
+        { range: [22, 28], socketGroups: [{ gems: names }] },
+        { range: [29, 40], socketGroups: [{ gems: names }] }
+      ],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const owed = (i: number): string[] =>
+    acquisitionsForStage(profile, i, gems, { playerLevel: 16 }).plan.flatMap((it) =>
+      it.kind === 'buy' && it.entry.fromPickOne ? [it.entry.gem] : []
+    )
+  assert.deepEqual([0, 1, 2, 3].map(owed), [[], ['Intimidating Cry or Leap Slam'], [], []])
 })
 
 test('an ordinary reward is still assumed handled by the stage that offered it', () => {

@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 224 tests: parser, tracker, watcher, guide, profile,
+npm test        # 225 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
@@ -122,15 +122,21 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      choices must appear when you reach Act 2 and not before — and portalling
      back to Act 1's town must not make them disappear again. Rolling a new
      character with a name you used last league starts the count over rather
-     than inheriting that character's act.
+     than inheriting that character's act. Entering any **Act 2** zone (e.g.
+     The Crypt) must bring in Act 2's rewards and Yeena's stock (Herald of Ash,
+     Blood Rage) — the act is the *second* number of the area id (`1_2_…`), and
+     reading the first made every zone of Acts 1-5 count as Act 1.
    - Buys are headed by their stop (`A1 · NESSA`). The same vendor heading twice
      is correct — their stock grows per quest, so that's two visits.
    - A `PICK ONE, BUY REST` box names where to buy the ones you don't take —
      e.g. Act 2's *Intruders in Black* (Herald of Ice / Herald of Thunder /
      Cold Snap) should point at **A2 · Yeena**, who stocks all three.
    - And once that stage rolls over, those gems must **still be on the list**,
-     now as buys marked `(if not picked)`. The quest gave you one of them; the
-     overlay can't see which, so it can't quietly assume they're all handled.
+     now as **one** buy row for the pick: the gems stacked, `↳ whichever you
+     didn't pick` (or `the 2 you didn't pick`) under them. The quest gave you
+     one of them; the overlay can't see which, so it can't quietly assume
+     they're all handled. That row is on the **next stage only** — the stage
+     after that doesn't repeat it.
      A gem from a quest that offered only *one* of your gems must NOT come back
      that way — you took it, it's done.
    - `A3 · Library` is violet and `A3 · Gravicius` rose, in the shopping rows,
