@@ -1238,7 +1238,10 @@ function GemBody(): React.JSX.Element {
               const prevStop = prev?.kind === 'buy' ? prev.stop : undefined
               return (
                 <Fragment key={i}>
-                  {stop && stop.key !== prevStop?.key && (
+                  {/* No heading for the mule: the Mule picker right above says
+                      it already, and a heading made the rewards after it read
+                      as part of the mule trip. */}
+                  {stop && stop.key !== 'mule' && stop.key !== prevStop?.key && (
                     <div
                       className={
                         'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider ' +
