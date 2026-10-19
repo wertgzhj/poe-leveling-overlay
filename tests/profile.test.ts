@@ -376,12 +376,18 @@ test('the shipped gem data carries no HTML entities and no duplicate names', () 
   assert.ok(quests.has("The Siren's Cadence"))
 })
 
-test('vendor cost tier follows the gem level requirement (provisional table)', () => {
+test('vendor cost tier follows the gem level requirement', () => {
+  // Seen in game.
   assert.equal(vendorCostFor(1), 'Wisdom')
-  assert.equal(vendorCostFor(8), 'Transmutation')
-  assert.equal(vendorCostFor(12), 'Alteration')
-  assert.equal(vendorCostFor(16), 'Chance')
-  assert.equal(vendorCostFor(31), 'Alchemy')
+  assert.equal(vendorCostFor(4), 'Wisdom', 'Dash')
+  assert.equal(vendorCostFor(8), 'Transmutation', 'Faster Attacks')
+  assert.equal(vendorCostFor(12), 'Transmutation', 'Sunder')
+  assert.equal(vendorCostFor(16), 'Alteration', 'Seismic Cry, Molten Shell')
+  assert.equal(vendorCostFor(18), 'Alteration', 'Cruelty')
+  // Act 3 and Act 4 by the same pattern, not yet seen.
+  assert.equal(vendorCostFor(24), 'Chance')
+  assert.equal(vendorCostFor(31), 'Chance')
+  assert.equal(vendorCostFor(34), 'Alchemy')
   assert.equal(vendorCostFor(undefined), undefined)
 })
 
@@ -394,7 +400,7 @@ test('purchase entries carry the cost tier when the gem level is known', () => {
     })
   ).profile!
   const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
-  assert.equal(acq.purchases[0]?.cost, 'Alteration') // requiredLevel 12
+  assert.equal(acq.purchases[0]?.cost, 'Transmutation') // requiredLevel 12
 })
 
 test('upcoming lists later-stage quest-reward gems with their start level', () => {
@@ -593,14 +599,14 @@ test('a pick-one group counts copies, not gems', () => {
   const g = acquisitionsForStage(profile, 0, gems).rewardGroups[0]
   assert.equal(g.pickOne, true)
   assert.equal(g.buyRest?.count, 2)
-  assert.equal(g.buyRest?.cost, 'Alteration')
+  assert.equal(g.buyRest?.cost, 'Transmutation')
 })
 
 test('purchases sort by cost tier, then act, then name', () => {
   const gems = new GemData({
     'Cheap A2': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] },
     'Cheap A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] },
-    'Pricey A1': { attr: 'int', requiredLevel: 28, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] }
+    'Pricey A1': { attr: 'int', requiredLevel: 38, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] }
   })
   const profile = parseProfile(
     JSON.stringify({
@@ -610,7 +616,7 @@ test('purchases sort by cost tier, then act, then name', () => {
     })
   ).profile!
   const acq = acquisitionsForStage(profile, 0, gems)
-  // Wisdom (lvl 1) before Alchemy (lvl 28); within Wisdom, Act 1 before Act 2.
+  // Wisdom (lvl 1) before Alchemy (lvl 38); within Wisdom, Act 1 before Act 2.
   assert.deepEqual(
     acq.purchases.map((e) => `${e.gem}/${e.cost}`),
     ['Cheap A1/Wisdom', 'Cheap A2/Wisdom', 'Pricey A1/Alchemy']
