@@ -1,15 +1,6 @@
 @import "tailwindcss";
 
-/* Central design tokens — dark, compact overlay theme.
-   Tailwind v4 turns each --color-* token into bg-/text-/border- utilities. */
-@theme {
-  --color-overlay-bg: #0e1118;
-  --color-overlay-panel: #161b26;
-  --color-overlay-border: #2a3346;
-  --color-overlay-accent: #c8a24a;
-  --color-overlay-text: #e6e9f0;
-  --color-overlay-muted: #8b93a7;
-}
+@import "./tokens.css";
 
 html,
 body,

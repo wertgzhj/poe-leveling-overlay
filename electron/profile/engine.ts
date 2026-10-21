@@ -663,7 +663,7 @@ function buildRewardGroups(
   })
   // Choices first (they need a decision), then by act, then quest name.
   // Chronological: act, then where the quest sits within that act (derived rank),
-  // then name. Choices are no longer hoisted to the top — the amber "Pick one"
+  // then name. Choices are no longer hoisted to the top — the gold "Pick one"
   // box already makes them stand out, and reading order should match play order.
   return groups.sort(
     (a, b) =>

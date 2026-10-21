@@ -79,7 +79,7 @@ export function ShareRoutes({ onImported }: { onImported: () => void }): React.J
       />
 
       <div className="text-xs">
-        {copied && <span className="text-emerald-400">Copied to the clipboard.</span>}
+        {copied && <span className="text-ok">Copied to the clipboard.</span>}
         {result && <ImportResult result={result} />}
         {!copied && !result && (
           <span className="text-overlay-muted">
@@ -96,12 +96,12 @@ function ImportResult({ result }: { result: RouteImportResultBridge }): React.JS
   return (
     <div className="flex flex-col gap-0.5">
       {acts.length > 0 && (
-        <span className="text-emerald-400">
+        <span className="text-ok">
           Imported {acts.length === 1 ? 'Act' : 'Acts'} {acts.join(', ')} — the overlay reloaded.
         </span>
       )}
       {result.errors.map((err, i) => (
-        <span key={i} className="text-red-300">
+        <span key={i} className="text-danger">
           · {err}
         </span>
       ))}

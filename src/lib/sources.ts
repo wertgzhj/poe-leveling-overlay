@@ -26,8 +26,8 @@ export const SOURCE_ALIAS: Record<string, string> = {
  * Keyed by the ALIAS, not the raw name: everything downstream renames first.
  */
 export const SOURCE_TONE: Record<string, string> = {
-  Library: 'text-violet-300',
-  Gravicius: 'text-rose-300'
+  Library: 'text-library',
+  Gravicius: 'text-fight'
 }
 
 export const MUTED = 'text-overlay-muted'
@@ -95,7 +95,7 @@ export interface SourceMark {
 export function sourceMark(e: SourceInput | undefined): SourceMark | null {
   if (!e) return null
   if (e.starting) {
-    return { label: '✓ start', title: 'You start with this gem', tone: 'text-emerald-400/90' }
+    return { label: '✓ start', title: 'You start with this gem', tone: 'text-ok' }
   }
   const act = e.act ? `A${e.act}` : null
   const inAct = e.act ? ` in Act ${e.act}` : ''
@@ -114,7 +114,7 @@ export function sourceMark(e: SourceInput | undefined): SourceMark | null {
     return {
       label: `Mule · ${e.mule.join('/')}`,
       title: `${muleInstruction(e.mule, e.muleHow)} ${otherwise}`,
-      tone: 'text-sky-300/90'
+      tone: 'text-mule'
     }
   }
   if (e.bucket === 'reward') {

@@ -56,15 +56,15 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    header. Paste a string (a trailing line break from a web page must vanish on
    save), and the button appears beside ⚙. In interactive mode, click it: it
    reads `✓ copied` for a moment *without* nudging ⚙ sideways, and Ctrl+V in a
-   stash or vendor search box pastes exactly the string. The counter turns amber
-   past **250** characters — the game's search box limit, confirmed in game. (The
+   stash or vendor search box pastes exactly the string. The counter turns orange
+   and gains a ⚠ past **250** characters — the game's search box limit, confirmed in game. (The
    community regex tools say 50; that is wrong by a factor of five.)
 4. **Tracking.** The tracker strip shows the current zone and level while
    playing. Restart the overlay mid-session — it resumes both. With no character
    pinned, rolling a fresh character (entering the Twilight Strand) switches
    tracking to it on its first level-up. Pin a name in Settings → Game log only
    when playing in a party — and while one is pinned, `⟳ character` must go
-   **amber** and name the pin rather than ticking, because tracking does not
+   **orange** and name the pin rather than ticking, because tracking does not
    move. A zone whose monster level is far from yours adds a tag — `zone 32 ▲`
    in red when it outpaces your safe range, `▼` when you have outgrown it. It
    must **not** appear in towns.
@@ -159,18 +159,18 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      for an Elementalist on a Witch build. It should still appear for a genuinely
      different base class.
    - **Mule a gem the tab tells you to** (e.g. Momentum from a Ranger on a
-     Marauder build): while you're on the mule, the amber banner is replaced by a
+     Marauder build): while you're on the mule, the orange ⚠ banner is replaced by a
      turquoise "Muling on a Ranger?" note. Then go back to your main: the moment
      it **levels up**, the strip, the stage and the Gems tab must be your main's
      again — not the mule's level 2. That used to stick until a restart. A
      partymate's level-up must still never move tracking.
-7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a violet
+7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a gold
    bar naming your choice; with `meta.pantheon` set, **Act 5** does the same. The
    bar outranks the Labyrinth and trial notices — those come round again, the
    bandits do not. ✕ dismisses it for that character, including after a restart.
    A profile that names neither must show nothing at all. Importing a PoB build
    should fill the bandit in by itself (PoB's `None` means "kill all three").
-8. **Trials.** Entering a trial zone shows an amber "Trial of Ascendancy in this
+8. **Trials.** Entering a trial zone shows an orange △ "Trial of Ascendancy in this
    zone" hint on every tab. Finishing the trial auto-checks it — Izaro voices a
    plaque line only on completion, and the zone identifies which trial it was.
    Confirm the **right** one is ticked, especially in **Act 7's Chamber of Sins
@@ -221,6 +221,24 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    ordinary text — not red, no `!` on the version badge. And whatever goes
    wrong, the line is one short sentence: no HTTP headers, no stack trace, no
    `C:\Users\…` path. Those all used to be shown in full.
+
+11. **Colours and accessibility.** One colour, one meaning, across the
+   overlay, Settings and the editor (`src/styles/tokens.css`):
+   - **Gold** — now / you / active: the active tab, the current guide step, the
+     trial you stand in ("you are here" is a gold row, like the guide step),
+     "take rewards now", a *Pick one* box, the bandit/pantheon bar.
+   - **Orange + ⚠ or △** — careful: the trial-zone bar, a wrong-class or
+     not-English log, a regex past 250, a hotkey without a modifier. Never
+     orange without its glyph.
+   - **Green** — free or done right: `Reward` in the Gems tab *and* the Guide's
+     `reward` tag, `✓ start`, saved/copied messages.
+   - **Red** — broken. **Turquoise** — the mule, nowhere else. **Violet** — the
+     Library, nowhere else. **Rose** — Gravicius.
+   - Done is **grey**, not gold: a checked trial's ✓ and a done guide step.
+   - Prices run grey → white (Wisdom → Alch), not gold.
+   - Tab through Settings and the editor with the keyboard: the focused control
+     shows a thin gold outline. The update arrow on the version badge doesn't
+     pulse when Windows has animations turned off.
 
 ## Known limitations
 

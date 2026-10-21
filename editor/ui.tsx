@@ -62,7 +62,7 @@ export function Btn(props: {
     v === 'primary'
       ? 'bg-overlay-accent/25 text-overlay-accent hover:bg-overlay-accent/35'
       : v === 'danger'
-        ? 'bg-red-500/15 text-red-300 hover:bg-red-500/25'
+        ? 'bg-danger/15 text-danger hover:bg-danger/25'
         : 'bg-white/10 text-overlay-text hover:bg-white/15'
   return (
     <button
@@ -86,10 +86,10 @@ export function SaveResult({
 }): React.JSX.Element | null {
   if (!result) return null
   if (result.ok) {
-    return <span className="text-xs text-emerald-400">{okText}</span>
+    return <span className="text-xs text-ok">{okText}</span>
   }
   return (
-    <span className="text-xs text-red-300">
+    <span className="text-xs text-danger">
       {result.errors.length ? result.errors.join('; ') : 'Save failed.'}
     </span>
   )

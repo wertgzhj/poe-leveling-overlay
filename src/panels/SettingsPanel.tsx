@@ -261,8 +261,8 @@ export function SettingsPanel(): React.JSX.Element {
                 className={
                   'mt-1.5 rounded-md p-1.5 text-[10px] ' +
                   (pobResult.ok
-                    ? 'border border-emerald-400/40 bg-emerald-400/10 text-emerald-300'
-                    : 'border border-red-400/40 bg-red-400/10 text-red-300')
+                    ? 'border border-ok/40 bg-ok/10 text-ok'
+                    : 'border border-danger/40 bg-danger/10 text-danger')
                 }
               >
                 {pobResult.ok ? (
@@ -271,7 +271,7 @@ export function SettingsPanel(): React.JSX.Element {
                   pobResult.errors.map((e, i) => <div key={i}>· {e}</div>)
                 )}
                 {pobResult.warnings.map((w, i) => (
-                  <div key={i} className="text-amber-300/90">
+                  <div key={i} className="text-warn">
                     ⚠ {w}
                   </div>
                 ))}
@@ -387,9 +387,11 @@ export function SettingsPanel(): React.JSX.Element {
                 title={`The game's search box takes ${SEARCH_BOX_LIMIT} characters; anything past that is cut off.`}
                 className={
                   'shrink-0 font-mono text-[10px] ' +
-                  (regexDraft.length > SEARCH_BOX_LIMIT ? 'text-amber-300' : 'text-overlay-muted')
+                  (regexDraft.length > SEARCH_BOX_LIMIT ? 'text-warn' : 'text-overlay-muted')
                 }
               >
+                {/* Not colour alone: over the limit it says so. */}
+                {regexDraft.length > SEARCH_BOX_LIMIT && '⚠ '}
                 {regexDraft.length}/{SEARCH_BOX_LIMIT}
               </span>
             </div>
@@ -405,9 +407,9 @@ export function SettingsPanel(): React.JSX.Element {
                   <div key={field} className="flex items-center justify-between gap-2">
                     <span className="text-xs text-overlay-text">{label}</span>
                     <div className="flex items-center gap-2">
-                      {conflict && <span className="text-[10px] text-red-400">⚠ conflict</span>}
+                      {conflict && <span className="text-[10px] text-danger">⚠ conflict</span>}
                       {!conflict && !hasModifier(accel) && (
-                        <span className="text-[10px] text-amber-400/80">no modifier</span>
+                        <span className="text-[10px] text-warn">⚠ no modifier</span>
                       )}
                       <button
                         onClick={() => startRecording(field)}
@@ -469,7 +471,7 @@ function UpdateRow(): React.JSX.Element {
 
   return (
     <>
-      <div className={'text-xs ' + (state === 'error' ? 'text-red-300' : 'text-overlay-text')}>{line}</div>
+      <div className={'text-xs ' + (state === 'error' ? 'text-danger' : 'text-overlay-text')}>{line}</div>
       <div className="mt-2 flex items-center gap-2">
         {state === 'ready' ? (
           <button

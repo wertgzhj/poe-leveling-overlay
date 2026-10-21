@@ -51,15 +51,15 @@ const COST_SHORT: Record<string, string> = {
   Alchemy: 'Alch'
 }
 
-// One hue, rising intensity: the pricier the gem, the brighter the gold. A ramp
-// rather than a palette — "this one actually costs something" reads at a glance
-// without having to learn five colours, and the word carries the meaning anyway.
+// One ramp, grey to white: the pricier the gem, the brighter the word. Not gold
+// — gold means "now" in this tab, and a price isn't a call to act. The word
+// carries the meaning anyway; every step clears AA contrast.
 const COST_TONE: Record<string, string> = {
   Wisdom: 'text-overlay-muted',
-  Transmutation: 'text-overlay-accent/60',
-  Alteration: 'text-overlay-accent/75',
-  Chance: 'text-overlay-accent/90',
-  Alchemy: 'text-overlay-accent'
+  Transmutation: 'text-overlay-text/70',
+  Alteration: 'text-overlay-text/80',
+  Chance: 'text-overlay-text/90',
+  Alchemy: 'text-overlay-text'
 }
 
 function ResizeGrip(): React.JSX.Element {
@@ -108,7 +108,7 @@ function DetectCharButton(): React.JSX.Element {
       title={flash?.title ?? "Detect the character you're logged in as (from your most recent level-up)"}
       className={
         'no-drag max-w-[45%] shrink-0 truncate rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:text-overlay-text ' +
-        (flash?.title ? 'text-amber-300' : 'text-overlay-muted')
+        (flash?.title ? 'text-warn' : 'text-overlay-muted')
       }
     >
       {flash?.text ?? '⟳ character'}
@@ -139,9 +139,9 @@ function RegexButton(): React.JSX.Element | null {
         // shove the ⚙ next to it sideways.
         'no-drag min-w-[3.75rem] rounded bg-white/10 px-1.5 py-0.5 text-center text-[11px] hover:text-overlay-text ' +
         (flash === 'copied'
-          ? 'text-emerald-400'
+          ? 'text-ok'
           : flash === 'failed'
-            ? 'text-amber-300'
+            ? 'text-warn'
             : 'text-overlay-muted')
       }
     >
@@ -187,7 +187,7 @@ function ZoneFitTag({ fit }: { fit: ZoneFitBridge }): React.JSX.Element {
       }
       className={
         'shrink-0 rounded px-1 text-[10px] font-medium ' +
-        (under ? 'bg-red-400/15 text-red-300' : 'bg-white/10 text-overlay-muted')
+        (under ? 'bg-danger/15 text-danger' : 'bg-white/10 text-overlay-muted')
       }
     >
       {under ? `zone ${fit.areaLevel} ▲` : `zone ${fit.areaLevel} ▼`}
@@ -295,6 +295,7 @@ export function MainPanel(): React.JSX.Element {
             <button
               className="no-drag rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
               title="Settings"
+              aria-label="Settings"
               onClick={() => window.overlay?.setSettingsOpen(true)}
             >
               ⚙
@@ -326,11 +327,11 @@ export function MainPanel(): React.JSX.Element {
               (logStatus?.state !== 'watching'
                 ? 'bg-white/25'
                 : languageMismatch
-                  ? 'bg-amber-400'
-                  : 'bg-emerald-400')
+                  ? 'bg-warn'
+                  : 'bg-ok')
             }
           />
-          <span className={'min-w-0 flex-1 truncate' + (languageMismatch ? ' text-amber-300' : '')}>
+          <span className={'min-w-0 flex-1 truncate' + (languageMismatch ? ' text-warn' : '')}>
             {trackerLine(logStatus, tracked, languageMismatch)}
           </span>
           {zoneFit && !languageMismatch && <ZoneFitTag fit={zoneFit} />}
@@ -378,7 +379,7 @@ function Tab({
     >
       {label}
       {badge && <span className="ml-1 text-[10px] text-overlay-muted">{badge}</span>}
-      {flag && <span className="ml-1 text-red-400">•</span>}
+      {flag && <span className="ml-1 text-danger">•</span>}
     </button>
   )
 }
@@ -397,10 +398,10 @@ function TrialHint(): React.JSX.Element | null {
   // and a trial zone comes round again.
   if (choice) {
     return (
-      <div className="flex items-center gap-2 border-b border-violet-400/40 bg-violet-400/10 px-3 py-1.5">
-        <span className="text-violet-300">◆</span>
+      <div className="flex items-center gap-2 border-b border-overlay-accent/50 bg-overlay-accent/15 px-3 py-1.5">
+        <span className="text-overlay-accent" aria-hidden>◆</span>
         <span
-          className="min-w-0 flex-1 truncate text-[11px] text-violet-200"
+          className="min-w-0 flex-1 truncate text-[11px] text-overlay-text"
           title={
             choice.id === 'bandit'
               ? `Act 2, "Deal with the Bandits" — your profile says ${choice.wants}. The alternatives: ${choice.options.join(', ')}. It cannot be changed afterwards.`
@@ -413,6 +414,7 @@ function TrialHint(): React.JSX.Element | null {
         <button
           className="shrink-0 text-overlay-muted hover:text-overlay-text"
           title="Done — don't remind me again on this character"
+          aria-label="Dismiss reminder"
           onClick={() => window.overlay?.dismissChoice(choice.id)}
         >
           ✕
@@ -432,6 +434,7 @@ function TrialHint(): React.JSX.Element | null {
         <button
           className="shrink-0 text-overlay-muted hover:text-overlay-text"
           title="Got it — don't show this again for this Labyrinth"
+          aria-label="Dismiss"
           onClick={() => window.overlay?.trialsDismissLab(unlocked)}
         >
           ✕
@@ -446,13 +449,13 @@ function TrialHint(): React.JSX.Element | null {
   const trial = trials?.trials.find((t) => t.id === trials.currentZoneTrialId)
   if (!trial || trial.seen) return null
   return (
-    <div className="flex items-center gap-2 border-b border-amber-400/40 bg-amber-400/10 px-3 py-1.5">
-      <span className="text-amber-300">△</span>
-      <span className="min-w-0 flex-1 truncate text-[11px] text-amber-200">
+    <div className="flex items-center gap-2 border-b border-warn/40 bg-warn/10 px-3 py-1.5">
+      <span className="text-warn" aria-hidden>△</span>
+      <span className="min-w-0 flex-1 truncate text-[11px] text-warn">
         Trial of Ascendancy in this zone — don&apos;t leave without it.
       </span>
       <button
-        className="shrink-0 rounded bg-amber-400/20 px-2 py-0.5 text-[10px] font-medium text-amber-200 hover:bg-amber-400/30"
+        className="shrink-0 rounded bg-warn/20 px-2 py-0.5 text-[10px] font-medium text-warn hover:bg-warn/30"
         title="Mark this trial as completed"
         onClick={() => window.overlay?.trialsToggle(trial.id)}
       >
@@ -498,10 +501,10 @@ function TrialsBody(): React.JSX.Element {
           <div key={`${t.id}-w`}>
           {newLab && (
             <div className="mb-1 mt-2 flex items-center justify-between px-1 first:mt-0">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-overlay-muted/80">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-overlay-muted">
                 {LAB_LABEL[t.lab]}
               </span>
-              <span className="text-[10px] text-overlay-muted/70">
+              <span className="text-[10px] text-overlay-muted">
                 {tally?.done}/{tally?.total}
               </span>
             </div>
@@ -509,15 +512,16 @@ function TrialsBody(): React.JSX.Element {
           <button
             onClick={() => window.overlay?.trialsToggle(t.id)}
             className={
-              'mb-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left ' +
-              (t.seen ? 'opacity-50' : 'bg-black/20') +
-              (here && !t.seen ? ' ring-1 ring-amber-400/50' : '')
+              'mb-1 flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left ' +
+              (here && !t.seen
+                ? 'border-overlay-accent/60 bg-overlay-accent/10'
+                : 'border-transparent ' + (t.seen ? 'opacity-50' : 'bg-black/20'))
             }
           >
             <span
               className={
                 'shrink-0 text-xs ' +
-                (t.seen ? 'text-overlay-accent' : here ? 'text-amber-300' : 'text-overlay-muted')
+                (t.seen ? 'text-overlay-muted' : here ? 'text-overlay-accent' : 'text-overlay-muted')
               }
             >
               {t.seen ? '✓' : '△'}
@@ -525,7 +529,7 @@ function TrialsBody(): React.JSX.Element {
             <div className="min-w-0">
               <div className={'text-xs ' + (t.seen ? 'text-overlay-muted line-through' : 'text-overlay-text')}>
                 {t.zone}
-                {here && !t.seen && <span className="ml-1.5 text-[9px] text-amber-300">you are here</span>}
+                {here && !t.seen && <span className="ml-1.5 text-[9px] text-overlay-accent">you are here</span>}
               </div>
               <div className="text-[10px] text-overlay-muted">Act {t.act}</div>
             </div>
@@ -544,7 +548,7 @@ function TrialsBody(): React.JSX.Element {
 
 function ErrorBox({ title, errors }: { title: string; errors: string[] }): React.JSX.Element {
   return (
-    <div className="mb-2 rounded-md border border-red-400/40 bg-red-400/10 p-2 text-[11px] text-red-300">
+    <div className="mb-2 rounded-md border border-danger/40 bg-danger/10 p-2 text-[11px] text-danger">
       <div className="mb-0.5 font-semibold">{title}</div>
       {errors.map((err, i) => (
         <div key={i}>· {err}</div>
@@ -613,7 +617,7 @@ function GuideBody(): React.JSX.Element {
         return (
           <div key={step.id}>
             {showActDivider && (
-              <div className="mb-1 mt-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-muted/70">
+              <div className="mb-1 mt-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-muted">
                 Act {step.act}
               </div>
             )}
@@ -635,7 +639,7 @@ function GuideBody(): React.JSX.Element {
                 <div className={'text-xs leading-snug ' + (isDone ? 'text-overlay-muted line-through' : 'text-overlay-text')}>
                   {step.text}
                   {step.rewardHint && (
-                    <span className="ml-1.5 rounded bg-overlay-accent/20 px-1 py-px text-[9px] text-overlay-accent">
+                    <span className="ml-1.5 rounded bg-ok/15 px-1 py-px text-[9px] text-ok">
                       reward
                     </span>
                   )}
@@ -727,7 +731,7 @@ function MulePicker({
   const short = (gem: string): string => gem.replace(/ Support$/, '')
   return (
     <div className="mb-2 flex items-center gap-1.5 px-1 text-[10px]">
-      <span className={'shrink-0 ' + (chosen ? 'text-sky-300/90' : 'text-overlay-muted')}>Mule</span>
+      <span className={'shrink-0 ' + (chosen ? 'text-mule' : 'text-overlay-muted')}>Mule</span>
       <select
         value={choice.chosen ?? ''}
         onChange={(e) => window.overlay?.setMule(e.target.value || null)}
@@ -738,7 +742,7 @@ function MulePicker({
         }
         className={
           'min-w-0 flex-1 truncate rounded border border-overlay-border bg-black/30 px-1 py-0.5 text-[10px] outline-none [color-scheme:dark] focus:border-overlay-accent ' +
-          (chosen ? 'text-sky-300/90' : 'text-overlay-muted')
+          (chosen ? 'text-mule' : 'text-overlay-muted')
         }
       >
         {choice.options.map((o) => (
@@ -777,7 +781,7 @@ function CostCell({
   if (mule?.length) {
     return (
       <span
-        className={cls + 'text-sky-300/90'}
+        className={cls + 'text-mule'}
         title={muleInstruction(mule, muleHow)}
       >
         {n > 1 && `${n}× `}
@@ -793,7 +797,7 @@ function CostCell({
     const extra = n - 1
     return (
       <span
-        className={cls + 'text-emerald-400/90'}
+        className={cls + 'text-ok'}
         title={
           extra > 0
             ? `The quest gives one — the other ${extra === 1 ? 'copy' : `${extra} copies`} you buy or find`
@@ -813,7 +817,7 @@ function CostCell({
   return (
     <span
       className={cls + tone}
-      title={cost ? `Costs ${cost}${copies} (price is provisional)` : `Buy from a vendor${copies}`}
+      title={cost ? `Costs ${cost}${copies}` : `Buy from a vendor${copies}`}
     >
       {n > 1 && `${n}× `}
       {short}
@@ -889,7 +893,7 @@ function RewardGroupRow({
       <>
         <CostCell free count={e.count} later={later} />
         <GemCell entry={e} comingUpAt={comingUpAt} later={later}>
-          {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+          {context(e) && <span className="text-overlay-muted">{context(e)}</span>}
         </GemCell>
         <SourceCell act={group.act} what={group.quest ?? 'quest'} later={later} />
       </>
@@ -903,11 +907,11 @@ function RewardGroupRow({
   return (
     <div
       className={
-        'col-span-3 grid grid-cols-subgrid items-baseline gap-x-1.5 rounded border border-amber-400/30 bg-amber-400/5 p-1.5' +
+        'col-span-3 grid grid-cols-subgrid items-baseline gap-x-1.5 rounded border border-overlay-accent/40 bg-overlay-accent/5 p-1.5' +
         (later ? ' opacity-50' : '')
       }
     >
-      <span className="col-span-2 mb-0.5 justify-self-start rounded bg-amber-400/20 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-amber-300">
+      <span className="col-span-2 mb-0.5 justify-self-start rounded bg-overlay-accent/20 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-overlay-accent">
         Pick one, buy rest
       </span>
       <SourceCell act={group.act} what={group.quest ?? 'quest'} />
@@ -916,7 +920,7 @@ function RewardGroupRow({
       {rest && (
         <span
           style={{ gridRow: `span ${group.gems.length}` }}
-          title={`The quest gives one — the other ${rest.count === 1 ? 'copy costs' : `${rest.count} copies cost`}${rest.cost ? ` about ${rest.cost} each (price is provisional)` : ' vendor money'}`}
+          title={`The quest gives one — the other ${rest.count === 1 ? 'copy costs' : `${rest.count} copies cost`}${rest.cost ? ` ${rest.cost} each` : ' vendor money'}`}
           className={
             'self-center text-right text-[10px] ' +
             ((rest.cost && COST_TONE[rest.cost]) || 'text-overlay-muted')
@@ -937,7 +941,7 @@ function RewardGroupRow({
           <Pip gem={e.colored} />
           <span className="min-w-0 truncate">
             {e.gem}
-            {context(e) && <span className="text-overlay-muted/80">{context(e)}</span>}
+            {context(e) && <span className="text-overlay-muted">{context(e)}</span>}
           </span>
         </div>
       ))}
@@ -1065,7 +1069,7 @@ function BuyRow({
       {mule ? (
         <SourceCell
           what={mule.join('/')}
-          tone="text-sky-300/90"
+          tone="text-mule"
           title={`Roll a level-1 ${mule.join(' or ')}, stash its starting gems, delete it. Otherwise ${e.npc ?? 'a vendor'}${e.act ? ` in Act ${e.act}` : ''} sells it${e.cost ? ` for ${e.cost}` : ''}.`}
           later={later}
         />
@@ -1129,7 +1133,7 @@ function SocketGroup({
                     attribute requirement is fully known — marking it "?" made
                     the overlay look broken on Portal, Convocation and friends. */}
                 {gem.unknown && (
-                  <span className="ml-1 text-[9px] text-amber-400/80" title="not in the gem data — colour guessed">
+                  <span className="ml-1 text-[9px] text-warn" title="not in the gem data — colour guessed">
                     ?
                   </span>
                 )}
@@ -1205,8 +1209,8 @@ function GemBody(): React.JSX.Element {
       {/* Only fires across base classes now — an Elementalist on a Witch build
           is the same character, ascended. "an Assassin" needs its own article. */}
       {profile.classMismatch && (
-        <div className="mb-2 rounded-md border border-amber-400/40 bg-amber-400/10 p-1.5 text-[10px] text-amber-300">
-          Tracked character is {article(profile.classMismatch)} {profile.classMismatch}, but this profile is
+        <div className="mb-2 rounded-md border border-warn/40 bg-warn/10 p-1.5 text-[10px] text-warn">
+          <span aria-hidden>⚠ </span>Tracked character is {article(profile.classMismatch)} {profile.classMismatch}, but this profile is
           for a {profile.meta.class}. Wrong profile loaded?
         </div>
       )}
@@ -1214,7 +1218,7 @@ function GemBody(): React.JSX.Element {
           problem. And it says what happens next, so nobody goes looking for
           a button to switch back. */}
       {profile.muling && (
-        <div className="mb-2 rounded-md border border-sky-300/30 bg-sky-300/10 p-1.5 text-[10px] text-sky-300/90">
+        <div className="mb-2 rounded-md border border-mule/30 bg-mule/10 p-1.5 text-[10px] text-mule">
           Muling on {article(profile.muling)} {profile.muling}? Stash its starting gems, then go back to your{' '}
           {profile.meta.class} — the overlay follows on its next level-up.
         </div>
@@ -1229,6 +1233,7 @@ function GemBody(): React.JSX.Element {
               disabled={!canPrev}
               onClick={() => window.overlay?.stageStep(-1)}
               title="Previous stage"
+              aria-label="Previous stage"
               className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
             >
               ◀
@@ -1240,6 +1245,7 @@ function GemBody(): React.JSX.Element {
               disabled={!canNext}
               onClick={() => window.overlay?.stageStep(1)}
               title="Next stage"
+              aria-label="Next stage"
               className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
             >
               ▶
@@ -1254,7 +1260,7 @@ function GemBody(): React.JSX.Element {
         <button
           onClick={() => window.overlay?.stageToLive()}
           title="Return to the stage for your current level"
-          className="mb-1.5 flex w-full items-center justify-center gap-1 rounded bg-amber-400/10 px-2 py-1 text-[10px] text-amber-200 hover:bg-amber-400/20"
+          className="mb-1.5 flex w-full items-center justify-center gap-1 rounded bg-white/10 px-2 py-1 text-[10px] text-overlay-text hover:bg-white/15"
         >
           Viewing {viewedIndex < liveIndex ? 'an earlier' : 'a later'} stage
           {profile.level != null ? ` · you're level ${profile.level}` : ''} — ▸ jump to current
@@ -1306,7 +1312,7 @@ function GemBody(): React.JSX.Element {
                         'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider ' +
                         (stop.npc
                           ? sourceTone(sourceName(stop.npc))
-                          : 'text-overlay-muted/70') +
+                          : 'text-overlay-muted') +
                         (item.later ? ' opacity-50' : '')
                       }
                     >

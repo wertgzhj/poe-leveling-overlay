@@ -19,7 +19,7 @@ export function VersionBadge(): React.JSX.Element | null {
         className="absolute bottom-1 right-2 flex items-center gap-1 rounded-full border border-overlay-accent/50 bg-overlay-accent/20 px-2 py-0.5 text-[10px] font-medium text-overlay-accent hover:bg-overlay-accent/35"
       >
         v{appVersion} → v{update.version}
-        <span className="animate-pulse">⬆</span>
+        <span className="motion-safe:animate-pulse">⬆</span>
       </button>
     )
   }
@@ -35,10 +35,10 @@ export function VersionBadge(): React.JSX.Element | null {
   return (
     <span
       title={update?.state === 'error' ? `Update check failed: ${update.message}` : undefined}
-      className="pointer-events-none absolute bottom-1 right-2 text-[10px] text-overlay-muted/70"
+      className="pointer-events-none absolute bottom-1 right-2 text-[10px] text-overlay-muted"
     >
       v{appVersion}
-      {update?.state === 'error' && <span className="ml-1 text-amber-400/80">!</span>}
+      {update?.state === 'error' && <span className="ml-1 text-warn" aria-label="update check failed">!</span>}
     </span>
   )
 }

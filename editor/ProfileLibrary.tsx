@@ -85,7 +85,7 @@ export function ProfileLibrary({
                   <span className="block truncate text-sm text-overlay-text">{e.name}</span>
                   <span className="block truncate text-[11px] text-overlay-muted">
                     {e.errors.length > 0 ? (
-                      <span className="text-red-300">won’t load: {e.errors[0]}</span>
+                      <span className="text-danger">won’t load: {e.errors[0]}</span>
                     ) : (
                       [e.ascendancy ?? e.charClass, `${e.stages} stage${e.stages === 1 ? '' : 's'}`]
                         .filter(Boolean)
@@ -97,7 +97,7 @@ export function ProfileLibrary({
                   {e.bundled ? (
                     <span className="text-overlay-muted">bundled · read-only</span>
                   ) : e.character ? (
-                    <span className="text-sky-300/90">→ {e.character}</span>
+                    <span className="text-overlay-muted">→ {e.character}</span>
                   ) : null}
                 </span>
               </button>
@@ -157,8 +157,8 @@ export function ProfileLibrary({
       {/* Two clicks rather than a native confirm(), which blocks the editor
           window while it waits — and the recycle bin makes it undoable anyway. */}
       {selected && pending.kind === 'delete' && (
-        <div className="flex flex-wrap items-center gap-2 rounded border border-red-400/40 bg-red-400/10 px-3 py-2">
-          <span className="text-xs text-red-200">
+        <div className="flex flex-wrap items-center gap-2 rounded border border-danger/40 bg-danger/10 px-3 py-2">
+          <span className="text-xs text-danger">
             Delete “{selected.name}”? It goes to the recycle bin
             {selected.id === activeId ? ', and the overlay switches to the bundled example' : ''}.
           </span>
@@ -219,7 +219,7 @@ export function ProfileLibrary({
       </div>
 
       {message && (
-        <p className={'text-xs ' + (message.ok ? 'text-emerald-400' : 'text-red-300')}>{message.text}</p>
+        <p className={'text-xs ' + (message.ok ? 'text-ok' : 'text-danger')}>{message.text}</p>
       )}
     </div>
   )
