@@ -1,0 +1,44 @@
+/* Design tokens, shared by the overlay and the editor window — one place, so
+   the two can't drift apart. Tailwind v4 turns each --color-* token into
+   bg-/text-/border- utilities (text-warn, bg-ok/10, …).
+
+   One colour, one meaning. Every text colour here clears WCAG AA (4.5:1) for
+   small text on the panel, measured against a bg-black/20 row; a colour never
+   carries a meaning on its own — each comes with a word or a glyph too, so
+   colour-blind players and a low overlay opacity lose nothing. */
+@theme {
+  /* surfaces and text */
+  --color-overlay-bg: #0e1118;
+  --color-overlay-panel: #161b26;
+  --color-overlay-border: #2a3346;
+  --color-overlay-text: #e6e9f0; /* 14.9:1 */
+  --color-overlay-muted: #8b93a7; /* 5.9:1 — the floor: never fade it further */
+
+  /* gold: now / you / active — current step, active tab, take it now */
+  --color-overlay-accent: #c8a24a; /* 7.6:1 */
+
+  /* states */
+  --color-ok: #34d399; /* 9.5:1 — done right, free (a quest reward) */
+  --color-warn: #fdba74; /* 10.8:1 — careful; orange, so it never reads as gold. Always with ⚠ or △ */
+  --color-danger: #fca5a5; /* 9.6:1 — broken, failed, conflict */
+
+  /* where a gem comes from — only in the source column */
+  --color-mule: #7dd3fc; /* 10.9:1 — another class's alt hands it over */
+  --color-library: #c4b5fd; /* 9.8:1 — Siosa, a trip to make */
+  --color-fight: #fda4af; /* 9.6:1 — Gravicius, a fight to win */
+}
+
+/* Keyboard focus is visible everywhere (settings and editor are used with the
+   keyboard); the mouse doesn't get a ring. */
+:focus-visible {
+  outline: 1px solid var(--color-overlay-accent);
+  outline-offset: 1px;
+}
+
+/* Native controls draw their popups in the OS theme unless told otherwise —
+   light-grey option lists were unreadable. */
+input,
+select,
+textarea {
+  color-scheme: dark;
+}

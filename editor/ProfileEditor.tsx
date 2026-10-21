@@ -107,7 +107,7 @@ export function ProfileEditor({
         </div>
       )}
       {errors.length > 0 && (
-        <div className="rounded border border-red-400/40 bg-red-400/10 p-2 text-xs text-red-300">
+        <div className="rounded border border-danger/40 bg-danger/10 p-2 text-xs text-danger">
           This profile file has problems: {errors.join('; ')}
         </div>
       )}

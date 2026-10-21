@@ -46,6 +46,7 @@ export function UpdateBanner(): React.JSX.Element | null {
         <button
           className="shrink-0 text-overlay-muted hover:text-overlay-text"
           title="Later (Settings still has the Restart button)"
+          aria-label="Dismiss"
           onClick={() => patch({ updateDismissed: true })}
         >
           ✕
