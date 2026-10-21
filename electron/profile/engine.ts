@@ -83,7 +83,24 @@ export interface Acquisitions {
    *  the act you reach them in, rewards first on ties so you never pay for a
    *  gem you could take free. */
   plan: AcquisitionItem[]
+  /** how each of this stage's gems sits against the act you've reached, keyed
+   *  by lowercased name (see LinkMark); a gem with no mark is left plain. */
+  linkMarks: Record<string, LinkMark>
 }
+
+/**
+ * A link row's highlight, from where the gem comes from and how far you are:
+ *
+ * - `thisAct`: you get it in the act you're in — the gems this act is for.
+ * - `new`: from an earlier act, and this stage needs it for the first time.
+ *   Builds don't only grow: a stage can swap in a whole link of Act 1 gems
+ *   you never bought, and "earlier act" mustn't read as "already yours".
+ * - `notYet`: from an act you haven't reached (or Siosa before the Library).
+ *
+ * Earlier-act gems you already used, starting gems and the mule stay plain:
+ * they're in hand, or acts don't apply.
+ */
+export type LinkMark = 'thisAct' | 'new' | 'notYet'
 
 export interface RewardGroup {
   quest?: string
@@ -373,7 +390,18 @@ export function acquisitionsForStage(
       if (e.mule?.length && normalizeGemName(e.gem) === key) e.muleHow = mule.how
     }
   }
-  return { rewards, purchases, other, upcoming, rewardGroups, plan }
+  const linkMarks: Record<string, LinkMark> = {}
+  if (actReached != null) {
+    for (const e of [...rewards, ...purchases, ...other]) {
+      if (e.starting || e.mule?.length || e.act == null) continue
+      const key = e.gem.toLowerCase()
+      const pastLibrary = reachedLibrary !== false || !needsLibrary(e.npc)
+      if (e.act > actReached || (e.act === actReached && !pastLibrary)) linkMarks[key] = 'notYet'
+      else if (e.act === actReached) linkMarks[key] = 'thisAct'
+      else if (!prevGems.has(key)) linkMarks[key] = 'new'
+    }
+  }
+  return { rewards, purchases, other, upcoming, rewardGroups, plan, linkMarks }
 }
 
 /** Merge the reward groups and vendor buys into one ordered to-do list. Ordered
