@@ -1605,6 +1605,31 @@ test('link rows mark this act, a first-time older gem, and what is not reachable
   })
 })
 
+test('a stage you paged to marks no gem "new"', () => {
+  // In Act 3, looking back at an Act 2 stage: every gem it introduced would
+  // wear the pill. This act's gold and the not-yet dimming still apply.
+  const gems = exampleGems()
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'paged', class: 'Marauder' },
+      stages: [
+        { range: [1, 15], socketGroups: [{ gems: ['Ground Slam'] }] },
+        { range: [16, 30], socketGroups: [{ gems: ['Ground Slam', 'Cleave', 'Herald of Ash', 'Cyclone'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Cleave', 'Herald of Ash', 'Cyclone'].map((gem) => ({ gem }))
+    })
+  ).profile!
+  const ctx = { actReached: 3, reachedLibrary: true }
+  assert.deepEqual(acquisitionsForStage(profile, 1, gems, ctx).linkMarks, {
+    cleave: 'new',
+    'herald of ash': 'new',
+    cyclone: 'thisAct'
+  })
+  assert.deepEqual(acquisitionsForStage(profile, 1, gems, { ...ctx, liveStage: false }).linkMarks, {
+    cyclone: 'thisAct'
+  })
+})
+
 test('no act known, no link marks', () => {
   const profile = berserker()
   assert.deepEqual(acquisitionsForStage(profile, 1, exampleGems(), { playerLevel: 9 }).linkMarks, {})

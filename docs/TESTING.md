@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 227 tests: parser, tracker, watcher, guide, profile,
+npm test        # 228 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
@@ -129,7 +129,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - **The links at the bottom read against your act.** In Act 2: Act 2 gems
      (Herald of Ash, Cruelty) have a **gold** name; an Act 1 gem this stage
      uses for the first time (a link switch, e.g. Cleave) carries a small
-     `NEW` pill; Act 1 gems you already used are plain; an Act 3 gem (Cyclone)
+     `NEW` pill — on the stage your level is in only, never on a stage you
+     paged to with ◀/▶; Act 1 gems you already used are plain; an Act 3 gem (Cyclone)
      is dimmed, tooltip "Not yet — from Act 3". Starting gems and the mule
      stay plain. Portalling back to Act 1's town changes nothing — it's the
      furthest act reached.
