@@ -226,12 +226,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
   from the 🐞 dev panel identifies it, and `CAMPAIGN_TRIALS`
   (`electron/trials/engine.ts`) is where it's corrected. Clicking a trial and the
   hint's *Done ✓* are the manual fallbacks.
-- **Vendor gem prices are approximate.** The tier shown per gem (Wisdom /
-  Transmutation / Alteration / Chance / Alchemy) is derived from its level
-  requirement; the boundaries live in `COST_TIERS`
-  (`electron/profile/gems.ts`). Wisdom (1-7), Transmutation (8-15) and
-  Alteration (16-23) are confirmed in game; Chance (24-33, Act 3) and Alchemy
-  (34+, Act 4) still need a look at a vendor.
+- **Vendor gem prices come from a level table.** The tier shown per gem is
+  derived from its level requirement (`COST_TIERS`, `electron/profile/gems.ts`):
+  Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+.
+  Every tier was checked against a vendor in game; if GGG reprices gems, that
+  table is the one place to change.
 - **Routes ship as placeholders.** Acts 1–10 contain thin skeletons meant to be
   replaced — in `data/campaign/actN.json`, as per-act overrides in the userData
   `routes/` folder, or in the visual editor.
