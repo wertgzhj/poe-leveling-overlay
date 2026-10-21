@@ -66,14 +66,13 @@ export interface GemInfo {
   sources?: GemSourceInfo[]
 }
 
-// Vendor gem prices by the gem's level requirement. The tiers follow the acts'
-// quest rewards (Act 1: 1-12, Act 2: 16-18, Act 3: 24-31, Act 4: 34-38).
-// Checked in game: Dash (4) Wisdom, Faster Attacks (8) and Sunder (12)
-// Transmutation, Seismic Cry / Molten Shell (16), Cruelty (18) and Punishment
-// (24, Act 3's first quest) Alteration, Cyclone (28) Chance. Alchemy is still
-// unconfirmed (TESTING has the checklist item).
+// Vendor gem prices by the gem's level requirement, every tier checked in game:
+// Dash (4) Wisdom; Faster Attacks (8), Sunder (12) Transmutation; Seismic Cry /
+// Molten Shell (16), Cruelty (18), Punishment (24) Alteration; Cyclone (28),
+// Summon Chaos Golem (34) Chance; Multistrike (38) Alchemy. No vendor gem sits
+// between 35 and 37 or above 38, so those boundaries are exact.
 const COST_TIERS: ReadonlyArray<[minLevel: number, cost: string]> = [
-  [34, 'Alchemy'],
+  [38, 'Alchemy'],
   [28, 'Chance'],
   [16, 'Alteration'],
   [8, 'Transmutation'],

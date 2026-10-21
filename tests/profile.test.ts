@@ -386,9 +386,8 @@ test('vendor cost tier follows the gem level requirement', () => {
   assert.equal(vendorCostFor(18), 'Alteration', 'Cruelty')
   assert.equal(vendorCostFor(24), 'Alteration', 'Punishment')
   assert.equal(vendorCostFor(28), 'Chance', 'Cyclone')
-  // Not yet seen.
-  assert.equal(vendorCostFor(31), 'Chance')
-  assert.equal(vendorCostFor(34), 'Alchemy')
+  assert.equal(vendorCostFor(34), 'Chance', 'Summon Chaos Golem')
+  assert.equal(vendorCostFor(38), 'Alchemy', 'Multistrike')
   assert.equal(vendorCostFor(undefined), undefined)
 })
 
@@ -538,12 +537,12 @@ test('a pick-one group prices the copies the quest does not give you', () => {
     classes: ['Witch']
   })
   const gems = new GemData({
-    // Four golems from one quest, same price tier (lvl 28+ -> Alchemy).
+    // Four golems from one quest, same price tier (lvl 34 -> Chance).
     Flame: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
     Ice: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
     Lightning: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
     Stone: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
-    // Mixed tiers: Wisdom (lvl 1) and Alchemy (lvl 28).
+    // Mixed tiers: Wisdom (lvl 1) and Chance (lvl 28).
     Cheap: { attr: 'int', requiredLevel: 1, sources: [quest(1, 'Mercy Mission')] },
     Dear: { attr: 'int', requiredLevel: 28, sources: [quest(1, 'Mercy Mission')] }
   })
@@ -561,7 +560,7 @@ test('a pick-one group prices the copies the quest does not give you', () => {
   // Four gems, one free: three buys at the shared tier.
   const seal = byQuest.get('Breaking the Seal')?.buyRest
   assert.equal(seal?.count, 3)
-  assert.equal(seal?.cost, 'Alchemy')
+  assert.equal(seal?.cost, 'Chance')
   // This fixture lists no vendor stock at all, so the dataset can't answer
   // "who sells it" — and the documented fallback is the broad vendor.
   assert.equal(seal?.npc, 'Siosa')
