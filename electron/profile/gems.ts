@@ -70,7 +70,7 @@ export interface GemInfo {
 // quest rewards (Act 1: 1-12, Act 2: 16-18, Act 3: 24-31, Act 4: 34-38).
 // Checked in game: Dash (4) Wisdom, Faster Attacks (8) and Sunder (12)
 // Transmutation, Seismic Cry / Molten Shell (16), Cruelty (18) and Punishment
-// (24, Act 3's first quest) Alteration. Chance and Alchemy are still
+// (24, Act 3's first quest) Alteration, Cyclone (28) Chance. Alchemy is still
 // unconfirmed (TESTING has the checklist item).
 const COST_TIERS: ReadonlyArray<[minLevel: number, cost: string]> = [
   [34, 'Alchemy'],

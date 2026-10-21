@@ -385,8 +385,8 @@ test('vendor cost tier follows the gem level requirement', () => {
   assert.equal(vendorCostFor(16), 'Alteration', 'Seismic Cry, Molten Shell')
   assert.equal(vendorCostFor(18), 'Alteration', 'Cruelty')
   assert.equal(vendorCostFor(24), 'Alteration', 'Punishment')
+  assert.equal(vendorCostFor(28), 'Chance', 'Cyclone')
   // Not yet seen.
-  assert.equal(vendorCostFor(28), 'Chance')
   assert.equal(vendorCostFor(31), 'Chance')
   assert.equal(vendorCostFor(34), 'Alchemy')
   assert.equal(vendorCostFor(undefined), undefined)
