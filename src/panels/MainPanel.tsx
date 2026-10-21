@@ -1081,23 +1081,50 @@ function BuyRow({
 // first two together — a link row has no price, and giving up the whole cost
 // column to whitespace would cost the names a third of the panel — while the
 // source sits in the same column as everywhere else, which is the point.
+type LinkMark = 'thisAct' | 'new' | 'notYet'
+
+// How a link row reads against the act you've reached (see LinkMark in the
+// engine). Gold is the tab's "do this now" colour, so it marks this act's gems
+// on the name only — the source column keeps its vendor colours. "new" is a
+// quiet pill, not a second loud colour; "not yet" just steps back.
+function linkMarkTitle(mark: LinkMark | undefined, act: number | undefined): string | undefined {
+  if (mark === 'thisAct') return `From Act ${act} — the act you're in.`
+  if (mark === 'new') return `From Act ${act}, and this stage needs it for the first time — you may not have it yet.`
+  if (mark === 'notYet') return `Not yet — from Act ${act}.`
+  return undefined
+}
+
 function SocketGroup({
   group,
-  acq
+  acq,
+  marks
 }: {
   group: ColoredSocketGroupBridge
   acq: Map<string, AcquisitionEntryBridge>
+  marks: Record<string, LinkMark>
 }): React.JSX.Element {
   return (
     <div className="col-span-3 mb-1.5 grid grid-cols-subgrid items-center gap-x-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
       {group.gems.map((gem, i) => {
-        const mark = sourceMark(acq.get(gem.name.toLowerCase()))
+        const entry = acq.get(gem.name.toLowerCase())
+        const mark = sourceMark(entry)
+        const link = marks[gem.name.toLowerCase()]
+        const dim = link === 'notYet' ? ' opacity-40' : ''
         return (
           <Fragment key={i}>
-            <div className="col-span-2 flex min-w-0 items-center gap-1.5">
+            <div className={'col-span-2 flex min-w-0 items-center gap-1.5' + dim} title={linkMarkTitle(link, entry?.act)}>
               <Pip gem={gem} />
-              <span className="min-w-0 truncate text-xs text-overlay-text">
+              <span
+                className={
+                  'min-w-0 truncate text-xs ' + (link === 'thisAct' ? 'text-overlay-accent' : 'text-overlay-text')
+                }
+              >
                 {gem.name}
+                {link === 'new' && (
+                  <span className="ml-1 rounded border border-overlay-text/30 px-0.5 text-[8px] uppercase tracking-wider text-overlay-text/70">
+                    new
+                  </span>
+                )}
                 {/* Only a genuinely unrecognised gem is flagged. A gem with no
                     attribute requirement is fully known — marking it "?" made
                     the overlay look broken on Portal, Convocation and friends. */}
@@ -1110,7 +1137,7 @@ function SocketGroup({
             </div>
             {/* Always rendered, even when empty: a missing cell would pull the
                 next row's gem into the source column. */}
-            <span title={mark?.title} className={'truncate text-[9px] ' + (mark?.tone ?? '')}>
+            <span title={mark?.title} className={'truncate text-[9px] ' + (mark?.tone ?? '') + dim}>
               {mark?.label}
             </span>
           </Fragment>
@@ -1318,7 +1345,7 @@ function GemBody(): React.JSX.Element {
         {stage ? (
           <>
             {stage.groups.map((group, i) => (
-              <SocketGroup key={i} group={group} acq={acqByGem} />
+              <SocketGroup key={i} group={group} acq={acqByGem} marks={profile.acquisitions?.linkMarks ?? {}} />
             ))}
             {stage.note && (
               <div className="col-span-3 mb-2 px-1 text-[10px] text-overlay-muted">{stage.note}</div>

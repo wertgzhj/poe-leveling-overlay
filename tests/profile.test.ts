@@ -1564,3 +1564,73 @@ test('every other quest is still one reward', () => {
   assert.equal(mercy[0]?.pickOne, true)
   assert.equal(mercy[0]?.slot, undefined)
 })
+
+// --- Link marks ---------------------------------------------------------------
+// The gem setup at the bottom of the tab, read against the act you've reached.
+
+test('link rows mark this act, a first-time older gem, and what is not reachable yet', () => {
+  const gems = exampleGems()
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'marks', class: 'Marauder' },
+      stages: [
+        { range: [1, 15], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support'] }] },
+        {
+          range: [16, 30],
+          socketGroups: [
+            // Ground Slam: Act 1, used before. Cleave: Act 1, a link switch.
+            { gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Cleave'] },
+            { gems: ['Herald of Ash', 'Cruelty Support'] },
+            { gems: ['Cyclone'] }
+          ]
+        }
+      ],
+      gemPlan: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Cleave', 'Herald of Ash', 'Cruelty Support', 'Cyclone'].map(
+        (gem) => ({ gem })
+      )
+    })
+  ).profile!
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const { linkMarks } = acquisitionsForStage(profile, 1, gems, {
+    startingGems: new Set(startingClasses().Marauder.map((g) => g.toLowerCase().replace(/ support$/, ''))),
+    actReached: 2,
+    reachedLibrary: false,
+    mule: momentum
+  })
+  assert.deepEqual(linkMarks, {
+    cleave: 'new',
+    'herald of ash': 'thisAct',
+    'cruelty support': 'thisAct',
+    cyclone: 'notYet'
+  })
+})
+
+test('a stage you paged to marks no gem "new"', () => {
+  // In Act 3, looking back at an Act 2 stage: every gem it introduced would
+  // wear the pill. This act's gold and the not-yet dimming still apply.
+  const gems = exampleGems()
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'paged', class: 'Marauder' },
+      stages: [
+        { range: [1, 15], socketGroups: [{ gems: ['Ground Slam'] }] },
+        { range: [16, 30], socketGroups: [{ gems: ['Ground Slam', 'Cleave', 'Herald of Ash', 'Cyclone'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Cleave', 'Herald of Ash', 'Cyclone'].map((gem) => ({ gem }))
+    })
+  ).profile!
+  const ctx = { actReached: 3, reachedLibrary: true }
+  assert.deepEqual(acquisitionsForStage(profile, 1, gems, ctx).linkMarks, {
+    cleave: 'new',
+    'herald of ash': 'new',
+    cyclone: 'thisAct'
+  })
+  assert.deepEqual(acquisitionsForStage(profile, 1, gems, { ...ctx, liveStage: false }).linkMarks, {
+    cyclone: 'thisAct'
+  })
+})
+
+test('no act known, no link marks', () => {
+  const profile = berserker()
+  assert.deepEqual(acquisitionsForStage(profile, 1, exampleGems(), { playerLevel: 9 }).linkMarks, {})
+})

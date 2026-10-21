@@ -83,7 +83,25 @@ export interface Acquisitions {
    *  the act you reach them in, rewards first on ties so you never pay for a
    *  gem you could take free. */
   plan: AcquisitionItem[]
+  /** how each of this stage's gems sits against the act you've reached, keyed
+   *  by lowercased name (see LinkMark); a gem with no mark is left plain. */
+  linkMarks: Record<string, LinkMark>
 }
+
+/**
+ * A link row's highlight, from where the gem comes from and how far you are:
+ *
+ * - `thisAct`: you get it in the act you're in — the gems this act is for.
+ * - `new`: from an earlier act, and this stage needs it for the first time —
+ *   on the stage your level is in only (AcquisitionContext.liveStage).
+ *   Builds don't only grow: a stage can swap in a whole link of Act 1 gems
+ *   you never bought, and "earlier act" mustn't read as "already yours".
+ * - `notYet`: from an act you haven't reached (or Siosa before the Library).
+ *
+ * Earlier-act gems you already used, starting gems and the mule stay plain:
+ * they're in hand, or acts don't apply.
+ */
+export type LinkMark = 'thisAct' | 'new' | 'notYet'
 
 export interface RewardGroup {
   quest?: string
@@ -212,6 +230,12 @@ export interface AcquisitionContext {
    * is the player's call, so this is chosen per character, never assumed.
    */
   mule?: MuleChoice | null
+  /**
+   * false when this is a stage you paged to, not the one your level is in.
+   * Then nothing is marked `new` (see LinkMark): looking back from Act 3 at
+   * an Act 2 stage, every gem it introduced would wear the pill. Default true.
+   */
+  liveStage?: boolean
 }
 
 /** A gem to mule, and the classes that get it by clearing the Twilight Strand. */
@@ -235,7 +259,7 @@ export function acquisitionsForStage(
   gems?: GemData,
   ctx: AcquisitionContext = {}
 ): Acquisitions {
-  const { startingGems, playerLevel, actReached, reachedLibrary, mule } = ctx
+  const { startingGems, playerLevel, actReached, reachedLibrary, mule, liveStage = true } = ctx
   // The mule lookup classify() reads, holding only the one gem you chose — so
   // every other gem a different class could hand you stays a quest or a buy,
   // and the plan never sends you off to roll two alts.
@@ -373,7 +397,18 @@ export function acquisitionsForStage(
       if (e.mule?.length && normalizeGemName(e.gem) === key) e.muleHow = mule.how
     }
   }
-  return { rewards, purchases, other, upcoming, rewardGroups, plan }
+  const linkMarks: Record<string, LinkMark> = {}
+  if (actReached != null) {
+    for (const e of [...rewards, ...purchases, ...other]) {
+      if (e.starting || e.mule?.length || e.act == null) continue
+      const key = e.gem.toLowerCase()
+      const pastLibrary = reachedLibrary !== false || !needsLibrary(e.npc)
+      if (e.act > actReached || (e.act === actReached && !pastLibrary)) linkMarks[key] = 'notYet'
+      else if (e.act === actReached) linkMarks[key] = 'thisAct'
+      else if (liveStage && !prevGems.has(key)) linkMarks[key] = 'new'
+    }
+  }
+  return { rewards, purchases, other, upcoming, rewardGroups, plan, linkMarks }
 }
 
 /** Merge the reward groups and vendor buys into one ordered to-do list. Ordered
