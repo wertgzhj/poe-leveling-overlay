@@ -36,6 +36,22 @@ app.disableHardwareAcceleration()
 // One window per scenario, closed before the next opens: without this, the
 // moment between them has no window and Electron quits.
 app.on('window-all-closed', () => {})
+
+// Never hang: a check that waits forever is worse than one that fails. One
+// scenario gets SCENARIO_MS, the whole run RUN_MS; either way it says where.
+const SCENARIO_MS = 30_000
+const RUN_MS = 180_000
+setTimeout(() => {
+  console.error(`render check: gave up after ${RUN_MS / 1000}s`)
+  app.exit(3)
+}, RUN_MS).unref()
+
+function within(ms, what, promise) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${what}: no result after ${ms / 1000}s`)), ms))
+  ])
+}
 app.commandLine.appendSwitch('force-device-scale-factor', '1')
 
 async function shoot(index, scenario) {
@@ -57,10 +73,11 @@ async function shoot(index, scenario) {
   await win.loadFile(join(root, 'out/renderer/index.html'))
   // Wait for the panel, open the tab, let React and the fonts settle.
   await win.webContents.executeJavaScript(`
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
       const tab = ${JSON.stringify(scenario.tab ?? null)}
       const start = Date.now()
       const tick = () => {
+        if (Date.now() - start > 20000) return reject(new Error('the overlay never rendered: ' + document.body.innerText.slice(0, 200)))
         const panel = document.querySelector('[data-interactive]')
         const button = tab && [...document.querySelectorAll('button')].find((b) => b.textContent.trim().startsWith(tab))
         if (panel && (!tab || button || Date.now() - start > 3000)) {
@@ -81,7 +98,9 @@ app.whenReady().then(async () => {
   const scenarios = JSON.parse(readFileSync(scenariosFile, 'utf8'))
   mkdirSync(outDir, { recursive: true })
   for (let i = 0; i < scenarios.length; i++) {
-    writeFileSync(join(outDir, `${scenarios[i].name}.png`), await shoot(i, scenarios[i]))
+    const { name } = scenarios[i]
+    writeFileSync(join(outDir, `${name}.png`), await within(SCENARIO_MS, name, shoot(i, scenarios[i])))
+    console.log(`  ${name}`)
   }
   console.log(`${scenarios.length} screenshots → ${outDir}`)
 

@@ -30,6 +30,7 @@ jobs:
       # Screenshots of the overlay in fixed scenarios (scripts/render-check/),
       # attached to the run: a PR's look can be checked without running it.
       - name: Render check
+        timeout-minutes: 5
         run: xvfb-run -a npm run render-check
 
       - name: Upload screenshots
