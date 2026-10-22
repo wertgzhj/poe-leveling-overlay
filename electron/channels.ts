@@ -8,6 +8,7 @@ import type { ProfileMeta, Profile } from './profile/profile.ts'
 import type { ResolvedStage, Acquisitions, MuleOption } from './profile/engine.ts'
 import type { TrialsSnapshot } from './trials/engine.ts'
 import type { LibraryEntry, LibraryResult } from './profile/library.ts'
+import type { ChoiceDue } from './profile/run.ts'
 
 export type { TrialsSnapshot, LibraryEntry, LibraryResult }
 
@@ -225,15 +226,8 @@ export interface ProfileSnapshot {
   muleChoice: { options: MuleOption[]; chosen: string | null } | null
 }
 
-/** A one-shot build decision the profile names and you've now reached the point
- *  for. Shown once in the notice bar, then dismissed for good. */
-export interface ChoiceDue {
-  id: 'bandit' | 'pantheon'
-  /** what the profile decided, already phrased for the bar. */
-  wants: string
-  /** the alternatives, for the tooltip — you're choosing, so they matter. */
-  options: string[]
-}
+/** A one-shot build decision you've reached the point for (profile/run.ts). */
+export type { ChoiceDue } from './profile/run.ts'
 
 export interface PobImportResponse {
   ok: boolean
