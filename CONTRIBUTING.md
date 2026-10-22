@@ -73,13 +73,21 @@ v0.3.0 && git push origin v0.3.0`.)
 
 ### Versioning
 
-Each release must be a **higher** version than the last (the updater compares
-semver):
+Each release must be the **next** version after the last published one — the
+updater compares semver and only ever moves up:
 
 | Change | Bump | Example |
 |---|---|---|
 | Bug fix | patch | `v0.2.1` → `v0.2.2` |
 | New feature | minor | `v0.2.1` → `v0.3.0` |
+
+**The build checks this before building anything.** Its first step rejects a
+tag that isn't exactly the next patch, minor or major after the last published
+release — a typo like `v19.0.0` for `v0.19.0` would otherwise make every
+installation 19.0.0 and strand it there. A rejected run fails with the three
+tags that would have been right (at the top of the run's page). Then delete
+the release **and** its tag (Code → Tags), and publish again with one of them.
+A deleted release no longer counts, so the same three apply.
 
 ### If a release turns out broken
 
