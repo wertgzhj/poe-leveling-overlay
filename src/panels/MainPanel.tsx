@@ -1074,7 +1074,7 @@ function BuyRow({
   later?: boolean
 }): React.JSX.Element {
   const mule = e.mule?.length ? e.mule : undefined
-  return (
+  const cells = (
     <>
       <CostCell cost={e.cost} count={e.count} mule={mule} muleHow={e.muleHow} later={later} />
       <GemCell entry={e} comingUpAt={comingUpAt} later={later} />
@@ -1089,6 +1089,15 @@ function BuyRow({
         <SourceCell act={e.act} what={e.npc ?? 'vendor'} approx={e.fallback} later={later} />
       )}
     </>
+  )
+  // The mule's line is tinted turquoise as a whole, like its line in the links
+  // below (LINE_TONE). A subgrid, so the cells still sit on the plan's columns.
+  return mule ? (
+    <div className={'col-span-3 grid grid-cols-subgrid items-baseline gap-x-1.5 rounded-sm py-px ' + LINE_TONE.mule}>
+      {cells}
+    </div>
+  ) : (
+    cells
   )
 }
 
@@ -1107,6 +1116,23 @@ type LinkMark = 'thisAct' | 'new' | 'notYet'
 // white, the source in its category colour — so a Library gem in the act
 // you're in is gold-lined AND violet, not one or the other. Never colour
 // alone: the bar is a shape, and the tooltip says it in words.
+//
+// The mule and a starting gem colour their whole line too, in their own
+// colour: turquoise for "another class's alt hands it over", green for "you
+// start with it". Neither gets an act mark, so a line is only ever one of the
+// three. The words in the source column ("Mule · Ranger", "✓ start") say the
+// same without colour.
+const LINE_TONE = {
+  thisAct: 'bg-overlay-accent/10 shadow-[inset_2px_0_0_var(--color-overlay-accent)]',
+  mule: 'bg-mule/10 shadow-[inset_2px_0_0_var(--color-mule)]',
+  start: 'bg-ok/10 shadow-[inset_2px_0_0_var(--color-ok)]'
+} as const
+
+function lineTone(entry: AcquisitionEntryBridge | undefined, link: LinkMark | undefined): string {
+  if (entry?.mule?.length) return LINE_TONE.mule
+  if (entry?.starting) return LINE_TONE.start
+  return link === 'thisAct' ? LINE_TONE.thisAct : ''
+}
 function linkMarkTitle(mark: LinkMark | undefined, act: number | undefined): string | undefined {
   if (mark === 'thisAct') return `From Act ${act} — the act you're in.`
   if (mark === 'new') return `From Act ${act}, and this stage needs it for the first time — you may not have it yet.`
@@ -1138,8 +1164,7 @@ function SocketGroup({
             key={i}
             title={linkMarkTitle(link, entry?.act)}
             className={
-              'col-span-3 grid grid-cols-subgrid items-center gap-x-1.5 rounded-sm px-1 py-px ' +
-              (link === 'thisAct' ? 'bg-overlay-accent/10 shadow-[inset_2px_0_0_var(--color-overlay-accent)]' : '')
+              'col-span-3 grid grid-cols-subgrid items-center gap-x-1.5 rounded-sm px-1 py-px ' + lineTone(entry, link)
             }
           >
             <div className="col-span-2 flex min-w-0 items-center gap-1.5">

@@ -129,7 +129,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - **The links at the bottom read against your act.** In Act 2: the lines
      of Act 2 gems (Herald of Ash, Cruelty) are **tinted gold with a gold bar
      on the left** — the whole line, the name stays white and the source keeps
-     its colour; an Act 1 gem this stage
+     its colour. The mule's line (in the links **and** in the plan above) is
+     tinted **turquoise** with a turquoise bar, a starting gem's line
+     **green** with a green bar; an Act 1 gem this stage
      uses for the first time (a link switch, e.g. Cleave) carries a small
      `NEW` pill — on the stage your level is in only, never on a stage you
      paged to with ◀/▶; Act 1 gems you already used are plain; an Act 3 gem (Cyclone)
