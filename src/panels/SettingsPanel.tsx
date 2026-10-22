@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { acceleratorFromEvent, formatAccelerator } from '../lib/accelerator'
+import { HEADING, button } from '../lib/ui'
 
 type HotkeyField = keyof HotkeyBindingsBridge
 
@@ -188,7 +189,7 @@ export function SettingsPanel(): React.JSX.Element {
             <span className="text-sm font-semibold tracking-wide">Settings</span>
           </div>
           <button
-            className="rounded bg-white/10 px-2 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
+            className={button('quiet', 'md')}
             onClick={() => window.overlay?.setSettingsOpen(false)}
           >
             Close
@@ -202,7 +203,7 @@ export function SettingsPanel(): React.JSX.Element {
 
           <button
             onClick={() => window.overlay?.openEditor()}
-            className="w-full rounded-md border border-overlay-accent/40 bg-overlay-accent/10 px-2 py-1.5 text-xs text-overlay-accent hover:bg-overlay-accent/20"
+            className={'w-full ' + button('primary', 'md')}
           >
             Open route &amp; profile editor…
           </button>
@@ -226,7 +227,7 @@ export function SettingsPanel(): React.JSX.Element {
               </select>
               <button
                 onClick={() => window.overlay?.openEditor('profiles')}
-                className="shrink-0 rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15"
+                className={'shrink-0 ' + button('ghost', 'md')}
                 title="New, duplicate, rename, delete — in the editor window"
               >
                 Manage…
@@ -250,7 +251,7 @@ export function SettingsPanel(): React.JSX.Element {
               <button
                 onClick={importPob}
                 disabled={pobBusy || pobInput.trim().length === 0}
-                className="rounded bg-overlay-accent/20 px-2 py-1 text-[11px] text-overlay-accent disabled:opacity-40"
+                className={button('primary', 'md')}
               >
                 {pobBusy ? 'Importing…' : 'Import'}
               </button>
@@ -293,7 +294,7 @@ export function SettingsPanel(): React.JSX.Element {
               />
               <button
                 onClick={browse}
-                className="shrink-0 rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15"
+                className={'shrink-0 ' + button('ghost', 'md')}
               >
                 Browse…
               </button>
@@ -476,7 +477,7 @@ function UpdateRow(): React.JSX.Element {
         {state === 'ready' ? (
           <button
             onClick={() => window.overlay?.installUpdate()}
-            className="rounded bg-overlay-accent/25 px-2 py-1 text-[11px] font-medium text-overlay-accent hover:bg-overlay-accent/35"
+            className={button('primary', 'md')}
           >
             Restart &amp; update
           </button>
@@ -484,7 +485,7 @@ function UpdateRow(): React.JSX.Element {
           <button
             onClick={() => window.overlay?.checkForUpdates()}
             disabled={busy || state === 'disabled'}
-            className="rounded bg-white/10 px-2 py-1 text-[11px] text-overlay-text hover:bg-white/15 disabled:opacity-40"
+            className={button('ghost', 'md')}
           >
             {busy ? 'Checking…' : 'Check for updates'}
           </button>
@@ -503,7 +504,7 @@ function UpdateRow(): React.JSX.Element {
 function Section({ title, children }: { title: string; children: React.ReactNode }): React.JSX.Element {
   return (
     <section>
-      <h2 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+      <h2 className={'mb-1.5 ' + HEADING + 'text-overlay-muted'}>
         {title}
       </h2>
       <div className="rounded-md bg-black/25 p-2">{children}</div>

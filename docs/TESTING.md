@@ -245,6 +245,13 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      readable. Only disabled buttons fade.
    - The Guide's quest steps show a plain `!`, not a red ❗. Nothing at the
      bottom of a tab (the Guide's `reset`) sits under the version number.
+   - **One tag, one heading, one button** (`src/lib/ui.ts`): `NEW`,
+     `REWARD`, `PICK ONE, BUY REST`, `YOU ARE HERE` and the `zone 32` tag share
+     one look (10px, upper case, filled), only the colour differs. Section
+     headings are all the same size; buttons in the header, Settings and the
+     editor differ only in size.
+   - **Nothing below 10px** except the letter inside a socket dot (9px bold).
+     The `B` in a blue dot is white, the `R` and `G` black — all readable.
    - Tab through Settings and the editor with the keyboard: the focused control
      shows a thin gold outline. The update arrow on the version badge doesn't
      pulse when Windows has animations turned off.
