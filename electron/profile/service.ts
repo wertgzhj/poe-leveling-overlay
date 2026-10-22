@@ -14,8 +14,8 @@
 import { app, shell } from 'electron'
 import { existsSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
-import { parseProfile, validateProfile, baseClassOf, BANDITS, type Profile } from './profile.ts'
-import { GemData, normalizeGemName, LIBRARY_ZONE, type GemInfo } from './gems.ts'
+import { parseProfile, validateProfile, baseClassOf, type Profile } from './profile.ts'
+import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
 import {
   activeStageIndex,
   actFromAreaId,
@@ -46,15 +46,12 @@ import {
   type LibraryResult
 } from './library.ts'
 import { store } from '../settings.ts'
-import { Channels, type ChoiceDue, type EditorProfileLoad, type EditorSaveResult, type ProfileSnapshot } from '../channels.ts'
+import { Channels, type EditorProfileLoad, type EditorSaveResult, type ProfileSnapshot } from '../channels.ts'
+import { CharacterRuns } from './run.ts'
 import type { OverlayController } from '../overlay.ts'
 import type { EditorWindow } from '../editor-window.ts'
 import type { LogService } from '../log/service.ts'
 import startingGemsJson from '../../data/starting-gems.json'
-
-/** Act 2 asks you to deal with the bandits; the Pantheon opens up in Act 5. */
-const BANDIT_ACT = 2
-const PANTHEON_ACT = 5
 
 export class ProfileService {
   private readonly overlay: OverlayController
@@ -83,6 +80,8 @@ export class ProfileService {
   private library: LibraryEntry[] = []
   /** The editor window, when there is one: it lists the same library. */
   private editor: EditorWindow | null = null
+  /** Each character's run: act, Library, dismissed reminders — in the settings file. */
+  private readonly runs = new CharacterRuns(store)
 
   constructor(overlay: OverlayController, log: LogService) {
     this.overlay = overlay
@@ -105,7 +104,8 @@ export class ProfileService {
     // moved. They're also where campaign progress shows up.
     log.addAreaListener((area) => {
       const reloaded = this.syncCharacter()
-      const moved = this.noteAct(actFromAreaId(area.areaId)) || this.noteLibrary(area.name)
+      const moved =
+        this.runs.noteAct(this.character, actFromAreaId(area.areaId)) || this.runs.noteLibrary(this.character, area.name)
       if (moved && !reloaded) this.push()
     })
     log.addFreshCharacterListener((name) => this.forgetRun(name))
@@ -117,7 +117,7 @@ export class ProfileService {
     this.character = state.character
     // Seed from the resumed area: the backscan doesn't emit area events, so
     // without this the plan shows every act until the next zone load.
-    this.noteAct(actFromAreaId(state.area?.areaId))
+    this.runs.noteAct(this.character, actFromAreaId(state.area?.areaId))
     this.adoptExternalProfiles()
     this.reload()
   }
@@ -353,7 +353,7 @@ export class ProfileService {
       stageCount: profile ? profile.stages.length : 0,
       viewedIndex: stageIndex,
       liveIndex,
-      choiceDue: this.choiceDue(),
+      choiceDue: this.runs.choiceDue(this.character, this.profile?.meta),
       library: this.library,
       activeId: this.activeId(),
       // Per character, so only once we know who you are — and only when this
@@ -371,8 +371,8 @@ export class ProfileService {
    *  level-ups stay inside the same stage, so the sorting work was being redone
    *  for an identical result. */
   private acquisitions(profile: Profile, stageIndex: number): Acquisitions {
-    const act = this.actReached()
-    const library = this.character ? (store.get('libraryReached')[this.character] ?? false) : null
+    const act = this.runs.act(this.character)
+    const library = this.runs.library(this.character)
     const mule = this.chosenMule(profile)
     const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}|${library}|${mule?.gem ?? ''}`
     if (this.acqCache?.key === key) return this.acqCache.value
@@ -419,99 +419,15 @@ export class ProfileService {
     this.push()
   }
 
-  /** The furthest act this character has reached, or null when we don't know
-   *  yet. Read fresh rather than cached: it moves at most nine times in a run. */
-  private actReached(): number | null {
-    if (!this.character) return null
-    return store.get('actReached')[this.character] ?? null
-  }
-
-  /**
-   * Record reaching an act. Persisted per character and monotonic on purpose:
-   * campaign progress doesn't go backwards, and portalling to Act 1's town must
-   * not hide the Act 5 shopping list. Returns true when it moved.
-   */
-  private noteAct(act: number | null): boolean {
-    if (act == null || !this.character) return false
-    const map = store.get('actReached')
-    if ((map[this.character] ?? 0) >= act) return false
-    store.set('actReached', { ...map, [this.character]: act })
-    return true
-  }
-
-  /**
-   * A brand-new character (see LogService.addFreshCharacterListener). Names get
-   * reused every league, so without this a fresh Act 1 character would inherit
-   * last league's namesake's run: the Act 10 mark (the whole campaign's list
-   * again), the Library, and dismissed bandit/pantheon reminders — the ones
-   * that matter most, because missing the bandits is for good.
-   *
-   * Only the run is forgotten. Which profile the name uses and what it mules
-   * are choices, not progress, and stay.
-   *
-   * This used to happen on entering the Strand, keyed by the tracked
-   * character — but in auto mode the tracker lets go of the old character
-   * right there, so there was no name to reset and nothing ever was.
-   */
+  /** A brand-new character's run starts over (see CharacterRuns.forget). */
   private forgetRun(name: string): void {
-    store.set('actReached', { ...store.get('actReached'), [name]: 1 })
-    store.set('libraryReached', without(store.get('libraryReached'), name))
-    store.set('dismissedChoices', without(store.get('dismissedChoices'), name))
+    this.runs.forget(name)
     if (name === this.character) this.push()
-  }
-
-  /**
-   * A build decision the profile named and you've now reached the point for.
-   * Both are one-shot and permanent for the character, which is exactly why a
-   * reminder is worth a bar: forgetting the bandits costs you the choice for
-   * good. A profile that says nothing gets no notice — the app has no opinion
-   * on which is right, that's the whole reason the field exists.
-   */
-  private choiceDue(): ChoiceDue | null {
-    const meta = this.profile?.meta
-    const act = this.actReached()
-    if (!meta || act == null) return null
-    const done = new Set(this.character ? (store.get('dismissedChoices')[this.character] ?? []) : [])
-
-    // Bandits first: Act 2 comes first, and once you're past it the pantheon is
-    // the only one left to nag about. Only one bar, so only one claim.
-    if (meta.bandit && act >= BANDIT_ACT && !done.has('bandit')) {
-      return {
-        id: 'bandit',
-        wants: meta.bandit === 'Kill all' ? 'kill all three' : `help ${meta.bandit}`,
-        options: BANDITS.map((b) => (b === 'Kill all' ? 'kill all three' : `help ${b}`))
-      }
-    }
-    const pantheon = meta.pantheon
-    if (pantheon && act >= PANTHEON_ACT && !done.has('pantheon')) {
-      return {
-        id: 'pantheon',
-        wants: [pantheon.major, pantheon.minor].filter(Boolean).join(' + '),
-        options: []
-      }
-    }
-    return null
   }
 
   /** Acknowledge a reminder. One-shot decisions, so it never comes back. */
   dismissChoice(id: string): void {
-    if (!this.character || (id !== 'bandit' && id !== 'pantheon')) return
-    const map = store.get('dismissedChoices')
-    const done = map[this.character] ?? []
-    if (done.includes(id)) return
-    store.set('dismissedChoices', { ...map, [this.character]: [...done, id] })
-    this.push()
-  }
-
-  /** Siosa sells more gems than anyone else, and you reach him by walking into
-   *  the Library, not by entering Act 3. Matched on the display name, the way
-   *  the trial zones are — English clients only, like every localized path. */
-  private noteLibrary(zoneName: string): boolean {
-    if (!this.character || zoneName !== LIBRARY_ZONE) return false
-    const map = store.get('libraryReached')
-    if (map[this.character]) return false
-    store.set('libraryReached', { ...map, [this.character]: true })
-    return true
+    if (this.runs.dismiss(this.character, id)) this.push()
   }
 
   /** Page the viewed gem stage (◀/▶). Pins a manual view until it lands back on
@@ -616,10 +532,4 @@ function loadGemData(): { gems: GemData; error: string | null } {
   } catch (e) {
     return { gems: new GemData({}), error: `could not read gem data (${path}): ${(e as Error).message}` }
   }
-}
-
-/** A per-character map minus one character. */
-function without<T>(map: Record<string, T>, key: string): Record<string, T> {
-  const { [key]: _gone, ...rest } = map
-  return rest
 }
