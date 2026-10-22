@@ -254,6 +254,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      editor differ only in size.
    - **Nothing below 10px** except the letter inside a socket dot (9px bold).
      The `B` in a blue dot is white, the `R` and `G` black — all readable.
+   - **Opacity fades the background, not the text.** Drag Settings → Opacity
+     down to 40 % in a dark zone: the panel goes see-through but the text
+     stays crisp. Below 70 % Settings shows "⚠ Below 70 %, text can be hard to
+     read in bright areas" — check that claim in a bright spot (snow, a white
+     effect): readable at 70 % and up, getting hard below.
    - Tab through Settings and the editor with the keyboard: the focused control
      shows a thin gold outline. The update arrow on the version badge doesn't
      pulse when Windows has animations turned off.

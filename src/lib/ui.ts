@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 // Shared class strings for the overlay and the editor: one tag, one heading,
 // one button — so a style can't drift between the places that use it. Colours
 // come from src/styles/tokens.css; every text-on-background pair here clears
@@ -45,4 +47,29 @@ export const BUTTON_VARIANT = {
 
 export function button(variant: keyof typeof BUTTON_VARIANT, size: keyof typeof BUTTON_SIZE): string {
   return BUTTON + BUTTON_SIZE[size] + ' ' + BUTTON_VARIANT[variant] + ' '
+}
+
+/**
+ * The overlay panel's surface at a given opacity (Settings → Opacity).
+ *
+ * Only the background fades — never the text. Fading the whole panel took the
+ * text down with it: at the 40 % floor, normal text over a mid-bright scene was
+ * 3.0:1 and grey text 2.1:1. With the background alone fading, text over a dark
+ * scene stays at 13.7:1 (grey 6.5:1). Over a bright one the background lets
+ * the light through either way — the game is another window, so the panel
+ * can't dim or blur it, only cover it — so below full opacity the text also
+ * gets a thin dark edge (.text-halo), and Settings says when it gets risky
+ * (OPACITY_READABLE).
+ */
+/** Below this, text over a bright scene (snow, a white effect) can drop under
+ *  readable contrast whatever we do; Settings says so instead of stopping you. */
+export const OPACITY_READABLE = 0.7
+
+export function panelSurface(opacity: number): { className: string; style: CSSProperties } {
+  const alpha = Math.round(95 * opacity)
+  return {
+    className:
+      'rounded-[10px] border shadow-lg backdrop-blur-sm ' + (opacity < 1 ? 'text-halo ' : ''),
+    style: { backgroundColor: `color-mix(in srgb, var(--color-overlay-panel) ${alpha}%, transparent)` }
+  }
 }
