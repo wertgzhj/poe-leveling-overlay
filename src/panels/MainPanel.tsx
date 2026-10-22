@@ -4,6 +4,8 @@ import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
 import { muleInstruction, sourceMark, sourceName, sourceTone, type MuleHow } from '../lib/sources'
 import { BUTTON, BUTTON_SIZE, HEADING, TAG, TAG_TONE, button, panelSurface, type Tone } from '../lib/ui'
+// Labyrinth tier names, from the trials engine itself (pure, no imports).
+import { LAB_LABEL } from '../../electron/trials/engine.ts'
 import { UpdateBanner } from './UpdateBanner'
 import { VersionBadge } from './VersionBadge'
 
@@ -23,13 +25,6 @@ const TYPE_ICONS: Record<StepTypeBridge, string> = {
   hint: '✎'
 }
 
-// Labyrinth tier names. Mirrored by hand from electron/trials/engine.ts — the
-// main and renderer build graphs are intentionally decoupled (see env.d.ts).
-const LAB_LABEL: Record<LabTierBridge, string> = {
-  normal: 'Normal Labyrinth',
-  cruel: 'Cruel Labyrinth',
-  merciless: 'Merciless Labyrinth'
-}
 
 // Distinct hues + the attribute letter inside each pip, so red/green/blue stay
 // unambiguous even when green and blue are hard to tell apart (colour-blind
@@ -41,10 +36,10 @@ const PIP_CLASS: Record<SocketColorBridge, string> = {
   W: 'bg-white/30 text-black/80'
 }
 
-// Vendor price tiers, shortened for the Gems tab's cost column. Mirrored by hand
-// from COST_TIERS in electron/profile/gems.ts — the main and renderer build
-// graphs are intentionally decoupled (see env.d.ts). An unknown tier falls back
-// to its own name, so adding one there can never render a blank cell here.
+// Vendor price tiers, shortened for the Gems tab's cost column — a display
+// choice, keyed by the names COST_TIERS (electron/profile/gems.ts) uses. An
+// unknown tier falls back to its own name, so adding one there can never render
+// a blank cell here.
 const COST_SHORT: Record<string, string> = {
   Wisdom: 'Wisdom',
   Transmutation: 'Trans',

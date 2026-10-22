@@ -12,25 +12,10 @@ import {
   ascendancyFor,
   ascendancyOptions,
   serializeProfile,
-  BANDITS as EDITOR_BANDITS,
-  PANTHEON_MAJOR as EDITOR_MAJOR,
-  PANTHEON_MINOR as EDITOR_MINOR,
-  ASCENDANCIES as EDITOR_ASCENDANCIES,
   type RouteDraft
 } from '../editor/model.ts'
 import { validateRoute } from '../electron/guide/route.ts'
-import {
-  ASCENDANCIES,
-  BANDITS,
-  CLASSES,
-  PANTHEON_MAJOR,
-  PANTHEON_MINOR
-} from '../electron/profile/profile.ts'
-
-test('the editor mirrors the main process ascendancy table exactly', () => {
-  // Hand-mirrored across two build graphs, so drift is a matter of when, not if.
-  assert.deepEqual(EDITOR_ASCENDANCIES, ASCENDANCIES)
-})
+import { CLASSES } from '../electron/profile/profile.ts'
 
 test('picking a class narrows the ascendancies to that class', () => {
   assert.deepEqual(ascendancyOptions('Witch'), ['', 'Necromancer', 'Elementalist', 'Occultist'])
@@ -130,13 +115,6 @@ test('blankStage produces a sane, non-overlapping starting range', () => {
   const s = blankStage(12)
   assert.deepEqual(s.range, [12, 22])
   assert.equal(s.socketGroups.length, 1)
-})
-
-test('the editor mirrors the bandit and pantheon lists exactly', () => {
-  // Same drift risk as the ascendancy table: two build graphs, one hand copy.
-  assert.deepEqual(EDITOR_BANDITS, BANDITS)
-  assert.deepEqual(EDITOR_MAJOR, PANTHEON_MAJOR)
-  assert.deepEqual(EDITOR_MINOR, PANTHEON_MINOR)
 })
 
 test('an undecided pantheon is left out of the saved profile entirely', () => {

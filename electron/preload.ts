@@ -17,6 +17,9 @@ import {
   type TrialsSnapshot,
   type UpdateStatus
 } from './channels'
+import type { AreaState, LevelUpEvent } from './log/tracker.ts'
+import type { WatcherStatus } from './log/watcher.ts'
+import type { AppSettings, SettingsPatch } from './settings.ts'
 
 function subscribe<T>(channel: string, cb: (payload: T) => void): () => void {
   const listener = (_e: unknown, payload: T): void => cb(payload)
@@ -36,13 +39,13 @@ const api = {
   detectCharacter: (): Promise<DetectedCharacter | null> =>
     ipcRenderer.invoke(Channels.logDetectCharacter),
   copySearchRegex: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopySearchRegex),
-  onLogStatus: (cb: (status: unknown) => void): (() => void) =>
+  onLogStatus: (cb: (status: WatcherStatus) => void): (() => void) =>
     subscribe(Channels.logStatus, cb),
   onLogSnapshot: (cb: (snap: LogSnapshot) => void): (() => void) =>
     subscribe(Channels.logSnapshot, cb),
-  onAreaEntered: (cb: (area: unknown) => void): (() => void) =>
+  onAreaEntered: (cb: (area: AreaState) => void): (() => void) =>
     subscribe(Channels.areaEntered, cb),
-  onLevelUp: (cb: (ev: unknown) => void): (() => void) =>
+  onLevelUp: (cb: (ev: LevelUpEvent) => void): (() => void) =>
     subscribe(Channels.playerLevelUp, cb),
 
   getGuide: (): Promise<GuideState> => ipcRenderer.invoke(Channels.guideGet),
@@ -106,9 +109,9 @@ const api = {
 
   setHoverUi: (over: boolean): void => ipcRenderer.send(Channels.overlayHoverUi, over),
 
-  getSettings: () => ipcRenderer.invoke(Channels.settingsGetAll),
+  getSettings: (): Promise<AppSettings> => ipcRenderer.invoke(Channels.settingsGetAll),
 
-  setSettings: (patch: unknown): Promise<SettingsSetResult> =>
+  setSettings: (patch: SettingsPatch): Promise<SettingsSetResult> =>
     ipcRenderer.invoke(Channels.settingsSet, patch),
 
   pauseHotkeys: (): void => ipcRenderer.send(Channels.hotkeysPause),

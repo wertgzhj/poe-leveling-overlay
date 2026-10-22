@@ -50,6 +50,12 @@ export interface AppSettings {
   searchRegex: string
 }
 
+/** What the renderer may change through the settings channel (see ipc.ts:
+ *  every field is checked there, unknown ones are ignored). */
+export type SettingsPatch = Partial<
+  Pick<AppSettings, 'opacity' | 'clickThrough' | 'clientTxtPath' | 'characterName' | 'visibleTabs' | 'searchRegex'>
+> & { hotkeys?: Partial<HotkeyBindings> }
+
 /** Everything persisted, including non-setting state: the resume snapshot and
  *  per-character guide progress. */
 interface StoreSchema extends AppSettings {
