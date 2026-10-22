@@ -12,7 +12,8 @@
   --color-overlay-panel: #161b26;
   --color-overlay-border: #2a3346;
   --color-overlay-text: #e6e9f0; /* 14.9:1 */
-  --color-overlay-muted: #8b93a7; /* 5.9:1 — the floor: never fade it further */
+  --color-overlay-muted: #9aa2b5; /* 7.1:1 — the floor: never fade it further. Still 4.6:1 in the
+     worst spot, a coloured line inside the gold "take rewards now" box */
 
   /* gold: now / you / active — current step, active tab, take it now */
   --color-overlay-accent: #c8a24a; /* 7.6:1 */
@@ -22,7 +23,8 @@
   --color-warn: #fdba74; /* 10.8:1 — careful; orange, so it never reads as gold. Always with ⚠ or △ */
   --color-danger: #fca5a5; /* 9.6:1 — broken, failed, conflict */
 
-  /* where a gem comes from — only in the source column */
+  /* where a gem comes from: the source column, and — for the mule and a
+     starting gem — the line's tint and bar too (see SocketGroup) */
   --color-mule: #7dd3fc; /* 10.9:1 — another class's alt hands it over */
   --color-library: #c4b5fd; /* 9.8:1 — Siosa, a trip to make */
   --color-fight: #fda4af; /* 9.6:1 — Gravicius, a fight to win */

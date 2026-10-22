@@ -11,7 +11,8 @@ import { VersionBadge } from './VersionBadge'
 // (Ctrl+Shift+C) while forward/back hotkeys work regardless.
 
 const TYPE_ICONS: Record<StepTypeBridge, string> = {
-  quest: '❗',
+  // Not ❗: that one is an emoji and draws red, and red means "broken" here.
+  quest: '!',
   waypoint: '◈',
   trial: '△',
   town: '⌂',
@@ -340,7 +341,10 @@ export function MainPanel(): React.JSX.Element {
 
         <TrialHint />
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+        {/* pb-6: the version badge sits on top of the panel's bottom-right
+            corner, so the content stops short of it — the Guide's "reset" ran
+            underneath it. */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-6 pt-2">
           {activeTab === 'guide' && <GuideBody />}
           {activeTab === 'gems' && <GemBody />}
           {activeTab === 'trials' && <TrialsBody />}
@@ -515,7 +519,7 @@ function TrialsBody(): React.JSX.Element {
               'mb-1 flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left ' +
               (here && !t.seen
                 ? 'border-overlay-accent/60 bg-overlay-accent/10'
-                : 'border-transparent ' + (t.seen ? 'opacity-50' : 'bg-black/20'))
+                : 'border-transparent ' + (t.seen ? '' : 'bg-black/20'))
             }
           >
             <span
@@ -628,7 +632,7 @@ function GuideBody(): React.JSX.Element {
               'mb-1 block w-full rounded-md px-2 py-1.5 text-left ' +
               (isCurrent
                 ? 'border border-overlay-accent/60 bg-overlay-accent/10'
-                : 'border border-transparent ' + (isDone ? 'opacity-45' : 'bg-black/20'))
+                : 'border border-transparent ' + (isDone ? '' : 'bg-black/20'))
             }
           >
             <div className="flex items-start gap-2">
@@ -680,7 +684,7 @@ function article(word: string): string {
 // The socket-colour dot. Shared by the link rows and the to-do list so a gem
 // looks the same wherever it turns up. Renders an empty box of the same size
 // when the colour is unknown (gems.json failed to load), so nothing shifts.
-function Pip({ gem }: { gem?: ColoredGemBridge }): React.JSX.Element {
+function Pip({ gem, dim }: { gem?: ColoredGemBridge; dim?: boolean }): React.JSX.Element {
   const box =
     'inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-black/80 '
   // A letterless pip still carries a zero-width space: an empty inline-flex box
@@ -701,7 +705,8 @@ function Pip({ gem }: { gem?: ColoredGemBridge }): React.JSX.Element {
         PIP_CLASS[gem.color] +
         // An "any colour" gem gets a dashed ring: white on purpose, not white
         // for lack of data. Nothing else changes about the row.
-        (gem.anyColor ? ' border border-dashed border-white/50 bg-transparent' : '')
+        (gem.anyColor ? ' border border-dashed border-white/50 bg-transparent' : '') +
+        (dim ? ' opacity-60' : '')
       }
     >
       {gem.color === 'W' ? '\u200B' : gem.color}
@@ -776,12 +781,15 @@ function CostCell({
   later?: boolean
 }): React.JSX.Element {
   const n = count ?? 1
-  const cls = 'text-right text-[10px] ' + (later ? 'opacity-50 ' : '')
+  // "Not now" is the readable grey, never transparency: faded grey fell to
+  // 2.4:1, unreadable. The "lvl N" next to the gem says why it waits.
+  const cls = 'text-right text-[10px] '
+  const now = (tone: string): string => (later ? 'text-overlay-muted' : tone)
 
   if (mule?.length) {
     return (
       <span
-        className={cls + 'text-mule'}
+        className={cls + now('text-mule')}
         title={muleInstruction(mule, muleHow)}
       >
         {n > 1 && `${n}× `}
@@ -797,7 +805,7 @@ function CostCell({
     const extra = n - 1
     return (
       <span
-        className={cls + 'text-ok'}
+        className={cls + now('text-ok')}
         title={
           extra > 0
             ? `The quest gives one — the other ${extra === 1 ? 'copy' : `${extra} copies`} you buy or find`
@@ -816,7 +824,7 @@ function CostCell({
   const copies = n > 1 ? ` — and you need ${n} of them` : ''
   return (
     <span
-      className={cls + tone}
+      className={cls + now(tone)}
       title={cost ? `Costs ${cost}${copies}` : `Buy from a vendor${copies}`}
     >
       {n > 1 && `${n}× `}
@@ -857,9 +865,7 @@ function SourceCell({
           (approx ? ' — general vendor, may show up earlier as a quest reward' : '')
       }
       className={
-        'truncate text-[10px] ' +
-        (tone ?? sourceTone(named)) +
-        (later ? ' opacity-50' : '')
+        'truncate text-[10px] ' + (later ? 'text-overlay-muted' : (tone ?? sourceTone(named)))
       }
     >
       {text}
@@ -907,14 +913,21 @@ function RewardGroupRow({
   return (
     <div
       className={
-        'col-span-3 grid grid-cols-subgrid items-baseline gap-x-1.5 rounded border border-overlay-accent/40 bg-overlay-accent/5 p-1.5' +
-        (later ? ' opacity-50' : '')
+        // A pick for later keeps its box, in grey: the choice is real, just not
+        // yet — and grey stays readable where transparency did not.
+        'col-span-3 grid grid-cols-subgrid items-baseline gap-x-1.5 rounded border p-1.5 ' +
+        (later ? 'border-overlay-border' : 'border-overlay-accent/40 bg-overlay-accent/5')
       }
     >
-      <span className="col-span-2 mb-0.5 justify-self-start rounded bg-overlay-accent/20 px-1 py-px text-[9px] font-bold uppercase tracking-wider text-overlay-accent">
+      <span
+        className={
+          'col-span-2 mb-0.5 justify-self-start rounded px-1 py-px text-[9px] font-bold uppercase tracking-wider ' +
+          (later ? 'bg-white/10 text-overlay-muted' : 'bg-overlay-accent/20 text-overlay-accent')
+        }
+      >
         Pick one, buy rest
       </span>
-      <SourceCell act={group.act} what={group.quest ?? 'quest'} />
+      <SourceCell act={group.act} what={group.quest ?? 'quest'} later={later} />
       {/* One price for the whole group, centred against the gems it covers: the
           quest gives one, so the rest is what you actually pay. */}
       {rest && (
@@ -923,7 +936,7 @@ function RewardGroupRow({
           title={`The quest gives one — the other ${rest.count === 1 ? 'copy costs' : `${rest.count} copies cost`}${rest.cost ? ` ${rest.cost} each` : ' vendor money'}`}
           className={
             'self-center text-right text-[10px] ' +
-            ((rest.cost && COST_TONE[rest.cost]) || 'text-overlay-muted')
+            ((!later && rest.cost && COST_TONE[rest.cost]) || 'text-overlay-muted')
           }
         >
           {rest.count}× {rest.cost ? (COST_SHORT[rest.cost] ?? rest.cost) : 'buy'}
@@ -935,10 +948,10 @@ function RewardGroupRow({
           title={e.gem + context(e)}
           className={
             'col-span-2 col-start-2 flex items-baseline gap-1.5 text-xs ' +
-            (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text')
+            (e.fromLevel || later ? 'text-overlay-muted' : 'text-overlay-text')
           }
         >
-          <Pip gem={e.colored} />
+          <Pip gem={e.colored} dim={later} />
           <span className="min-w-0 truncate">
             {e.gem}
             {context(e) && <span className="text-overlay-muted">{context(e)}</span>}
@@ -992,11 +1005,11 @@ function GemCell({
     return (
       <div
         title={`Only the ${n > 1 ? `${n} you didn't pick` : "one you didn't pick"} — the quest gave you one of these, and the overlay can't see your inventory.`}
-        className={'flex min-w-0 flex-col text-xs text-overlay-text' + (later ? ' opacity-50' : '')}
+        className={'flex min-w-0 flex-col text-xs ' + (later ? 'text-overlay-muted' : 'text-overlay-text')}
       >
         {e.anyOf.map((g) => (
           <span key={g.gem} className="flex min-w-0 items-baseline gap-1.5">
-            <Pip gem={g.colored} />
+            <Pip gem={g.colored} dim={later} />
             <span className="min-w-0 truncate">{g.gem}</span>
           </span>
         ))}
@@ -1012,11 +1025,10 @@ function GemCell({
       title={later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}
       className={
         'flex min-w-0 items-baseline gap-1.5 text-xs ' +
-        (e.fromLevel ? 'text-overlay-muted' : 'text-overlay-text') +
-        (later ? ' opacity-50' : '')
+        (e.fromLevel || later ? 'text-overlay-muted' : 'text-overlay-text')
       }
     >
-      <Pip gem={e.colored} />
+      <Pip gem={e.colored} dim={later} />
       {/* Truncated, never wrapped: "for later (lvl 62+)" is worth knowing but
           not worth a second line, least of all in a narrow panel. The full
           text is in the tooltip. */}
@@ -1062,7 +1074,7 @@ function BuyRow({
   later?: boolean
 }): React.JSX.Element {
   const mule = e.mule?.length ? e.mule : undefined
-  return (
+  const cells = (
     <>
       <CostCell cost={e.cost} count={e.count} mule={mule} muleHow={e.muleHow} later={later} />
       <GemCell entry={e} comingUpAt={comingUpAt} later={later} />
@@ -1078,6 +1090,15 @@ function BuyRow({
       )}
     </>
   )
+  // The mule's line is tinted turquoise as a whole, like its line in the links
+  // below (LINE_TONE). A subgrid, so the cells still sit on the plan's columns.
+  return mule ? (
+    <div className={'col-span-3 grid grid-cols-subgrid items-baseline gap-x-1.5 rounded-sm py-px ' + LINE_TONE.mule}>
+      {cells}
+    </div>
+  ) : (
+    cells
+  )
 }
 
 
@@ -1088,9 +1109,30 @@ function BuyRow({
 type LinkMark = 'thisAct' | 'new' | 'notYet'
 
 // How a link row reads against the act you've reached (see LinkMark in the
-// engine). Gold is the tab's "do this now" colour, so it marks this act's gems
-// on the name only — the source column keeps its vendor colours. "new" is a
-// quiet pill, not a second loud colour; "not yet" just steps back.
+// engine). The state belongs to the whole line, never to one word in it:
+// this act's gems get a gold-tinted line with a gold bar on its left edge (the
+// Guide's current step reads the same way); "not yet" turns the line grey;
+// "new" is a quiet pill. Text colours stay with what they mean — the gem name
+// white, the source in its category colour — so a Library gem in the act
+// you're in is gold-lined AND violet, not one or the other. Never colour
+// alone: the bar is a shape, and the tooltip says it in words.
+//
+// The mule and a starting gem colour their whole line too, in their own
+// colour: turquoise for "another class's alt hands it over", green for "you
+// start with it". Neither gets an act mark, so a line is only ever one of the
+// three. The words in the source column ("Mule · Ranger", "✓ start") say the
+// same without colour.
+const LINE_TONE = {
+  thisAct: 'bg-overlay-accent/10 shadow-[inset_2px_0_0_var(--color-overlay-accent)]',
+  mule: 'bg-mule/10 shadow-[inset_2px_0_0_var(--color-mule)]',
+  start: 'bg-ok/10 shadow-[inset_2px_0_0_var(--color-ok)]'
+} as const
+
+function lineTone(entry: AcquisitionEntryBridge | undefined, link: LinkMark | undefined): string {
+  if (entry?.mule?.length) return LINE_TONE.mule
+  if (entry?.starting) return LINE_TONE.start
+  return link === 'thisAct' ? LINE_TONE.thisAct : ''
+}
 function linkMarkTitle(mark: LinkMark | undefined, act: number | undefined): string | undefined {
   if (mark === 'thisAct') return `From Act ${act} — the act you're in.`
   if (mark === 'new') return `From Act ${act}, and this stage needs it for the first time — you may not have it yet.`
@@ -1108,21 +1150,26 @@ function SocketGroup({
   marks: Record<string, LinkMark>
 }): React.JSX.Element {
   return (
-    <div className="col-span-3 mb-1.5 grid grid-cols-subgrid items-center gap-x-1.5 rounded-md border border-overlay-border/70 bg-black/20 p-1.5">
+    <div className="col-span-3 mb-1.5 grid grid-cols-subgrid items-center gap-x-1.5 gap-y-px rounded-md border border-overlay-border/70 bg-black/20 px-0.5 py-1">
       {group.gems.map((gem, i) => {
         const entry = acq.get(gem.name.toLowerCase())
         const mark = sourceMark(entry)
         const link = marks[gem.name.toLowerCase()]
-        const dim = link === 'notYet' ? ' opacity-40' : ''
+        const notYet = link === 'notYet'
         return (
-          <Fragment key={i}>
-            <div className={'col-span-2 flex min-w-0 items-center gap-1.5' + dim} title={linkMarkTitle(link, entry?.act)}>
-              <Pip gem={gem} />
-              <span
-                className={
-                  'min-w-0 truncate text-xs ' + (link === 'thisAct' ? 'text-overlay-accent' : 'text-overlay-text')
-                }
-              >
+          // One line, one subgrid: the tint and the bar span all of it, and the
+          // columns still line up with every other row. Every line gets the
+          // same padding, highlighted or not, so the names stay aligned.
+          <div
+            key={i}
+            title={linkMarkTitle(link, entry?.act)}
+            className={
+              'col-span-3 grid grid-cols-subgrid items-center gap-x-1.5 rounded-sm px-1 py-px ' + lineTone(entry, link)
+            }
+          >
+            <div className="col-span-2 flex min-w-0 items-center gap-1.5">
+              <Pip gem={gem} dim={notYet} />
+              <span className={'min-w-0 truncate text-xs ' + (notYet ? 'text-overlay-muted' : 'text-overlay-text')}>
                 {gem.name}
                 {link === 'new' && (
                   <span className="ml-1 rounded border border-overlay-text/30 px-0.5 text-[8px] uppercase tracking-wider text-overlay-text/70">
@@ -1141,10 +1188,10 @@ function SocketGroup({
             </div>
             {/* Always rendered, even when empty: a missing cell would pull the
                 next row's gem into the source column. */}
-            <span title={mark?.title} className={'truncate text-[9px] ' + (mark?.tone ?? '') + dim}>
+            <span title={mark?.title} className={'truncate text-[9px] ' + (notYet ? 'text-overlay-muted' : (mark?.tone ?? ''))}>
               {mark?.label}
             </span>
-          </Fragment>
+          </div>
         )
       })}
       {group.note && <div className="col-span-3 mt-0.5 pl-4 text-[10px] text-overlay-muted">{group.note}</div>}
@@ -1234,7 +1281,7 @@ function GemBody(): React.JSX.Element {
               onClick={() => window.overlay?.stageStep(-1)}
               title="Previous stage"
               aria-label="Previous stage"
-              className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
+              className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-40"
             >
               ◀
             </button>
@@ -1246,7 +1293,7 @@ function GemBody(): React.JSX.Element {
               onClick={() => window.overlay?.stageStep(1)}
               title="Next stage"
               aria-label="Next stage"
-              className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-25"
+              className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-40"
             >
               ▶
             </button>
@@ -1310,10 +1357,7 @@ function GemBody(): React.JSX.Element {
                     <div
                       className={
                         'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider ' +
-                        (stop.npc
-                          ? sourceTone(sourceName(stop.npc))
-                          : 'text-overlay-muted') +
-                        (item.later ? ' opacity-50' : '')
+                        (stop.npc && !item.later ? sourceTone(sourceName(stop.npc)) : 'text-overlay-muted')
                       }
                     >
                       {stop.npc
