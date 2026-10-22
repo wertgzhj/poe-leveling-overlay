@@ -186,13 +186,22 @@ or pinned explicitly in settings.
 so the backscan rebuilds zone, level and character from the log tail, and
 progress is persisted per character.
 
+**A reused name is a new run.** Progress is keyed by character name, and names
+come back every league. The Twilight Strand only ever sees a new character, but
+the log names it on its first level-up, so that is when its run (act, Library,
+trials, guide ticks, dismissed reminders) starts over. Choices — its profile,
+its mule — carry on.
+
 **Client language.** Two of the three tracked lines are localized by the game.
 Only English patterns ship; another language is detected and reported rather
 than silently half-working.
 
-**Levelling ranges, not acts.** Which gems are actionable now is decided by
-character level against PoE's XP safe range, because level is tracked reliably
-and act detection lags. Gems above that range are dimmed, never hidden.
+**Level for "now", act for "at all".** Whether a gem is for now or for later is
+decided by character level against PoE's XP safe range — level is tracked on
+every level-up. The furthest act reached (the second number of the zone id,
+`1_2_…` = Act 2) decides what's shown at all: a quest in an act you haven't
+reached is left out, and the build's links are tinted by act. A gem for later
+turns grey; it is never hidden.
 
 ## Privacy
 
