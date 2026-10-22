@@ -68,8 +68,11 @@ Main
                         step forward/back. Rebinding re-registers live.
 
 Renderer (overlay)          Renderer (editor)
-├── MainPanel               ├── RouteEditor
-│   Guide / Gems / Trials   └── ProfileEditor
+├── MainPanel (frame)       ├── RouteEditor
+│   ├── NoticeBar           ├── ProfileEditor
+│   ├── GuideTab            └── ProfileLibrary
+│   ├── GemsTab (gems/: PlanRows, LinkGroup, MulePicker)
+│   └── TrialsTab
 ├── SettingsPanel
 ├── UpdateBanner + VersionBadge
 └── DebugPanel (dev only — parsed events, in memory, never written to disk)
