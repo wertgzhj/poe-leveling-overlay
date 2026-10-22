@@ -354,9 +354,10 @@ npm run import-pob -- "<pob code>" --out data/profiles/mine.json   # PoB -> prof
 ```
 
 Log-format note: the shipped patterns (`data/log-patterns/en.json`) are verified
-against real captures; the named area ids (`data/areas/en.json`) are verified for
-Act 1 only. A sanitized capture from a later act is the most useful thing to add —
-see `data/fixtures/README.md` for the capture + sanitize workflow.
+against real captures, and so is every campaign area id in `data/areas/en.json`,
+Acts 1–10. `tests/areas.test.ts` keeps the trial zones and the guide routes
+agreeing with that table. See `data/fixtures/README.md` for the capture +
+sanitize workflow.
 
 Requires Node 22.6+ (the tests run TypeScript directly). The app targets Windows; `npm run package:win` builds the installer
 (run on Windows or with wine).

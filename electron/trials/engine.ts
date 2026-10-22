@@ -7,8 +7,8 @@
 // speaks it as you finish a trial. There are just six plaque lines for twelve
 // trials, so the LINE alone cannot say which one — the ZONE you're standing in
 // does. Hence: an Izaro line while in a trial's zone completes THAT trial, and
-// when the zone is unknown we fall back to matching the line against the six
-// verified normal-lab fragments. Manual toggle remains for anything missed.
+// when the zone is unknown we fall back to matching the line against the
+// verified plaque fragments. Manual toggle remains for anything missed.
 
 /** Which Labyrinth a trial unlocks. All three are done during the campaign. */
 export type LabTier = 'normal' | 'cruel' | 'merciless'
@@ -27,33 +27,36 @@ export interface TrialDef {
    *  (exact or prefix) — the "trial in this zone" hint AND, with an Izaro line,
    *  the completion signal. */
   zone: string
-  /** A distinctive fragment of Izaro's plaque line, where known. Only the six
-   *  normal-lab lines are verified from real captures; cruel/merciless reuse the
-   *  same six lines, so the line alone can't identify them — the zone does. */
+  /** A distinctive fragment of Izaro's plaque line. All twelve are verified
+   *  from real captures: cruel/merciless reuse the six normal-lab lines, so the
+   *  line alone can't identify them — the zone does. */
   izaro?: string
 }
 
 // All twelve campaign trials: six for the Normal Labyrinth (Acts 1–3), three for
-// Cruel (Acts 6–7) and three for Merciless (Acts 8–10). Zone names are
-// provisional (the 🐞 dev panel shows each zone you enter) and the manual toggle
-// covers any mismatch; completion is zone + an Izaro line, so a wrong zone name
-// degrades to the plaque-line fallback rather than breaking.
+// Cruel (Acts 6–7) and three for Merciless (Acts 8–10). Zones and plaque lines
+// are verified against real captures (normal 2026-07-21, all twelve 2026-10-22);
+// the manual toggle stays for anything missed. Completion is zone + an Izaro
+// line, so a zone name that drifts degrades to the plaque-line fallback rather
+// than breaking.
 export const CAMPAIGN_TRIALS: readonly TrialDef[] = [
-  // Normal Labyrinth — plaque lines verified 2026-07-21.
+  // Normal Labyrinth.
   { id: 't-a1-lower-prison', act: 1, lab: 'normal', zone: 'The Lower Prison', izaro: 'strongest metal' },
   { id: 't-a2-crypt', act: 2, lab: 'normal', zone: 'The Crypt Level 1', izaro: 'Shine boldly' },
   { id: 't-a2-chamber-of-sins', act: 2, lab: 'normal', zone: 'The Chamber of Sins Level 2', izaro: 'consideration and hesitation' },
   { id: 't-a3-crematorium', act: 3, lab: 'normal', zone: 'The Crematorium', izaro: 'tempered by the flames' },
   { id: 't-a3-catacombs', act: 3, lab: 'normal', zone: 'The Catacombs', izaro: 'bear two blades' },
   { id: 't-a3-imperial-gardens', act: 3, lab: 'normal', zone: 'The Imperial Gardens', izaro: 'precisely where he stands' },
-  // Cruel Labyrinth.
-  { id: 't-a6-prison', act: 6, lab: 'cruel', zone: 'The Prison' },
-  { id: 't-a7-crypt', act: 7, lab: 'cruel', zone: 'The Crypt' },
-  { id: 't-a7-chamber-of-sins', act: 7, lab: 'cruel', zone: 'The Chamber of Sins Level 2' },
+  // Cruel Labyrinth. Act 6's trial is in The Lower Prison, like Act 1's — the
+  // act tells them apart (see matchZone). It used to say "The Prison", a zone
+  // that doesn't exist, so the Act 6 trial never completed on its own.
+  { id: 't-a6-prison', act: 6, lab: 'cruel', zone: 'The Lower Prison', izaro: 'strongest metal' },
+  { id: 't-a7-crypt', act: 7, lab: 'cruel', zone: 'The Crypt', izaro: 'Shine boldly' },
+  { id: 't-a7-chamber-of-sins', act: 7, lab: 'cruel', zone: 'The Chamber of Sins Level 2', izaro: 'consideration and hesitation' },
   // Merciless Labyrinth.
-  { id: 't-a8-bath-house', act: 8, lab: 'merciless', zone: 'The Bath House' },
-  { id: 't-a9-tunnel', act: 9, lab: 'merciless', zone: 'The Tunnel' },
-  { id: 't-a10-ossuary', act: 10, lab: 'merciless', zone: 'The Ossuary' }
+  { id: 't-a8-bath-house', act: 8, lab: 'merciless', zone: 'The Bath House', izaro: 'tempered by the flames' },
+  { id: 't-a9-tunnel', act: 9, lab: 'merciless', zone: 'The Tunnel', izaro: 'bear two blades' },
+  { id: 't-a10-ossuary', act: 10, lab: 'merciless', zone: 'The Ossuary', izaro: 'precisely where he stands' }
 ] as const
 
 /** @deprecated kept for older imports — the six Normal-Labyrinth trials. */
@@ -84,6 +87,10 @@ export class TrialsEngine {
   private readonly trials: readonly TrialDef[]
   private seen = new Set<string>()
   private currentZoneTrial: string | null = null
+  /** Whether you're in the campaign, as far as the area id says. The endgame
+   *  trials in maps reuse the same six plaque lines, so out there a line must
+   *  not fall back to ticking a campaign trial. */
+  private inCampaign = true
   /** Labyrinths whose unlock notice has been dismissed. Persisted, because the
    *  gap between "unlocked" and "actually ran it" is often hours. */
   private dismissedLabs = new Set<LabTier>()
@@ -142,9 +149,12 @@ export class TrialsEngine {
 
   /** Note the zone the player entered (with the act, when known — some zones
    *  host a trial in TWO difficulties, e.g. The Chamber of Sins Level 2 in Act 2
-   *  and again in Act 7). Marks nothing; only tracks whether the current zone
-   *  contains a trial (the hint). Returns true if that changed. */
-  applyZone(zoneName: string, act?: number | null): boolean {
+   *  and again in Act 7). `campaign` is false for a zone whose id says it isn't
+   *  one (a map, the Labyrinth); without an id, assume it is. Marks nothing;
+   *  only tracks whether the current zone contains a trial (the hint). Returns
+   *  true if that changed. */
+  applyZone(zoneName: string, act?: number | null, campaign = true): boolean {
+    this.inCampaign = campaign
     const next = this.matchZone(zoneName, act)?.id ?? null
     if (next === this.currentZoneTrial) return false
     this.currentZoneTrial = next
@@ -154,9 +164,10 @@ export class TrialsEngine {
   /** Izaro spoke — he only voices a plaque as a trial is completed. The zone
    *  decides WHICH trial (six lines cover twelve trials, so the line can't):
    *  standing in a trial's zone completes that one. With no trial zone active
-   *  (unknown/renamed zone) fall back to the six verified normal-lab fragments,
-   *  taking the earliest still-unfinished match. Returns true if this newly
-   *  completed a trial (idempotent / no-match otherwise). */
+   *  (unknown/renamed zone) fall back to the plaque fragments, taking the
+   *  earliest still-unfinished match — but only in the campaign: the endgame
+   *  trials say the same lines. Returns true if this newly completed a trial
+   *  (idempotent / no-match otherwise). */
   completeByIzaro(line: string): boolean {
     const here = this.currentZoneTrial
     if (here) {
@@ -164,6 +175,7 @@ export class TrialsEngine {
       this.seen.add(here)
       return true
     }
+    if (!this.inCampaign) return false
     const said = line.toLowerCase()
     const t = this.trials.find(
       (t) => t.izaro && said.includes(t.izaro.toLowerCase()) && !this.seen.has(t.id)

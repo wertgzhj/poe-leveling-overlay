@@ -28,7 +28,7 @@ test('a zone hosting a trial in two difficulties resolves by act', () => {
   assert.deepEqual(seen.map((t) => t.id), ['t-a7-chamber-of-sins'])
 })
 
-test('a cruel/merciless trial completes from the zone (no known plaque line)', () => {
+test('a cruel/merciless trial completes from the zone', () => {
   const engine = new TrialsEngine()
   engine.applyZone('The Ossuary', 10)
   assert.equal(engine.completeByIzaro('An emperor must know precisely where he stands.'), true)
@@ -36,8 +36,46 @@ test('a cruel/merciless trial completes from the zone (no known plaque line)', (
   assert.equal(engine.completeByIzaro('An emperor must know precisely where he stands.'), false)
 })
 
-test("each Izaro plaque line completes its own trial; his other chatter doesn't", () => {
+test("Act 6's trial is in The Lower Prison, like Act 1's: the act decides", () => {
   const engine = new TrialsEngine()
+  // The zone used to read "The Prison", which doesn't exist: no hint, and the
+  // line fell back to ticking the Act 1 trial instead.
+  assert.equal(engine.matchZone('The Lower Prison', 1)?.id, 't-a1-lower-prison')
+  assert.equal(engine.matchZone('The Lower Prison', 6)?.id, 't-a6-prison')
+  engine.applyZone('The Lower Prison', 6)
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
+  assert.deepEqual(
+    engine.snapshot().trials.filter((t) => t.seen).map((t) => t.id),
+    ['t-a6-prison']
+  )
+})
+
+test('every cruel and merciless trial has its plaque line: the fallback reaches them', () => {
+  // Verified in a real capture: the later trials repeat the normal lines.
+  assert.ok(CAMPAIGN_TRIALS.every((t) => t.izaro))
+  // Act 1's trial done, zone unknown: the same line is now Act 6's.
+  const engine = new TrialsEngine(['t-a1-lower-prison'])
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
+  assert.equal(engine.snapshot().trials.find((t) => t.id === 't-a6-prison')?.seen, true)
+})
+
+test('the endgame trials say the same lines, and tick nothing', () => {
+  // The trials in maps (EndGame_Labyrinth_trials_*) repeat the six plaque lines.
+  // Out of the campaign there's no fallback, or a skipped cruel trial would be
+  // ticked by an endgame one.
+  const engine = new TrialsEngine()
+  engine.applyZone('Trial of Piercing Truth', null, false)
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), false)
+  assert.equal(engine.snapshot().seenCount, 0)
+  // Back in the campaign, the fallback works again.
+  engine.applyZone('The Coast', 6, true)
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
+})
+
+test("each Izaro plaque line completes its own trial; his other chatter doesn't", () => {
+  // The six normal trials alone: the later ones repeat these lines (see the
+  // Act 6 tests above).
+  const engine = new TrialsEngine([], [], NORMAL_TRIALS)
 
   // A non-plaque line (intro / Labyrinth-fight chatter) matches nothing.
   assert.equal(engine.completeByIzaro('You have done well to come this far.'), false)

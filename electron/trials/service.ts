@@ -4,6 +4,7 @@
 
 import { TrialsEngine } from './engine.ts'
 import { actFromAreaId } from '../profile/engine.ts'
+import { isCampaignAreaId } from '../log/tracker.ts'
 import { store } from '../settings.ts'
 import { Channels, type TrialsSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
@@ -22,7 +23,9 @@ export class TrialsService {
     this.overlay = overlay
     this.log = log
     this.engine = new TrialsEngine()
-    log.addAreaListener((area) => this.onZone(area.name, actFromAreaId(area.areaId)))
+    log.addAreaListener((area) =>
+      this.onZone(area.name, actFromAreaId(area.areaId), area.areaId == null || isCampaignAreaId(area.areaId))
+    )
     // Izaro's plaque line identifies the trial you just finished — auto-check it.
     log.addIzaroListener((line) => this.onIzaro(line))
     // start() runs before the log backscan has identified the character, so the
@@ -61,9 +64,9 @@ export class TrialsService {
     if (this.engine.dismissLab(lab)) this.afterChange()
   }
 
-  private onZone(zoneName: string, act: number | null): void {
+  private onZone(zoneName: string, act: number | null, campaign: boolean): void {
     this.syncCharacter()
-    if (this.engine.applyZone(zoneName, act)) this.afterChange()
+    if (this.engine.applyZone(zoneName, act, campaign)) this.afterChange()
   }
 
   private onIzaro(line: string): void {

@@ -174,7 +174,11 @@ recommendation per quest.
 **Area detection.** The primary signal is the instance-generation debug line
 (`Generating level <N> area "<areaId>"`), which is locale-independent. The
 localized "You have entered …" line is the fallback and the source of display
-names.
+names. A name both halves of the campaign use (The Coast is `1_1_2` and
+`2_6_2`) resolves on that fallback to the half you were just in. Campaign ids
+are `<part>_<act>_<zone>`; anything else (hideouts, maps, the Labyrinth's
+`<n>_Labyrinth_…`) is outside the campaign for the guide, the zone-level hint
+and the trials fallback alike (`isCampaignAreaId`).
 
 **Quest completion is not detectable.** `Client.txt` does not log it. Progress
 is driven by area changes, with hotkeys and clicking a step as the correction

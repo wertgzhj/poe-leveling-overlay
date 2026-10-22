@@ -122,10 +122,27 @@ test('zoneEntered matching the current area is a silent confirmation', () => {
 
 test('zoneEntered without a Generating line falls back to reverse name lookup', () => {
   const { tracker, areas } = makeTracker()
-  feed(tracker, '… [INFO Client 1] : You have entered The Coast.')
+  feed(tracker, '… [INFO Client 1] : You have entered The Ship Graveyard.')
   assert.equal(areas.length, 1)
-  assert.equal(areas[0].areaId, '1_1_2')
+  assert.equal(areas[0].areaId, '1_1_9')
   assert.equal(areas[0].areaLevel, null)
+})
+
+test('a name both parts use resolves to the part you are in', () => {
+  // The Coast is 1_1_2 in Act 1 and 2_6_2 in Act 6.
+  const { tracker, areas } = makeTracker()
+  feed(tracker, '… [INFO Client 1] : You have entered The Coast.')
+  assert.equal(areas[0].areaId, null, 'nothing to go on: no guess')
+
+  feed(tracker, '… [DEBUG Client 1] Generating level 45 area "2_6_1" with seed 3')
+  feed(tracker, '… [INFO Client 1] : You have entered The Twilight Strand.')
+  feed(tracker, '… [INFO Client 1] : You have entered The Coast.')
+  assert.equal(areas.at(-1)?.areaId, '2_6_2')
+
+  feed(tracker, '… [DEBUG Client 1] Generating level 13 area "1_1_town" with seed 1')
+  feed(tracker, "… [INFO Client 1] : You have entered Lioneye's Watch.")
+  feed(tracker, '… [INFO Client 1] : You have entered The Coast.')
+  assert.equal(areas.at(-1)?.areaId, '1_1_2')
 })
 
 test('word-id instances (hideouts/maps) adopt their localized names', () => {
@@ -283,6 +300,10 @@ test('towns, hideouts and nameless zones are excluded — the comparison would l
   // Non-campaign instances use word ids and aren't part of the levelling curve.
   assert.equal(fit('HideoutWorldTurtle', 68, 20), null)
   assert.equal(fit('MapWorldsCitySquare', 78, 40), null)
+  // Nor is the Labyrinth, though its ids start with a digit: running the Normal
+  // Lab (level 33) at 45 is not "overlevelled".
+  assert.equal(fit('1_Labyrinth_boss_1', 33, 45), null)
+  assert.equal(fit('EndGame_Labyrinth_trials_spikes', 75, 90), null)
   // The fallback zone path carries no monster level at all.
   assert.equal(fit('2_1_3', null, 20), null)
   assert.equal(fit(null, 40, 20), null)
