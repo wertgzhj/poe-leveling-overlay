@@ -30,6 +30,15 @@
   --color-fight: #fda4af; /* 9.6:1 — Gravicius, a fight to win */
 }
 
+/* A thin dark edge around text, for when the panel lets the game show through
+   (see panelSurface): over snow or a bright effect, light text on a
+   see-through background loses its contrast, and the edge keeps every letter
+   apart from whatever is behind it. Tight on purpose — a wider glow smudged
+   the 10px text into the background instead. */
+.text-halo {
+  text-shadow: 0 0 1px rgb(0 0 0 / 0.9);
+}
+
 /* Keyboard focus is visible everywhere (settings and editor are used with the
    keyboard); the mouse doesn't get a ring. */
 :focus-visible {

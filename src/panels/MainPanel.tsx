@@ -3,7 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
 import { muleInstruction, sourceMark, sourceName, sourceTone, type MuleHow } from '../lib/sources'
-import { BUTTON, BUTTON_SIZE, HEADING, TAG, TAG_TONE, button, type Tone } from '../lib/ui'
+import { BUTTON, BUTTON_SIZE, HEADING, TAG, TAG_TONE, button, panelSurface, type Tone } from '../lib/ui'
 import { UpdateBanner } from './UpdateBanner'
 import { VersionBadge } from './VersionBadge'
 
@@ -254,15 +254,17 @@ export function MainPanel(): React.JSX.Element {
   const profileHasErrors = (profile?.errors?.length ?? 0) > 0
   const trialsBadge = trials ? `${trials.seenCount}/${trials.total}` : undefined
 
+  const surface = panelSurface(opacity)
   return (
     <div className="flex h-screen w-screen items-start justify-center p-2">
       <div
         data-interactive
         className={
-          'relative flex max-h-full w-full flex-col overflow-hidden rounded-[10px] border bg-overlay-panel/95 shadow-lg backdrop-blur-sm ' +
+          'relative flex max-h-full w-full flex-col overflow-hidden ' +
+          surface.className +
           (moveMode ? 'border-overlay-accent' : 'border-overlay-border')
         }
-        style={{ opacity }}
+        style={surface.style}
       >
         <header
           className={

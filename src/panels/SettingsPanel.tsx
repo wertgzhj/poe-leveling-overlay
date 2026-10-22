@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { acceleratorFromEvent, formatAccelerator } from '../lib/accelerator'
-import { HEADING, button } from '../lib/ui'
+import { HEADING, OPACITY_READABLE, button, panelSurface } from '../lib/ui'
 
 type HotkeyField = keyof HotkeyBindingsBridge
 
@@ -176,12 +176,14 @@ export function SettingsPanel(): React.JSX.Element {
     })
   }
 
+  // The same surface as the overlay, so dragging the slider previews it here.
+  const surface = panelSurface(opacity)
   return (
     <div className="flex h-screen w-screen items-start justify-center p-2">
       <div
         data-interactive
-        className="flex max-h-full w-full flex-col overflow-hidden rounded-[10px] border border-overlay-border bg-overlay-panel/95 shadow-lg backdrop-blur-sm"
-        style={{ opacity }}
+        className={'flex max-h-full w-full flex-col overflow-hidden border-overlay-border ' + surface.className}
+        style={surface.style}
       >
         <header className="flex items-center justify-between border-b border-overlay-border px-3 py-2">
           <div className="flex items-center gap-2">
@@ -330,6 +332,7 @@ export function SettingsPanel(): React.JSX.Element {
                   step={0.05}
                   value={opacity}
                   onChange={(e) => setOpacity(Number(e.target.value))}
+                  aria-label="Opacity"
                   className="w-28 accent-overlay-accent"
                 />
                 <span className="w-8 text-right font-mono text-[11px] text-overlay-muted">
@@ -337,6 +340,13 @@ export function SettingsPanel(): React.JSX.Element {
                 </span>
               </div>
             </div>
+            {/* A note, not a limit: it's your overlay. The step is 0.05, so
+                compare with a little slack for float rounding. */}
+            {opacity < OPACITY_READABLE - 0.001 && (
+              <p className="mt-1 text-[10px] text-warn">
+                ⚠ Below {Math.round(OPACITY_READABLE * 100)} %, text can be hard to read in bright areas.
+              </p>
+            )}
             <div className="mt-2 flex items-center justify-between">
               <span className="text-xs text-overlay-text">Click-through by default</span>
               <Toggle on={clickThrough} onChange={setClickThrough} />
