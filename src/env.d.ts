@@ -219,7 +219,8 @@ interface AcquisitionsBridge {
   upcoming: AcquisitionEntryBridge[]
   rewardGroups: RewardGroupBridge[]
   plan: AcquisitionItemBridge[]
-  linkMarks: Record<string, 'thisAct' | 'new' | 'notYet'>
+  linkMarks: Record<string, 'thisAct' | 'notYet'>
+  newGems: string[]
 }
 
 interface ProfileMetaBridge {

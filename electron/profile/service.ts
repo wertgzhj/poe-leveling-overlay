@@ -352,7 +352,7 @@ export class ProfileService {
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
           : null,
-      acquisitions: profile ? this.acquisitions(profile, stageIndex, stageIndex === liveIndex) : null,
+      acquisitions: profile ? this.acquisitions(profile, stageIndex) : null,
       stageCount: profile ? profile.stages.length : 0,
       viewedIndex: stageIndex,
       liveIndex,
@@ -373,19 +373,18 @@ export class ProfileService {
    *  plan only depends on the stage, the level and the loaded profile — and most
    *  level-ups stay inside the same stage, so the sorting work was being redone
    *  for an identical result. */
-  private acquisitions(profile: Profile, stageIndex: number, liveStage: boolean): Acquisitions {
+  private acquisitions(profile: Profile, stageIndex: number): Acquisitions {
     const act = this.actReached()
     const library = this.character ? (store.get('libraryReached')[this.character] ?? false) : null
     const mule = this.chosenMule(profile)
-    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}|${library}|${mule?.gem ?? ''}|${liveStage}`
+    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}|${library}|${mule?.gem ?? ''}`
     if (this.acqCache?.key === key) return this.acqCache.value
     const value = acquisitionsForStage(profile, stageIndex, this.gems, {
       startingGems: this.startingByClass.get(profile.meta.class),
       playerLevel: this.level,
       actReached: act,
       reachedLibrary: library,
-      mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null,
-      liveStage
+      mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null
     })
     this.acqCache = { key, value }
     return value

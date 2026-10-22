@@ -393,13 +393,19 @@ function Tab({
 function Tag({
   tone,
   className,
+  title,
   children
 }: {
   tone: Tone
   className?: string
+  title?: string
   children: React.ReactNode
 }): React.JSX.Element {
-  return <span className={TAG + TAG_TONE[tone] + (className ? ' ' + className : '')}>{children}</span>
+  return (
+    <span title={title} className={TAG + TAG_TONE[tone] + (className ? ' ' + className : '')}>
+      {children}
+    </span>
+  )
 }
 
 // The notice bar, shown on every tab. Three things can claim it, ranked by how
@@ -1118,13 +1124,14 @@ function BuyRow({
 // first two together — a link row has no price, and giving up the whole cost
 // column to whitespace would cost the names a third of the panel — while the
 // source sits in the same column as everywhere else, which is the point.
-type LinkMark = 'thisAct' | 'new' | 'notYet'
+type LinkMark = 'thisAct' | 'notYet'
 
 // How a link row reads against the act you've reached (see LinkMark in the
 // engine). The state belongs to the whole line, never to one word in it:
 // this act's gems get a gold-tinted line with a gold bar on its left edge (the
-// Guide's current step reads the same way); "not yet" turns the line grey;
-// "new" is a quiet pill. Text colours stay with what they mean — the gem name
+// Guide's current step reads the same way); "not yet" turns the line grey.
+// NEW is separate and stacks with any of them: it says what changed since the
+// previous stage, whatever the gem's act. Text colours stay with what they mean — the gem name
 // white, the source in its category colour — so a Library gem in the act
 // you're in is gold-lined AND violet, not one or the other. Never colour
 // alone: the bar is a shape, and the tooltip says it in words.
@@ -1147,7 +1154,6 @@ function lineTone(entry: AcquisitionEntryBridge | undefined, link: LinkMark | un
 }
 function linkMarkTitle(mark: LinkMark | undefined, act: number | undefined): string | undefined {
   if (mark === 'thisAct') return `From Act ${act} — the act you're in.`
-  if (mark === 'new') return `From Act ${act}, and this stage needs it for the first time — you may not have it yet.`
   if (mark === 'notYet') return `Not yet — from Act ${act}.`
   return undefined
 }
@@ -1155,11 +1161,14 @@ function linkMarkTitle(mark: LinkMark | undefined, act: number | undefined): str
 function SocketGroup({
   group,
   acq,
-  marks
+  marks,
+  fresh
 }: {
   group: ColoredSocketGroupBridge
   acq: Map<string, AcquisitionEntryBridge>
   marks: Record<string, LinkMark>
+  /** gems the previous stage's links don't have — they wear NEW */
+  fresh: ReadonlySet<string>
 }): React.JSX.Element {
   return (
     <div className="col-span-3 mb-1.5 grid grid-cols-subgrid items-center gap-x-1.5 gap-y-px rounded-md border border-overlay-border/70 bg-black/20 px-0.5 py-1">
@@ -1183,8 +1192,8 @@ function SocketGroup({
               <Pip gem={gem} dim={notYet} />
               <span className={'min-w-0 truncate text-xs ' + (notYet ? 'text-overlay-muted' : 'text-overlay-text')}>
                 {gem.name}
-                {link === 'new' && (
-                  <Tag tone="neutral" className="ml-1">
+                {fresh.has(gem.name.toLowerCase()) && (
+                  <Tag tone="neutral" className="ml-1" title="Not in the previous stage's links — new with this stage">
                     new
                   </Tag>
                 )}
@@ -1243,6 +1252,7 @@ function GemBody(): React.JSX.Element {
   ]) {
     acqByGem.set(e.gem.toLowerCase(), e)
   }
+  const freshGems = new Set(profile.acquisitions?.newGems ?? [])
 
   return (
     <>
@@ -1407,7 +1417,13 @@ function GemBody(): React.JSX.Element {
         {stage ? (
           <>
             {stage.groups.map((group, i) => (
-              <SocketGroup key={i} group={group} acq={acqByGem} marks={profile.acquisitions?.linkMarks ?? {}} />
+              <SocketGroup
+                key={i}
+                group={group}
+                acq={acqByGem}
+                marks={profile.acquisitions?.linkMarks ?? {}}
+                fresh={freshGems}
+              />
             ))}
             {stage.note && (
               <div className="col-span-3 mb-2 px-1 text-[10px] text-overlay-muted">{stage.note}</div>
