@@ -131,13 +131,15 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      on the left** — the whole line, the name stays white and the source keeps
      its colour. The mule's line (in the links **and** in the plan above) is
      tinted **turquoise** with a turquoise bar, a starting gem's line
-     **green** with a green bar; an Act 1 gem this stage
-     uses for the first time (a link switch, e.g. Cleave) carries a small
-     `NEW` pill — on the stage your level is in only, never on a stage you
-     paged to with ◀/▶; Act 1 gems you already used are plain; an Act 3 gem (Cyclone)
-     is grey (still readable), tooltip "Not yet — from Act 3". Starting gems and the mule
-     stay plain. Portalling back to Act 1's town changes nothing — it's the
-     furthest act reached.
+     **green** with a green bar; earlier-act gems are plain; an Act 3 gem
+     (Cyclone) is grey (still readable), tooltip "Not yet — from Act 3".
+     Portalling back to Act 1's town changes nothing — it's the furthest act
+     reached.
+   - **`NEW` marks what changed since the previous stage** — every gem that
+     wasn't in the previous stage's links, whatever its act or line colour
+     (Herald of Ash in After Fidelitas: gold line *and* `NEW`). On every stage,
+     also one you page to with ◀/▶; never on the first stage. A gem that only
+     moves to another link is not `NEW`.
    - Buys are headed by their stop (`A1 · NESSA`). The same vendor heading twice
      is correct — their stock grows per quest, so that's two visits.
    - A `PICK ONE, BUY REST` box names where to buy the ones you don't take —

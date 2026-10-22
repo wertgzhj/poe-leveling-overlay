@@ -1568,7 +1568,7 @@ test('every other quest is still one reward', () => {
 // --- Link marks ---------------------------------------------------------------
 // The gem setup at the bottom of the tab, read against the act you've reached.
 
-test('link rows mark this act, a first-time older gem, and what is not reachable yet', () => {
+test('link rows mark this act and what is not reachable yet', () => {
   const gems = exampleGems()
   const profile = parseProfile(
     JSON.stringify({
@@ -1578,7 +1578,6 @@ test('link rows mark this act, a first-time older gem, and what is not reachable
         {
           range: [16, 30],
           socketGroups: [
-            // Ground Slam: Act 1, used before. Cleave: Act 1, a link switch.
             { gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Cleave'] },
             { gems: ['Herald of Ash', 'Cruelty Support'] },
             { gems: ['Cyclone'] }
@@ -1591,43 +1590,41 @@ test('link rows mark this act, a first-time older gem, and what is not reachable
     })
   ).profile!
   const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
-  const { linkMarks } = acquisitionsForStage(profile, 1, gems, {
+  const { linkMarks, newGems } = acquisitionsForStage(profile, 1, gems, {
     startingGems: new Set(startingClasses().Marauder.map((g) => g.toLowerCase().replace(/ support$/, ''))),
     actReached: 2,
     reachedLibrary: false,
     mule: momentum
   })
+  // Act state: earlier-act gems, the start gem and the mule have none.
   assert.deepEqual(linkMarks, {
-    cleave: 'new',
     'herald of ash': 'thisAct',
     'cruelty support': 'thisAct',
     cyclone: 'notYet'
   })
+  // NEW is what changed since the previous stage, whatever the act: Cleave
+  // (Act 1), Herald of Ash (this act, so gold AND new), Cyclone (not yet).
+  assert.deepEqual(newGems.sort(), ['cleave', 'cruelty support', 'cyclone', 'herald of ash'])
 })
 
-test('a stage you paged to marks no gem "new"', () => {
-  // In Act 3, looking back at an Act 2 stage: every gem it introduced would
-  // wear the pill. This act's gold and the not-yet dimming still apply.
+test('NEW is the change from the previous stage, on any stage but the first', () => {
   const gems = exampleGems()
   const profile = parseProfile(
     JSON.stringify({
-      meta: { name: 'paged', class: 'Marauder' },
+      meta: { name: 'changes', class: 'Marauder' },
       stages: [
-        { range: [1, 15], socketGroups: [{ gems: ['Ground Slam'] }] },
-        { range: [16, 30], socketGroups: [{ gems: ['Ground Slam', 'Cleave', 'Herald of Ash', 'Cyclone'] }] }
+        { range: [1, 9], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support'] }] },
+        // Ruthless moves to another link: not a change. Leap Slam is.
+        { range: [10, 20], socketGroups: [{ gems: ['Ground Slam'] }, { gems: ['Leap Slam', 'Ruthless Support'] }] }
       ],
-      gemPlan: ['Ground Slam', 'Cleave', 'Herald of Ash', 'Cyclone'].map((gem) => ({ gem }))
+      gemPlan: ['Ground Slam', 'Ruthless Support', 'Leap Slam'].map((gem) => ({ gem }))
     })
   ).profile!
-  const ctx = { actReached: 3, reachedLibrary: true }
-  assert.deepEqual(acquisitionsForStage(profile, 1, gems, ctx).linkMarks, {
-    cleave: 'new',
-    'herald of ash': 'new',
-    cyclone: 'thisAct'
-  })
-  assert.deepEqual(acquisitionsForStage(profile, 1, gems, { ...ctx, liveStage: false }).linkMarks, {
-    cyclone: 'thisAct'
-  })
+  // Nothing to compare the first stage with.
+  assert.deepEqual(acquisitionsForStage(profile, 0, gems).newGems, [])
+  // No act or level needed, and the same whether it's the live stage or not.
+  assert.deepEqual(acquisitionsForStage(profile, 1, gems).newGems, ['leap slam'])
+  assert.deepEqual(acquisitionsForStage(profile, 1, gems, { actReached: 3, playerLevel: 40 }).newGems, ['leap slam'])
 })
 
 test('no act known, no link marks', () => {
