@@ -1,6 +1,7 @@
 import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { useDebugStore } from '../stores/debugStore'
+import { button } from '../lib/ui'
 
 // Dev-only event feed: shows *parsed* events, held in memory —
 // never raw log lines, never written to disk. Reachable only when the app runs
@@ -24,7 +25,7 @@ export function DebugPanel(): React.JSX.Element {
             <span className="text-sm font-semibold tracking-wide">Log events (dev)</span>
           </div>
           <button
-            className="rounded bg-white/10 px-2 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
+            className={button('quiet', 'md')}
             onClick={() => patch({ debugOpen: false })}
           >
             Close

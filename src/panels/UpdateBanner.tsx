@@ -1,4 +1,5 @@
 import { useOverlayStore } from '../stores/overlayStore'
+import { button } from '../lib/ui'
 
 // The passive "effortless update" nudge inside the main panel. Silent until the
 // updater has something worth showing: a download in progress (thin, transient)
@@ -37,7 +38,7 @@ export function UpdateBanner(): React.JSX.Element | null {
           Update <b>v{update.version}</b> is ready.
         </span>
         <button
-          className="shrink-0 rounded bg-overlay-accent/25 px-2 py-0.5 text-[11px] font-medium text-overlay-accent hover:bg-overlay-accent/35"
+          className={'shrink-0 ' + button('primary', 'sm')}
           title="Restart now to finish updating"
           onClick={() => window.overlay?.installUpdate()}
         >

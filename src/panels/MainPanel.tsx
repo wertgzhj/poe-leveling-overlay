@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { formatAccelerator } from '../lib/accelerator'
 import { muleInstruction, sourceMark, sourceName, sourceTone, type MuleHow } from '../lib/sources'
+import { BUTTON, BUTTON_SIZE, HEADING, TAG, TAG_TONE, button, type Tone } from '../lib/ui'
 import { UpdateBanner } from './UpdateBanner'
 import { VersionBadge } from './VersionBadge'
 
@@ -34,10 +35,10 @@ const LAB_LABEL: Record<LabTierBridge, string> = {
 // unambiguous even when green and blue are hard to tell apart (colour-blind
 // friendly). Green is a true green rather than emerald, blue a deep blue.
 const PIP_CLASS: Record<SocketColorBridge, string> = {
-  R: 'bg-red-500',
-  G: 'bg-green-500',
-  B: 'bg-blue-600',
-  W: 'bg-white/30'
+  R: 'bg-red-500 text-black/80', // 4.7:1
+  G: 'bg-green-500 text-black/80', // 7.0:1
+  B: 'bg-blue-600 text-white', // 5.2:1
+  W: 'bg-white/30 text-black/80'
 }
 
 // Vendor price tiers, shortened for the Gems tab's cost column. Mirrored by hand
@@ -108,7 +109,9 @@ function DetectCharButton(): React.JSX.Element {
       onClick={onClick}
       title={flash?.title ?? "Detect the character you're logged in as (from your most recent level-up)"}
       className={
-        'no-drag max-w-[45%] shrink-0 truncate rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:text-overlay-text ' +
+        // A quiet button whose text colour flashes, so the colour is set here
+        // rather than by the variant — two text colours would fight.
+        'no-drag max-w-[45%] shrink-0 truncate bg-white/10 enabled:hover:text-overlay-text ' + BUTTON + BUTTON_SIZE.sm + ' ' +
         (flash?.title ? 'text-warn' : 'text-overlay-muted')
       }
     >
@@ -138,7 +141,7 @@ function RegexButton(): React.JSX.Element | null {
       className={
         // Fixed width: "✓ copied" is wider than "Regex", and the flash must not
         // shove the ⚙ next to it sideways.
-        'no-drag min-w-[3.75rem] rounded bg-white/10 px-1.5 py-0.5 text-center text-[11px] hover:text-overlay-text ' +
+        'no-drag min-w-[3.75rem] text-center bg-white/10 enabled:hover:text-overlay-text ' + BUTTON + BUTTON_SIZE.sm + ' ' +
         (flash === 'copied'
           ? 'text-ok'
           : flash === 'failed'
@@ -186,10 +189,7 @@ function ZoneFitTag({ fit }: { fit: ZoneFitBridge }): React.JSX.Element {
           ? `The zone is level ${fit.areaLevel}, ${fit.by} past your safe range — tougher, and reduced experience.`
           : `The zone is level ${fit.areaLevel}, ${fit.by} below your safe range — reduced experience, move on.`
       }
-      className={
-        'shrink-0 rounded px-1 text-[10px] font-medium ' +
-        (under ? 'bg-danger/15 text-danger' : 'bg-white/10 text-overlay-muted')
-      }
+      className={'shrink-0 ' + TAG + TAG_TONE[under ? 'danger' : 'muted']}
     >
       {under ? `zone ${fit.areaLevel} ▲` : `zone ${fit.areaLevel} ▼`}
     </span>
@@ -277,7 +277,7 @@ export function MainPanel(): React.JSX.Element {
           <div className="flex items-center gap-1.5">
             {moveMode && (
               <button
-                className="no-drag rounded bg-overlay-accent/20 px-2 py-0.5 text-[11px] text-overlay-accent"
+                className={'no-drag ' + button('primary', 'sm')}
                 onClick={() => window.overlay?.exitMoveMode()}
               >
                 Done
@@ -285,7 +285,7 @@ export function MainPanel(): React.JSX.Element {
             )}
             {isDev && (
               <button
-                className="no-drag rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
+                className={'no-drag ' + button('quiet', 'sm')}
                 title="Log events (dev)"
                 onClick={() => patch({ debugOpen: true })}
               >
@@ -294,7 +294,7 @@ export function MainPanel(): React.JSX.Element {
             )}
             <RegexButton />
             <button
-              className="no-drag rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-overlay-muted hover:text-overlay-text"
+              className={'no-drag ' + button('quiet', 'sm')}
               title="Settings"
               aria-label="Settings"
               onClick={() => window.overlay?.setSettingsOpen(true)}
@@ -386,6 +386,20 @@ function Tab({
       {flag && <span className="ml-1 text-danger">•</span>}
     </button>
   )
+}
+
+// A small label next to a name (see TAG in lib/ui). One look for all of them,
+// the colour saying what kind: gold now, green free, grey plain.
+function Tag({
+  tone,
+  className,
+  children
+}: {
+  tone: Tone
+  className?: string
+  children: React.ReactNode
+}): React.JSX.Element {
+  return <span className={TAG + TAG_TONE[tone] + (className ? ' ' + className : '')}>{children}</span>
 }
 
 // The notice bar, shown on every tab. Three things can claim it, ranked by how
@@ -505,7 +519,7 @@ function TrialsBody(): React.JSX.Element {
           <div key={`${t.id}-w`}>
           {newLab && (
             <div className="mb-1 mt-2 flex items-center justify-between px-1 first:mt-0">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-overlay-muted">
+              <span className={HEADING + 'text-overlay-muted'}>
                 {LAB_LABEL[t.lab]}
               </span>
               <span className="text-[10px] text-overlay-muted">
@@ -533,7 +547,7 @@ function TrialsBody(): React.JSX.Element {
             <div className="min-w-0">
               <div className={'text-xs ' + (t.seen ? 'text-overlay-muted line-through' : 'text-overlay-text')}>
                 {t.zone}
-                {here && !t.seen && <span className="ml-1.5 text-[9px] text-overlay-accent">you are here</span>}
+                {here && !t.seen && <Tag tone="gold" className="ml-1.5">you are here</Tag>}
               </div>
               <div className="text-[10px] text-overlay-muted">Act {t.act}</div>
             </div>
@@ -576,7 +590,7 @@ function SkeletonNotice({ act }: { act: number | undefined }): React.JSX.Element
       </p>
       <button
         onClick={() => window.overlay?.openEditor()}
-        className="mt-1.5 rounded bg-overlay-accent/15 px-2 py-0.5 text-[10px] text-overlay-accent hover:bg-overlay-accent/25"
+        className={'mt-1.5 ' + button('primary', 'sm')}
       >
         Open the route editor…
       </button>
@@ -621,7 +635,7 @@ function GuideBody(): React.JSX.Element {
         return (
           <div key={step.id}>
             {showActDivider && (
-              <div className="mb-1 mt-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-overlay-muted">
+              <div className={'mb-1 mt-1 px-1 ' + HEADING + 'text-overlay-muted'}>
                 Act {step.act}
               </div>
             )}
@@ -643,9 +657,9 @@ function GuideBody(): React.JSX.Element {
                 <div className={'text-xs leading-snug ' + (isDone ? 'text-overlay-muted line-through' : 'text-overlay-text')}>
                   {step.text}
                   {step.rewardHint && (
-                    <span className="ml-1.5 rounded bg-ok/15 px-1 py-px text-[9px] text-ok">
+                    <Tag tone="ok" className="ml-1.5">
                       reward
-                    </span>
+                    </Tag>
                   )}
                 </div>
                 {isCurrent &&
@@ -686,7 +700,10 @@ function article(word: string): string {
 // when the colour is unknown (gems.json failed to load), so nothing shifts.
 function Pip({ gem, dim }: { gem?: ColoredGemBridge; dim?: boolean }): React.JSX.Element {
   const box =
-    'inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-black/80 '
+    // 9px bold, the one exception to the 10px floor: the letter repeats the
+    // colour for colour-blind eyes and must fit the dot. Black on red and
+    // green, white on blue — black on blue was 3.5:1.
+    'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold '
   // A letterless pip still carries a zero-width space: an empty inline-flex box
   // takes its baseline from its bottom edge instead of from text, which would
   // park white pips a few pixels below the lettered ones in the to-do list.
@@ -919,14 +936,9 @@ function RewardGroupRow({
         (later ? 'border-overlay-border' : 'border-overlay-accent/40 bg-overlay-accent/5')
       }
     >
-      <span
-        className={
-          'col-span-2 mb-0.5 justify-self-start rounded px-1 py-px text-[9px] font-bold uppercase tracking-wider ' +
-          (later ? 'bg-white/10 text-overlay-muted' : 'bg-overlay-accent/20 text-overlay-accent')
-        }
-      >
+      <Tag tone={later ? 'muted' : 'gold'} className="col-span-2 mb-0.5 justify-self-start">
         Pick one, buy rest
-      </span>
+      </Tag>
       <SourceCell act={group.act} what={group.quest ?? 'quest'} later={later} />
       {/* One price for the whole group, centred against the gems it covers: the
           quest gives one, so the rest is what you actually pay. */}
@@ -1040,7 +1052,7 @@ function GemCell({
             read as an order to go and buy it. */}
         {e.fromPickOne && (
           <span
-            className="ml-1 text-[9px] text-overlay-muted"
+            className="ml-1 text-[10px] text-overlay-muted"
             title="Only if you didn't pick it — it was one of the choices at that quest, and the overlay can't see your inventory."
           >
             (if not picked)
@@ -1172,15 +1184,15 @@ function SocketGroup({
               <span className={'min-w-0 truncate text-xs ' + (notYet ? 'text-overlay-muted' : 'text-overlay-text')}>
                 {gem.name}
                 {link === 'new' && (
-                  <span className="ml-1 rounded border border-overlay-text/30 px-0.5 text-[8px] uppercase tracking-wider text-overlay-text/70">
+                  <Tag tone="neutral" className="ml-1">
                     new
-                  </span>
+                  </Tag>
                 )}
                 {/* Only a genuinely unrecognised gem is flagged. A gem with no
                     attribute requirement is fully known — marking it "?" made
                     the overlay look broken on Portal, Convocation and friends. */}
                 {gem.unknown && (
-                  <span className="ml-1 text-[9px] text-warn" title="not in the gem data — colour guessed">
+                  <span className="ml-1 text-[10px] text-warn" title="not in the gem data — colour guessed">
                     ?
                   </span>
                 )}
@@ -1188,7 +1200,7 @@ function SocketGroup({
             </div>
             {/* Always rendered, even when empty: a missing cell would pull the
                 next row's gem into the source column. */}
-            <span title={mark?.title} className={'truncate text-[9px] ' + (notYet ? 'text-overlay-muted' : (mark?.tone ?? ''))}>
+            <span title={mark?.title} className={'truncate text-[10px] ' + (notYet ? 'text-overlay-muted' : (mark?.tone ?? ''))}>
               {mark?.label}
             </span>
           </div>
@@ -1285,7 +1297,7 @@ function GemBody(): React.JSX.Element {
             >
               ◀
             </button>
-            <span className="flex-1 truncate text-center text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+            <span className={'flex-1 truncate text-center ' + HEADING + 'text-overlay-muted'}>
               {stage.label}
             </span>
             <button
@@ -1299,7 +1311,7 @@ function GemBody(): React.JSX.Element {
             </button>
           </div>
         ) : (
-          <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wider text-overlay-muted">
+          <div className={'mb-1 px-1 ' + HEADING + 'text-overlay-muted'}>
             {stage.label}
           </div>
         ))}
@@ -1331,7 +1343,7 @@ function GemBody(): React.JSX.Element {
           >
             <div
               className={
-                'col-span-3 text-[10px] font-semibold uppercase tracking-wider ' +
+                'col-span-3 ' + HEADING +
                 (atReward ? 'text-overlay-accent' : 'text-overlay-muted')
               }
             >
@@ -1356,7 +1368,7 @@ function GemBody(): React.JSX.Element {
                   {stop && stop.key !== 'mule' && stop.key !== prevStop?.key && (
                     <div
                       className={
-                        'col-span-3 mt-0.5 text-[9px] font-semibold uppercase tracking-wider ' +
+                        'col-span-3 mt-0.5 ' + HEADING +
                         (stop.npc && !item.later ? sourceTone(sourceName(stop.npc)) : 'text-overlay-muted')
                       }
                     >

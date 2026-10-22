@@ -1,5 +1,7 @@
 // Small shared form controls for the editor (dark theme).
 
+import { button } from '../src/lib/ui'
+
 export function TextInput(props: {
   value: string
   onChange: (v: string) => void
@@ -57,19 +59,13 @@ export function Btn(props: {
   disabled?: boolean
   title?: string
 }): React.JSX.Element {
-  const v = props.variant ?? 'ghost'
-  const cls =
-    v === 'primary'
-      ? 'bg-overlay-accent/25 text-overlay-accent hover:bg-overlay-accent/35'
-      : v === 'danger'
-        ? 'bg-danger/15 text-danger hover:bg-danger/25'
-        : 'bg-white/10 text-overlay-text hover:bg-white/15'
+  // The same buttons as the overlay's (src/lib/ui.ts), at the editor's size.
   return (
     <button
       onClick={props.onClick}
       disabled={props.disabled}
       title={props.title}
-      className={'rounded px-2 py-1 text-xs disabled:opacity-40 ' + cls}
+      className={button(props.variant ?? 'ghost', 'lg')}
     >
       {props.children}
     </button>
