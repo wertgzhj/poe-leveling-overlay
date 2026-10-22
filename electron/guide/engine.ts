@@ -10,7 +10,7 @@
 //  - Manual forward/back (hotkeys) and per-step toggling are the correction
 //    mechanism — quest completion is not detectable from the log.
 
-import { isCampaignAreaId } from '../log/tracker.ts'
+import { isCampaignAreaId } from '../log/areas.ts'
 import type { Route, RouteStep } from './route.ts'
 
 export interface GuideAreaEvent {

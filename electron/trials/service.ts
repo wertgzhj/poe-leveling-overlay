@@ -4,7 +4,6 @@
 
 import { TrialsEngine } from './engine.ts'
 import { actFromAreaId } from '../profile/engine.ts'
-import { isCampaignAreaId } from '../log/tracker.ts'
 import { store } from '../settings.ts'
 import { Channels, type TrialsSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
@@ -23,9 +22,7 @@ export class TrialsService {
     this.overlay = overlay
     this.log = log
     this.engine = new TrialsEngine()
-    log.addAreaListener((area) =>
-      this.onZone(area.name, actFromAreaId(area.areaId), area.areaId == null || isCampaignAreaId(area.areaId))
-    )
+    log.addAreaListener((area) => this.onZone(area.name, actFromAreaId(area.areaId), area.areaId))
     // Izaro's plaque line identifies the trial you just finished — auto-check it.
     log.addIzaroListener((line) => this.onIzaro(line))
     // start() runs before the log backscan has identified the character, so the
@@ -64,9 +61,9 @@ export class TrialsService {
     if (this.engine.dismissLab(lab)) this.afterChange()
   }
 
-  private onZone(zoneName: string, act: number | null, campaign: boolean): void {
+  private onZone(zoneName: string, act: number | null, areaId: string | null): void {
     this.syncCharacter()
-    if (this.engine.applyZone(zoneName, act, campaign)) this.afterChange()
+    if (this.engine.applyZone(zoneName, act, areaId)) this.afterChange()
   }
 
   private onIzaro(line: string): void {
@@ -88,6 +85,7 @@ export class TrialsService {
     this.persistTimer = null
     store.set('trialsProgress', { ...store.get('trialsProgress'), [name]: [], [DEFAULT_CHAR_KEY]: [] })
     store.set('trialsDismissedLabs', { ...store.get('trialsDismissedLabs'), [name]: [], [DEFAULT_CHAR_KEY]: [] })
+    store.set('trialsCompletedLabs', { ...store.get('trialsCompletedLabs'), [name]: [], [DEFAULT_CHAR_KEY]: [] })
     if (this.charKey === name || this.charKey === DEFAULT_CHAR_KEY) {
       this.charKey = name
       this.engine = new TrialsEngine()
@@ -107,7 +105,9 @@ export class TrialsService {
   private engineFor(charKey: string): TrialsEngine {
     return new TrialsEngine(
       store.get('trialsProgress')[charKey] ?? [],
-      store.get('trialsDismissedLabs')[charKey] ?? []
+      store.get('trialsDismissedLabs')[charKey] ?? [],
+      undefined,
+      store.get('trialsCompletedLabs')[charKey] ?? []
     )
   }
 
@@ -124,16 +124,18 @@ export class TrialsService {
   private persistNow(): void {
     const seen = this.engine.seenIds()
     const dismissed = this.engine.dismissedLabIds()
+    const completed = this.engine.completedLabIds()
     const all = { ...store.get('trialsProgress') }
     // Don't leave an empty "(default)" bucket behind when the backscan finally
     // names the character — it's noise in a file people do open and edit.
-    const empty = seen.length === 0 && dismissed.length === 0
+    const empty = seen.length === 0 && dismissed.length === 0 && completed.length === 0
     if (empty && this.charKey === DEFAULT_CHAR_KEY && !(DEFAULT_CHAR_KEY in all)) return
     all[this.charKey] = seen
     store.set('trialsProgress', all)
     const labs = { ...store.get('trialsDismissedLabs') }
     labs[this.charKey] = dismissed
     store.set('trialsDismissedLabs', labs)
+    store.set('trialsCompletedLabs', { ...store.get('trialsCompletedLabs'), [this.charKey]: completed })
   }
 
   private push(): void {

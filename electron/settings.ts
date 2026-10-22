@@ -64,6 +64,8 @@ interface StoreSchema extends AppSettings {
   trialsProgress: Record<string, string[]>
   /** character -> Labyrinth tiers whose unlock notice was dismissed. */
   trialsDismissedLabs: Record<string, string[]>
+  /** character -> Labyrinth tiers beaten (Izaro's death line, see trials). */
+  trialsCompletedLabs: Record<string, string[]>
   /** character -> the build profile last used for them, so switching characters
    *  switches profiles instead of making you go into Settings. Built from use;
    *  a profile that names its character (`meta.character`) declares its own. */
@@ -106,6 +108,7 @@ const defaults: StoreSchema = {
   guideProgress: {},
   trialsProgress: {},
   trialsDismissedLabs: {},
+  trialsCompletedLabs: {},
   profileByCharacter: {},
   actReached: {},
   libraryReached: {},

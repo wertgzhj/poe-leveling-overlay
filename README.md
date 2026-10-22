@@ -28,7 +28,8 @@ semi-automatically from a Path of Building import.
 - **Imports your Path of Building build** — paste an export code or a `pobb.in`
   link and it writes the stages for you.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
-  you finish it, and telling you when a Labyrinth is ready to run.
+  you finish it, telling you when a Labyrinth is ready to run, and noticing when
+  you've beaten it.
 - **Keeps your search regex one click away.** Store a stash or vendor search
   string in Settings, and a **Regex** button in the header copies it — paste it
   into the game yourself. The overlay never types into the game.
@@ -140,7 +141,8 @@ Labyrinth. It **auto-checks a trial when you finish it**: Izaro voices a plaque 
 only on completion, and the zone you're standing in says which trial it was (the same
 zone can host a trial in two difficulties, so the act decides). It also shows a hint
 while you're in a trial's zone, tells you when a Labyrinth's trials are all
-done, and you can click any trial to correct it.
+done, and you can click any trial to correct it. When Izaro dies in a Labyrinth's
+final arena, that Labyrinth is marked **done** and its trials are ticked with it.
 
 Don't use one of the tabs? **Settings → Overlay → Tabs to show** hides any of them
 (at least one stays on); with a single tab the switcher disappears entirely.

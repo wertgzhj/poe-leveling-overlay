@@ -116,7 +116,17 @@ const trials: TrialsSnapshot = {
   seenCount: 2,
   total: 6,
   currentZoneTrialId: 't3',
-  unlockedLabs: []
+  unlockedLabs: [],
+  completedLabs: []
+}
+
+// The Normal Labyrinth beaten: its six trials ticked, its heading says so.
+const labDone: TrialsSnapshot = {
+  ...trials,
+  trials: trials.trials.map((t) => ({ ...t, seen: true })),
+  seenCount: 6,
+  currentZoneTrialId: null,
+  completedLabs: ['normal']
 }
 
 const guide: GuideState = {
@@ -184,6 +194,7 @@ const scenarios: Scenario[] = [
     guide
   },
   { name: 'trials', tab: 'Trials', profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
+  { name: 'trials-lab-done', tab: 'Trials', profile: profileSnapshot(3, 22, 2), log: crypt, trials: labDone, guide },
   { name: 'guide', tab: 'Guide', profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
   {
     name: 'settings',

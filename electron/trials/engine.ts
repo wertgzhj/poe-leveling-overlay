@@ -9,6 +9,11 @@
 // does. Hence: an Izaro line while in a trial's zone completes THAT trial, and
 // when the zone is unknown we fall back to matching the line against the
 // verified plaque fragments. Manual toggle remains for anything missed.
+//
+// The Labyrinths themselves are detected the same way: Izaro's death line in a
+// Labyrinth's final arena means you beat it (see completeByIzaro).
+
+import { isCampaignAreaId } from '../log/areas.ts'
 
 /** Which Labyrinth a trial unlocks. All three are done during the campaign. */
 export type LabTier = 'normal' | 'cruel' | 'merciless'
@@ -76,12 +81,40 @@ export interface TrialsSnapshot {
   total: number
   /** Trial located in the zone the player is currently in (hint), else null. */
   currentZoneTrialId: string | null
-  /** Labyrinths whose trials are all done and that haven't been dismissed yet —
-   *  the "you can run this now" notice. Ordered normal → cruel → merciless. */
+  /** Labyrinths whose trials are all done and that haven't been dismissed or
+   *  run yet — the "you can run this now" notice. Ordered normal → cruel →
+   *  merciless. */
   unlockedLabs: LabTier[]
+  /** Labyrinths you've beaten, in the same order. */
+  completedLabs: LabTier[]
 }
 
 const LAB_ORDER: readonly LabTier[] = ['normal', 'cruel', 'merciless']
+
+/**
+ * Izaro's last words, one of six at random, as he dies in a Labyrinth's final
+ * arena. Verified across every finished run in a two-year capture (normal,
+ * cruel, merciless and eternal alike). When YOU die he says something else
+ * ("For those who ascend too quickly…"), so a failed attempt counts for
+ * nothing.
+ */
+export const IZARO_DEFEATED: readonly string[] = [
+  'I die for the Empire',
+  'You are free',
+  'Triumphant at last',
+  'Your destination is more dangerous than the journey',
+  'Delight in your gilded dungeon',
+  'The trap of tyranny is inescapable'
+]
+
+/** The Labyrinth whose final arena an area id is, else null. The campaign
+ *  labs are '1_' normal, '2_' cruel and '3_' merciless
+ *  ('3_Labyrinth_boss_2_end_#' — the game's suffix); the Eternal one
+ *  ('EndGame_…') isn't part of the campaign and stays out. */
+export function labFinaleOf(areaId: string | null | undefined): LabTier | null {
+  const m = /^([123])_Labyrinth_boss_2_end/.exec(areaId ?? '')
+  return m ? LAB_ORDER[Number(m[1]) - 1] : null
+}
 
 export class TrialsEngine {
   private readonly trials: readonly TrialDef[]
@@ -91,27 +124,32 @@ export class TrialsEngine {
    *  trials in maps reuse the same six plaque lines, so out there a line must
    *  not fall back to ticking a campaign trial. */
   private inCampaign = true
+  /** The Labyrinth whose final arena you're standing in, else null. */
+  private labFinale: LabTier | null = null
   /** Labyrinths whose unlock notice has been dismissed. Persisted, because the
    *  gap between "unlocked" and "actually ran it" is often hours. */
   private dismissedLabs = new Set<LabTier>()
+  /** Labyrinths beaten. Persisted per character, like the trials. */
+  private completedLabs = new Set<LabTier>()
 
   constructor(
     seenIds: string[] = [],
     dismissedLabs: string[] = [],
-    trials: readonly TrialDef[] = CAMPAIGN_TRIALS
+    trials: readonly TrialDef[] = CAMPAIGN_TRIALS,
+    completedLabs: string[] = []
   ) {
     this.trials = trials
     const valid = new Set(trials.map((t) => t.id))
     for (const id of seenIds) if (valid.has(id)) this.seen.add(id)
-    for (const lab of dismissedLabs) {
-      if ((LAB_ORDER as readonly string[]).includes(lab)) this.dismissedLabs.add(lab as LabTier)
-    }
+    for (const lab of dismissedLabs) if (isLab(lab)) this.dismissedLabs.add(lab)
+    for (const lab of completedLabs) if (isLab(lab)) this.completedLabs.add(lab)
   }
 
-  /** Labyrinths with every trial done, minus the ones already acknowledged. */
+  /** Labyrinths with every trial done, minus the ones already acknowledged or
+   *  already run — the notice is about going there, and you went. */
   private unlocked(): LabTier[] {
     return LAB_ORDER.filter((lab) => {
-      if (this.dismissedLabs.has(lab)) return false
+      if (this.dismissedLabs.has(lab) || this.completedLabs.has(lab)) return false
       const of = this.trials.filter((t) => t.lab === lab)
       return of.length > 0 && of.every((t) => this.seen.has(t.id))
     })
@@ -120,14 +158,35 @@ export class TrialsEngine {
   /** Acknowledge a Labyrinth's unlock notice. Returns true if that changed
    *  anything, so the caller knows whether to persist and push. */
   dismissLab(lab: string): boolean {
-    if (!(LAB_ORDER as readonly string[]).includes(lab)) return false
-    if (this.dismissedLabs.has(lab as LabTier)) return false
-    this.dismissedLabs.add(lab as LabTier)
+    if (!isLab(lab) || this.dismissedLabs.has(lab)) return false
+    this.dismissedLabs.add(lab)
     return true
   }
 
   dismissedLabIds(): string[] {
     return [...this.dismissedLabs]
+  }
+
+  completedLabIds(): string[] {
+    return LAB_ORDER.filter((lab) => this.completedLabs.has(lab))
+  }
+
+  /**
+   * A Labyrinth beaten. Its trials are ticked too: the Plaza doesn't let you in
+   * without them, so any the log missed (a non-English zone name, a trial done
+   * with the overlay closed) were done all the same. Returns true if anything
+   * changed.
+   */
+  completeLab(lab: LabTier): boolean {
+    let changed = !this.completedLabs.has(lab)
+    this.completedLabs.add(lab)
+    for (const t of this.trials) {
+      if (t.lab === lab && !this.seen.has(t.id)) {
+        this.seen.add(t.id)
+        changed = true
+      }
+    }
+    return changed
   }
 
   snapshot(): TrialsSnapshot {
@@ -143,25 +202,28 @@ export class TrialsEngine {
       seenCount: this.seen.size,
       total: this.trials.length,
       currentZoneTrialId: this.currentZoneTrial,
-      unlockedLabs: this.unlocked()
+      unlockedLabs: this.unlocked(),
+      completedLabs: LAB_ORDER.filter((lab) => this.completedLabs.has(lab))
     }
   }
 
   /** Note the zone the player entered (with the act, when known — some zones
    *  host a trial in TWO difficulties, e.g. The Chamber of Sins Level 2 in Act 2
-   *  and again in Act 7). `campaign` is false for a zone whose id says it isn't
-   *  one (a map, the Labyrinth); without an id, assume it is. Marks nothing;
-   *  only tracks whether the current zone contains a trial (the hint). Returns
-   *  true if that changed. */
-  applyZone(zoneName: string, act?: number | null, campaign = true): boolean {
-    this.inCampaign = campaign
+   *  and again in Act 7). The area id, when there is one, says whether this is
+   *  the campaign at all (a map or the Labyrinth isn't) and whether it's a
+   *  Labyrinth's final arena. Marks nothing; only tracks whether the current
+   *  zone contains a trial (the hint). Returns true if that changed. */
+  applyZone(zoneName: string, act?: number | null, areaId?: string | null): boolean {
+    this.inCampaign = areaId == null || isCampaignAreaId(areaId)
+    this.labFinale = labFinaleOf(areaId)
     const next = this.matchZone(zoneName, act)?.id ?? null
     if (next === this.currentZoneTrial) return false
     this.currentZoneTrial = next
     return true
   }
 
-  /** Izaro spoke — he only voices a plaque as a trial is completed. The zone
+  /** Izaro spoke. In a Labyrinth's final arena, his death line means you beat
+   *  it. Elsewhere he only voices a plaque as a trial is completed. The zone
    *  decides WHICH trial (six lines cover twelve trials, so the line can't):
    *  standing in a trial's zone completes that one. With no trial zone active
    *  (unknown/renamed zone) fall back to the plaque fragments, taking the
@@ -169,6 +231,11 @@ export class TrialsEngine {
    *  trials say the same lines. Returns true if this newly completed a trial
    *  (idempotent / no-match otherwise). */
   completeByIzaro(line: string): boolean {
+    if (this.labFinale) {
+      const said = line.toLowerCase()
+      const died = IZARO_DEFEATED.some((d) => said.includes(d.toLowerCase()))
+      return died && this.completeLab(this.labFinale)
+    }
     const here = this.currentZoneTrial
     if (here) {
       if (this.seen.has(here)) return false
@@ -218,9 +285,14 @@ export class TrialsEngine {
     // Dismissals go too: with no trials done there is nothing to acknowledge,
     // and keeping them would silence the notice for a fresh character.
     this.dismissedLabs.clear()
+    this.completedLabs.clear()
   }
 
   seenIds(): string[] {
     return [...this.seen]
   }
+}
+
+function isLab(lab: string): lab is LabTier {
+  return (LAB_ORDER as readonly string[]).includes(lab)
 }

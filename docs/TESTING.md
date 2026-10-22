@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 253 tests: parser, tracker, watcher, guide, profile,
+npm test        # 258 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table
 npm run typecheck
@@ -192,6 +192,10 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    When the last trial of a Labyrinth is checked, the same bar switches to
    "**Normal Labyrinth unlocked**". Dismiss it with ✕ and it must stay gone —
    including after a restart — while a later Labyrinth still announces itself.
+   **Beat the Labyrinth:** the moment Izaro dies in the final arena, its heading
+   on the Trials tab gets a grey "✓ done", the unlock bar goes away without a ✕,
+   and any of its trials you hadn't ticked are ticked. Dying to him must change
+   nothing, and neither must the Eternal Labyrinth.
 9. **Editor.** Tray → *Edit routes & profile…* opens a normal window. Add or edit
    a step, save, and the Guide tab reflects it without a restart. Same for the
    profile and the Gems tab.

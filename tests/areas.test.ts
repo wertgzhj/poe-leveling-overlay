@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
-import { isCampaignAreaId } from '../electron/log/tracker.ts'
+import { isCampaignAreaId } from '../electron/log/areas.ts'
 import { actFromAreaId } from '../electron/profile/engine.ts'
 import { CAMPAIGN_TRIALS } from '../electron/trials/engine.ts'
 

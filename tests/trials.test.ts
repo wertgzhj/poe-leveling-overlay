@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { TrialsEngine, CAMPAIGN_TRIALS, NORMAL_TRIALS } from '../electron/trials/engine.ts'
+import { TrialsEngine, CAMPAIGN_TRIALS, NORMAL_TRIALS, labFinaleOf } from '../electron/trials/engine.ts'
 
 test('twelve campaign trials: 6 normal, 3 cruel, 3 merciless', () => {
   assert.equal(CAMPAIGN_TRIALS.length, 12)
@@ -64,11 +64,11 @@ test('the endgame trials say the same lines, and tick nothing', () => {
   // Out of the campaign there's no fallback, or a skipped cruel trial would be
   // ticked by an endgame one.
   const engine = new TrialsEngine()
-  engine.applyZone('Trial of Piercing Truth', null, false)
+  engine.applyZone('Trial of Piercing Truth', null, 'EndGame_Labyrinth_trials_spikes')
   assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), false)
   assert.equal(engine.snapshot().seenCount, 0)
   // Back in the campaign, the fallback works again.
-  engine.applyZone('The Coast', 6, true)
+  engine.applyZone('The Coast', 6, '2_6_2')
   assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
 })
 
@@ -220,3 +220,88 @@ test('seen state hydrates from persisted ids (ignoring unknown ids)', () => {
   assert.equal(e.snapshot().seenCount, 1)
   assert.deepEqual(e.seenIds(), ['t-a1-lower-prison'])
 })
+
+// ---------- the Labyrinths ----------
+// Lines and area ids from a real capture: the final arena is
+// '<1|2|3>_Labyrinth_boss_2_end', and Izaro's death line there means you won.
+
+const ENTRY = 'An aspirant can afford to be promising. An emperor must keep those promises.'
+const TAUNT = 'The Empire awaits you with open jaws.'
+
+test('the final arena names its Labyrinth; the Eternal one and the rest of the lab do not', () => {
+  assert.equal(labFinaleOf('1_Labyrinth_boss_2_end'), 'normal')
+  assert.equal(labFinaleOf('2_Labyrinth_boss_2_end'), 'cruel')
+  assert.equal(labFinaleOf('3_Labyrinth_boss_2_end_#'), 'merciless')
+  assert.equal(labFinaleOf('EndGame_Labyrinth_boss_2_end'), null)
+  assert.equal(labFinaleOf('1_Labyrinth_boss_2'), null, 'the second Izaro fight is not the last')
+  assert.equal(labFinaleOf('1_Labyrinth_OH_straight'), null)
+  assert.equal(labFinaleOf(null), null)
+})
+
+test("Izaro's death line in the final arena beats the Labyrinth and ticks its trials", () => {
+  // Two trials the log never saw: the Plaza let you in, so they were done.
+  const engine = new TrialsEngine(['t-a1-lower-prison', 't-a2-crypt', 't-a2-chamber-of-sins', 't-a3-crematorium'])
+  engine.applyZone("Aspirant's Trial", null, '1_Labyrinth_boss_2_end')
+  assert.equal(engine.completeByIzaro(ENTRY), false)
+  assert.equal(engine.completeByIzaro(TAUNT), false)
+  assert.equal(engine.completeByIzaro('I die for the Empire!'), true)
+
+  const snap = engine.snapshot()
+  assert.deepEqual(snap.completedLabs, ['normal'])
+  assert.equal(snap.trials.filter((t) => t.lab === 'normal').every((t) => t.seen), true)
+  assert.equal(snap.trials.some((t) => t.lab !== 'normal' && t.seen), false)
+  // Saying it again changes nothing.
+  assert.equal(engine.completeByIzaro('Before your emperor, you are worthy.'), false)
+})
+
+test('each of his six death lines counts, in every campaign Labyrinth', () => {
+  const lines = [
+    'I die for the Empire!',
+    'You are free!',
+    'Triumphant at last!',
+    'Your destination is more dangerous than the journey, ascendant.',
+    'Delight in your gilded dungeon, ascendant.',
+    'The trap of tyranny is inescapable.'
+  ]
+  for (const line of lines) {
+    for (const [id, lab] of [['1_Labyrinth_boss_2_end', 'normal'], ['2_Labyrinth_boss_2_end', 'cruel'], ['3_Labyrinth_boss_2_end_#', 'merciless']]) {
+      const engine = new TrialsEngine()
+      engine.applyZone("Aspirant's Trial", null, id)
+      assert.equal(engine.completeByIzaro(line), true, `${line} in ${id}`)
+      assert.deepEqual(engine.snapshot().completedLabs, [lab])
+    }
+  }
+})
+
+test('dying to Izaro, the Eternal Lab and his earlier fights beat nothing', () => {
+  const engine = new TrialsEngine()
+  // You died: he gloats instead.
+  engine.applyZone("Aspirant's Trial", null, '3_Labyrinth_boss_2_end_#')
+  assert.equal(engine.completeByIzaro('For those who ascend too quickly, the fall is inevitable.'), false)
+  // The Eternal Labyrinth is endgame, not one of the campaign's three.
+  engine.applyZone("Aspirant's Trial", null, 'EndGame_Labyrinth_boss_2_end')
+  assert.equal(engine.completeByIzaro('I die for the Empire!'), false)
+  // His first two fights end with him fleeing, not dying.
+  engine.applyZone("Aspirant's Trial", null, '1_Labyrinth_boss_1')
+  assert.equal(engine.completeByIzaro('Such resilience!'), false)
+  assert.deepEqual(engine.snapshot().completedLabs, [])
+  assert.equal(engine.snapshot().seenCount, 0)
+})
+
+test('a beaten Labyrinth drops its unlock notice, persists, and resets', () => {
+  const six = NORMAL_TRIALS.map((t) => t.id)
+  const engine = new TrialsEngine(six)
+  assert.deepEqual(engine.snapshot().unlockedLabs, ['normal'])
+  engine.applyZone("Aspirant's Trial", null, '1_Labyrinth_boss_2_end')
+  engine.completeByIzaro('Triumphant at last!')
+  assert.deepEqual(engine.snapshot().unlockedLabs, [], 'you went: no more "go there"')
+
+  // Back from the settings file.
+  const again = new TrialsEngine(engine.seenIds(), engine.dismissedLabIds(), undefined, engine.completedLabIds())
+  assert.deepEqual(again.snapshot().completedLabs, ['normal'])
+  assert.deepEqual(new TrialsEngine([], [], undefined, ['bogus', 'cruel']).completedLabIds(), ['cruel'])
+
+  again.reset()
+  assert.deepEqual(again.snapshot().completedLabs, [])
+})
+

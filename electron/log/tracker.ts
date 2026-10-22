@@ -3,6 +3,7 @@
 // with the localized zoneEntered INFO line (fallback / display-name source),
 // and binds level-ups to one character so party members don't advance stages.
 
+import { isCampaignAreaId } from './areas.ts'
 import type { LogParser, ParsedLogEvent } from './parser.ts'
 
 // The Twilight Strand (Act 1 opening zone) is only ever entered by a brand-new
@@ -10,14 +11,6 @@ import type { LogParser, ParsedLogEvent } from './parser.ts'
 // unambiguous "different character now" signal: re-arm adoption so the new
 // character's first level-up binds instead of staying stuck on the old one.
 export const TWILIGHT_STRAND_ID = '1_1_1'
-
-/** Campaign area ids are '<part>_<act>_<zone>' ("1_1_2", "1_1_town",
- *  "2_8_7_1_"); hideouts and maps use word ids ("HideoutWorldTurtle"), and the
- *  Labyrinth '<n>_Labyrinth_…' — a leading digit alone would let the lab in.
- *  All verified against real captures (see data/areas/en.json). */
-export function isCampaignAreaId(areaId: string): boolean {
-  return /^\d+_\d+_/.test(areaId)
-}
 
 /** A character's first level-up is to level 2. After entering the Twilight
  *  Strand, a level-up to this level or below is the new character; anything
