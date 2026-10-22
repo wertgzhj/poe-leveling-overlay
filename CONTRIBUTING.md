@@ -51,6 +51,22 @@ installed app and the auto-update feed are untouched. Delete it when you're done
 (The portable exe never self-updates, so it can't accidentally pull the live
 release over your test.)
 
+### See what a change looks like (render check)
+
+Every CI run takes screenshots of the overlay in seven fixed scenarios — the
+Gems tab in Act 2, the mule stage, a paged-back stage, Trials, Guide,
+Settings, and 40 % opacity — and attaches them to the run as the
+**`render-check`** artifact. A PR's look can be checked there without running
+anything. The scenarios are computed by the real engine from the real gem
+data (`scripts/render-check/scenarios.ts`); only the main process is a
+stand-in.
+
+Locally: `npm run render-check` writes them to `out/render-check/` (on Linux
+without a display, run it under `xvfb-run -a`). For a change that should look
+**exactly** the same — a refactor — copy that folder away before the change,
+then run `npm run render-check -- --compare <that folder>` after: it compares
+the screenshots byte for byte and fails if any differ.
+
 ## Cut a release (go live)
 
 The installed app auto-updates from this repo's GitHub Releases. To publish one —

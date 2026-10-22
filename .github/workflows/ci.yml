@@ -27,6 +27,19 @@ jobs:
       - name: Bundle
         run: npm run build
 
+      # Screenshots of the overlay in fixed scenarios (scripts/render-check/),
+      # attached to the run: a PR's look can be checked without running it.
+      - name: Render check
+        run: xvfb-run -a npm run render-check
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-check
+          path: out/render-check/*.png
+          if-no-files-found: ignore
+
       - name: Audit (production deps)
         run: npm audit --omit=dev
         continue-on-error: true
