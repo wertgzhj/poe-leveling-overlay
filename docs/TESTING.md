@@ -126,12 +126,14 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      The Crypt) must bring in Act 2's rewards and Yeena's stock (Herald of Ash,
      Blood Rage) — the act is the *second* number of the area id (`1_2_…`), and
      reading the first made every zone of Acts 1-5 count as Act 1.
-   - **The links at the bottom read against your act.** In Act 2: Act 2 gems
-     (Herald of Ash, Cruelty) have a **gold** name; an Act 1 gem this stage
+   - **The links at the bottom read against your act.** In Act 2: the lines
+     of Act 2 gems (Herald of Ash, Cruelty) are **tinted gold with a gold bar
+     on the left** — the whole line, the name stays white and the source keeps
+     its colour; an Act 1 gem this stage
      uses for the first time (a link switch, e.g. Cleave) carries a small
      `NEW` pill — on the stage your level is in only, never on a stage you
      paged to with ◀/▶; Act 1 gems you already used are plain; an Act 3 gem (Cyclone)
-     is dimmed, tooltip "Not yet — from Act 3". Starting gems and the mule
+     is grey (still readable), tooltip "Not yet — from Act 3". Starting gems and the mule
      stay plain. Portalling back to Act 1's town changes nothing — it's the
      furthest act reached.
    - Buys are headed by their stop (`A1 · NESSA`). The same vendor heading twice
@@ -236,6 +238,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      Library, nowhere else. **Rose** — Gravicius.
    - Done is **grey**, not gold: a checked trial's ✓ and a done guide step.
    - Prices run grey → white (Wisdom → Alch), not gold.
+   - **"Not now" is grey, never faded:** a done guide step or trial (✓, struck
+     through), a "for later" row or *Pick one* box, a not-yet link — all stay
+     readable. Only disabled buttons fade.
+   - The Guide's quest steps show a plain `!`, not a red ❗. Nothing at the
+     bottom of a tab (the Guide's `reset`) sits under the version number.
    - Tab through Settings and the editor with the keyboard: the focused control
      shows a thin gold outline. The update arrow on the version badge doesn't
      pulse when Windows has animations turned off.
