@@ -29,6 +29,7 @@ export class TrialsService {
     // first load lands under "(default)". Level-ups are the signal that names a
     // character, so re-check the binding on every one, not just on zone changes.
     log.addLevelListener(() => this.syncCharacter())
+    log.addFreshCharacterListener((name) => this.freshCharacter(name))
   }
 
   start(): void {
@@ -68,6 +69,27 @@ export class TrialsService {
   private onIzaro(line: string): void {
     this.syncCharacter()
     if (this.engine.completeByIzaro(line)) this.afterChange()
+  }
+
+  /**
+   * A brand-new character: its trials and Labyrinth notices start empty, not
+   * as last league's namesake left them — they were all ticked, and the
+   * notices dismissed. Runs before the level-up that loads the character.
+   *
+   * In auto mode the Strand left us on the placeholder key, so switch to the
+   * name right here (the same level-up adopts it). With a pinned name it's
+   * already loaded, and the in-memory engine has to start over too.
+   */
+  private freshCharacter(name: string): void {
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistTimer = null
+    store.set('trialsProgress', { ...store.get('trialsProgress'), [name]: [], [DEFAULT_CHAR_KEY]: [] })
+    store.set('trialsDismissedLabs', { ...store.get('trialsDismissedLabs'), [name]: [], [DEFAULT_CHAR_KEY]: [] })
+    if (this.charKey === name || this.charKey === DEFAULT_CHAR_KEY) {
+      this.charKey = name
+      this.engine = new TrialsEngine()
+      this.push()
+    }
   }
 
   private syncCharacter(): void {

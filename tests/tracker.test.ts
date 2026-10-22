@@ -14,16 +14,22 @@ const parser = makeParser()
 function makeTracker(bound: string | null = null) {
   const areas: AreaState[] = []
   const levels: LevelUpEvent[] = []
+  // Every callback in order, so a test can see what fires before what.
+  const events: string[] = []
   const tracker = new ProgressTracker({
     areaNames: loadAreaNames(),
     boundCharacter: bound,
     callbacks: {
       onArea: (a) => areas.push(a),
-      onLevelUp: (l) => levels.push(l)
+      onLevelUp: (l) => {
+        levels.push(l)
+        events.push(`level:${l.name}`)
+      },
+      onFreshCharacter: (name) => events.push(`fresh:${name}`)
     },
     now: () => 1000
   })
-  return { tracker, areas, levels }
+  return { tracker, areas, levels, events }
 }
 
 function feed(tracker: ProgressTracker, line: string): void {
@@ -353,4 +359,74 @@ test('the remembered characters are capped, oldest first out', () => {
   assert.equal(own.length, 20)
   assert.equal(own[0], 'Alt5')
   assert.equal(own.at(-1), 'Alt24')
+})
+
+// --- A name reused next league ---------------------------------------------
+// The Twilight Strand means a new character, but the log names it only on its
+// first level-up. That level-up is when its namesake's old run gets dropped.
+
+const STRAND_LINE = '… [DEBUG Client 1] Generating level 1 area "1_1_1" with seed 5'
+
+test('a fresh character is named on its first level-up, before that level-up', () => {
+  const { tracker, events } = makeTracker() // auto mode, as most people run it
+  feed(tracker, '… [INFO Client 1] : manauda (Marauder) is now level 70')
+  feed(tracker, STRAND_LINE)
+  // Nothing yet: the Strand alone doesn't say who.
+  assert.deepEqual(events, ['level:manauda'])
+  // Same name as last league's character — that's the point.
+  feed(tracker, '… [INFO Client 1] : manauda (Marauder) is now level 2')
+  assert.deepEqual(events, ['level:manauda', 'fresh:manauda', 'level:manauda'])
+  // Once per Strand.
+  feed(tracker, '… [INFO Client 1] : manauda (Marauder) is now level 3')
+  assert.equal(events.filter((e) => e.startsWith('fresh')).length, 1)
+})
+
+test('going back to an old character after the Strand resets nothing', () => {
+  const { tracker, events } = makeTracker()
+  feed(tracker, STRAND_LINE)
+  // Rolled a character, then logged back into your level-40 main instead.
+  feed(tracker, '… [INFO Client 1] : MyMain (Witch) is now level 41')
+  feed(tracker, '… [INFO Client 1] : MyMain (Witch) is now level 42')
+  assert.ok(!events.some((e) => e.startsWith('fresh')))
+})
+
+test('with a pinned name, only that name can be the fresh character', () => {
+  const { tracker, events } = makeTracker('manauda')
+  feed(tracker, STRAND_LINE)
+  // A mule rolled on the side must not wipe the pinned character...
+  feed(tracker, '… [INFO Client 1] : MuleGuy (Ranger) is now level 2')
+  assert.ok(!events.includes('fresh:MuleGuy'))
+  // ...the pinned name's own first level-up does.
+  feed(tracker, '… [INFO Client 1] : manauda (Marauder) is now level 2')
+  assert.ok(events.includes('fresh:manauda'))
+})
+
+test('a Strand visit already settled in the log is history', () => {
+  const { tracker, events } = makeTracker()
+  tracker.backscan([STRAND_LINE, '… [INFO Client 1] : X (Witch) is now level 2'], parser)
+  assert.ok(!events.some((e) => e.startsWith('fresh')))
+  // X levelling on live is X, not a new character.
+  feed(tracker, '… [INFO Client 1] : X (Witch) is now level 3')
+  assert.ok(!events.some((e) => e.startsWith('fresh')))
+})
+
+test('overlay started after rolling the character: its first level-up still counts', () => {
+  const { tracker, events } = makeTracker()
+  tracker.backscan(['… [INFO Client 1] : manauda (Marauder) is now level 70', STRAND_LINE], parser)
+  feed(tracker, '… [INFO Client 1] : manauda (Marauder) is now level 2')
+  assert.ok(events.includes('fresh:manauda'))
+})
+
+test('overlay started after rolling a new name: it is tracked, not the old character', () => {
+  const { tracker } = makeTracker()
+  tracker.backscan(
+    ['… [INFO Client 1] : OldChar (Witch) is now level 70', '… [INFO Client 1] : OldChar (Witch) is now level 71', STRAND_LINE],
+    parser
+  )
+  // Mid-roll: nobody bound yet, rather than last week's character — not even
+  // the one the saved state remembers.
+  tracker.hydrate({ ...tracker.snapshot(), character: 'OldChar', level: 71 })
+  assert.equal(tracker.snapshot().character, null)
+  feed(tracker, '… [INFO Client 1] : NewChar (Duelist) is now level 2')
+  assert.equal(tracker.snapshot().character, 'NewChar')
 })

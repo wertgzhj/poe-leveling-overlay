@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 228 tests: parser, tracker, watcher, guide, profile,
+npm test        # 234 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
@@ -121,8 +121,14 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - On a **fresh character in Act 1** the list holds Act 1 only. Act 2's quest
      choices must appear when you reach Act 2 and not before — and portalling
      back to Act 1's town must not make them disappear again. Rolling a new
-     character with a name you used last league starts the count over rather
-     than inheriting that character's act. Entering any **Act 2** zone (e.g.
+     character with a name you used last league starts **the whole run** over
+     on its first level-up (to 2): the act, the Library, the Trials tab, the
+     guide's ticks and dismissed bandit/pantheon reminders — none inherited
+     from last league's namesake. Steps ticked on the Strand before that
+     level-up stay. The profile the name uses and its mule choice stay too.
+     Try it both with the overlay running when you roll the character **and**
+     started only after you entered the Strand: either way the new character
+     is the one tracked, not last week's. Entering any **Act 2** zone (e.g.
      The Crypt) must bring in Act 2's rewards and Yeena's stock (Herald of Ash,
      Blood Rage) — the act is the *second* number of the area id (`1_2_…`), and
      reading the first made every zone of Acts 1-5 count as Act 1.

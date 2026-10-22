@@ -11,6 +11,11 @@ import type { LogParser, ParsedLogEvent } from './parser.ts'
 // character's first level-up binds instead of staying stuck on the old one.
 export const TWILIGHT_STRAND_ID = '1_1_1'
 
+/** A character's first level-up is to level 2. After entering the Twilight
+ *  Strand, a level-up to this level or below is the new character; anything
+ *  higher means you went back to an old one instead. */
+export const FRESH_CHARACTER_MAX_LEVEL = 2
+
 export interface AreaState {
   /** Canonical act-scoped id ("1_1_town"); null when only a name was seen and it couldn't be resolved. */
   areaId: string | null
@@ -80,6 +85,14 @@ const OWN_LIMIT = 20
 export interface TrackerCallbacks {
   onArea?: (area: AreaState) => void
   onLevelUp?: (ev: LevelUpEvent) => void
+  /**
+   * A brand-new character, named. Fires once per Twilight Strand, on that
+   * character's first level-up and BEFORE its onLevelUp — so whoever keeps
+   * per-character progress can drop last league's namesake's before loading.
+   * Not at the Strand itself: nothing in the log names the new character
+   * until it levels, and in auto mode the binding is empty by then.
+   */
+  onFreshCharacter?: (name: string) => void
 }
 
 /** What a backscan window actually contained, per event kind. The split matters
@@ -110,6 +123,9 @@ export class ProgressTracker {
 
   private explicitBinding: string | null
   private adoptedBinding: string | null = null
+  /** Entered the Twilight Strand; the next level-up says who's new (see
+   *  onFreshCharacter). */
+  private freshPending = false
   private levelUpCounts = new Map<string, number>()
   /** Latest level/class seen per character name (any name, bound or not). */
   private lastSeen = new Map<string, { level: number; charClass: string }>()
@@ -207,7 +223,9 @@ export class ProgressTracker {
     // merge the remembered characters in, ahead of anything the backscan found.
     const recent = new Set(this.own)
     this.own = [...(snap.own ?? []).filter((n) => !recent.has(n)), ...this.own].slice(-OWN_LIMIT)
-    if (!this.explicitBinding && !this.adoptedBinding && snap.character) {
+    // Not while the log ends mid-roll on the Twilight Strand: the log is ground
+    // truth, and it says the remembered character isn't the one playing.
+    if (!this.explicitBinding && !this.adoptedBinding && !this.freshPending && snap.character) {
       this.adopt(snap.character)
       if (snap.level != null && !this.lastSeen.has(snap.character)) {
         this.lastSeen.set(snap.character, {
@@ -237,7 +255,11 @@ export class ProgressTracker {
       if (ev.kind !== 'izaro') counts[ev.kind]++
       this.apply(ev, false)
     }
-    if (!this.explicitBinding && !this.adoptedBinding && this.levelUpCounts.size > 0) {
+    // The log ends on the Twilight Strand: a new character is mid-roll and
+    // hasn't levelled yet. Adopting the log's most frequent name would bind
+    // last week's character, and the new one's first level-up would then be
+    // "someone else". Stay unbound; that level-up adopts it.
+    if (!this.explicitBinding && !this.adoptedBinding && !this.freshPending && this.levelUpCounts.size > 0) {
       let best: string | null = null
       let bestCount = -1
       for (const [name, count] of this.levelUpCounts) {
@@ -265,6 +287,10 @@ export class ProgressTracker {
           this.adoptedBinding = null
           this.levelUpCounts.clear()
         }
+        // Also from the backscan: start the overlay after rolling the
+        // character, and its first level-up is still to come. A level-up
+        // already in the log settles it (below), so history never fires.
+        if (ev.areaId === TWILIGHT_STRAND_ID) this.freshPending = true
         this.area = {
           areaId: ev.areaId,
           name: this.areaNames[ev.areaId] ?? ev.areaId,
@@ -306,6 +332,13 @@ export class ProgressTracker {
         this.lastLevelUpName = ev.name
         this.levelUpCounts.set(ev.name, (this.levelUpCounts.get(ev.name) ?? 0) + 1)
         this.lastSeen.set(ev.name, { level: ev.level, charClass: ev.charClass })
+        // The Strand's character, named at last. With a pinned name only that
+        // one counts — a mule rolled on the side mustn't wipe your main — and a
+        // level-up past 2 means you went back to an old character: no reset.
+        if (this.freshPending && (!this.explicitBinding || ev.name === this.explicitBinding)) {
+          this.freshPending = false
+          if (emit && ev.level <= FRESH_CHARACTER_MAX_LEVEL) this.callbacks.onFreshCharacter?.(ev.name)
+        }
         if (!this.explicitBinding && emit) {
           if (!this.adoptedBinding) {
             // First live level-up adopts the character (confirm toast is P3).

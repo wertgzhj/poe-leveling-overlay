@@ -37,6 +37,7 @@ export class LogService {
   private levelListeners: Array<(level: number) => void> = []
   /** In-main consumers of Izaro voice lines (the trials service). */
   private izaroListeners: Array<(line: string) => void> = []
+  private freshListeners: Array<(name: string) => void> = []
   /** The backscan saw locale-independent lines but none of the localized ones —
    *  i.e. the game runs in a language we have no patterns for. */
   private languageMismatch = false
@@ -98,6 +99,12 @@ export class LogService {
     this.izaroListeners.push(listener)
   }
 
+  /** A brand-new character's first level-up, before its level listeners run
+   *  (see TrackerCallbacks.onFreshCharacter). */
+  addFreshCharacterListener(listener: (name: string) => void): void {
+    this.freshListeners.push(listener)
+  }
+
   getSnapshot(): LogSnapshot {
     const state = this.tracker.snapshot()
     return {
@@ -134,7 +141,10 @@ export class LogService {
       boundCharacter: store.get('characterName'),
       callbacks: {
         onArea: (area) => this.onArea(area),
-        onLevelUp: (ev) => this.onLevelUp(ev)
+        onLevelUp: (ev) => this.onLevelUp(ev),
+        onFreshCharacter: (name) => {
+          for (const listener of this.freshListeners) listener(name)
+        }
       }
     })
   }
