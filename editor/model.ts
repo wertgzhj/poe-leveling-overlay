@@ -3,40 +3,21 @@
 // be blank mid-edit); the authoritative validation happens in the main process on
 // save, reusing the same validators the app loads files with.
 
-export const STEP_TYPES = [
-  'quest',
-  'waypoint',
-  'trial',
-  'town',
-  'boss',
-  'kill',
-  'enter',
-  'hint'
-] as const
-export type StepType = (typeof STEP_TYPES)[number]
-
-export const CLASSES = [
-  'Marauder',
-  'Ranger',
-  'Witch',
-  'Duelist',
-  'Templar',
-  'Shadow',
-  'Scion'
-] as const
-export type CharClass = (typeof CLASSES)[number]
-
-// Ascendancies per base class. Mirrored by hand from electron/profile/profile.ts
-// — the editor and main build graphs are intentionally decoupled (see env.d.ts).
-export const ASCENDANCIES: Record<CharClass, readonly string[]> = {
-  Marauder: ['Juggernaut', 'Berserker', 'Chieftain'],
-  Ranger: ['Deadeye', 'Raider', 'Pathfinder'],
-  Witch: ['Necromancer', 'Elementalist', 'Occultist'],
-  Duelist: ['Slayer', 'Gladiator', 'Champion'],
-  Templar: ['Inquisitor', 'Hierophant', 'Guardian'],
-  Shadow: ['Assassin', 'Saboteur', 'Trickster'],
-  Scion: ['Ascendant']
-}
+// The lists the editor offers are the main process's own — the ones its
+// validators accept — imported, not copied: both modules are pure, and a copy
+// is a drift waiting to happen.
+import { ASCENDANCIES, type CharClass } from '../electron/profile/profile.ts'
+import type { StepType } from '../electron/guide/route.ts'
+export { STEP_TYPES, type StepType } from '../electron/guide/route.ts'
+export {
+  ASCENDANCIES,
+  BANDITS,
+  CLASSES,
+  PANTHEON_MAJOR,
+  PANTHEON_MINOR,
+  type Bandit,
+  type CharClass
+} from '../electron/profile/profile.ts'
 
 /** The ascendancy choices for a class, with "" first for "not decided yet".
  *  Anything already in the draft that isn't one of them is kept as an option, so
@@ -51,31 +32,6 @@ export function ascendancyOptions(cls: CharClass, current?: string): string[] {
 export function ascendancyFor(cls: CharClass, current?: string): string | undefined {
   return current && ASCENDANCIES[cls].includes(current) ? current : undefined
 }
-
-// Bandit and Pantheon options. Mirrored by hand from electron/profile/profile.ts
-// — the editor and main build graphs are intentionally decoupled (see env.d.ts).
-// Names only: the stats change between patches, and the profile records which
-// one you decided on, not what it grants.
-export const BANDITS = ['Alira', 'Kraityn', 'Oak', 'Kill all'] as const
-export type Bandit = (typeof BANDITS)[number]
-
-export const PANTHEON_MAJOR = [
-  'Soul of the Brine King',
-  'Soul of Lunaris',
-  'Soul of Solaris',
-  'Soul of Arakaali'
-] as const
-
-export const PANTHEON_MINOR = [
-  'Soul of Abberath',
-  'Soul of Garukhan',
-  'Soul of Gruthkul',
-  'Soul of Ralakesh',
-  'Soul of Ryslatha',
-  'Soul of Shakari',
-  'Soul of Tukohama',
-  'Soul of Yugul'
-] as const
 
 /** Options with "" first, for a field that is allowed to stay undecided. */
 export function optional<T extends string>(values: readonly T[]): (T | '')[] {

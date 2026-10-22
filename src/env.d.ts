@@ -1,455 +1,71 @@
-// Renderer-side type for the preload bridge (window.overlay). Kept in sync by
-// hand with electron/preload.ts + electron/channels.ts — the two build graphs
-// are intentionally decoupled, so this is not imported from electron/.
+// Renderer-side names for the preload bridge (window.overlay) and what flows
+// through it. Every one points at the main process's own type — the bridge is
+// `typeof api` in electron/preload.ts — so a field added there is here too,
+// and a mismatch is a type error instead of a silent drift. `import()` types
+// are erased at compile time: the two bundles stay separate, only the checker
+// sees both. (This used to be a 456-line hand-kept copy.)
 
-interface OverlayStateBridge {
-  visible: boolean
-  clickThrough: boolean
-  moveMode: boolean
-  settingsOpen: boolean
-}
+// --- overlay, settings, app ---
+type OverlayBridge = import('../electron/preload.ts').OverlayApi
+type OverlayStateBridge = import('../electron/channels.ts').OverlayState
+type AppInfoBridge = import('../electron/channels.ts').AppInfo
+type HotkeyBindingsBridge = import('../electron/settings.ts').HotkeyBindings
+type VisibleTabsBridge = import('../electron/settings.ts').VisibleTabs
+type AppSettingsBridge = import('../electron/settings.ts').AppSettings
+type SettingsPatchBridge = import('../electron/settings.ts').SettingsPatch
+type SettingsSetResultBridge = import('../electron/channels.ts').SettingsSetResult
+type UpdateStatusBridge = import('../electron/channels.ts').UpdateStatus
 
-interface AppInfoBridge {
-  version: string
-  electron: string
-  isDev: boolean
-}
+// --- game log ---
+type AreaStateBridge = import('../electron/log/tracker.ts').AreaState
+type LevelUpBridge = import('../electron/log/tracker.ts').LevelUpEvent
+type TrackerStateBridge = import('../electron/log/tracker.ts').TrackerSnapshot
+type ZoneFitBridge = import('../electron/log/tracker.ts').ZoneFit
+type WatcherStatusBridge = import('../electron/log/watcher.ts').WatcherStatus
+type DetectedCharacterBridge = import('../electron/channels.ts').DetectedCharacter
+type LogEventSummaryBridge = import('../electron/channels.ts').LogEventSummary
+type LogSnapshotBridge = import('../electron/channels.ts').LogSnapshot
 
-interface HotkeyBindingsBridge {
-  toggleVisibility: string
-  toggleClickThrough: string
-  toggleMoveMode: string
-  stepForward: string
-  stepBack: string
-}
+// --- guide ---
+type StepTypeBridge = import('../electron/guide/route.ts').StepType
+type RouteStepBridge = import('../electron/guide/route.ts').RouteStep
+type RouteBridge = import('../electron/guide/route.ts').Route
+type GuideStateBridge = import('../electron/channels.ts').GuideState
 
-interface VisibleTabsBridge {
-  guide: boolean
-  gems: boolean
-  trials: boolean
-}
+// --- gems ---
+type SocketColorBridge = import('../electron/profile/gems.ts').SocketColor
+type ColoredGemBridge = import('../electron/profile/gems.ts').ColoredGem
+type ColoredSocketGroupBridge = import('../electron/profile/engine.ts').ColoredSocketGroup
+type ResolvedStageBridge = import('../electron/profile/engine.ts').ResolvedStage
+type AcquisitionEntryBridge = import('../electron/profile/engine.ts').AcquisitionEntry
+type RewardGroupBridge = import('../electron/profile/engine.ts').RewardGroup
+type ShoppingStopBridge = import('../electron/profile/engine.ts').ShoppingStop
+type AcquisitionItemBridge = import('../electron/profile/engine.ts').AcquisitionItem
+type AcquisitionsBridge = import('../electron/profile/engine.ts').Acquisitions
+type MuleOptionBridge = import('../electron/profile/engine.ts').MuleOption
+type ProfileMetaBridge = import('../electron/profile/profile.ts').ProfileMeta
+type ChoiceDueBridge = import('../electron/channels.ts').ChoiceDue
+type ProfileSnapshotBridge = import('../electron/channels.ts').ProfileSnapshot
+type LibraryEntryBridge = import('../electron/profile/library.ts').LibraryEntry
+type LibraryResultBridge = import('../electron/profile/library.ts').LibraryResult
+type PobImportResponseBridge = import('../electron/channels.ts').PobImportResponse
 
-interface AppSettingsBridge {
-  bounds: { x?: number; y?: number; width: number; height: number }
-  opacity: number
-  clickThrough: boolean
-  hotkeys: HotkeyBindingsBridge
-  clientTxtPath: string | null
-  profilePath: string | null
-  characterName: string | null
-  logLanguage: string
-  visibleTabs: VisibleTabsBridge
-  searchRegex: string
-}
+// --- trials ---
+type LabTierBridge = import('../electron/trials/engine.ts').LabTier
+type TrialStateBridge = import('../electron/trials/engine.ts').TrialState
+type TrialsSnapshotBridge = import('../electron/trials/engine.ts').TrialsSnapshot
 
-interface SettingsPatchBridge {
-  opacity?: number
-  clickThrough?: boolean
-  hotkeys?: HotkeyBindingsBridge
-  clientTxtPath?: string | null
-  characterName?: string | null
-  visibleTabs?: VisibleTabsBridge
-  searchRegex?: string
-}
-
-interface SettingsSetResultBridge {
-  failed: string[]
-}
-
-interface AreaStateBridge {
-  areaId: string | null
-  name: string
-  areaLevel: number | null
-  ts: number
-}
-
-interface LevelUpBridge {
-  name: string
-  charClass: string
-  level: number
-  isBound: boolean
-  ts: number
-}
-
-interface WatcherStatusBridge {
-  state: 'off' | 'missing' | 'watching' | 'error'
-  path: string | null
-  sizeBytes: number | null
-}
-
-interface TrackerStateBridge {
-  area: AreaStateBridge | null
-  character: string | null
-  charClass: string | null
-  level: number | null
-}
-
-interface DetectedCharacterBridge {
-  name: string
-  charClass: string
-  level: number
-  tracking: boolean
-  pinnedTo: string | null
-}
-
-interface LogEventSummaryBridge {
-  kind: 'area' | 'levelup'
-  ts: number
-  text: string
-}
-
-interface ZoneFitBridge {
-  verdict: 'under' | 'over'
-  areaLevel: number
-  by: number
-}
-
-interface LogSnapshotBridge {
-  status: WatcherStatusBridge
-  state: TrackerStateBridge
-  recent: LogEventSummaryBridge[]
-  languageMismatch: boolean
-  zoneFit: ZoneFitBridge | null
-}
-
-type StepTypeBridge =
-  | 'quest'
-  | 'waypoint'
-  | 'trial'
-  | 'town'
-  | 'boss'
-  | 'kill'
-  | 'enter'
-  | 'hint'
-
-interface RouteStepBridge {
-  id: string
-  type: StepTypeBridge
-  areaId?: string
-  zone?: string
-  text: string
-  hints?: string[]
-  rewardHint?: boolean
-  act?: number
-}
-
-interface RouteBridge {
-  act: number
-  name?: string
-  steps: RouteStepBridge[]
-  skeleton?: boolean
-}
-
-interface GuideStateBridge {
-  route: RouteBridge | null
-  acts: number[]
-  skeletonActs: number[]
-  errors: string[]
-  doneIds: string[]
-  cursorIndex: number
-  cursorStepId: string | null
-}
-
-type SocketColorBridge = 'R' | 'G' | 'B' | 'W'
-
-interface ColoredGemBridge {
-  name: string
-  color: SocketColorBridge
-  unknown: boolean
-  anyColor?: boolean
-}
-
-interface ColoredSocketGroupBridge {
-  gems: ColoredGemBridge[]
-  note?: string
-}
-
-interface ResolvedStageBridge {
-  index: number
-  label: string
-  range: [number, number]
-  groups: ColoredSocketGroupBridge[]
-  note?: string
-}
-
-interface AcquisitionEntryBridge {
-  gem: string
-  count?: number
-  bucket: 'reward' | 'purchase' | 'other'
-  act?: number
-  npc?: string
-  quest?: string
-  note?: string
-  fallback?: boolean
-  fromLevel?: number
-  cost?: string
-  starting?: boolean
-  mule?: string[]
-  muleHow?: 'start' | 'reward' | 'vendor'
-  requiredLevel?: number
-  colored?: ColoredGemBridge
-  fromPickOne?: boolean
-  anyOf?: { gem: string; colored?: ColoredGemBridge }[]
-}
-
-interface RewardGroupBridge {
-  quest?: string
-  act?: number
-  pickOne: boolean
-  gems: AcquisitionEntryBridge[]
-  buyRest?: { count: number; cost?: string; act?: number; npc?: string; partial?: boolean }
-}
-
-interface ShoppingStopBridge {
-  key: string
-  label: string
-  act?: number
-  npc?: string
-}
-
-type AcquisitionItemBridge = (
-  | { kind: 'reward'; group: RewardGroupBridge }
-  | { kind: 'buy'; entry: AcquisitionEntryBridge; stop?: ShoppingStopBridge }
-) & { later: boolean; atLevel?: number }
-
-interface AcquisitionsBridge {
-  rewards: AcquisitionEntryBridge[]
-  purchases: AcquisitionEntryBridge[]
-  other: AcquisitionEntryBridge[]
-  upcoming: AcquisitionEntryBridge[]
-  rewardGroups: RewardGroupBridge[]
-  plan: AcquisitionItemBridge[]
-  linkMarks: Record<string, 'thisAct' | 'notYet'>
-  newGems: string[]
-}
-
-interface ProfileMetaBridge {
-  name: string
-  class: string
-  ascendancy?: string
-  character?: string
-  pobSource?: string
-  bandit?: string
-  pantheon?: { major?: string; minor?: string }
-}
-
-interface ChoiceDueBridge {
-  id: 'bandit' | 'pantheon'
-  wants: string
-  options: string[]
-}
-
-interface ProfileSnapshotBridge {
-  meta: ProfileMetaBridge | null
-  errors: string[]
-  gemDataError: string | null
-  level: number | null
-  classMismatch: string | null
-  muling: string | null
-  activeStage: ResolvedStageBridge | null
-  nextStage: ResolvedStageBridge | null
-  acquisitions: AcquisitionsBridge | null
-  stageCount: number
-  viewedIndex: number
-  liveIndex: number
-  choiceDue: ChoiceDueBridge | null
-  /** Every profile you have, bundled example first. */
-  library: LibraryEntryBridge[]
-  /** The active profile's id; null if it isn't in the library. */
-  activeId: string | null
-  /** What this build could mule, and the gem you mule on the tracked
-   *  character (null = none); null altogether = no choice to offer. */
-  muleChoice: { options: MuleOptionBridge[]; chosen: string | null } | null
-}
-
-/** A gem a fresh alt of another class gets on the Twilight Strand. */
-interface MuleOptionBridge {
-  gem: string
-  classes: string[]
-  how: 'start' | 'reward' | 'vendor'
-}
-
-/** One profile in the library — mirrors LibraryEntry in electron/profile/library.ts. */
-interface LibraryEntryBridge {
-  id: string
-  path: string
-  name: string
-  charClass?: string
-  ascendancy?: string
-  character?: string
-  stages: number
-  bundled?: boolean
-  errors: string[]
-}
-
-interface LibraryResultBridge {
-  ok: boolean
-  errors: string[]
-  entry?: LibraryEntryBridge
-}
-
-interface PobImportResponseBridge {
-  ok: boolean
-  path?: string
-  warnings: string[]
-  errors: string[]
-}
-
-type LabTierBridge = 'normal' | 'cruel' | 'merciless'
-
-interface TrialStateBridge {
-  id: string
-  act: number
-  lab: LabTierBridge
-  zone: string
-  seen: boolean
-}
-
-interface TrialsSnapshotBridge {
-  trials: TrialStateBridge[]
-  seenCount: number
-  total: number
-  currentZoneTrialId: string | null
-  unlockedLabs: LabTierBridge[]
-}
-
-// --- Editor (route/profile file editing) ---
-
-interface SocketGroupFileBridge {
-  gems: string[]
-  note?: string
-}
-
-interface StageFileBridge {
-  range: [number, number]
-  label?: string
-  socketGroups: SocketGroupFileBridge[]
-  note?: string
-}
-
-interface GemSourceFileBridge {
-  kind: 'questReward' | 'vendor' | 'drop' | 'unobtainable'
-  questId?: string
-  npc?: string
-  act?: number
-  afterQuest?: string
-  note?: string
-}
-
-interface GemPlanFileBridge {
-  gem: string
-  count?: number
-  source?: GemSourceFileBridge
-}
-
-interface ProfileFileBridge {
-  meta: ProfileMetaBridge
-  stages: StageFileBridge[]
-  gemPlan: GemPlanFileBridge[]
-}
-
-interface EditorRouteEntryBridge {
-  act: number
-  route: RouteBridge | null
-  errors: string[]
-  source: 'override' | 'bundled' | 'missing'
-}
-
-interface EditorLoadBridge {
-  routes: EditorRouteEntryBridge[]
-}
-
-interface EditorProfileLoadBridge {
-  id: string
-  path: string
-  bundled: boolean
-  profile: ProfileFileBridge | null
-  errors: string[]
-}
-
-interface RouteImportResultBridge {
-  written: number[]
-  errors: string[]
-}
-
-interface EditorSaveResultBridge {
-  ok: boolean
-  errors: string[]
-  path?: string
-  /** a profile save: the id it landed under (new when the example was saved) */
-  id?: string
-}
-
-type UpdateStatusBridge =
-  | { state: 'idle' }
-  | { state: 'disabled'; reason: string }
-  | { state: 'checking' }
-  | { state: 'current'; version: string }
-  | { state: 'downloading'; version: string; percent: number }
-  | { state: 'ready'; version: string }
-  | { state: 'publishing'; version: string | null }
-  | { state: 'error'; message: string }
-
-interface OverlayBridge {
-  getState(): Promise<OverlayStateBridge>
-  onState(cb: (state: OverlayStateBridge) => void): () => void
-  getLogSnapshot(): Promise<LogSnapshotBridge>
-  detectCharacter(): Promise<DetectedCharacterBridge | null>
-  /** Copies the search regex stored in Settings; false when none is set. */
-  copySearchRegex(): Promise<boolean>
-  onLogStatus(cb: (status: WatcherStatusBridge) => void): () => void
-  onLogSnapshot(cb: (snap: LogSnapshotBridge) => void): () => void
-  onAreaEntered(cb: (area: AreaStateBridge) => void): () => void
-  onLevelUp(cb: (ev: LevelUpBridge) => void): () => void
-  getGuide(): Promise<GuideStateBridge>
-  onGuideState(cb: (state: GuideStateBridge) => void): () => void
-  guideToggleStep(stepId: string): void
-  guideReset(): void
-  getProfile(): Promise<ProfileSnapshotBridge>
-  onProfileState(cb: (snap: ProfileSnapshotBridge) => void): () => void
-  stageStep(delta: number): void
-  stageToLive(): void
-  dismissChoice(id: string): void
-  /** The gem to mule on the tracked character; null = none. */
-  setMule(gem: string | null): void
-  /** Switch the active profile; false if it doesn't exist or won't load. */
-  activateProfile(id: string): Promise<boolean>
-  createProfile(name: string, charClass: string): Promise<LibraryResultBridge>
-  duplicateProfile(id: string): Promise<LibraryResultBridge>
-  renameProfile(id: string, name: string): Promise<LibraryResultBridge>
-  /** To the recycle bin. */
-  deleteProfile(id: string): Promise<LibraryResultBridge>
-  /** Pick an outside file and copy it in; null when the dialog was cancelled. */
-  importProfileFile(): Promise<LibraryResultBridge | null>
-  importPob(input: string): Promise<PobImportResponseBridge>
-  getTrials(): Promise<TrialsSnapshotBridge>
-  onTrialsState(cb: (snap: TrialsSnapshotBridge) => void): () => void
-  trialsToggle(id: string): void
-  trialsReset(): void
-  trialsDismissLab(lab: LabTierBridge): void
-  exitMoveMode(): void
-  setSettingsOpen(open: boolean): void
-  resizeBy(dx: number, dy: number): void
-  setHoverUi(over: boolean): void
-  getSettings(): Promise<AppSettingsBridge>
-  setSettings(patch: SettingsPatchBridge): Promise<SettingsSetResultBridge>
-  pauseHotkeys(): void
-  resumeHotkeys(): void
-  pickClientTxt(): Promise<string | null>
-  getAppInfo(): Promise<AppInfoBridge>
-  openEditor(tab?: string): void
-  onEditorFocusTab(cb: (tab: string) => void): () => void
-  editorLoadProfile(id: string): Promise<EditorProfileLoadBridge | null>
-  editorLoad(): Promise<EditorLoadBridge>
-  editorSaveRoute(act: number, json: unknown): Promise<EditorSaveResultBridge>
-  editorSaveProfile(id: string, json: unknown): Promise<EditorSaveResultBridge>
-  editorExportRoutes(): Promise<string>
-  editorImportRoutes(text: string): Promise<RouteImportResultBridge>
-  getUpdateStatus(): Promise<UpdateStatusBridge>
-  onUpdateStatus(cb: (status: UpdateStatusBridge) => void): () => void
-  checkForUpdates(): void
-  installUpdate(): void
-}
+// --- editor: profile and route files as they're written ---
+type SocketGroupFileBridge = import('../electron/profile/profile.ts').SocketGroup
+type StageFileBridge = import('../electron/profile/profile.ts').Stage
+type GemSourceFileBridge = import('../electron/profile/profile.ts').GemSource
+type GemPlanFileBridge = import('../electron/profile/profile.ts').GemPlanEntry
+type ProfileFileBridge = import('../electron/profile/profile.ts').Profile
+type EditorRouteEntryBridge = import('../electron/channels.ts').EditorRouteEntry
+type EditorLoadBridge = import('../electron/channels.ts').EditorLoad
+type EditorProfileLoadBridge = import('../electron/channels.ts').EditorProfileLoad
+type RouteImportResultBridge = import('../electron/channels.ts').RouteImportResult
+type EditorSaveResultBridge = import('../electron/channels.ts').EditorSaveResult
 
 interface Window {
   overlay?: OverlayBridge

@@ -1,5 +1,5 @@
 // IPC channel names + payload types shared between the main process and the
-// preload bridge. Renderer-facing type mirrors live in src/env.d.ts (kept in sync).
+// preload bridge. The renderer names them in src/env.d.ts, by reference — not a copy.
 
 import type { TrackerSnapshot, ZoneFit } from './log/tracker.ts'
 import type { WatcherStatus } from './log/watcher.ts'
