@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 234 tests: parser, tracker, watcher, guide, profile,
+npm test        # 242 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors
 npm run typecheck
