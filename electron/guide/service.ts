@@ -40,6 +40,7 @@ export class GuideService {
     // and the profile already follow it; the guide used to wait for the next
     // zone load and show the previous character's ticks until then.
     log.addLevelListener(() => this.syncCharacter())
+    log.addFreshCharacterListener((name) => this.freshCharacter(name))
   }
 
   start(): void {
@@ -107,6 +108,31 @@ export class GuideService {
    * must happen together, because `charKey` is what `persistNow` writes under.
    * Moving it on its own would file one character's ticks under another's name.
    */
+  /**
+   * A brand-new character: its guide progress starts from this run, not from
+   * last league's namesake's finished route. Runs before the level-up that
+   * loads the character.
+   *
+   * In auto mode the steps ticked on the Strand before level 2 sit under the
+   * placeholder key — they are this character's, so they carry over, and the
+   * placeholder is emptied so the next new character doesn't inherit them.
+   * With a pinned name the Strand's ticks are mixed in with the old run's and
+   * can't be told apart, so it starts empty.
+   */
+  private freshCharacter(name: string): void {
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistTimer = null
+    const carried = this.charKey === DEFAULT_CHAR_KEY && this.engine ? this.engine.snapshot().doneIds : []
+    store.set('guideProgress', { ...store.get('guideProgress'), [name]: carried, [DEFAULT_CHAR_KEY]: [] })
+    if (this.charKey === name || this.charKey === DEFAULT_CHAR_KEY) {
+      this.charKey = name
+      if (this.route) {
+        this.engine = new GuideEngine(this.route, carried)
+        this.push()
+      }
+    }
+  }
+
   private syncCharacter(): void {
     const next = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
     if (next === this.charKey) return

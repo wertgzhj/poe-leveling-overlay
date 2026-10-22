@@ -46,7 +46,6 @@ import {
   type LibraryResult
 } from './library.ts'
 import { store } from '../settings.ts'
-import { TWILIGHT_STRAND_ID } from '../log/tracker.ts'
 import { Channels, type ChoiceDue, type EditorProfileLoad, type EditorSaveResult, type ProfileSnapshot } from '../channels.ts'
 import type { OverlayController } from '../overlay.ts'
 import type { EditorWindow } from '../editor-window.ts'
@@ -106,12 +105,10 @@ export class ProfileService {
     // moved. They're also where campaign progress shows up.
     log.addAreaListener((area) => {
       const reloaded = this.syncCharacter()
-      const moved =
-        area.areaId === TWILIGHT_STRAND_ID
-          ? this.restartAct()
-          : this.noteAct(actFromAreaId(area.areaId)) || this.noteLibrary(area.name)
+      const moved = this.noteAct(actFromAreaId(area.areaId)) || this.noteLibrary(area.name)
       if (moved && !reloaded) this.push()
     })
+    log.addFreshCharacterListener((name) => this.forgetRun(name))
   }
 
   start(): void {
@@ -443,22 +440,24 @@ export class ProfileService {
   }
 
   /**
-   * Entering the Twilight Strand means a brand-new character — you cannot go
-   * back to it. Names get reused every league, so without this a fresh Act 1
-   * character would inherit the Act 10 mark of last league's namesake and see
-   * the whole campaign's list again.
+   * A brand-new character (see LogService.addFreshCharacterListener). Names get
+   * reused every league, so without this a fresh Act 1 character would inherit
+   * last league's namesake's run: the Act 10 mark (the whole campaign's list
+   * again), the Library, and dismissed bandit/pantheon reminders — the ones
+   * that matter most, because missing the bandits is for good.
+   *
+   * Only the run is forgotten. Which profile the name uses and what it mules
+   * are choices, not progress, and stay.
+   *
+   * This used to happen on entering the Strand, keyed by the tracked
+   * character — but in auto mode the tracker lets go of the old character
+   * right there, so there was no name to reset and nothing ever was.
    */
-  private restartAct(): boolean {
-    if (!this.character) return false
-    const changed = store.get('libraryReached')[this.character]
-    if (changed) {
-      const { [this.character]: _gone, ...rest } = store.get('libraryReached')
-      store.set('libraryReached', rest)
-    }
-    const map = store.get('actReached')
-    if (map[this.character] === 1 && !changed) return false
-    store.set('actReached', { ...map, [this.character]: 1 })
-    return true
+  private forgetRun(name: string): void {
+    store.set('actReached', { ...store.get('actReached'), [name]: 1 })
+    store.set('libraryReached', without(store.get('libraryReached'), name))
+    store.set('dismissedChoices', without(store.get('dismissedChoices'), name))
+    if (name === this.character) this.push()
   }
 
   /**
@@ -617,4 +616,10 @@ function loadGemData(): { gems: GemData; error: string | null } {
   } catch (e) {
     return { gems: new GemData({}), error: `could not read gem data (${path}): ${(e as Error).message}` }
   }
+}
+
+/** A per-character map minus one character. */
+function without<T>(map: Record<string, T>, key: string): Record<string, T> {
+  const { [key]: _gone, ...rest } = map
+  return rest
 }
