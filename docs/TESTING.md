@@ -6,9 +6,9 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 245 tests: parser, tracker, watcher, guide, profile,
+npm test        # 258 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
-                # search regex, profile library, update errors
+                # search regex, profile library, update errors, area table
 npm run typecheck
 npm run build
 ```
@@ -186,10 +186,16 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    zone" hint on every tab. Finishing the trial auto-checks it — Izaro voices a
    plaque line only on completion, and the zone identifies which trial it was.
    Confirm the **right** one is ticked, especially in **Act 7's Chamber of Sins
-   Level 2**, which must tick the *Cruel* entry rather than the Act 2 one.
+   Level 2**, which must tick the *Cruel* entry rather than the Act 2 one, and
+   **Act 6's Lower Prison**, which must tick the Cruel entry, not Act 1's. An
+   endgame trial in a map says the same lines and must tick nothing.
    When the last trial of a Labyrinth is checked, the same bar switches to
    "**Normal Labyrinth unlocked**". Dismiss it with ✕ and it must stay gone —
    including after a restart — while a later Labyrinth still announces itself.
+   **Beat the Labyrinth:** the moment Izaro dies in the final arena, its heading
+   on the Trials tab gets a grey "✓ done", the unlock bar goes away without a ✕,
+   and any of its trials you hadn't ticked are ticked. Dying to him must change
+   nothing, and neither must the Eternal Labyrinth.
 9. **Editor.** Tray → *Edit routes & profile…* opens a normal window. Add or edit
    a step, save, and the Guide tab reflects it without a restart. Same for the
    profile and the Gems tab.
@@ -276,11 +282,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
   detected and reported in the tracker strip rather than silently half-working.
   Adding one is a data change: drop a file next to `en.json` and register it in
   `electron/log/service.ts`.
-- **Cruel and Merciless trial zone names are provisional.** They are not
-  confirmed against a live game. If a trial doesn't auto-check, the zone name
-  from the 🐞 dev panel identifies it, and `CAMPAIGN_TRIALS`
-  (`electron/trials/engine.ts`) is where it's corrected. Clicking a trial and the
-  hint's *Done ✓* are the manual fallbacks.
+- **Trial zones and Izaro's lines are matched by English name.** All twelve
+  are confirmed against a real capture. If GGG renames one and a trial stops
+  auto-checking, the zone name from the 🐞 dev panel identifies it, and
+  `CAMPAIGN_TRIALS` (`electron/trials/engine.ts`) is where it's corrected.
+  Clicking a trial and the hint's *Done ✓* are the manual fallbacks.
 - **Vendor gem prices come from a level table.** The tier shown per gem is
   derived from its level requirement (`COST_TIERS`, `electron/profile/gems.ts`):
   Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+.

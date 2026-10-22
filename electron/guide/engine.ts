@@ -6,10 +6,11 @@
 //  - Towns never skip work: a town entry only advances when the matched town
 //    step is the current step or the one right after it (portal trips to sell
 //    must not jump the guide forward past uncompleted zones).
-//  - Non-campaign instances (word ids: Hideout*, MapWorlds*, …) are ignored.
+//  - Non-campaign instances (Hideout*, MapWorlds*, the Labyrinth) are ignored.
 //  - Manual forward/back (hotkeys) and per-step toggling are the correction
 //    mechanism — quest completion is not detectable from the log.
 
+import { isCampaignAreaId } from '../log/areas.ts'
 import type { Route, RouteStep } from './route.ts'
 
 export interface GuideAreaEvent {
@@ -24,11 +25,7 @@ export interface GuideSnapshot {
   cursorStepId: string | null
 }
 
-/** Campaign area ids are numeric-scoped ("1_1_2", "1_1_town"); hideouts and
- *  endgame maps use word ids ("HideoutWorldTurtle") — verified in act1-real.log. */
-export function isCampaignAreaId(areaId: string): boolean {
-  return /^\d/.test(areaId)
-}
+export { isCampaignAreaId }
 
 export class GuideEngine {
   private route: Route

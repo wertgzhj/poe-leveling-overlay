@@ -125,6 +125,13 @@ test('word-id instances are not campaign areas', () => {
   assert.equal(isCampaignAreaId('MapWorldsCitySquare'), false)
   assert.equal(isCampaignAreaId('1_1_town'), true)
   assert.equal(isCampaignAreaId('1_1_4_1'), true)
+  // Real ids from a full capture: the trailing underscore is the game's.
+  assert.equal(isCampaignAreaId('2_8_7_1_'), true)
+  assert.equal(isCampaignAreaId('2_11_endgame_town'), true)
+  // The Labyrinth starts with a digit too, but it isn't the campaign route.
+  assert.equal(isCampaignAreaId('1_Labyrinth_boss_2_end'), false)
+  assert.equal(isCampaignAreaId('3_Labyrinth_boss_2_end_#'), false)
+  assert.equal(isCampaignAreaId('EndGame_Labyrinth_trials_lava_#'), false)
 })
 
 test('entering zones advances the cursor positionally', () => {

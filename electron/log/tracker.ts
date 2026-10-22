@@ -3,6 +3,7 @@
 // with the localized zoneEntered INFO line (fallback / display-name source),
 // and binds level-ups to one character so party members don't advance stages.
 
+import { isCampaignAreaId } from './areas.ts'
 import type { LogParser, ParsedLogEvent } from './parser.ts'
 
 // The Twilight Strand (Act 1 opening zone) is only ever entered by a brand-new
@@ -52,7 +53,8 @@ export interface ZoneFit {
  * Returns null whenever the comparison would mislead:
  *  - towns generate at a fixed monster level (Lioneye's Watch at 13), so
  *    standing in one at level 5 is not "underlevelled"
- *  - non-campaign instances (hideouts, maps) aren't part of the levelling curve
+ *  - non-campaign instances (hideouts, maps, the Labyrinth) aren't part of the
+ *    levelling curve
  *  - the fallback zone path carries no monster level at all
  */
 export function zoneFit(
@@ -61,7 +63,7 @@ export function zoneFit(
   safeRange: number
 ): ZoneFit | null {
   if (!area || area.areaLevel == null || charLevel == null) return null
-  if (!area.areaId || !/^\d/.test(area.areaId) || area.areaId.endsWith('_town')) return null
+  if (!area.areaId || !isCampaignAreaId(area.areaId) || area.areaId.endsWith('_town')) return null
   const gap = area.areaLevel - charLevel
   if (gap > safeRange) return { verdict: 'under', areaLevel: area.areaLevel, by: gap - safeRange }
   if (-gap > safeRange) return { verdict: 'over', areaLevel: area.areaLevel, by: -gap - safeRange }
@@ -116,8 +118,10 @@ export interface TrackerOptions {
 
 export class ProgressTracker {
   private readonly areaNames: Record<string, string>
-  /** name -> areaId; null value = ambiguous (duplicate zone names across acts). */
-  private readonly reverseNames = new Map<string, string | null>()
+  /** name -> every areaId with that name. Most have one; the second part of
+   *  the campaign revisits Act 1-5 zones under the same names (The Coast is
+   *  1_1_2 and 2_6_2), never twice within a part. */
+  private readonly reverseNames = new Map<string, string[]>()
   private readonly callbacks: TrackerCallbacks
   private readonly now: () => number
 
@@ -157,7 +161,7 @@ export class ProgressTracker {
 
     for (const [id, name] of Object.entries(opts.areaNames)) {
       const key = name.toLowerCase()
-      this.reverseNames.set(key, this.reverseNames.has(key) ? null : id)
+      this.reverseNames.set(key, [...(this.reverseNames.get(key) ?? []), id])
     }
   }
 
@@ -273,6 +277,19 @@ export class ProgressTracker {
     return counts
   }
 
+  /** The area id for a zone name, for the fallback path. A name both parts of
+   *  the campaign use resolves to the part you were just in — you can't walk
+   *  from Act 3 into Act 6's Coast — and to nothing without one to go on. */
+  private idForName(zoneName: string): string | null {
+    const ids = this.reverseNames.get(zoneName.toLowerCase()) ?? []
+    if (ids.length <= 1) return ids[0] ?? null
+    const here = this.area?.areaId
+    if (!here || !isCampaignAreaId(here)) return null
+    const part = here.slice(0, here.indexOf('_') + 1)
+    const same = ids.filter((id) => id.startsWith(part))
+    return same.length === 1 ? same[0] : null
+  }
+
   handle(ev: ParsedLogEvent): void {
     this.apply(ev, true)
   }
@@ -318,9 +335,9 @@ export class ProgressTracker {
         // Repeat announcement of the current zone: nothing to do.
         if (this.area && this.area.name === ev.zoneName) break
         // Fallback: the debug line was missed (pattern drift) — reverse
-        // name lookup; unknown or act-ambiguous names yield a null id.
+        // name lookup; unknown or still-ambiguous names yield a null id.
         this.area = {
-          areaId: this.reverseNames.get(ev.zoneName.toLowerCase()) ?? null,
+          areaId: this.idForName(ev.zoneName),
           name: ev.zoneName,
           areaLevel: null,
           ts: this.now()
