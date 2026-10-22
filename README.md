@@ -17,12 +17,14 @@ semi-automatically from a Path of Building import.
 - **Reads your game log, so it keeps up on its own.** Zone and level come from
   `Client.txt`; the guide advances as you enter zones and the Gems tab flips
   stages as you level. Close and reopen mid-session and it resumes where you are.
-  It flags a zone that's well above or below your level, and switching characters
-  brings back that character's build profile.
+  It flags a zone that's well above or below your level, switching characters
+  brings back that character's build profile, and a new character that reuses
+  last league's name starts its run over instead of inheriting the old one's.
 - **Tells you which gems to get, and where from.** Quest rewards and vendor buys
   in one chronological list, rewards first so you never pay for a gem a quest
   hands over. Socket colours are computed, prices shown, "pick one" quest choices
-  flagged, and gems your class already starts with are never listed to buy.
+  flagged, gems your class already starts with are never listed to buy, and an
+  optional mule (a throwaway level-1 alt) is planned in.
 - **Imports your Path of Building build** — paste an export code or a `pobb.in`
   link and it writes the stages for you.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
@@ -68,16 +70,16 @@ and Exile Leveling. Full guardrails:
 
 ## Install (Windows)
 
-Two double-clickable options, both produced by the **Build Windows** GitHub Action.
-Run it manually (repo → Actions → *Build Windows* → *Run workflow*) for a **dev build**
-— the exes land as a downloadable run **artifact** (version `0.0.0`, no release). To cut
-a **real release**, push a `v*` tag (e.g. `v0.1.0`): the build takes its version from the
-tag and attaches both exes to a **GitHub Release**.
+Download one of two files from the latest
+[**Release**](https://github.com/wertgzhj/poe-leveling-overlay/releases/latest):
 
-- **Installer** — `PoE Leveling Overlay-<version>-setup.exe`: installs the app and adds
-  Start Menu + Desktop shortcuts. Double-click the shortcut to launch.
-- **Portable** — `PoE Leveling Overlay-<version>-portable.exe`: no install; double-click
-  the exe directly.
+- **Installer** — `PoE-Leveling-Overlay-<version>-setup.exe`: installs the app and adds
+  Start Menu + Desktop shortcuts, and **updates itself** (see below).
+- **Portable** — `PoE-Leveling-Overlay-<version>-portable.exe`: no install; double-click
+  the exe directly. It doesn't update itself.
+
+Both are built by the **Build Windows** GitHub Action; how a release is cut is in
+[`CONTRIBUTING.md`](CONTRIBUTING.md#cut-a-release-go-live).
 
 The build is **unsigned**, so Windows SmartScreen warns on first run — choose
 *More info → Run anyway*. (Code signing needs a paid certificate; it's a later item.)
@@ -176,7 +178,8 @@ save** and shows validation problems in the panel.
 - The guide always advances to the **next open step** for the zone you entered. Town
   visits never skip pending steps, so portal trips to sell don't derail it. Hideouts
   and endgame maps are ignored entirely.
-- `"rewardHint": true` marks quest-reward steps (used by the gem panel from P3 on).
+- `"rewardHint": true` marks quest-reward steps: the guide tags them `REWARD`, and
+  while one is the current step the Gems tab's list reads *take rewards now*.
 - Fix mistakes with the next/previous hotkeys or by clicking a step (needs
   interactive mode, `Ctrl+Shift+C`).
 
@@ -225,30 +228,39 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
 ```
 
 - The **cost column** says how you get a gem: `Reward` in green for a free quest
-  pick, otherwise the vendor price tier (`Wisdom` / `Trans` / `Alt` / `Chance` /
-  `Alch`, brighter gold the dearer it is). Prices are provisional — see
-  [`docs/TESTING.md`](docs/TESTING.md#known-limitations).
+  pick, otherwise the vendor's price, from grey to white the dearer it is. Vendors
+  price a gem by its level requirement, and every tier was checked in game:
+
+  | Gem level | 1–7 | 8–15 | 16–27 | 28–37 | 38+ |
+  |---|---|---|---|---|---|
+  | Price | `Wisdom` | `Trans` | `Alt` | `Chance` | `Alch` |
+
 - A gem needed in **two different links** shows its count there too: `2× Alt` means
   two purchases. A quest hands out exactly one reward, so a reward needed twice reads
   `Reward +1` — one free, the rest you buy or find.
-- A gem another class **starts** with reads **`Mule`** in the cost column and the class
-  to roll in the source column, both in turquoise — roll a level-1 character of that
-  class, stash its two starting gems, delete it, and you have it for free instead of
-  buying it (from `data/starting-gems.json`). Those come first in the list: it's the
-  one thing you do before you start.
+- **Muling** — rolling a throwaway level-1 character of another class for a gem it
+  gets on the Twilight Strand (its starting gems, Hillock's reward, or Nessa's first
+  stock) — is your call, per character: the **Mule** dropdown under the character
+  line picks the gem (Momentum by default, when the build uses it) or **No mule**,
+  which is the better answer in a party. The muled gem's line is tinted
+  **turquoise**, reads `Mule` in the cost column and the class to roll in the source
+  column, and comes first on the opening stages (up to level 4) only: it's the one
+  thing you do before you start. It also leaves its quest pick, so that quest hands
+  over the next gem you want instead.
 - A quest that offers several of your gems is one **pick**, so it gets its own box
   reading `PICK ONE, BUY REST` — with the price of the ones you don't take **and the
   vendor who has them all**. Those gems are quest rewards, so nothing else on the tab
-  would ever have told you where to buy them. Once you've moved on they reappear as
-  ordinary buys marked `(if not picked)`: the quest handed over exactly one, and the
-  overlay can't see your inventory, so it lists them rather than assuming.
-- Gems you'll want later are dimmed and marked `— for later (lvl 32+)`, ordered by
+  would ever have told you where to buy them. (*The Caged Brute* is two picks — a
+  support and a skill — and shows as two.) On the **next** stage the rest come back
+  once, as one buy row reading `↳ whichever you didn't pick`: the quest handed over
+  exactly one, and the overlay can't see your inventory.
+- Gems you'll want later turn grey and read `— for later (lvl 32+)`, ordered by
   when you actually need them. A quest choice from an act you **haven't reached** is
-  left out entirely rather than dimmed — at level 2 in Act 1, an Act 4 quest is not a
+  left out entirely rather than greyed — at level 2 in Act 1, an Act 4 quest is not a
   preview. It appears when you get there. Before the overlay has seen a zone it shows
-  everything, and entering the Twilight Strand starts the count over.
-- Buys are headed by the **stop** you make them at — `A1 · Nessa`, `A3 · Siosa ·
-  Library` — so what you pick up in one visit reads as one block. A vendor's stock
+  everything.
+- Buys are headed by the **stop** you make them at — `A1 · Nessa`, `A3 · Library` —
+  so what you pick up in one visit reads as one block. A vendor's stock
   grows with each quest you finish, so the same NPC can head two blocks: that's two
   trips, not a duplicate.
 - **Siosa waits for the Library.** He's the earliest source for around 195 gems —
@@ -256,6 +268,11 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
   Library and handing over the Golden Page, not by entering the act. His stock stays
   out of the list until you've been there, and reads as **`A3 · Library`** in violet,
   because the trip is the thing you have to remember, not the man.
+- **The links at the bottom** are the build as it should be socketed now. Each line
+  is tinted by what it is — **gold** for a gem from the act you're in, **turquoise**
+  for the mule, **green** for a starting gem — and a gem from an act you haven't
+  reached is grey. **`NEW`** marks a gem the previous stage's links didn't have, so
+  you see what changed at a glance, on any stage you page to with ◀ ▶.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
   gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`,
   filled from the Path of Exile Wiki. **Easiest way to (re)fill it:** repo → Actions →
@@ -277,8 +294,8 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
 code or a `pobb.in` / `pastebin` link and hit **Import** — it decodes the build,
 reads the class and the per-level-range skill sets, and adds it as a **new** profile
 and makes it active — importing another build never replaces this one (reviewing any
-warnings it shows). Gem *sources* are left blank for you to fill
-(full gem data is a later phase). Headless equivalent:
+warnings it shows). Where each gem comes from is filled in from `data/gems.json` by
+class. Headless equivalent:
 
 ```bash
 npm run import-pob -- "<pob code or file>" --name "My Build" --out data/profiles/mine.json
@@ -290,19 +307,22 @@ npm run import-pob -- "<pob code or file>" --name "My Build" --out data/profiles
   over exclusive fullscreen.
 - **No zone detection:** check the `Client.txt` path in Settings.
 - **Zones track but the level never changes:** the game isn't running in English. The
-  tracker strip turns amber and says so; switch the client to English, or add your
+  tracker strip turns orange and says so; switch the client to English, or add your
   language as `data/log-patterns/<lang>.json` and register it in
   `electron/log/service.ts`.
 - **A gem says "drop/trade" but you can buy it:** the gem data may predate a patch —
   repo → Actions → *Fetch gem data* → *Run workflow*, then report it if it persists.
 - **A hotkey does nothing:** another app may already own that combo — rebind it.
+- **Text is hard to read in bright areas:** raise **Settings → Overlay → Opacity** to
+  70 % or more. Below that, Settings says so: the panel can only cover the game, not
+  dim it, so over snow or a bright effect a see-through background loses contrast.
 
 ## Privacy
 
 Local-only by design: no server, no account, no telemetry, no analytics, no crash
 reporting. **Nothing about you, your characters or your game is ever sent anywhere.**
-The log watcher matches only zone/level patterns and discards every other line
-immediately; chat and whisper content is never parsed, stored, or displayed. Settings
+The log watcher matches only zone, level and Izaro's trial lines and discards every
+other line immediately; chat and whisper content is never parsed, stored, or displayed. Settings
 and profiles are stored locally.
 
 The app makes exactly two kinds of outbound request, both to third parties that learn
@@ -328,16 +348,17 @@ npm run make-icon   # generate the tray/app icon (build/icon.png)
 npm run dev         # launch the overlay with hot reload
 npm run build       # bundle main + preload + renderer
 npm run typecheck   # tsc for the main and renderer projects
-npm test            # parser / tracker / watcher / guide / profile / PoB tests
+npm test            # unit tests: log parsing, tracking, gem engine, PoB import, …
 npm run sanitize -- capture.txt out.log   # sanitize a Client.txt capture for fixtures
 npm run import-pob -- "<pob code>" --out data/profiles/mine.json   # PoB -> profile
 ```
 
-Log-format note: the shipped patterns (`data/log-patterns/en.json`) and area ids
-(`data/areas/en.json`) are **provisional until validated against a real capture** —
+Log-format note: the shipped patterns (`data/log-patterns/en.json`) are verified
+against real captures; the named area ids (`data/areas/en.json`) are verified for
+Act 1 only. A sanitized capture from a later act is the most useful thing to add —
 see `data/fixtures/README.md` for the capture + sanitize workflow.
 
-Requires Node 20+. The app targets Windows; `npm run package:win` builds the installer
+Requires Node 22.6+ (the tests run TypeScript directly). The app targets Windows; `npm run package:win` builds the installer
 (run on Windows or with wine).
 
 ## License
