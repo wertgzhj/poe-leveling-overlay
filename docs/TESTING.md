@@ -173,7 +173,10 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      moves to another link is not `NEW`.
    - The ▶ of the stage switch says where the next stage starts (`lvl 56 ▶`),
      its tooltip names it; on the last stage it's greyed out with no level.
-     Nothing follows the last link group but the version.
+     Nothing follows the last link group but the version. No line repeats
+     class, ascendancy or level under the tracker line; a paged stage says
+     `Earlier stage ▸ back to yours`. A gem slotted once on this stage reads
+     `Alt`, not `2× Alt`, even if a later stage slots it twice.
    - **Settings → Gems tab → "▸ What the colours mean"** unfolds a legend:
      every line colour, `NEW`, the source colours and the socket pips, each
      drawn the way the real rows draw it and said in words. It stays open when
@@ -291,14 +294,15 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - Done is **grey**, not gold: a checked trial's ✓ and a done guide step.
    - Prices run grey → white (Wisdom → Alch), not gold.
    - **"Not now" is grey, never faded:** a done guide step or trial (✓, struck
-     through), a "for later" row or *Pick one* box, a not-yet link — all stay
+     through), a `· lvl 32+` row or *Pick one* box, a not-yet link — all stay
      readable. Only disabled buttons fade.
    - The Guide's quest steps show a plain `!`, not a red ❗. Nothing at the
      bottom of a tab (the Guide's `reset`) sits under the version number.
    - **One tag, one heading, one button** (`src/lib/ui.ts`): `NEW`,
-     `REWARD`, `PICK ONE, BUY REST`, `YOU ARE HERE` and the `zone 32` tag share
-     one look (10px, upper case, filled), only the colour differs. Section
-     headings are all the same size; buttons in the header, Settings and the
+     `REWARD`, `YOU ARE HERE` and the `zone 32` tag share one look (10px,
+     upper case, filled), only the colour differs. Section headings are all
+     the same size and unfilled — *Get these gems* and *Pick one, buy rest*
+     alike; buttons in the header, Settings and the
      editor differ only in size.
    - **Nothing below 10px** except the letter inside a socket dot (9px bold).
      The `B` in a blue dot is white, the `R` and `G` black — all readable.

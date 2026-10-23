@@ -127,3 +127,25 @@ test('two vendors in one act: the earlier quest\'s wins, not the data\'s order',
   assert.equal(data.earliestVendor('Vulnerability', 'Marauder')?.npc, 'Clarissa')
   assert.equal(data.earliestSource('Vulnerability', 'Marauder')?.npc, 'Clarissa')
 })
+
+test("a stage counts its own copies, not the build's most", () => {
+  // As a PoB import writes it: count 2, because the last stage slots the gem
+  // in two links. The stage before slots it once and must say 1×.
+  const data = new GemData({
+    Autoexertion: { attr: 'str', requiredLevel: 24, sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa' }] }
+  })
+  const build = parseProfile(
+    JSON.stringify({
+      meta: { name: 'copies', class: 'Marauder' },
+      stages: [
+        { range: [22, 31], socketGroups: [{ gems: ['Autoexertion'] }] },
+        { range: [32, 40], socketGroups: [{ gems: ['Autoexertion'] }, { gems: ['Autoexertion'] }] }
+      ],
+      gemPlan: [{ gem: 'Autoexertion', count: 2 }]
+    })
+  ).profile!
+  const countOn = (stage: number): number | undefined =>
+    acquisitionsForStage(build, stage, data, { actReached: 3 }).purchases.find((e) => e.gem === 'Autoexertion')?.count
+  assert.equal(countOn(0), undefined, 'one copy: no count')
+  assert.equal(countOn(1), 2)
+})

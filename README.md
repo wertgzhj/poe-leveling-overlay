@@ -264,7 +264,7 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
   exactly one, and the overlay can't see your inventory.
 - **The list holds what you can get from the acts you've reached** — for this stage,
   and quest picks for later stages. Gems you'll want later turn grey and read
-  `— for later (lvl 32+)`. Anything from an act you **haven't reached** is left out:
+  `· lvl 32+` after the name (the tooltip spells it out). Anything from an act you **haven't reached** is left out:
   at level 2 in Act 1, an Act 4 quest is not a preview; it appears when you get
   there, and until then the gem waits in grey in the links below. A pick that's only
   for later shows on the stages of its own act — an Act 1 pick isn't carried onto an
