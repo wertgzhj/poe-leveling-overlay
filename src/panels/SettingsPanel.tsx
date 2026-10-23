@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useOverlayStore } from '../stores/overlayStore'
 import { acceleratorFromEvent, formatAccelerator } from '../lib/accelerator'
 import { HEADING, OPACITY_READABLE, button, panelSurface } from '../lib/ui'
+import { Legend } from './gems/Legend'
 
 type HotkeyField = keyof HotkeyBindingsBridge
 
@@ -439,6 +440,10 @@ export function SettingsPanel(): React.JSX.Element {
                 {regexDraft.length}/{SEARCH_BOX_LIMIT}
               </span>
             </div>
+          </Section>
+
+          <Section title="Gems tab">
+            <Legend />
           </Section>
 
           <Section title="Hotkeys">

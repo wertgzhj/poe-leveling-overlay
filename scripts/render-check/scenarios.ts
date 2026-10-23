@@ -177,14 +177,14 @@ export interface Scenario {
 const scenarios: Scenario[] = [
   // Act 2, the live stage: line colours, NEW, a pick, the bandit reminder.
   { name: 'gems-act2', tab: 'Gems', profile: profileSnapshot(3, 22, 2, { choiceDue: bandit }), log: crypt, trials, guide },
-  // The colour legend unfolded — under the short opening stage, so it fits.
+  // The Gems tab's colour legend, unfolded in Settings.
   {
-    name: 'gems-legend',
-    tab: 'Gems',
+    name: 'settings-legend',
+    settings: true,
     click: 'What the colours mean',
-    profile: profileSnapshot(0, 2, 1),
-    log: log('The Coast', '1_1_2', 2, 2),
-    trials: { ...trials, currentZoneTrialId: null },
+    profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
     guide
   },
   // The opening stage: the mule trip in the plan, the starting gem's line.

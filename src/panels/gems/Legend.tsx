@@ -2,7 +2,8 @@ import { useOverlayStore } from '../../stores/overlayStore'
 import { Pip, Tag } from '../shared'
 import { LINE_TONE } from './LinkGroup'
 
-// What the Gems tab's colours mean, behind a toggle at the bottom of the tab.
+// What the Gems tab's colours mean, behind a toggle in Settings — reference you
+// read once, so it doesn't take room under the links while you play.
 // Every sample is drawn with the classes the real rows use (LINE_TONE, Tag,
 // Pip, the token colours), so the legend can't drift from what it explains.
 // Each meaning is said in words too — the legend is the long form of the
@@ -38,7 +39,7 @@ export function Legend(): React.JSX.Element {
   const open = useOverlayStore((s) => s.legendOpen)
   const patch = useOverlayStore((s) => s.patch)
   return (
-    <div className="mt-2 px-1">
+    <div>
       <button
         aria-expanded={open}
         aria-controls="gems-legend"

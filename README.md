@@ -24,8 +24,8 @@ semi-automatically from a Path of Building import.
   in one chronological list, rewards first so you never pay for a gem a quest
   hands over. Socket colours are computed, prices shown, "pick one" quest choices
   flagged, gems your class already starts with are never listed to buy, and an
-  optional mule (a throwaway level-1 alt) is planned in. *What the colours mean*,
-  at the bottom of the tab, explains every colour in words.
+  optional mule (a throwaway level-1 alt) is planned in. Settings → *Gems tab*
+  explains every colour in words.
 - **Imports your Path of Building build** — paste an export code or a `pobb.in`
   link and it writes the stages for you.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment

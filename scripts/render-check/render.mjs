@@ -87,7 +87,11 @@ async function shoot(index, scenario) {
           const press = () => {
             const b = then && [...document.querySelectorAll('button')].find((b) => b.textContent.includes(then))
             if (then && !b) return reject(new Error('no button saying ' + then))
-            if (b) b.click()
+            if (b) {
+              b.click()
+              // Bring what it opened into view: the panel scrolls, the shot doesn't.
+              requestAnimationFrame(() => b.scrollIntoView({ block: 'start' }))
+            }
             document.fonts.ready.then(() => setTimeout(resolve, 300))
           }
           setTimeout(press, then ? 100 : 0)
