@@ -4,6 +4,7 @@ import { sourceName, sourceTone } from '../../lib/sources'
 import { HEADING } from '../../lib/ui'
 import { useOverlayStore } from '../../stores/overlayStore'
 import { article, ErrorBox } from '../shared'
+import { Legend } from './Legend'
 import { SocketGroup } from './LinkGroup'
 import { MulePicker } from './MulePicker'
 import { BuyRow, RewardGroupRow } from './PlanRows'
@@ -229,6 +230,7 @@ export function GemBody(): React.JSX.Element {
           From level {profile.nextStage.range[0]}: {profile.nextStage.label}
         </div>
       )}
+      <Legend />
     </>
   )
 }
