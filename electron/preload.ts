@@ -63,6 +63,7 @@ const api = {
   setMule: (gem: string | null): void => ipcRenderer.send(Channels.profileSetMule, gem),
   gemNameList: (): Promise<string[]> => ipcRenderer.invoke(Channels.profileGemNames),
   dismissChoice: (id: string): void => ipcRenderer.send(Channels.profileDismissChoice, id),
+  togglePantheon: (soul: string): void => ipcRenderer.send(Channels.profileTogglePantheon, soul),
   activateProfile: (id: string): Promise<boolean> => ipcRenderer.invoke(Channels.profilesActivate, id),
   createProfile: (name: string, charClass: string): Promise<LibraryResult> =>
     ipcRenderer.invoke(Channels.profilesCreate, { name, charClass }),

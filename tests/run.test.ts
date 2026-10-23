@@ -5,7 +5,7 @@ import type { ProfileMeta } from '../electron/profile/profile.ts'
 
 // The settings file, as a plain object.
 function memoryStore(seed: Partial<RunData> = {}): RunStore & { data: RunData } {
-  const data: RunData = { actReached: {}, dismissedChoices: {}, ...seed }
+  const data: RunData = { actReached: {}, dismissedChoices: {}, pantheonUnlocked: {}, ...seed }
   return {
     data,
     get: (key) => data[key],
@@ -34,13 +34,19 @@ test('the act only moves forward', () => {
   assert.equal(runs.noteAct('manauda', null), false)
 })
 
-test('the bandits are due from Act 2, the pantheon from Act 5, one at a time', () => {
+test('the bandits are due from Act 2, the pantheon from Act 6, one at a time', () => {
   const runs = new CharacterRuns(memoryStore())
   runs.noteAct('manauda', 1)
   assert.equal(runs.choiceDue('manauda', BUILD), null, 'Act 1: nothing yet')
 
   runs.noteAct('manauda', 5)
-  // Both are due by Act 5, but the bar holds one: the bandits come first.
+  // Act 5: the bandits, and no pantheon yet — its gods are fought in Acts 6-10.
+  assert.equal(runs.choiceDue('manauda', BUILD)?.id, 'bandit')
+  runs.dismiss('manauda', 'bandit')
+  assert.equal(runs.choiceDue('manauda', BUILD), null, 'Act 5: no pantheon yet')
+  runs.forget('manauda')
+  runs.noteAct('manauda', 6)
+  // Both are due by Act 6, but the bar holds one: the bandits come first.
   const bandit = runs.choiceDue('manauda', BUILD)
   assert.equal(bandit?.id, 'bandit')
   assert.equal(bandit?.wants, 'help Alira')
@@ -81,3 +87,20 @@ test("a fresh character forgets its namesake's run, and only its own", () => {
   assert.deepEqual(store.data.actReached.other, 6)
   assert.deepEqual(store.data.dismissedChoices.other, ['bandit'])
 })
+
+test('Pantheon powers are ticked per character, and a fresh character starts empty', () => {
+  const store = memoryStore()
+  const runs = new CharacterRuns(store)
+  assert.deepEqual(runs.pantheon('manauda'), [])
+  assert.equal(runs.togglePantheon('manauda', 'Soul of Tukohama'), true)
+  assert.deepEqual(runs.pantheon('manauda'), ['Soul of Tukohama'])
+  assert.deepEqual(runs.pantheon('other'), [])
+  // Toggling again unticks it.
+  runs.togglePantheon('manauda', 'Soul of Tukohama')
+  assert.deepEqual(runs.pantheon('manauda'), [])
+  runs.togglePantheon('manauda', 'Soul of Shakari')
+  runs.forget('manauda')
+  assert.deepEqual(runs.pantheon('manauda'), [])
+  assert.equal(runs.togglePantheon(null, 'Soul of Shakari'), false)
+})
+

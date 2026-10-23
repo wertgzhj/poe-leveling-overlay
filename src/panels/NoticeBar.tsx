@@ -5,13 +5,16 @@ import { useOverlayStore } from '../stores/overlayStore'
 
 // The notice bar under the tracker strip, shown on every tab.
 
+const NO_GODS: PantheonStatusBridge[] = []
+
 // The notice bar, shown on every tab. Three things can claim it, ranked by how
 // costly missing one is: a one-shot build decision (permanent), then a finished
 // Labyrinth (an hour of not knowing), then a trial you're standing in (it comes
-// round again). Only one bar, so it never stacks.
+// round again), then a Pantheon god your profile wants (you can come back for
+// it). Only one bar, so it never stacks.
 export function TrialHint(): React.JSX.Element | null {
-  const { trials, choice } = useOverlayStore(
-    useShallow((s) => ({ trials: s.trials, choice: s.profile?.choiceDue ?? null }))
+  const { trials, choice, pantheon } = useOverlayStore(
+    useShallow((s) => ({ trials: s.trials, choice: s.profile?.choiceDue ?? null, pantheon: s.profile?.pantheon ?? NO_GODS }))
   )
 
   // A bandit or pantheon choice outranks both. It is one-shot and permanent for
@@ -26,7 +29,7 @@ export function TrialHint(): React.JSX.Element | null {
           title={
             choice.id === 'bandit'
               ? `Act 2, "Deal with the Bandits" — your profile says ${choice.wants}. The alternatives: ${choice.options.join(', ')}. It cannot be changed afterwards.`
-              : `Act 5 — the Pantheon opens up at Sin. Your profile wants ${choice.wants}. This one you can change later.`
+              : `From Act 6 your Pantheon powers come from the gods you defeat — your profile wants ${choice.wants}. You can change them at any time in town.`
           }
         >
           {choice.id === 'bandit' ? 'Bandits: ' : 'Pantheon: '}
@@ -68,7 +71,31 @@ export function TrialHint(): React.JSX.Element | null {
   // zone never checks a trial off (you can walk it without doing the trial), so
   // this is a reminder plus a one-click correction.
   const trial = trials?.trials.find((t) => t.id === trials.currentZoneTrialId)
-  if (!trial || trial.seen) return null
+  if (!trial || trial.seen) {
+    // Last: a Pantheon god your profile wants is fought here. Optional bosses
+    // are easy to walk past, so it says where — a side area by name.
+    const god = pantheon.find((g) => g.here && !g.unlocked)
+    if (!god) return null
+    return (
+      <div className="flex items-center gap-2 border-b border-overlay-accent/50 bg-overlay-accent/15 px-3 py-1.5">
+        <span className="text-overlay-accent" aria-hidden>◆</span>
+        <span
+          className="min-w-0 flex-1 truncate text-[11px] text-overlay-text"
+          title={`${god.god} — ${god.where}. Defeating it unlocks ${god.soul}, which your profile wants.`}
+        >
+          Pantheon: {god.soul.replace(/^Soul of (the )?/, '')}
+          {god.side ? ` — ${god.side}` : ' is here'}
+        </span>
+        <button
+          className="shrink-0 rounded bg-overlay-accent/20 px-2 py-0.5 text-[10px] font-medium text-overlay-accent hover:bg-overlay-accent/30"
+          title="Mark this Pantheon power as unlocked on this character"
+          onClick={() => window.overlay?.togglePantheon(god.soul)}
+        >
+          Done ✓
+        </button>
+      </div>
+    )
+  }
   return (
     <div className="flex items-center gap-2 border-b border-warn/40 bg-warn/10 px-3 py-1.5">
       <span className="text-warn" aria-hidden>△</span>

@@ -46,6 +46,7 @@ type MuleOptionBridge = import('../electron/profile/engine.ts').MuleOption
 type ProfileMetaBridge = import('../electron/profile/profile.ts').ProfileMeta
 type ChoiceDueBridge = import('../electron/channels.ts').ChoiceDue
 type ProfileSnapshotBridge = import('../electron/channels.ts').ProfileSnapshot
+type PantheonStatusBridge = import('../electron/channels.ts').PantheonStatus
 type LibraryEntryBridge = import('../electron/profile/library.ts').LibraryEntry
 type LibraryResultBridge = import('../electron/profile/library.ts').LibraryResult
 type PobImportResponseBridge = import('../electron/channels.ts').PobImportResponse

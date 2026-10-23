@@ -17,7 +17,7 @@ import {
   resolveStage,
   type AcquisitionContext
 } from '../../electron/profile/engine.ts'
-import type { ChoiceDue, GuideState, LogSnapshot, ProfileSnapshot } from '../../electron/channels.ts'
+import type { ChoiceDue, GuideState, LogSnapshot, PantheonStatus, ProfileSnapshot } from '../../electron/channels.ts'
 import type { TrialsSnapshot } from '../../electron/trials/engine.ts'
 
 const root = new URL('../../', import.meta.url).pathname
@@ -65,7 +65,12 @@ function profileSnapshot(
   stageIndex: number,
   level: number,
   act: number,
-  extra: { liveIndex?: number; choiceDue?: ChoiceDue | null; classMismatch?: string | null } = {}
+  extra: {
+    liveIndex?: number
+    choiceDue?: ChoiceDue | null
+    classMismatch?: string | null
+    pantheon?: PantheonStatus[]
+  } = {}
 ): ProfileSnapshot {
   const ctx: AcquisitionContext = {
     startingGems: new Set((starting[profile.meta.class] ?? []).map(normalizeGemName)),
@@ -90,7 +95,8 @@ function profileSnapshot(
     choiceDue: extra.choiceDue ?? null,
     library: [],
     activeId: null,
-    muleChoice: { options, chosen: mule?.gem ?? null }
+    muleChoice: { options, chosen: mule?.gem ?? null },
+    pantheon: extra.pantheon ?? []
   }
 }
 
@@ -209,6 +215,28 @@ const scenarios: Scenario[] = [
     guide
   },
   { name: 'trials', tab: 'Trials', profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
+  // In The Oasis with Soul of Shakari wanted: the Pantheon hint, and the list.
+  {
+    name: 'trials-pantheon',
+    tab: 'Trials',
+    profile: profileSnapshot(3, 62, 9, {
+      pantheon: [
+        { soul: 'Soul of Lunaris', god: 'Lunaris, Eternal Moon', act: 8, where: 'The Harbour Bridge', unlocked: true, here: false },
+        {
+          soul: 'Soul of Shakari',
+          god: 'Shakari, Queen of the Sands',
+          act: 9,
+          where: 'The Sand Pit, a side area of The Oasis',
+          side: 'The Sand Pit',
+          unlocked: false,
+          here: true
+        }
+      ]
+    }),
+    log: log('The Oasis', '2_9_4', 61, 62),
+    trials: { ...trials, currentZoneTrialId: null },
+    guide
+  },
   { name: 'trials-lab-done', tab: 'Trials', profile: profileSnapshot(3, 22, 2), log: crypt, trials: labDone, guide },
   { name: 'guide', tab: 'Guide', profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
   {

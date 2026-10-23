@@ -119,7 +119,7 @@ export interface ProfileMeta {
   pobSource?: string
   /** Act 2's "Deal with the Bandits" — the overlay reminds you when you get there. */
   bandit?: Bandit
-  /** Chosen from Sin once the Pantheon opens up in Act 5. */
+  /** Pantheon powers: its gods are fought in Acts 6-10 (see pantheon.ts). */
   pantheon?: Pantheon
 }
 

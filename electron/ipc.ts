@@ -141,6 +141,9 @@ export function registerIpc(
   ipcMain.on(Channels.profileDismissChoice, (_e, id: unknown) => {
     if (typeof id === 'string') profile.dismissChoice(id)
   })
+  ipcMain.on(Channels.profileTogglePantheon, (_e, soul: unknown) => {
+    if (typeof soul === 'string') profile.togglePantheon(soul)
+  })
 
   ipcMain.on(Channels.editorOpen, (_e, tab: unknown) => editor.open(typeof tab === 'string' ? tab : undefined))
   ipcMain.handle(Channels.editorLoad, () => loadForEditor())
