@@ -35,6 +35,8 @@ export const Channels = {
   hotkeysResume: 'hotkeys:resume',
   /** renderer -> main (invoke): native file picker for the Client.txt path */
   dialogPickClientTxt: 'dialog:pick-client-txt',
+  /** renderer -> main (invoke): look for Client.txt and use it; the path or null */
+  logLocateClientTxt: 'log:locate-client-txt',
   /** renderer -> main: the gem to mule on the tracked character (null = none) */
   profileSetMule: 'profile:set-mule',
   /** renderer -> main (invoke): switch the active profile by library id */

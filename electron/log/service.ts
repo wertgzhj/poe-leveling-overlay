@@ -3,7 +3,10 @@
 // the resume snapshot (restart/resume). The only file in electron/log/ that
 // may import Electron modules.
 
+import { execFileSync } from 'node:child_process'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { LogParser, type LogPatterns } from './parser.ts'
+import { locateClientTxt, steamPathFromReg, type LocateFs } from './locate.ts'
 import { ProgressTracker, zoneFit, type AreaState, type LevelUpEvent } from './tracker.ts'
 // Both are pure modules; the safe-range formula is the gem panel's too, and
 // duplicating it here would let the two drift.
@@ -57,7 +60,12 @@ export class LogService {
   }
 
   start(): void {
-    const path = store.get('clientTxtPath')
+    // First launch (or a path cleared in Settings): look before asking.
+    let path = store.get('clientTxtPath')
+    if (!path) {
+      path = this.locateClientTxt()
+      if (path) store.set('clientTxtPath', path)
+    }
     if (path) {
       this.watcher.start(path)
     } else {
@@ -78,6 +86,26 @@ export class LogService {
     } else {
       this.watcher.stop()
       this.send(Channels.logStatus, this.watcher.status())
+    }
+  }
+
+  /** Where this machine keeps Path of Exile's Client.txt, or null when none of
+   *  the usual places has one (see locate.ts). Windows only, like the game. */
+  locateClientTxt(): string | null {
+    if (process.platform !== 'win32') return null
+    try {
+      return locateClientTxt(
+        {
+          programFilesX86: process.env['ProgramFiles(x86)'],
+          programFiles: process.env['ProgramFiles'],
+          programData: process.env['ProgramData'],
+          steamPath: registrySteamPath()
+        },
+        NODE_FS
+      )
+    } catch (err) {
+      console.warn('[log] looking for Client.txt failed:', err)
+      return null
     }
   }
 
@@ -232,5 +260,45 @@ export class LogService {
 
   private send(channel: string, payload: unknown): void {
     this.overlay.window?.webContents.send(channel, payload)
+  }
+}
+
+/** The real file system, for locate.ts. Every miss is a null, never a throw. */
+const NODE_FS: LocateFs = {
+  read: (path) => {
+    try {
+      return readFileSync(path, 'utf8')
+    } catch {
+      return null
+    }
+  },
+  list: (dir) => {
+    try {
+      return readdirSync(dir)
+    } catch {
+      return []
+    }
+  },
+  mtime: (path) => {
+    try {
+      const st = statSync(path)
+      return st.isFile() ? st.mtimeMs : null
+    } catch {
+      return null
+    }
+  }
+}
+
+/** Steam's folder from the registry — it's often not in Program Files. */
+function registrySteamPath(): string | null {
+  try {
+    const out = execFileSync('reg', ['query', 'HKCU\\Software\\Valve\\Steam', '/v', 'SteamPath'], {
+      encoding: 'utf8',
+      timeout: 2000,
+      windowsHide: true
+    })
+    return steamPathFromReg(out)
+  } catch {
+    return null // no Steam, or no reg.exe: the Program Files guesses remain
   }
 }

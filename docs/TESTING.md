@@ -6,9 +6,10 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 258 tests: parser, tracker, watcher, guide, profile,
+npm test        # 266 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
-                # search regex, profile library, update errors, area table
+                # search regex, profile library, update errors, area table,
+                # finding Client.txt
 npm run typecheck
 npm run build
 ```
@@ -47,6 +48,12 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    around the panel must reach the game — only the visible panel captures the
    mouse.
 3. **Settings.** ⚙ → set the `Client.txt` path, rebind a hotkey, adjust opacity.
+   **First launch:** with no path stored (delete `clientTxtPath` from the settings
+   file, or clear the field and restart), the overlay must find `Client.txt` by
+   itself and start tracking — Steam, a Steam library on another drive, standalone
+   or Epic. **Find** does the same on demand and says *Found* or *Not found*; on a
+   machine with both a Steam and a standalone install it must pick the one you
+   played last.
    All take effect immediately. The sections run in the order the work does:
    Updates, the editor button, Build profile, Game log, Overlay, Search regex,
    Hotkeys. The three tabs split the window into equal thirds at any size — drag
