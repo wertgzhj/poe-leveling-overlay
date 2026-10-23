@@ -119,6 +119,8 @@ const api = {
 
   pickClientTxt: (): Promise<string | null> =>
     ipcRenderer.invoke(Channels.dialogPickClientTxt),
+  locateClientTxt: (): Promise<string | null> =>
+    ipcRenderer.invoke(Channels.logLocateClientTxt),
 
   getAppInfo: (): Promise<AppInfo> => ipcRenderer.invoke(Channels.appGetInfo)
 }

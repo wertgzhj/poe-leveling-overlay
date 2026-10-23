@@ -71,6 +71,8 @@ export function SettingsPanel(): React.JSX.Element {
   const [recording, setRecording] = useState<HotkeyField | null>(null)
   const [failed, setFailed] = useState<Set<string>>(new Set())
   const [pathDraft, setPathDraft] = useState(clientTxtPath ?? '')
+  /** What the last "Find" said; cleared when the path is typed or browsed. */
+  const [findResult, setFindResult] = useState<'found' | 'none' | null>(null)
   const [charDraft, setCharDraft] = useState(characterName ?? '')
   const [regexDraft, setRegexDraft] = useState(searchRegex)
   const [pobInput, setPobInput] = useState('')
@@ -137,7 +139,18 @@ export function SettingsPanel(): React.JSX.Element {
     void window.overlay?.setSettings({ clientTxtPath: v.length ? v : null })
   }
 
+  const find = (): void => {
+    void window.overlay?.locateClientTxt().then((p) => {
+      setFindResult(p ? 'found' : 'none')
+      if (p) {
+        setPathDraft(p)
+        patch({ clientTxtPath: p })
+      }
+    })
+  }
+
   const browse = (): void => {
+    setFindResult(null)
     void window.overlay?.pickClientTxt().then((p) => {
       if (p) {
         setPathDraft(p)
@@ -290,10 +303,20 @@ export function SettingsPanel(): React.JSX.Element {
                 spellCheck={false}
                 value={pathDraft}
                 placeholder="…\Path of Exile\logs\Client.txt"
-                onChange={(e) => setPathDraft(e.target.value)}
+                onChange={(e) => {
+                  setPathDraft(e.target.value)
+                  setFindResult(null)
+                }}
                 onBlur={() => commitPath(pathDraft)}
                 className="min-w-0 flex-1 rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
               />
+              <button
+                onClick={find}
+                title="Look in the Steam, standalone and Epic install folders"
+                className={'shrink-0 ' + button('ghost', 'md')}
+              >
+                Find
+              </button>
               <button
                 onClick={browse}
                 className={'shrink-0 ' + button('ghost', 'md')}
@@ -301,7 +324,16 @@ export function SettingsPanel(): React.JSX.Element {
                 Browse…
               </button>
             </div>
-            <p className="mt-1 text-[10px] text-overlay-muted">Used for zone/level tracking.</p>
+            <p
+              className={'mt-1 text-[10px] ' + (findResult === 'none' ? 'text-warn' : 'text-overlay-muted')}
+              role="status"
+            >
+              {findResult === 'found'
+                ? '✓ Found — tracking from this file.'
+                : findResult === 'none'
+                  ? 'Not found in the usual places — use Browse… (it’s in the game folder, under logs).'
+                  : 'Used for zone/level tracking. Found by itself on first launch.'}
+            </p>
 
             <label className="mt-2 block text-[11px] text-overlay-muted">
               Character name (optional)

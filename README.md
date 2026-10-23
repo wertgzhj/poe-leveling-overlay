@@ -113,7 +113,10 @@ Two things to know:
 
 ## Setup
 
-1. Set the path to your `Client.txt` (Settings → Game log). Defaults:
+1. The overlay finds your `Client.txt` by itself on first launch: the Steam folder and
+   every Steam library (a second drive too), the standalone client in Program Files,
+   and Epic. If it can't, set the path in Settings → Game log (**Find** looks again,
+   **Browse…** picks the file):
    - Steam: `…\steamapps\common\Path of Exile\logs\Client.txt`
    - Standalone: `…\Grinding Gear Games\Path of Exile\logs\Client.txt`
 2. Run Path of Exile in **Windowed Fullscreen** — exclusive fullscreen covers overlays.
@@ -307,7 +310,8 @@ npm run import-pob -- "<pob code or file>" --name "My Build" --out data/profiles
 
 - **Overlay is invisible:** switch PoE to Windowed Fullscreen; the overlay cannot draw
   over exclusive fullscreen.
-- **No zone detection:** check the `Client.txt` path in Settings.
+- **No zone detection:** check the `Client.txt` path in Settings — **Find** looks
+  for it again.
 - **Zones track but the level never changes:** the game isn't running in English. The
   tracker strip turns orange and says so; switch the client to English, or add your
   language as `data/log-patterns/<lang>.json` and register it in

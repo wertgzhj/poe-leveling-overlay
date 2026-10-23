@@ -111,7 +111,7 @@ function trackerLine(
   if (logStatus?.state !== 'watching') {
     if (logStatus?.state === 'missing') return 'Client.txt not found — check Settings'
     if (logStatus?.state === 'error') return 'Log read error — see Settings'
-    return 'Set the Client.txt path in Settings to enable tracking'
+    return 'Client.txt not found — set its path in Settings to enable tracking'
   }
   // Zone lines parse (they're locale-independent) but the localized ones don't:
   // levels never arrive, so the Gems tab would sit on stage 1 forever. Say why.

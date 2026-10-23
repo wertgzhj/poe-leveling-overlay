@@ -225,6 +225,15 @@ export function registerIpc(
     return pickFile(overlay, 'Select Client.txt', [{ name: 'Client log', extensions: ['txt'] }])
   })
 
+  ipcMain.handle(Channels.logLocateClientTxt, (): string | null => {
+    const found = log.locateClientTxt()
+    if (found && found !== store.get('clientTxtPath')) {
+      store.set('clientTxtPath', found)
+      log.setPath(found)
+    }
+    return found
+  })
+
 }
 
 async function pickFile(
