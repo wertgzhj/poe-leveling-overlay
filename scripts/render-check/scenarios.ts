@@ -164,6 +164,8 @@ export interface Scenario {
   tab?: 'Guide' | 'Gems' | 'Trials'
   /** a button to press after the tab, by (part of) its text */
   click?: string
+  /** short names from Settings (real name -> short) */
+  gemNames?: Record<string, string>
   settings?: boolean
   opacity?: number
   /** a long regex, so the counter shows its warning */
@@ -182,6 +184,7 @@ const scenarios: Scenario[] = [
     name: 'settings-legend',
     settings: true,
     click: 'What the colours mean',
+    gemNames: { 'Cast when Damage Taken Support': 'CwDT', 'Melee Physical Damage Support': 'MPD' },
     profile: profileSnapshot(3, 22, 2),
     log: crypt,
     trials,
@@ -213,6 +216,16 @@ const scenarios: Scenario[] = [
     settings: true,
     opacity: 0.4,
     regex: '"' + 'a|'.repeat(130) + '"',
+    profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
+    guide
+  },
+  // Your short names: "MPD" in the list and the links, the full name in the tooltip.
+  {
+    name: 'gems-short-names',
+    tab: 'Gems',
+    gemNames: { 'Melee Physical Damage Support': 'MPD', 'Chance to Bleed Support': 'CtB' },
     profile: profileSnapshot(3, 22, 2),
     log: crypt,
     trials,

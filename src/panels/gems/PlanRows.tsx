@@ -1,6 +1,6 @@
 import { sourceName, sourceTone } from '../../lib/sources'
 import { HEADING } from '../../lib/ui'
-import { Pip } from '../shared'
+import { GemName, Pip } from '../shared'
 
 // The rows of the Gems tab's plan box, on the tab's three columns: cost, gem, source.
 
@@ -226,7 +226,7 @@ export function RewardGroupRow({
         >
           <Pip gem={e.colored} dim={later} />
           <span className="min-w-0 truncate">
-            {e.gem}
+            <GemName name={e.gem} />
             {context(e) && <span className="text-overlay-muted">{context(e)}</span>}
           </span>
         </div>
@@ -289,7 +289,9 @@ function GemCell({
         {e.anyOf.map((g) => (
           <span key={g.gem} className="flex min-w-0 items-baseline gap-1.5">
             <Pip gem={g.colored} dim={later} />
-            <span className="min-w-0 truncate">{g.gem}</span>
+            <span className="min-w-0 truncate">
+              <GemName name={g.gem} />
+            </span>
           </span>
         ))}
         <span className="text-[10px] text-overlay-muted">
@@ -312,7 +314,7 @@ function GemCell({
           not worth a second line, least of all in a narrow panel. The full
           text is in the tooltip. */}
       <span className="min-w-0 truncate">
-        {e.gem}
+        <GemName name={e.gem} />
         {/* You may already own this one — it lost a quest choice, and nothing
             in the log says which of them you took. Marked rather than hidden:
             a gem you still need must not vanish, and one you have shouldn't

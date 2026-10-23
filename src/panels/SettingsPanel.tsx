@@ -4,6 +4,7 @@ import { useOverlayStore } from '../stores/overlayStore'
 import { acceleratorFromEvent, formatAccelerator } from '../lib/accelerator'
 import { HEADING, OPACITY_READABLE, button, panelSurface } from '../lib/ui'
 import { Legend } from './gems/Legend'
+import { GemShortNames } from './GemShortNames'
 import { MulePicker } from './MulePicker'
 
 type HotkeyField = keyof HotkeyBindingsBridge
@@ -460,6 +461,7 @@ export function SettingsPanel(): React.JSX.Element {
 
           <Section title="Gems tab">
             <Legend />
+            <GemShortNames />
           </Section>
 
           <Section title="Hotkeys">

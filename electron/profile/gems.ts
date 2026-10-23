@@ -117,6 +117,10 @@ export class GemData {
   private readonly byKey = new Map<string, GemInfo>()
   /** trailing " Support" stripped — the forgiving fallback, never a shadow. */
   private readonly byLoose = new Map<string, GemInfo>()
+  /** The dataset's own spelling of each gem, by exact and by forgiving key —
+   *  for naming a gem back (short names in Settings), never for lookups. */
+  private readonly nameByKey = new Map<string, string>()
+  private readonly nameByLoose = new Map<string, string>()
   /** "<act>|<quest>" -> the levels of the gems that quest hands out (see questRank). */
   private readonly questLevel = new Map<string, { min: number; sum: number; count: number }>()
   /** True when the dataset lists Siosa/Lilly stock per gem (i.e. the wiki fetch
@@ -127,6 +131,7 @@ export class GemData {
   constructor(gems: Record<string, GemInfo>) {
     for (const [name, info] of Object.entries(gems)) {
       this.byKey.set(exactGemKey(name), info)
+      this.nameByKey.set(exactGemKey(name), name)
     }
     // The forgiving pass comes second and never overwrites an exact name.
     // "Barrage" and "Barrage Support" are two different gems — a level-12 bow
@@ -135,7 +140,10 @@ export class GemData {
     // price, which then dimmed it as "for later" for twenty-odd levels.
     for (const [name, info] of Object.entries(gems)) {
       const loose = normalizeGemName(name)
-      if (!this.byKey.has(loose) && !this.byLoose.has(loose)) this.byLoose.set(loose, info)
+      if (!this.byKey.has(loose) && !this.byLoose.has(loose)) {
+        this.byLoose.set(loose, info)
+        this.nameByLoose.set(loose, name)
+      }
     }
     let broadVendorRows = 0
     for (const info of this.byKey.values()) {
@@ -198,6 +206,18 @@ export class GemData {
    */
   private questOrder(a: GemSourceInfo, b: GemSourceInfo): number {
     return this.questRank(a.act, a.quest) - this.questRank(b.act, b.quest)
+  }
+
+  /** Every gem's name as the dataset spells it, sorted. */
+  names(): string[] {
+    return [...this.nameByKey.values()].sort((a, b) => a.localeCompare(b))
+  }
+
+  /** A gem's name as the dataset spells it — "cast when damage taken" or
+   *  "Cast when Damage Taken" both give "Cast when Damage Taken Support" —
+   *  or undefined for no such gem. */
+  canonicalName(gem: string): string | undefined {
+    return this.nameByKey.get(exactGemKey(gem)) ?? this.nameByLoose.get(normalizeGemName(gem))
   }
 
   info(gem: string): GemInfo | undefined {
