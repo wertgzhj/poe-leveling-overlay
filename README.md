@@ -279,8 +279,11 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
   heading says where to go. His quest, *A Fixture of Fate*, reads `Library` too.
 - **The links at the bottom** are the build as it should be socketed now. A line
   from the act you're in is tinted **gold**; a gem from an act you haven't reached is
-  grey. **`NEW`** marks a gem the previous stage's links didn't have, so you see what
-  changed at a glance, on any stage you page to with ◀ ▶. A mule gem's line turns
+  grey. **`NEW`** marks a gem the previous stage's links didn't have — or another
+  copy of one: a second Autoexertion is new, and goes on the list to buy — so you see
+  what changed at a glance, on any stage you page to with ◀ ▶. **`RELINKED`** on a
+  link's top edge says the link itself was rearranged: a gem moved in from another
+  link, or one left it. A mule gem's line turns
   **turquoise** and a starting gem's **green** only on a stage where they're new —
   never on the first, where nothing is; the source column (`Mule · Ranger`,
   `✓ start`) says what they are on every stage.

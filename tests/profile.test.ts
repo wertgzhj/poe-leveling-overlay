@@ -1521,7 +1521,7 @@ test('link rows mark this act and what is not reachable yet', () => {
     })
   ).profile!
   const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
-  const { linkMarks, newGems } = acquisitionsForStage(profile, 1, gems, {
+  const { linkMarks, linkChanges } = acquisitionsForStage(profile, 1, gems, {
     startingGems: new Set(startingClasses().Marauder.map((g) => g.toLowerCase().replace(/ support$/, ''))),
     actReached: 2,
     mule: momentum
@@ -1534,8 +1534,16 @@ test('link rows mark this act and what is not reachable yet', () => {
   })
   // NEW is what changed since the previous stage, whatever the act: Cleave
   // (Act 1), Herald of Ash (this act, so gold AND new), Cyclone (not yet).
-  assert.deepEqual(newGems.sort(), ['cleave', 'cruelty support', 'cyclone', 'herald of ash'])
+  assert.deepEqual(newIn(profile, 1, linkChanges), ['cleave', 'cruelty support', 'cyclone', 'herald of ash'])
 })
+
+/** The gems a stage marks NEW, lowercased and sorted. */
+function newIn(profile: Profile, stage: number, changes: { fresh: boolean[][] }): string[] {
+  return profile.stages[stage].socketGroups
+    .flatMap((g, gi) => g.gems.filter((_, i) => changes.fresh[gi][i]))
+    .map((g) => g.toLowerCase())
+    .sort()
+}
 
 test('NEW is the change from the previous stage, on any stage but the first', () => {
   const gems = exampleGems()
@@ -1551,10 +1559,13 @@ test('NEW is the change from the previous stage, on any stage but the first', ()
     })
   ).profile!
   // Nothing to compare the first stage with.
-  assert.deepEqual(acquisitionsForStage(profile, 0, gems).newGems, [])
+  assert.deepEqual(newIn(profile, 0, acquisitionsForStage(profile, 0, gems).linkChanges), [])
   // No act or level needed, and the same whether it's the live stage or not.
-  assert.deepEqual(acquisitionsForStage(profile, 1, gems).newGems, ['leap slam'])
-  assert.deepEqual(acquisitionsForStage(profile, 1, gems, { actReached: 3, playerLevel: 40 }).newGems, ['leap slam'])
+  assert.deepEqual(newIn(profile, 1, acquisitionsForStage(profile, 1, gems).linkChanges), ['leap slam'])
+  const later = acquisitionsForStage(profile, 1, gems, { actReached: 3, playerLevel: 40 }).linkChanges
+  assert.deepEqual(newIn(profile, 1, later), ['leap slam'])
+  // …but the move is a rearrangement: both links are RELINKED.
+  assert.deepEqual(later.relinked, [true, true])
 })
 
 test('no act known, no link marks', () => {
