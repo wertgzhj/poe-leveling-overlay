@@ -1,4 +1,7 @@
+import { useMemo } from 'react'
+import { shortNamer } from '../lib/gem-names'
 import { TAG, TAG_TONE, type Tone } from '../lib/ui'
+import { useOverlayStore } from '../stores/overlayStore'
 
 // Small pieces every tab uses: the tag, the error box, the socket pip.
 
@@ -83,4 +86,18 @@ export function Pip({ gem, dim }: { gem?: ColoredGemBridge; dim?: boolean }): Re
  *  the vowel test is enough (Assassin, Elementalist, Inquisitor, Occultist). */
 export function article(word: string): string {
   return /^[aeiou]/i.test(word) ? 'an' : 'a'
+}
+
+/** A gem's name as you want to read it: your short name from Settings, or the
+ *  name itself. Display only — never pass the result back into anything that
+ *  looks a gem up (see electron/gem-names.ts). */
+export function useGemName(): (gem: string) => string {
+  const names = useOverlayStore((s) => s.gemNames)
+  return useMemo(() => shortNamer(names), [names])
+}
+
+/** A gem name to draw, with the full name in the tooltip when it's shortened. */
+export function GemName({ name }: { name: string }): React.JSX.Element {
+  const shown = useGemName()(name)
+  return shown === name ? <>{name}</> : <span title={name}>{shown}</span>
 }

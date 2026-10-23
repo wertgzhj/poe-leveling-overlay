@@ -16,6 +16,8 @@ interface OverlayStore {
   visibleTabs: VisibleTabsBridge
   /** Stash/vendor search string; '' hides the copy button. */
   searchRegex: string
+  /** Your short names for gems (real name -> short), display only. */
+  gemNames: Record<string, string>
   // log tracking
   logStatus: WatcherStatusBridge | null
   tracked: TrackerStateBridge | null
@@ -59,6 +61,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   characterName: null,
   visibleTabs: { guide: true, gems: true, trials: true },
   searchRegex: '',
+  gemNames: {},
   logStatus: null,
   tracked: null,
   languageMismatch: false,

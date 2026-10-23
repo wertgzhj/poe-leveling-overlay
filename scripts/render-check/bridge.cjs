@@ -27,8 +27,10 @@ const answers = {
       characterName: null,
       logLanguage: 'en',
       visibleTabs: { guide: true, gems: true, trials: true },
-      searchRegex: s.regex ?? ''
+      searchRegex: s.regex ?? '',
+      gemNames: s.gemNames ?? {}
     }),
+  gemNameList: () => ok(['Cast when Damage Taken Support', 'Melee Physical Damage Support', 'Sunder']),
   getAppInfo: () => ok({ version: '0.0.0', electron: process.versions.electron, isDev: false }),
   getLogSnapshot: () => ok(s.log),
   getProfile: () => ok(s.profile),

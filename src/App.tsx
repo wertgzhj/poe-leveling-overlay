@@ -25,7 +25,8 @@ export function App(): React.JSX.Element {
         clientTxtPath: s.clientTxtPath,
         characterName: s.characterName,
         visibleTabs: s.visibleTabs,
-        searchRegex: s.searchRegex
+        searchRegex: s.searchRegex,
+        gemNames: s.gemNames
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()

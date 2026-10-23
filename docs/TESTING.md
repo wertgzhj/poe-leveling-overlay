@@ -6,11 +6,11 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 284 tests: parser, tracker, watcher, guide, profile,
+npm test        # 287 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table,
                 # finding Client.txt, window and import hardening,
-                # the shopping list's act scenarios
+                # the shopping list's act scenarios, gem short names
 npm run typecheck
 npm run build
 ```
@@ -183,6 +183,13 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      class, ascendancy or level under the tracker line; a paged stage says
      `Earlier stage ▸ back to yours`. A gem slotted once on this stage reads
      `Alt`, not `2× Alt`, even if a later stage slots it twice.
+   - **Settings → Gems tab → Short names:** type a gem (suggestions come from
+     the gem data; `Cast when Damage Taken` finds the support), a short name
+     (`CwDT`, up to 24 characters), Add. The Gems tab — list, pick boxes and
+     links — shows `CwDT`, hovering shows the full name. A name that isn't a
+     gem says so and can't be added; ✕ removes one. The editor and every
+     profile file keep the real names; NEW, RELINKED and the list work exactly
+     as before.
    - **Settings → Gems tab → "▸ What the colours mean"** unfolds a legend:
      every line colour, `NEW`, the source colours and the socket pips, each
      drawn the way the real rows draw it and said in words. It stays open when

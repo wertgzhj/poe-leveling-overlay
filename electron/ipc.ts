@@ -10,6 +10,7 @@ import {
 } from './settings'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { normalizeSearchRegex } from './search-regex.ts'
+import { sanitizeGemNames } from './gem-names.ts'
 import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
 import type { GuideService } from './guide/service.ts'
@@ -80,6 +81,9 @@ export function registerIpc(
     if ('searchRegex' in patch) {
       store.set('searchRegex', normalizeSearchRegex(patch.searchRegex))
     }
+    if ('gemNames' in patch) {
+      store.set('gemNames', sanitizeGemNames(patch.gemNames, (gem) => profile.canonicalGemName(gem)))
+    }
 
     let failed: string[] = []
     if (patch.hotkeys) {
@@ -126,6 +130,7 @@ export function registerIpc(
   ipcMain.on(Channels.guideReset, () => guide.reset())
 
   ipcMain.handle(Channels.profileGet, () => profile.snapshot())
+  ipcMain.handle(Channels.profileGemNames, (): string[] => profile.gemNameList())
   ipcMain.on(Channels.profileStageStep, (_e, delta: unknown) => {
     if (typeof delta === 'number') profile.stageStep(delta)
   })

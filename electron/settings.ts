@@ -48,12 +48,18 @@ export interface AppSettings {
   /** A search string for the game's stash/vendor search box, copied from the
    *  overlay with one click. '' = none, and none means no button. */
   searchRegex: string
+  /** Your short names for gems, real name -> short ("CwDT"). Display only, in
+   *  the Gems tab (see gem-names.ts). */
+  gemNames: Record<string, string>
 }
 
 /** What the renderer may change through the settings channel (see ipc.ts:
  *  every field is checked there, unknown ones are ignored). */
 export type SettingsPatch = Partial<
-  Pick<AppSettings, 'opacity' | 'clickThrough' | 'clientTxtPath' | 'characterName' | 'visibleTabs' | 'searchRegex'>
+  Pick<
+    AppSettings,
+    'opacity' | 'clickThrough' | 'clientTxtPath' | 'characterName' | 'visibleTabs' | 'searchRegex' | 'gemNames'
+  >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
 /** Everything persisted, including non-setting state: the resume snapshot and
@@ -101,6 +107,7 @@ const defaults: StoreSchema = {
   logLanguage: 'en',
   visibleTabs: { guide: true, gems: true, trials: true },
   searchRegex: '',
+  gemNames: {},
   progress: null,
   guideProgress: {},
   trialsProgress: {},
@@ -150,6 +157,7 @@ export function getSettings(): AppSettings {
     characterName: store.get('characterName'),
     logLanguage: store.get('logLanguage'),
     visibleTabs: getVisibleTabs(),
-    searchRegex: store.get('searchRegex')
+    searchRegex: store.get('searchRegex'),
+    gemNames: store.get('gemNames')
   }
 }

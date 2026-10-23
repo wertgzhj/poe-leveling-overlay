@@ -1,5 +1,5 @@
 import { sourceMark } from '../../lib/sources'
-import { Pip, Tag } from '../shared'
+import { GemName, Pip, Tag } from '../shared'
 
 // The build's links at the bottom of the Gems tab, each line marked by act and kind.
 
@@ -98,7 +98,7 @@ export function SocketGroup({
             <div className="col-span-2 flex min-w-0 items-center gap-1.5">
               <Pip gem={gem} dim={notYet} />
               <span className={'min-w-0 truncate text-xs ' + (notYet ? 'text-overlay-muted' : 'text-overlay-text')}>
-                {gem.name}
+                <GemName name={gem.name} />
                 {fresh[i] && (
                   <Tag tone="neutral" className="ml-1" title="A copy the previous stage's links don't have — new with this stage">
                     new

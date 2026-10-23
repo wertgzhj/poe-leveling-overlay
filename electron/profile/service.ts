@@ -308,6 +308,16 @@ export class ProfileService {
     return this.library.find((e) => e.path === configured)?.id ?? null
   }
 
+  /** Every gem's name as the gem data spells it — the short-name picker's list. */
+  gemNameList(): string[] {
+    return this.gems.names()
+  }
+
+  /** A gem's real name, however it was typed; undefined for no such gem. */
+  canonicalGemName(gem: string): string | undefined {
+    return this.gems.canonicalName(gem)
+  }
+
   snapshot(): ProfileSnapshot {
     const profile = this.profile
     const level = this.level

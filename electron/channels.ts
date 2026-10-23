@@ -82,6 +82,8 @@ export const Channels = {
   profileState: 'profile:state',
   /** renderer -> main (invoke): current profile snapshot */
   profileGet: 'profile:get',
+  /** renderer -> main (invoke): every gem's name, for the short-name picker */
+  profileGemNames: 'profile:gem-names',
   /** renderer -> main: page the viewed gem stage by a delta (±1); pins a manual
    *  view until it lands back on the live stage. */
   profileStageStep: 'profile:stage-step',
