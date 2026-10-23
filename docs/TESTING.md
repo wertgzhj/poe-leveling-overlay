@@ -287,6 +287,41 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      shows a thin gold outline. The update arrow on the version badge doesn't
      pulse when Windows has animations turned off.
 
+## What the code takes as given
+
+Every value below looks like a fact in the code. This is where each one stands,
+so a wrong one can be found before it ships — the vendor prices were exactly
+that once: a table everyone believed, wrong in two tiers.
+
+- **✓ game** — checked in the game client.
+- **✓ log** — checked against a real `Client.txt` (Acts 1–10, all three labs,
+  ~55 new characters, captured 2026-10-22; never committed).
+- **✓ data** — checked against the wiki gem data.
+- **○** — not confirmed yet. Believable, but nobody has looked.
+
+| What | Where | Status |
+|---|---|---|
+| The four log line patterns | `data/log-patterns/en.json` | ✓ log |
+| Every campaign area id and its name, Acts 1–10 | `data/areas/en.json` | ✓ log |
+| The act is the *second* number of an area id | `actFromAreaId` | ✓ log |
+| The twelve trial zones and Izaro's plaque lines; Cruel and Merciless repeat the Normal lines | `CAMPAIGN_TRIALS` | ✓ log |
+| Izaro's six death lines in `<1\|2\|3>_Labyrinth_boss_2_end` mean the lab is beaten; dying to him says something else | `IZARO_DEFEATED` | ✓ log — every finished run |
+| A new character's first level-up is to level 2, on the Strand | `FRESH_CHARACTER_MAX_LEVEL` | ✓ log — all 46 |
+| A partymate's level-up can't take the new-character reset | tracker, `onFreshCharacter` | ○ — the Strand is solo, but a group can meet from Lioneye's Watch and the Coast on. It holds because you reach level 2 on the Strand, before anyone can join; a partymate levelling first, after you leave the Strand at level 1, would take it. Not seen in the capture (8 partymates, none before level 3) — which shows it's rare, not that it can't happen |
+| A mule is deleted by level 3 | `MULE_MAX_LEVEL` | ✓ log — every mule stopped at level 2 |
+| The mule trip pays until Mercy Mission, so stages starting by level 4 carry it | `MULE_TRIP_LAST_START` | ✓ log — Tidal Island reached at level 4 in 14 of 23 runs (2–5) |
+| Siosa's stock opens on walking into "The Library" | `LIBRARY_ZONE` | ✓ log (the zone name) |
+| Vendor price tiers: Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+ | `COST_TIERS` | ✓ game — every tier |
+| The stash/vendor search box takes 250 characters | `SEARCH_BOX_LIMIT` | ✓ game |
+| The Caged Brute gives two rewards (a skill and a support) | `TWO_REWARD_QUESTS` | ✓ game. Other quests: ○ — by the data, no other quest mixes skills and supports for every class |
+| The starting skill and support per class | `data/starting-gems.json` | ✓ game (owner-confirmed) |
+| Quest order within an act, derived from the levels its rewards need | `GemData` | ✓ data — reproduces the real order for every act |
+| `Client.txt` in Steam's default folder | `locate.ts` | ✓ game. Other Steam libraries, standalone, Epic: ○ — from the launchers' documented layouts |
+| The experience safe range is `3 + level/16` | `safeLevelRange` | ○ — poewiki's formula, not checked in game |
+| The bandits are due from Act 2, the Pantheon from Act 5 | `BANDIT_ACT`, `PANTHEON_ACT` | ○ |
+| The level you start each act at, for PoB stages named "Act N" | `ACT_START_LEVEL` | Acts 1–6 ✓ log. Acts 7–10 ○ — the table says 52/58/64/67, the captured runs reached those towns at 49–50/53–54/59/61–62 (median) |
+| Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
+
 ## Known limitations
 
 - **English clients only.** Two of the three tracked log lines are localized by
