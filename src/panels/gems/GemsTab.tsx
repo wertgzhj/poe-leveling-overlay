@@ -152,36 +152,27 @@ export function GemBody(): React.JSX.Element {
                 (atReward ? 'text-overlay-accent' : 'text-overlay-muted')
               }
             >
-              Get these gems{atReward ? ' — take rewards now' : ''}
+              Get these gems
             </div>
             {/* Rows render bare cells into this grid, so the columns line up
                 across every row. Dimming a "later" row happens per cell: a
                 wrapper element here would become a grid item and break them. */}
             {plan.map((item, i) => {
-              // A heading each time the shopping stop changes, so what you pick
-              // up in one visit reads as one block. A vendor's stock grows with
-              // each quest, so the same NPC can head two blocks — that's two
-              // trips, not a duplicate.
-              const stop = item.kind === 'buy' ? item.stop : undefined
-              const prev = plan[i - 1]
-              const prevStop = prev?.kind === 'buy' ? prev.stop : undefined
+              // A heading each time the act changes, rewards and buys alike, so
+              // what you pick up in one town reads as one block. Rewards used to
+              // go without one, and an Act 2 reward sat under "A1" once the
+              // headings stopped naming the vendor.
+              const heading = itemHeading(item)
+              const prevHeading = i > 0 ? itemHeading(plan[i - 1]) : undefined
               return (
                 <Fragment key={i}>
-                  {/* No heading for the mule: the Mule picker right above says
-                      it already, and a heading made the rewards after it read
-                      as part of the mule trip. */}
-                  {stop && stop.key !== 'mule' && stop.key !== prevStop?.key && (
+                  {heading && heading.text !== prevHeading?.text && (
                     <div
                       className={
-                        'col-span-3 mt-0.5 ' + HEADING +
-                        (stop.npc && !item.later ? sourceTone(sourceName(stop.npc)) : 'text-overlay-muted')
+                        'col-span-3 mt-0.5 ' + HEADING + (heading.library && !item.later ? sourceTone('Library') : 'text-overlay-muted')
                       }
                     >
-                      {stop.npc
-                        ? [stop.act ? `A${stop.act}` : null, sourceName(stop.npc)]
-                            .filter(Boolean)
-                            .join(' · ')
-                        : stop.label}
+                      {heading.text}
                     </div>
                   )}
                   {item.kind === 'reward' ? (
@@ -231,4 +222,21 @@ export function GemBody(): React.JSX.Element {
 
     </>
   )
+}
+
+/**
+ * The heading a to-do item sits under. The act is the stop: one gem vendor per
+ * town, and everyone past their first league knows who (owner). Only the
+ * Library is named — a second Act 3 stop you have to walk to, in its own
+ * colour — for Siosa's stock and his quest's rewards alike. The mule has none:
+ * the Mule picker right above says it, and a heading made the rewards after it
+ * read as part of the mule trip.
+ */
+function itemHeading(item: AcquisitionItemBridge): { text: string; library: boolean } | undefined {
+  const act = item.kind === 'reward' ? item.group.act : item.entry.act
+  const from = item.kind === 'reward' ? item.group.quest : item.stop?.npc
+  if (item.kind === 'buy' && (item.stop?.key === 'mule' || !item.stop)) return undefined
+  const library = from != null && sourceName(from) === 'Library'
+  if (act == null) return item.kind === 'buy' && item.stop ? { text: item.stop.label, library } : undefined
+  return { text: library ? `A${act} · Library` : `A${act}`, library }
 }

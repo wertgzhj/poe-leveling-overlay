@@ -10,9 +10,10 @@
  * quest; what you need is where you stand or who you fight.
  */
 export const SOURCE_ALIAS: Record<string, string> = {
-  // Siosa never comes up in conversation — "the Library" is the trip you make,
-  // and the trip is what unlocks his stock (see LIBRARY_VENDOR in gems.ts).
+  // Siosa never comes up in conversation — "the Library" is the trip you make.
   Siosa: 'Library',
+  // His quest, the one the Library's gems are handed out for.
+  'A Fixture of Fate': 'Library',
   // You clear this one by killing Gravicius, and enough builds skip him that
   // the name of the fight beats the name of the quest.
   'Sever the Right Hand': 'Gravicius'

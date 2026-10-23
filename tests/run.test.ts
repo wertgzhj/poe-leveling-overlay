@@ -5,7 +5,7 @@ import type { ProfileMeta } from '../electron/profile/profile.ts'
 
 // The settings file, as a plain object.
 function memoryStore(seed: Partial<RunData> = {}): RunStore & { data: RunData } {
-  const data: RunData = { actReached: {}, libraryReached: {}, dismissedChoices: {}, ...seed }
+  const data: RunData = { actReached: {}, dismissedChoices: {}, ...seed }
   return {
     data,
     get: (key) => data[key],
@@ -32,16 +32,6 @@ test('the act only moves forward', () => {
   // No character, or no act from the zone: nothing to note.
   assert.equal(runs.noteAct(null, 4), false)
   assert.equal(runs.noteAct('manauda', null), false)
-})
-
-test("the Library counts only when you walk into it, once", () => {
-  const runs = new CharacterRuns(memoryStore())
-  assert.equal(runs.library(null), null)
-  assert.equal(runs.library('manauda'), false)
-  assert.equal(runs.noteLibrary('manauda', 'The Sewers'), false)
-  assert.equal(runs.noteLibrary('manauda', 'The Library'), true)
-  assert.equal(runs.noteLibrary('manauda', 'The Library'), false, 'already there')
-  assert.equal(runs.library('manauda'), true)
 })
 
 test('the bandits are due from Act 2, the pantheon from Act 5, one at a time', () => {
@@ -79,18 +69,15 @@ test('a profile that names no decision gets no reminder', () => {
 test("a fresh character forgets its namesake's run, and only its own", () => {
   const store = memoryStore({
     actReached: { manauda: 10, other: 6 },
-    libraryReached: { manauda: true, other: true },
     dismissedChoices: { manauda: ['bandit', 'pantheon'], other: ['bandit'] }
   })
   const runs = new CharacterRuns(store)
   runs.forget('manauda')
-  // Back in Act 1, before the Library, and the bandit reminder will come again.
+  // Back in Act 1, and the bandit reminder will come again.
   assert.equal(runs.act('manauda'), 1)
-  assert.equal(runs.library('manauda'), false)
   runs.noteAct('manauda', 2)
   assert.equal(runs.choiceDue('manauda', BUILD)?.id, 'bandit')
   // Nobody else's run moves.
   assert.deepEqual(store.data.actReached.other, 6)
-  assert.equal(store.data.libraryReached.other, true)
   assert.deepEqual(store.data.dismissedChoices.other, ['bandit'])
 })

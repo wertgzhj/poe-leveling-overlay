@@ -8,4 +8,4 @@
 export { type ColoredSocketGroup, type ResolvedStage, type AcquisitionEntry, type Acquisitions, type LinkMark, type RewardGroup, type ShoppingStop, type AcquisitionItem, type AcquisitionContext } from './engine/types.ts'
 export { actFromAreaId, activeStageIndex, stepStageView, resolveStage } from './engine/stages.ts'
 export { MULE_MAX_LEVEL, MULE_TRIP_LAST_START, STRAND_QUEST, muleOptions, defaultMule, mulingClass, type MuleChoice, type MuleHow, type MuleOption } from './engine/mule.ts'
-export { acquisitionsForStage } from './engine/acquisitions.ts'
+export { acquisitionsForStage, planWindow } from './engine/acquisitions.ts'

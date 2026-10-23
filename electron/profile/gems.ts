@@ -37,24 +37,6 @@ export const BROAD_VENDORS: readonly GemSourceInfo[] = [
  *  tells us the dataset can answer "does a broad vendor sell this?" itself. */
 const BROAD_VENDOR_NPCS = new Set(['siosa', 'lilly roth'])
 
-/**
- * Siosa is a stop, not an act. He is the earliest source for 195 gems — three
- * times Nessa, the next biggest — but he does not open with Act 3: you reach him
- * by walking into The Library and handing over the Golden Page. Treating his
- * stock as "available in Act 3" dumped two hundred purchases into the list the
- * moment you entered the act, for gems you could not buy for another hour.
- */
-export const LIBRARY_VENDOR = 'siosa'
-/** The zone that unlocks him. Matched by display name, like the trial zones —
- *  which means English clients only, same as the rest of the localized paths. */
-export const LIBRARY_ZONE = 'The Library'
-
-/** True for the vendor you only reach by going to the Library. Takes the NPC
- *  name rather than a whole source, because the two callers hold different
- *  shapes of it. Case-insensitive: the name comes from the wiki. */
-export function needsLibrary(npc: string | undefined): boolean {
-  return npc?.trim().toLowerCase() === LIBRARY_VENDOR
-}
 /** How many explicit broad-vendor rows make the dataset authoritative. A couple
  *  of hand-written entries shouldn't flip it; the wiki fetch yields hundreds. */
 export const BROAD_VENDOR_DATA_MIN = 20
@@ -208,6 +190,16 @@ export class GemData {
     return stats.min * QUEST_RANK_SCALE + stats.sum / stats.count
   }
 
+  /**
+   * Two sources in the same act: the one whose quest you finish first. Without
+   * it a tie went to whichever the data listed first — in Act 3 that was Siosa,
+   * so a Marauder was sent to the Library for Vulnerability that Clarissa sells
+   * him right after Lost in Love, half the act earlier.
+   */
+  private questOrder(a: GemSourceInfo, b: GemSourceInfo): number {
+    return this.questRank(a.act, a.quest) - this.questRank(b.act, b.quest)
+  }
+
   info(gem: string): GemInfo | undefined {
     // Exact first, forgiving second: a profile that writes "Arcane Surge" still
     // finds "Arcane Surge Support", without "Barrage" finding the support.
@@ -260,7 +252,7 @@ export class GemData {
   earliestSource(gem: string, cls?: CharClass | null): GemSourceInfo | null {
     const options = this.sourcesFor(gem, cls)
     if (options.length > 0) {
-      return [...options].sort((a, b) => a.act - b.act || rank(a.kind) - rank(b.kind))[0]
+      return [...options].sort((a, b) => a.act - b.act || rank(a.kind) - rank(b.kind) || this.questOrder(a, b))[0]
     }
     if (this.hasBroadVendorData) return null
     // Only known gems (present in gems.json) fall back — an unknown name might
@@ -277,7 +269,7 @@ export class GemData {
    */
   earliestVendor(gem: string, cls?: CharClass | null): GemSourceInfo | null {
     const vendors = this.sourcesFor(gem, cls).filter((s) => s.kind === 'vendor')
-    if (vendors.length > 0) return [...vendors].sort((a, b) => a.act - b.act)[0]
+    if (vendors.length > 0) return [...vendors].sort((a, b) => a.act - b.act || this.questOrder(a, b))[0]
     if (this.hasBroadVendorData) return null
     return this.info(gem)?.attr ? BROAD_VENDORS[0] : null
   }

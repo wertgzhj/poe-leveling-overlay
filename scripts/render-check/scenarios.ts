@@ -71,7 +71,7 @@ function profileSnapshot(
     startingGems: new Set((starting[profile.meta.class] ?? []).map(normalizeGemName)),
     playerLevel: level,
     actReached: act,
-    reachedLibrary: false,
+    liveIndex: extra.liveIndex ?? stageIndex,
     mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null
   }
   return {

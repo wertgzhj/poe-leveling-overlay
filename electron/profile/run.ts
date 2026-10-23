@@ -1,11 +1,10 @@
-// A character's run: how far it got (act, the Library) and which one-shot
+// A character's run: how far it got (the act) and which one-shot
 // reminders it has dismissed. Pure — no Electron: it reads and writes through
 // a small store interface, which the profile service backs with the settings
 // file and the tests with a plain object. Everything here is keyed by
 // character name, and names come back every league (see forget).
 
 import { BANDITS, type ProfileMeta } from './profile.ts'
-import { LIBRARY_ZONE } from './gems.ts'
 
 /** Act 2 asks you to deal with the bandits; the Pantheon opens up in Act 5.
  *  Unconfirmed in game (docs/TESTING.md, "What the code takes as given"). */
@@ -25,7 +24,6 @@ export interface ChoiceDue {
 /** What a run keeps, per character name. */
 export interface RunData {
   actReached: Record<string, number>
-  libraryReached: Record<string, boolean>
   dismissedChoices: Record<string, string[]>
 }
 
@@ -48,12 +46,6 @@ export class CharacterRuns {
     return this.store.get('actReached')[name] ?? null
   }
 
-  /** Whether this character has been to Act 3's Library; null with no character. */
-  library(name: string | null): boolean | null {
-    if (!name) return null
-    return this.store.get('libraryReached')[name] ?? false
-  }
-
   /**
    * Record reaching an act. Persisted per character and monotonic on purpose:
    * campaign progress doesn't go backwards, and portalling to Act 1's town must
@@ -67,22 +59,11 @@ export class CharacterRuns {
     return true
   }
 
-  /** Siosa sells more gems than anyone else, and you reach him by walking into
-   *  the Library, not by entering Act 3. Matched on the display name, the way
-   *  the trial zones are — English clients only, like every localized path. */
-  noteLibrary(name: string | null, zoneName: string): boolean {
-    if (!name || zoneName !== LIBRARY_ZONE) return false
-    const map = this.store.get('libraryReached')
-    if (map[name]) return false
-    this.store.set('libraryReached', { ...map, [name]: true })
-    return true
-  }
-
   /**
    * A brand-new character (see LogService.addFreshCharacterListener). Names get
    * reused every league, so without this a fresh Act 1 character would inherit
    * last league's namesake's run: the Act 10 mark (the whole campaign's list
-   * again), the Library, and dismissed bandit/pantheon reminders — the ones
+   * again) and dismissed bandit/pantheon reminders — the ones
    * that matter most, because missing the bandits is for good.
    *
    * Only the run is forgotten. Which profile the name uses and what it mules
@@ -94,7 +75,6 @@ export class CharacterRuns {
    */
   forget(name: string): void {
     this.store.set('actReached', { ...this.store.get('actReached'), [name]: 1 })
-    this.store.set('libraryReached', without(this.store.get('libraryReached'), name))
     this.store.set('dismissedChoices', without(this.store.get('dismissedChoices'), name))
   }
 

@@ -5,6 +5,9 @@
 
 import { deflateSync, inflateSync } from 'node:zlib'
 import { XMLParser } from 'fast-xml-parser'
+// "Act N" titles become level ranges through the act table — rough on purpose;
+// the author can adjust.
+import { ACT_START_LEVEL, CAMPAIGN_END } from './acts.ts'
 import {
   validateProfile,
   CLASSES,
@@ -26,14 +29,6 @@ export interface PobImportOptions {
   name?: string
 }
 
-// Approximate campaign level at the START of each act — used to turn "Act N"
-// labels into level ranges. Rough on purpose; the author can adjust. Acts 1-6
-// match a real capture's runs; 7-10 run a few levels above them (see
-// docs/TESTING.md, "What the code takes as given").
-const ACT_START_LEVEL: Record<number, number> = {
-  1: 1, 2: 12, 3: 22, 4: 32, 5: 40, 6: 45, 7: 52, 8: 58, 9: 64, 10: 67
-}
-const CAMPAIGN_END = 70
 
 /** base64url + zlib, matching PoB's export/import codec. */
 export function encodePobCode(xml: string): string {

@@ -119,6 +119,15 @@ shopping list would send a Marauder to buy gems Nessa only sells to a Witch.
 Siosa (Act 3, after *A Fixture of Fate*) and Lilly Roth (Act 6 onward) sell
 almost everything to any class, and the data lists their stock explicitly — so a
 gem with no source is one nobody sells, not a gap. Those show as drop/trade.
+Where two vendors in one act sell a gem, the one whose quest comes first wins
+(the quest order is derived from the reward levels, see `GemData.questRank`) —
+Clarissa after *Lost in Love*, not Siosa half an act later.
+
+**Which acts a stage's list draws on** (`planWindow`, engine/acquisitions.ts):
+the live stage, everything up to the furthest act reached; a stage paged back
+to, its own acts (from its level range and `electron/profile/acts.ts`); one
+paged forward to, a preview of its acts. Quest picks only for later stages
+show on the stages of their own act.
 
 The file is generated from the Path of Exile Wiki's Cargo API
 (`npm run fetch-gems`, or the *Fetch gem data* workflow) and re-run per league.
@@ -195,8 +204,8 @@ progress is persisted per character.
 
 **A reused name is a new run.** Progress is keyed by character name, and names
 come back every league. The Twilight Strand only ever sees a new character, but
-the log names it on its first level-up, so that is when its run (act, Library,
-trials, guide ticks, dismissed reminders) starts over. Choices — its profile,
+the log names it on its first level-up, so that is when its run (act, trials, guide
+ticks, dismissed reminders) starts over. Choices — its profile,
 its mule — carry on.
 
 **Client language.** Two of the three tracked lines are localized by the game.

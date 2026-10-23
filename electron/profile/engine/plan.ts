@@ -1,6 +1,6 @@
 // Part of the build-profile engine (see ../engine.ts). The to-do list: rewards and buys merged in the order you reach them.
 
-import { costRank, needsLibrary, safeLevelRange } from '../gems.ts'
+import { costRank, safeLevelRange } from '../gems.ts'
 import { groupQuestRank } from './rewards.ts'
 import { type AcquisitionEntry, type AcquisitionItem, type RewardGroup, type ShoppingStop } from './types.ts'
 
@@ -14,8 +14,7 @@ export function buildPlan(
   rewardGroups: RewardGroup[],
   purchases: AcquisitionEntry[],
   playerLevel?: number | null,
-  actReached?: number | null,
-  reachedLibrary?: boolean | null
+  actReached?: number | null
 ): AcquisitionItem[] {
   const minReq = (entries: AcquisitionEntry[]): number | undefined => {
     const levels = entries.map((e) => e.requiredLevel).filter((l): l is number => l != null)
@@ -32,13 +31,11 @@ export function buildPlan(
   // blank the list because a signal is missing.
   const reachable = (act: number | undefined): boolean =>
     actReached == null || act == null || act <= actReached
-  // Siosa is gated on the Library rather than on Act 3 — walking into the act
-  // doesn't reach him, walking into that zone does. Unknown stays visible.
-  // A mule is the exception to both: it's done at level 1, before the run, so
-  // where the gem would otherwise come from is beside the point.
-  const shoppable = (entry: AcquisitionEntry): boolean =>
-    (entry.mule?.length ?? 0) > 0 ||
-    (reachable(entry.act) && (reachedLibrary !== false || !needsLibrary(entry.npc)))
+  // Siosa counts as Act 3, like Clarissa (owner's call): the list is for what
+  // you can get from the act, now or later, and he's in it. A mule is the
+  // exception: it's done at level 1, before the run, so where the gem would
+  // otherwise come from is beside the point.
+  const shoppable = (entry: AcquisitionEntry): boolean => (entry.mule?.length ?? 0) > 0 || reachable(entry.act)
   const raw: Raw[] = [
     ...rewardGroups
       .filter((group) => reachable(group.act))
@@ -72,10 +69,9 @@ export function buildPlan(
       costOf(a) - costOf(b) ||
       nameOf(a).localeCompare(nameOf(b))
   )
-  // Nothing is filtered out: act-based hiding vanished too much,
-  // and act detection is unreliable). Instead a gem more than the XP safe-range
-  // above your level is flagged "later" — the UI dims it and shows the level it
-  // comes online. Unknown player level = everything shown as now.
+  // Within the acts that stay, a gem more than the XP safe-range above your
+  // level is flagged "later" — the UI dims it and shows the level it comes
+  // online. Unknown player level = everything shown as now.
   const range = playerLevel != null ? safeLevelRange(playerLevel) : null
   return raw.map((it): AcquisitionItem => {
     const later = range != null && it.req != null && it.req > (playerLevel as number) + range

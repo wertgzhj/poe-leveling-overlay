@@ -21,6 +21,11 @@ test('a renamed source keeps its colour wherever it is read', () => {
   assert.equal(library?.label, 'A3 · Library')
   assert.equal(library?.tone, SOURCE_TONE.Library)
 
+  // Siosa's own quest, the Library's rewards: same name, same colour.
+  const fixture = sourceMark({ bucket: 'reward', act: 3, quest: 'A Fixture of Fate' })
+  assert.equal(fixture?.label, 'A3 · Library')
+  assert.equal(fixture?.tone, SOURCE_TONE.Library)
+
   // Everything not in the table stays muted, in both branches.
   assert.equal(sourceMark({ bucket: 'reward', act: 1, quest: 'Mercy Mission' })?.tone, MUTED)
   assert.equal(sourceMark({ bucket: 'purchase', act: 1, npc: 'Nessa' })?.tone, MUTED)
