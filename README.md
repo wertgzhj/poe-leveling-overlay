@@ -214,7 +214,11 @@ yourself (or import it from Path of Building, below).
   two **one-shot decisions** the campaign asks for — `bandit` (`Alira` / `Kraityn` /
   `Oak` / `Kill all`) and `pantheon` (`major` / `minor`, e.g. `Soul of Lunaris`). Both
   are optional; when set, the overlay reminds you at the point you reach them (Act 2
-  and Act 5) and you dismiss it with ✕. Which one is right depends entirely on the
+  and Act 6) and you dismiss it with ✕. For the Pantheon it also knows **where each
+  god is fought** (Acts 6–10, side areas named): walk into that zone and the notice
+  bar says so — "Pantheon: Shakari — The Sand Pit" — and the Trials tab lists your two
+  powers with a tick each, per character. Upgrades aren't tracked: the map bosses
+  that upgrade a power rotate with the atlas. Which one is right depends entirely on the
   build and the bandits can't be changed afterwards, so the choice lives in your
   profile — the app has no opinion, and it deliberately quotes **no stats**, because
   those change between patches and a stale number is worse than none. A PoB import

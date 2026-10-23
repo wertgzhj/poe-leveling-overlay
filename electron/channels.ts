@@ -91,6 +91,8 @@ export const Channels = {
   profileStageLive: 'profile:stage-live',
   /** renderer -> main: acknowledge a build-decision reminder (bandit/pantheon) */
   profileDismissChoice: 'profile:dismiss-choice',
+  /** renderer -> main: tick/untick a Pantheon power as unlocked on this character */
+  profileTogglePantheon: 'profile:toggle-pantheon',
   /** renderer -> main (invoke): import a PoB code/link into an active profile */
   pobImport: 'pob:import',
   /** renderer -> main: open the editor window */
@@ -228,6 +230,25 @@ export interface ProfileSnapshot {
    *  character (null = none) — null altogether when there's no character yet or
    *  nothing to mule. */
   muleChoice: { options: MuleOption[]; chosen: string | null } | null
+  /** The Pantheon powers the profile names, where their gods are fought, and
+   *  whether this character has them — empty without a choice or a character. */
+  pantheon: PantheonStatus[]
+}
+
+/** One Pantheon power the profile wants (see electron/profile/pantheon.ts). */
+export interface PantheonStatus {
+  soul: string
+  god: string
+  act: number
+  /** "The Sand Pit, a side area of The Oasis" */
+  where: string
+  /** the side area to look for, when the god is in one ("The Sand Pit", or
+   *  "a side area" where we don't have its name) */
+  side?: string
+  /** ticked as unlocked on this character */
+  unlocked: boolean
+  /** you're standing where its god is fought */
+  here: boolean
 }
 
 /** A one-shot build decision you've reached the point for (profile/run.ts). */

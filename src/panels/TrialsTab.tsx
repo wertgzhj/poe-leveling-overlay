@@ -4,10 +4,15 @@ import { HEADING } from '../lib/ui'
 import { useOverlayStore } from '../stores/overlayStore'
 import { Tag } from './shared'
 
-// The Trials tab: the campaign Trials of Ascendancy, per Labyrinth.
+// The Trials tab: the campaign Trials of Ascendancy, per Labyrinth — and the
+// Pantheon powers your profile wants, which are the same kind of thing: a boss
+// in a zone, done once per character.
+
+const NO_GODS: PantheonStatusBridge[] = []
 
 export function TrialsBody(): React.JSX.Element {
   const trials = useOverlayStore((s) => s.trials)
+  const pantheon = useOverlayStore((s) => s.profile?.pantheon ?? NO_GODS)
   if (!trials) return <p className="px-1 text-xs text-overlay-muted">Loading…</p>
 
   // done/total per Labyrinth, counted once instead of per row.
@@ -84,6 +89,7 @@ export function TrialsBody(): React.JSX.Element {
           </div>
         )
       })}
+      {pantheon.length > 0 && <PantheonList gods={pantheon} />}
       <p className="mt-1 px-1 text-[10px] text-overlay-muted">
         Finishing a trial auto-checks it (Izaro&apos;s plaque line names the trial);
         the hint and a manual click are fallbacks. Each Labyrinth needs all of its
@@ -93,3 +99,47 @@ export function TrialsBody(): React.JSX.Element {
     </>
   )
 }
+
+/** The profile's Pantheon powers: where each god is fought, and a tick once
+ *  it's yours. Ticked by hand — the log doesn't say when a god falls. */
+function PantheonList({ gods }: { gods: PantheonStatusBridge[] }): React.JSX.Element {
+  const done = gods.filter((g) => g.unlocked).length
+  return (
+    <>
+      <div className="mb-1 mt-2 flex items-center justify-between px-1">
+        <span className={HEADING + 'text-overlay-muted'}>Pantheon</span>
+        <span className="text-[10px] text-overlay-muted">
+          {done}/{gods.length}
+        </span>
+      </div>
+      {gods.map((g) => {
+        const here = g.here && !g.unlocked
+        return (
+          <button
+            key={g.soul}
+            onClick={() => window.overlay?.togglePantheon(g.soul)}
+            title={`${g.god}: defeat it to unlock ${g.soul}. Click to ${g.unlocked ? 'untick' : 'tick'} it.`}
+            className={
+              'mb-1 flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left ' +
+              (here ? 'border-overlay-accent/60 bg-overlay-accent/10' : 'border-transparent ' + (g.unlocked ? '' : 'bg-black/20'))
+            }
+          >
+            <span className={'shrink-0 text-xs ' + (here ? 'text-overlay-accent' : 'text-overlay-muted')}>
+              {g.unlocked ? '✓' : '◆'}
+            </span>
+            <div className="min-w-0">
+              <div className={'text-xs ' + (g.unlocked ? 'text-overlay-muted line-through' : 'text-overlay-text')}>
+                {g.soul}
+                {here && <Tag tone="gold" className="ml-1.5">you are here</Tag>}
+              </div>
+              <div className="truncate text-[10px] text-overlay-muted">
+                Act {g.act} · {g.where}
+              </div>
+            </div>
+          </button>
+        )
+      })}
+    </>
+  )
+}
+

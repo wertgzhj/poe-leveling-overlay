@@ -82,6 +82,8 @@ interface StoreSchema extends AppSettings {
   actReached: Record<string, number>
   /** character -> build decisions whose reminder was acknowledged ("bandit",
    *  "pantheon"). One-shot choices, so the notice must not come back. */
+  /** character -> Pantheon powers ticked as unlocked (see CharacterRuns). */
+  pantheonUnlocked: Record<string, string[]>
   dismissedChoices: Record<string, string[]>
   /** character -> the gem you mule on it, or null for none. Absent = the
    *  default (Momentum, else the build's first): muling generally beats a quest
@@ -116,6 +118,7 @@ const defaults: StoreSchema = {
   profileByCharacter: {},
   actReached: {},
   dismissedChoices: {},
+  pantheonUnlocked: {},
   muleByCharacter: {}
 }
 

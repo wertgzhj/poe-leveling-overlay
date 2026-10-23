@@ -6,11 +6,11 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 287 tests: parser, tracker, watcher, guide, profile,
+npm test        # 293 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table,
                 # finding Client.txt, window and import hardening,
-                # the shopping list's act scenarios, gem short names
+                # the shopping list's act scenarios, gem short names, Pantheon gods
 npm run typecheck
 npm run build
 ```
@@ -228,11 +228,20 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      again — not the mule's level 2. That used to stick until a restart. A
      partymate's level-up must still never move tracking.
 7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a gold
-   bar naming your choice; with `meta.pantheon` set, **Act 5** does the same. The
+   bar naming your choice; with `meta.pantheon` set, **Act 6** does the same
+   (not Act 5: the Pantheon's gods are fought in Acts 6–10). The
    bar outranks the Labyrinth and trial notices — those come round again, the
    bandits do not. ✕ dismisses it for that character, including after a restart.
    A profile that names neither must show nothing at all. Importing a PoB build
    should fill the bandit in by itself (PoB's `None` means "kill all three").
+   **Pantheon gods:** with e.g. Lunaris + Shakari in the profile, the Trials tab
+   has a *Pantheon* section listing both, with act and place ("Act 9 · The Sand
+   Pit, a side area of The Oasis"). Entering **The Oasis** (Act 9) shows a gold
+   bar "Pantheon: Shakari — The Sand Pit" with *Done ✓*; a god in the zone itself
+   reads "… is here". Done ✓ or a click in the list ticks it for that character
+   (and unticks on a second click); a new character starts with none. Act 6's
+   Prisoner's Gate and Wetlands show their gods, Act 1's never do. The bar ranks
+   below a trial in the same zone.
 8. **Trials.** Entering a trial zone shows an orange △ "Trial of Ascendancy in this
    zone" hint on every tab. Finishing the trial auto-checks it — Izaro voices a
    plaque line only on completion, and the zone identifies which trial it was.
@@ -358,7 +367,8 @@ that once: a table everyone believed, wrong in two tiers.
 | Quest order within an act, derived from the levels its rewards need | `GemData` | ✓ data — reproduces the real order for every act |
 | `Client.txt` in Steam's default folder | `locate.ts` | ✓ game. Other Steam libraries, standalone, Epic: ○ — from the launchers' documented layouts |
 | The experience safe range is `3 + level/16`, applied in both directions | `safeLevelRange`, `zoneFit` | ✓ poewiki (*Experience*: SafeZone = ⌊3 + PlayerLevel/16⌋, EffectiveDifference = max(\|player − monster\| − SafeZone, 0)) |
-| The bandits are due from Act 2, the Pantheon from Act 5 | `BANDIT_ACT`, `PANTHEON_ACT` | ○ |
+| The bandits are due from Act 2; the Pantheon from Act 6, where its gods start | `BANDIT_ACT`, `PANTHEON_ACT` | Bandits ○. Pantheon ✓ poewiki (*The Pantheon*: "defeat certain gods in Acts 6 through 10") |
+| Where each Pantheon god is fought | `PANTHEON_GODS` (`pantheon.ts`) | Zones: owner, from poewiki's god pages; their area ids ✓ log. Side area names (Sand Pit, Spawning Ground, Valley of the Fire Drinker, Den of Despair) ○ — never in a capture yet; Garukhan's is unnamed |
 | The level you reach each act at: for PoB stages named "Act N", and for which acts a stage's shopping list covers | `ACT_START_LEVEL` (`acts.ts`) | ✓ log — the median level on first entering each act's town across ten full runs; Acts 7–10 were lowered to it (49/53/59/61, from 52/58/64/67) |
 | Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
 

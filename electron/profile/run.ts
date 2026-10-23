@@ -6,10 +6,11 @@
 
 import { BANDITS, type ProfileMeta } from './profile.ts'
 
-/** Act 2 asks you to deal with the bandits; the Pantheon opens up in Act 5.
- *  Unconfirmed in game (docs/TESTING.md, "What the code takes as given"). */
+/** Act 2 asks you to deal with the bandits; the Pantheon's powers come from
+ *  the gods you defeat in Acts 6-10 (poewiki, The Pantheon) — Tukohama, in
+ *  Act 6, is the first. */
 const BANDIT_ACT = 2
-const PANTHEON_ACT = 5
+const PANTHEON_ACT = 6
 
 /** A one-shot build decision the profile names and you've now reached the point
  *  for. Shown once in the notice bar, then dismissed for good. */
@@ -25,6 +26,9 @@ export interface ChoiceDue {
 export interface RunData {
   actReached: Record<string, number>
   dismissedChoices: Record<string, string[]>
+  /** The Pantheon powers this character has unlocked ("Soul of Tukohama"),
+   *  ticked by hand — the log doesn't say when a god falls. */
+  pantheonUnlocked: Record<string, string[]>
 }
 
 export interface RunStore {
@@ -76,6 +80,23 @@ export class CharacterRuns {
   forget(name: string): void {
     this.store.set('actReached', { ...this.store.get('actReached'), [name]: 1 })
     this.store.set('dismissedChoices', without(this.store.get('dismissedChoices'), name))
+    this.store.set('pantheonUnlocked', without(this.store.get('pantheonUnlocked'), name))
+  }
+
+  /** The Pantheon powers this character has unlocked. */
+  pantheon(name: string | null): string[] {
+    if (!name) return []
+    return this.store.get('pantheonUnlocked')[name] ?? []
+  }
+
+  /** Tick or untick a Pantheon power as unlocked. Returns true when it changed. */
+  togglePantheon(name: string | null, soul: string): boolean {
+    if (!name || !soul) return false
+    const map = this.store.get('pantheonUnlocked')
+    const have = map[name] ?? []
+    const next = have.includes(soul) ? have.filter((s) => s !== soul) : [...have, soul]
+    this.store.set('pantheonUnlocked', { ...map, [name]: next })
+    return true
   }
 
   /**

@@ -16,6 +16,7 @@ import { existsSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 
 import { join } from 'node:path'
 import { parseProfile, validateProfile, baseClassOf, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
+import { godsFor, isHere, whereIs } from './pantheon.ts'
 import {
   activeStageIndex,
   actFromAreaId,
@@ -46,7 +47,13 @@ import {
   type LibraryResult
 } from './library.ts'
 import { store } from '../settings.ts'
-import { Channels, type EditorProfileLoad, type EditorSaveResult, type ProfileSnapshot } from '../channels.ts'
+import {
+  Channels,
+  type EditorProfileLoad,
+  type EditorSaveResult,
+  type PantheonStatus,
+  type ProfileSnapshot
+} from '../channels.ts'
 import { CharacterRuns } from './run.ts'
 import type { OverlayController } from '../overlay.ts'
 import type { EditorWindow } from '../editor-window.ts'
@@ -78,6 +85,9 @@ export class ProfileService {
   private character: string | null = null
   /** Every profile you have, bundled example first — re-read on each reload. */
   private library: LibraryEntry[] = []
+  /** The last zone held one of the profile's Pantheon gods — leaving it must
+   *  clear the hint. */
+  private godWasHere = false
   /** The editor window, when there is one: it lists the same library. */
   private editor: EditorWindow | null = null
   /** Each character's run: act, dismissed reminders — in the settings file. */
@@ -105,7 +115,10 @@ export class ProfileService {
     log.addAreaListener((area) => {
       const reloaded = this.syncCharacter()
       const moved = this.runs.noteAct(this.character, actFromAreaId(area.areaId))
-      if (moved && !reloaded) this.push()
+      // Walking into (or out of) a Pantheon god's zone changes the hint.
+      const godHere = godsFor(this.profile?.meta.pantheon).some((g) => isHere(g, area.areaId, area.name))
+      if ((moved || godHere || this.godWasHere) && !reloaded) this.push()
+      this.godWasHere = godHere
     })
     log.addFreshCharacterListener((name) => this.forgetRun(name))
   }
@@ -363,6 +376,7 @@ export class ProfileService {
       viewedIndex: stageIndex,
       liveIndex,
       choiceDue: this.runs.choiceDue(this.character, this.profile?.meta),
+      pantheon: this.pantheonStatus(),
       library: this.library,
       activeId: this.activeId(),
       // Per character, so only once we know who you are — and only when this
@@ -437,6 +451,29 @@ export class ProfileService {
   /** Acknowledge a reminder. One-shot decisions, so it never comes back. */
   dismissChoice(id: string): void {
     if (this.runs.dismiss(this.character, id)) this.push()
+  }
+
+  /** Tick or untick a Pantheon power as unlocked on this character. */
+  togglePantheon(soul: string): void {
+    if (this.runs.togglePantheon(this.character, soul)) this.push()
+  }
+
+  /** The profile's Pantheon powers, where their gods are and whether this
+   *  character has them. Nothing before the log names a character: unlocks are
+   *  kept per character. */
+  private pantheonStatus(): PantheonStatus[] {
+    if (!this.character) return []
+    const area = this.log.getSnapshot().state.area
+    const have = new Set(this.runs.pantheon(this.character))
+    return godsFor(this.profile?.meta.pantheon).map((g) => ({
+      soul: g.soul,
+      god: g.god,
+      act: g.act,
+      where: whereIs(g),
+      side: g.sideArea ?? g.sideAreaHint,
+      unlocked: have.has(g.soul),
+      here: isHere(g, area?.areaId, area?.name)
+    }))
   }
 
   /** Page the viewed gem stage (◀/▶). Pins a manual view until it lands back on
