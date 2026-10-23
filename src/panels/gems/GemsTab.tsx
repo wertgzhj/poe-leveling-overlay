@@ -5,7 +5,6 @@ import { HEADING } from '../../lib/ui'
 import { useOverlayStore } from '../../stores/overlayStore'
 import { article, ErrorBox } from '../shared'
 import { SocketGroup } from './LinkGroup'
-import { MulePicker } from './MulePicker'
 import { BuyRow, RewardGroupRow } from './PlanRows'
 
 // The Gems tab: what to socket at your level, and where each gem comes from.
@@ -61,9 +60,6 @@ export function GemBody(): React.JSX.Element {
       {/* No class/ascendancy/level line: the build's name is the header, the
           level is in the tracker line above, and the class only matters on a
           mismatch, which says it below. */}
-      {/* Per character, not per stage: it sits with the character line, above
-          the stage navigation, so paging through stages never moves it. */}
-      {profile.muleChoice && <MulePicker choice={profile.muleChoice} />}
 
       {/* Only fires across base classes now — an Elementalist on a Witch build
           is the same character, ascended. "an Assassin" needs its own article. */}
@@ -225,14 +221,12 @@ export function GemBody(): React.JSX.Element {
  * The heading a to-do item sits under. The act is the stop: one gem vendor per
  * town, and everyone past their first league knows who (owner). Only the
  * Library is named — a second Act 3 stop you have to walk to, in its own
- * colour — for Siosa's stock and his quest's rewards alike. The mule has none:
- * the Mule picker right above says it, and a heading made the rewards after it
- * read as part of the mule trip.
+ * colour — for Siosa's stock and his quest's rewards alike.
  */
 function itemHeading(item: AcquisitionItemBridge): { text: string; library: boolean } | undefined {
   const act = item.kind === 'reward' ? item.group.act : item.entry.act
   const from = item.kind === 'reward' ? item.group.quest : item.stop?.npc
-  if (item.kind === 'buy' && (item.stop?.key === 'mule' || !item.stop)) return undefined
+  if (item.kind === 'buy' && !item.stop) return undefined
   const library = from != null && sourceName(from) === 'Library'
   if (act == null) return item.kind === 'buy' && item.stop ? { text: item.stop.label, library } : undefined
   return { text: library ? `A${act} · Library` : `A${act}`, library }

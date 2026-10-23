@@ -4,7 +4,7 @@ import { actsOfLevels } from '../acts.ts'
 import { normalizeGemName, type GemData } from '../gems.ts'
 import { type CharClass, type GemPlanEntry, type Profile, type Stage } from '../profile.ts'
 import { acquisitionOrder, classify } from './classify.ts'
-import { MULE_TRIP_LAST_START, type MuleChoice } from './mule.ts'
+import { type MuleChoice } from './mule.ts'
 import { buildPlan } from './plan.ts'
 import { buildRewardGroups, owedFromPicks, upcomingRewards } from './rewards.ts'
 import { type AcquisitionContext, type AcquisitionEntry, type Acquisitions, type LinkMark, type RewardGroup } from './types.ts'
@@ -47,11 +47,6 @@ export function acquisitionsForStage(
   const isNewThisStage = (e: AcquisitionEntry): boolean => !prevGems.has(e.gem.toLowerCase())
 
   const { rewards, purchases, other } = sortIntoLists(profile, used, copies, gems, startingGems, startingOwners)
-  const muleTrip = isMuleTripStage(profile, stageIndex, mule)
-  if (mule && muleTrip) {
-    const trip = muleTripEntry(profile, stageIndex, mule, [...rewards, ...purchases, ...other], gems, startingGems, startingOwners)
-    if (trip) purchases.push(trip)
-  }
 
   // Owner-specified priority: cost tier, then act (1→10), then alphabet.
   rewards.sort(acquisitionOrder)
@@ -81,9 +76,9 @@ export function acquisitionsForStage(
       // use. A group holding one of this stage's gems is this stage's business.
       g.gems.some((e) => !e.fromLevel) || g.act == null || g.act >= acts.from
     ),
-    // The mule trip belongs to the early stages — each of them, even when the
-    // one before already slotted the gem; past them, the gem is already yours.
-    [...purchases.filter((e) => (e.mule?.length ? muleTrip : isNewThisStage(e))), ...stillOwed],
+    // No mule row (owner): the choice lives in Settings, and the gem's line in
+    // the links says "Mule · Ranger". The list is for what you get in the run.
+    [...purchases.filter((e) => !e.mule?.length && isNewThisStage(e)), ...stillOwed],
     playerLevel,
     acts.to
   )
@@ -172,45 +167,15 @@ function sortIntoLists(
     // A gem you mule leaves the quest's pick: it's yours before the quest, and
     // the pick goes to the next gem you want from it — on a Marauder, Mercy
     // Mission hands over Chance to Bleed instead of the Momentum a Ranger alt
-    // already gave you. It lands with the mule trip, still saying what the quest
-    // would have been (see sourceMark).
+    // already gave you. It's filed with the purchases, off the to-do list, and
+    // its line in the links still says what the quest would have been (see
+    // sourceMark).
     if (acq.bucket === 'reward' && acq.mule?.length) purchases.push(acq)
     else if (acq.bucket === 'reward') rewards.push(acq)
     else if (acq.bucket === 'purchase') purchases.push(acq)
     else other.push(acq)
   }
   return { rewards, purchases, other }
-}
-
-/** You mule once, before the run — not when the gem's stage comes round, and
- *  not again on every stage until then. So the trip sits on the stages of the
- *  run's first levels (see MULE_TRIP_LAST_START), even for a gem the build
- *  slots much later — by level, not by "the first stage", because a profile
- *  may well slice levels 1-4 into two stages. */
-function isMuleTripStage(profile: Profile, stageIndex: number, mule: MuleChoice | null | undefined): boolean {
-  const stage = profile.stages[stageIndex]
-  return !!mule && (stageIndex === 0 || (stage != null && stage.range[0] <= MULE_TRIP_LAST_START))
-}
-
-/** The mule trip for a gem this stage doesn't list yet — one the build first
- *  slots later — or null when it's already listed or never used. */
-function muleTripEntry(
-  profile: Profile,
-  stageIndex: number,
-  mule: MuleChoice,
-  listed: readonly AcquisitionEntry[],
-  gems: GemData | undefined,
-  startingGems: ReadonlySet<string> | undefined,
-  startingOwners: Map<string, string[]> | undefined
-): AcquisitionEntry | null {
-  const key = normalizeGemName(mule.gem)
-  const firstUse = profile.stages.findIndex((s) =>
-    s.socketGroups.some((g) => g.gems.some((gem) => normalizeGemName(gem) === key))
-  )
-  if (firstUse <= stageIndex || listed.some((e) => normalizeGemName(e.gem) === key)) return null
-  const planned = profile.gemPlan.find((e) => normalizeGemName(e.gem) === key)
-  const acq = classify(planned ?? { gem: mule.gem }, profile.meta.class, gems, startingGems, startingOwners)
-  return acq.mule?.length ? acq : null
 }
 
 /**

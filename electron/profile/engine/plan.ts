@@ -32,10 +32,8 @@ export function buildPlan(
   const reachable = (act: number | undefined): boolean =>
     actReached == null || act == null || act <= actReached
   // Siosa counts as Act 3, like Clarissa (owner's call): the list is for what
-  // you can get from the act, now or later, and he's in it. A mule is the
-  // exception: it's done at level 1, before the run, so where the gem would
-  // otherwise come from is beside the point.
-  const shoppable = (entry: AcquisitionEntry): boolean => (entry.mule?.length ?? 0) > 0 || reachable(entry.act)
+  // you can get from the act, now or later, and he's in it.
+  const shoppable = (entry: AcquisitionEntry): boolean => reachable(entry.act)
   const raw: Raw[] = [
     ...rewardGroups
       .filter((group) => reachable(group.act))
@@ -44,10 +42,6 @@ export function buildPlan(
       .filter(shoppable)
       .map((entry): Raw => ({ kind: 'buy', entry, req: entry.requiredLevel }))
   ]
-  // Muling comes first, whatever act the gem's vendor sits in. You roll the alt,
-  // stash its two starting gems and delete it before you take a step on the real
-  // character — it is the one item on this list that isn't part of the run.
-  const muleFirst = (it: Raw): number => (it.kind === 'buy' && it.entry.mule?.length ? 0 : 1)
   // Order by the act you reach each in, reward-first on ties (unchanged).
   const actOf = (it: Raw): number => (it.kind === 'reward' ? it.group.act : it.entry.act) ?? 99
   const rewardFirst = (it: Raw): number => (it.kind === 'reward' ? 0 : 1)
@@ -62,7 +56,6 @@ export function buildPlan(
     it.kind === 'reward' ? (it.group.gems[0]?.gem ?? '') : it.entry.gem
   raw.sort(
     (a, b) =>
-      muleFirst(a) - muleFirst(b) ||
       actOf(a) - actOf(b) ||
       questOf(a) - questOf(b) ||
       rewardFirst(a) - rewardFirst(b) ||
@@ -90,7 +83,6 @@ export function buildPlan(
  * it is two visits, which is what actually happens.
  */
 function shoppingStop(entry: AcquisitionEntry): ShoppingStop | undefined {
-  if (entry.mule?.length) return { key: 'mule', label: 'Roll a mule first' }
   if (entry.bucket !== 'purchase' || !entry.npc) return undefined
   const where = entry.act ? `A${entry.act} · ${entry.npc}` : entry.npc
   return {

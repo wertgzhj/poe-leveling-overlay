@@ -71,9 +71,9 @@ Renderer (overlay)          Renderer (editor)
 ├── MainPanel (frame)       ├── RouteEditor
 │   ├── NoticeBar           ├── ProfileEditor
 │   ├── GuideTab            └── ProfileLibrary
-│   ├── GemsTab (gems/: PlanRows, LinkGroup, MulePicker)
+│   ├── GemsTab (gems/: PlanRows, LinkGroup, Legend)
 │   └── TrialsTab
-├── SettingsPanel
+├── SettingsPanel (MulePicker, the Gems tab legend)
 ├── UpdateBanner + VersionBadge
 └── DebugPanel (dev only — parsed events, in memory, never written to disk)
 ```

@@ -15,13 +15,6 @@ export interface MuleChoice {
  *  Confirmed against a real capture: every mule in it stopped at level 2. */
 export const MULE_MAX_LEVEL = 3
 
-/** The mule trip stays on every stage that starts at or below this level: the
- *  run's opening, up to Mercy Mission — the quest a mule typically stands in
- *  for. A stage starting later is past the point where an alt still pays.
- *  Confirmed against a real capture: Tidal Island, where Mercy Mission is done,
- *  was reached at level 4 in 14 of 23 runs (2–5). */
-export const MULE_TRIP_LAST_START = 4
-
 /** The quest that clears the Twilight Strand (Hillock). A fresh alt finishes
  *  it in minutes, so its reward and the stock it unlocks at Nessa are as much a
  *  mule's to hand over as the gems the class starts with. */
