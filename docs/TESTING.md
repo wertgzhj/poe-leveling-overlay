@@ -57,7 +57,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    All take effect immediately. The sections run in the order the work does:
    Updates, the editor button, Build profile, Game log, Overlay, Search regex,
    Hotkeys. The three tabs split the window into equal thirds at any size — drag
-   the resize grip and they should stay even, with no dead space after "Trials".
+   the resize grip and they should stay even, with no dead space after "Guide".
 
    **Search regex.** With the field empty there is **no** Regex button in the
    header. Paste a string (a trailing line break from a web page must vanish on
