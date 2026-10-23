@@ -153,6 +153,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      (Herald of Ash in After Fidelitas: gold line *and* `NEW`). On every stage,
      also one you page to with ◀/▶; never on the first stage. A gem that only
      moves to another link is not `NEW`.
+   - **"▸ What the colours mean"** at the bottom of the tab unfolds a legend:
+     every line colour, `NEW`, the source colours and the socket pips, each
+     drawn the way the real rows draw it and said in words. It stays open when
+     you switch tabs and back; a screen reader announces it as expanded or
+     collapsed.
    - Buys are headed by their stop (`A1 · NESSA`). The same vendor heading twice
      is correct — their stock grows per quest, so that's two visits.
    - A `PICK ONE, BUY REST` box names where to buy the ones you don't take —

@@ -162,6 +162,8 @@ const crypt = log('The Chamber of Sins Level 2', '1_2_9_2', 15, 22)
 export interface Scenario {
   name: string
   tab?: 'Guide' | 'Gems' | 'Trials'
+  /** a button to press after the tab, by (part of) its text */
+  click?: string
   settings?: boolean
   opacity?: number
   /** a long regex, so the counter shows its warning */
@@ -175,6 +177,16 @@ export interface Scenario {
 const scenarios: Scenario[] = [
   // Act 2, the live stage: line colours, NEW, a pick, the bandit reminder.
   { name: 'gems-act2', tab: 'Gems', profile: profileSnapshot(3, 22, 2, { choiceDue: bandit }), log: crypt, trials, guide },
+  // The colour legend unfolded — under the short opening stage, so it fits.
+  {
+    name: 'gems-legend',
+    tab: 'Gems',
+    click: 'What the colours mean',
+    profile: profileSnapshot(0, 2, 1),
+    log: log('The Coast', '1_1_2', 2, 2),
+    trials: { ...trials, currentZoneTrialId: null },
+    guide
+  },
   // The opening stage: the mule trip in the plan, the starting gem's line.
   {
     name: 'gems-mule',

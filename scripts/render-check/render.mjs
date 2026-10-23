@@ -75,6 +75,7 @@ async function shoot(index, scenario) {
   await win.webContents.executeJavaScript(`
     new Promise((resolve, reject) => {
       const tab = ${JSON.stringify(scenario.tab ?? null)}
+      const then = ${JSON.stringify(scenario.click ?? null)}
       const start = Date.now()
       const tick = () => {
         if (Date.now() - start > 20000) return reject(new Error('the overlay never rendered: ' + document.body.innerText.slice(0, 200)))
@@ -82,7 +83,14 @@ async function shoot(index, scenario) {
         const button = tab && [...document.querySelectorAll('button')].find((b) => b.textContent.trim().startsWith(tab))
         if (panel && (!tab || button || Date.now() - start > 3000)) {
           if (button) button.click()
-          document.fonts.ready.then(() => setTimeout(resolve, 300))
+          // A second button to press once the tab is up (a legend, a toggle).
+          const press = () => {
+            const b = then && [...document.querySelectorAll('button')].find((b) => b.textContent.includes(then))
+            if (then && !b) return reject(new Error('no button saying ' + then))
+            if (b) b.click()
+            document.fonts.ready.then(() => setTimeout(resolve, 300))
+          }
+          setTimeout(press, then ? 100 : 0)
         } else setTimeout(tick, 50)
       }
       tick()

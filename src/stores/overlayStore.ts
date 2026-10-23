@@ -34,6 +34,8 @@ interface OverlayStore {
   update: UpdateStatusBridge | null
   updateDismissed: boolean
   tab: 'guide' | 'gems' | 'trials'
+  /** The Gems tab's colour legend is unfolded (kept across tab switches). */
+  legendOpen: boolean
   patch: (partial: Partial<OverlayStore>) => void
   applyLogSnapshot: (snap: LogSnapshotBridge) => void
 }
@@ -70,6 +72,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   // Gems first: it works out of the box (bundled gem data + PoB import), while
   // the Guide depends on route content the user still has to write.
   tab: 'gems',
+  legendOpen: false,
   patch: (partial) => set(partial),
   applyLogSnapshot: (snap) =>
     set({
