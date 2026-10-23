@@ -137,7 +137,9 @@ Two things to know:
 | Guide: next step | `Ctrl+Shift+N` | Marks the current step done |
 | Guide: previous step | `Ctrl+Shift+P` | Reopens the last completed step |
 
-The overlay has **Guide**, **Gems** and **Trials** tabs. The Trials tab tracks all
+The overlay has **Gems**, **Trials** and **Guide** tabs, in that order — it opens on Gems,
+which works out of the box, while the Guide runs on placeholder routes until you write
+your own. The Trials tab tracks all
 **twelve** campaign Trials of Ascendancy — six for the **Normal** Labyrinth (Acts 1–3),
 three for **Cruel** (Acts 6–7) and three for **Merciless** (Acts 8–10), grouped per
 Labyrinth. It **auto-checks a trial when you finish it**: Izaro voices a plaque line

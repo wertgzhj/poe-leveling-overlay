@@ -103,6 +103,9 @@ function RegexButton(): React.JSX.Element | null {
   )
 }
 
+/** The tab bar's order, and the order Settings lists them in. */
+export const TAB_ORDER = ['gems', 'trials', 'guide'] as const
+
 function trackerLine(
   logStatus: WatcherStatusBridge | null,
   tracked: TrackerStateBridge | null,
@@ -181,9 +184,11 @@ export function MainPanel(): React.JSX.Element {
   )
 
   // Hiding the active tab falls back to the first one still shown (settings
-  // guarantees at least one is on).
-  const shownTabs = (['guide', 'gems', 'trials'] as const).filter((t) => visibleTabs[t])
-  const activeTab = shownTabs.includes(tab) ? tab : (shownTabs[0] ?? 'guide')
+  // guarantees at least one is on). Gems leads, as the overlay opens on it: it
+  // works out of the box, while the Guide shows placeholder routes until you
+  // write your own.
+  const shownTabs = TAB_ORDER.filter((t) => visibleTabs[t])
+  const activeTab = shownTabs.includes(tab) ? tab : (shownTabs[0] ?? 'gems')
 
   if (!visible) return <div />
 
@@ -260,14 +265,14 @@ export function MainPanel(): React.JSX.Element {
         {/* Tab switch — only the tabs enabled in Settings; hidden when just one. */}
         {shownTabs.length > 1 && (
           <div className="flex gap-1 px-2">
-            {visibleTabs.guide && (
-              <Tab label="Guide" active={activeTab === 'guide'} flag={guideHasErrors} onClick={() => patch({ tab: 'guide' })} />
-            )}
             {visibleTabs.gems && (
               <Tab label="Gems" active={activeTab === 'gems'} flag={profileHasErrors} onClick={() => patch({ tab: 'gems' })} />
             )}
             {visibleTabs.trials && (
               <Tab label="Trials" badge={trialsBadge} active={activeTab === 'trials'} onClick={() => patch({ tab: 'trials' })} />
+            )}
+            {visibleTabs.guide && (
+              <Tab label="Guide" active={activeTab === 'guide'} flag={guideHasErrors} onClick={() => patch({ tab: 'guide' })} />
             )}
           </div>
         )}

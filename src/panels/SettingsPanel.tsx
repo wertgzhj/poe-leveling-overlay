@@ -14,10 +14,11 @@ const HOTKEY_FIELDS: ReadonlyArray<readonly [HotkeyField, string]> = [
   ['stepBack', 'Guide: previous step']
 ]
 
+// In the tab bar's order (see TAB_ORDER).
 const TAB_FIELDS: ReadonlyArray<readonly [keyof VisibleTabsBridge, string]> = [
-  ['guide', 'Guide'],
   ['gems', 'Gems'],
-  ['trials', 'Trials']
+  ['trials', 'Trials'],
+  ['guide', 'Guide']
 ]
 
 // The game's stash/vendor search box length — 250 characters, confirmed in game
