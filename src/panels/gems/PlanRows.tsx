@@ -1,5 +1,6 @@
 import { type MuleHow, muleInstruction, sourceName, sourceTone } from '../../lib/sources'
-import { Pip, Tag } from '../shared'
+import { HEADING } from '../../lib/ui'
+import { Pip } from '../shared'
 import { LINE_TONE } from './LinkGroup'
 
 // The rows of the Gems tab's plan box, on the tab's three columns: cost, gem, source.
@@ -182,7 +183,7 @@ export function RewardGroupRow({
   later?: boolean
 }): React.JSX.Element {
   const context = (e: AcquisitionEntryBridge): string =>
-    e.fromLevel ? ` — for later (lvl ${e.fromLevel}+)` : ''
+    e.fromLevel ? ` · lvl ${e.fromLevel}+` : ''
 
   if (!group.pickOne) {
     const e = group.gems[0]
@@ -210,9 +211,11 @@ export function RewardGroupRow({
         (later ? 'border-overlay-border' : 'border-overlay-accent/40 bg-overlay-accent/5')
       }
     >
-      <Tag tone={later ? 'muted' : 'gold'} className="col-span-2 mb-0.5 justify-self-start">
+      {/* A heading like the list's own, not a badge: the box's border already
+          groups the pick, and one label style reads as one system. */}
+      <span className={'col-span-2 mb-0.5 ' + HEADING + (later ? 'text-overlay-muted' : 'text-overlay-accent')}>
         Pick one, buy rest
-      </Tag>
+      </span>
       <SourceCell act={group.act} what={group.quest ?? 'quest'} later={later} />
       {/* One price for the whole group, centred against the gems it covers: the
           quest gives one, so the rest is what you actually pay. */}
@@ -231,7 +234,7 @@ export function RewardGroupRow({
       {group.gems.map((e) => (
         <div
           key={e.gem}
-          title={e.gem + context(e)}
+          title={e.fromLevel ? `${e.gem} — for a later stage, from level ${e.fromLevel}` : e.gem}
           className={
             'col-span-2 col-start-2 flex items-baseline gap-1.5 text-xs ' +
             (e.fromLevel || later ? 'text-overlay-muted' : 'text-overlay-text')

@@ -163,9 +163,12 @@ function sortIntoLists(
   for (const entry of profile.gemPlan) {
     if (used.size > 0 && !used.has(entry.gem.toLowerCase())) continue
     const acq = classify(entry, profile.meta.class, gems, startingGems, startingOwners)
-    // The stage's socket groups are the truth for how many you need.
+    // The stage's socket groups are the truth for how many you need — both
+    // ways. The plan's count is the most any stage needs (a PoB import writes
+    // that), so taking only the larger made "2× Alt" of a gem this stage
+    // slots once because a later one slots it twice.
     const needed = copies.get(entry.gem.toLowerCase())
-    if (needed != null && needed > (acq.count ?? 1)) acq.count = needed
+    if (needed != null) acq.count = needed > 1 ? needed : undefined
     // A gem you mule leaves the quest's pick: it's yours before the quest, and
     // the pick goes to the next gem you want from it — on a Marauder, Mercy
     // Mission hands over Chance to Bleed instead of the Momentum a Ranger alt

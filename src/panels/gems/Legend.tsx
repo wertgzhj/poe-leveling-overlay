@@ -70,7 +70,7 @@ export function Legend(): React.JSX.Element {
           <Row sample={<span className="text-[10px] text-fight">A3 · Gravicius</span>}>
             A quest reward you only get by killing Gravicius
           </Row>
-          <Row sample={<span className="text-[10px] text-overlay-muted">for later (lvl 5+)</span>}>
+          <Row sample={<span className="text-[10px] text-overlay-muted">Leap Slam · lvl 6+</span>}>
             Can&apos;t use it yet — grey until you can
           </Row>
 

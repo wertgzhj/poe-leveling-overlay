@@ -58,11 +58,9 @@ export function GemBody(): React.JSX.Element {
         />
       )}
 
-      <div className="mb-2 flex items-center gap-2 px-1 text-[11px] text-overlay-muted">
-        <span className="text-overlay-text">{profile.meta.class}</span>
-        {profile.meta.ascendancy && <span>· {profile.meta.ascendancy}</span>}
-        {profile.level != null && <span>· level {profile.level}</span>}
-      </div>
+      {/* No class/ascendancy/level line: the build's name is the header, the
+          level is in the tracker line above, and the class only matters on a
+          mismatch, which says it below. */}
       {/* Per character, not per stage: it sits with the character line, above
           the stage navigation, so paging through stages never moves it. */}
       {profile.muleChoice && <MulePicker choice={profile.muleChoice} />}
@@ -126,8 +124,7 @@ export function GemBody(): React.JSX.Element {
           title="Return to the stage for your current level"
           className="mb-1.5 flex w-full items-center justify-center gap-1 rounded bg-white/10 px-2 py-1 text-[10px] text-overlay-text hover:bg-white/15"
         >
-          Viewing {viewedIndex < liveIndex ? 'an earlier' : 'a later'} stage
-          {profile.level != null ? ` · you're level ${profile.level}` : ''} — ▸ jump to current
+          {viewedIndex < liveIndex ? 'Earlier' : 'Later'} stage ▸ back to yours
         </button>
       )}
 
