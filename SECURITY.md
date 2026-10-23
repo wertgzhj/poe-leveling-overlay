@@ -12,7 +12,11 @@ person — expect a reply in days, not hours.
 Worth knowing before assessing anything, because it bounds the attack surface:
 
 - It **reads one file**, the game's own `Client.txt`, and matches a handful of
-  regexes against each line. Every other line is discarded immediately.
+  regexes against each line. Every other line is discarded immediately. To
+  *find* that file on first launch it also looks, read-only, at Steam's library
+  list (`libraryfolders.vdf`), Epic's install manifests and one registry value
+  (`HKCU\Software\Valve\Steam` → `SteamPath`) — nothing else, and nothing of
+  it leaves the machine.
 - It **never writes to, injects into, or sends anything to** the Path of Exile
   process. No memory access, no simulated input, no automation.
 - It stores settings, your route/profile files and progress locally
