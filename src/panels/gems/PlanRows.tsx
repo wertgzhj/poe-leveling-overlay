@@ -210,7 +210,9 @@ export function RewardGroupRow({
             ((!later && rest.cost && COST_TONE[rest.cost]) || 'text-overlay-muted')
           }
         >
-          {rest.count}× {rest.cost ? (COST_SHORT[rest.cost] ?? rest.cost) : 'buy'}
+          {/* "1×" said nothing a plain row doesn't: a count only when it's more. */}
+          {rest.count > 1 && `${rest.count}× `}
+          {rest.cost ? (COST_SHORT[rest.cost] ?? rest.cost) : 'buy'}
         </span>
       )}
       {group.gems.map((e) => (
