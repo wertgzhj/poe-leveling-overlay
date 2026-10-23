@@ -112,6 +112,10 @@ function CostCell({
  * (in its colour), and a later act, when this town doesn't stock them. The
  * vendor's name stays in the tooltip.
  */
+function restElsewhere(act: number | undefined, questAct: number | undefined, npc: string): boolean {
+  return sourceName(npc) !== npc || (act != null && questAct != null && act !== questAct)
+}
+
 function RestWhere({ act, questAct, npc }: { act?: number; questAct?: number; npc: string }): React.JSX.Element {
   const named = sourceName(npc)
   if (named !== npc) {
@@ -243,7 +247,10 @@ export function RewardGroupRow({
       {/* Where "buy rest" actually happens. Every gem in here is filed as a
           quest reward — a quest is its earliest source — so none of them ever
           reached the shopping list, and the instruction had no address. */}
-      {rest && (rest.npc || rest.partial) && (
+      {/* Only when it says more than the tag above: "buy rest" is the tag's
+          own words, so the line appears for somewhere else — the Library, a
+          later act — or nobody. */}
+      {rest && (rest.partial || (rest.npc && restElsewhere(rest.act, group.act, rest.npc))) && (
         <div
           className="col-span-2 col-start-2 text-[10px] text-overlay-muted"
           title={rest.npc ? `${rest.act ? `Act ${rest.act}: ` : ''}${rest.npc}` : undefined}

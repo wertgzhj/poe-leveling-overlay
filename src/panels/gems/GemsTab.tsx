@@ -152,33 +152,27 @@ export function GemBody(): React.JSX.Element {
                 (atReward ? 'text-overlay-accent' : 'text-overlay-muted')
               }
             >
-              Get these gems{atReward ? ' — take rewards now' : ''}
+              Get these gems
             </div>
             {/* Rows render bare cells into this grid, so the columns line up
                 across every row. Dimming a "later" row happens per cell: a
                 wrapper element here would become a grid item and break them. */}
             {plan.map((item, i) => {
-              // A heading each time the shopping stop changes, so what you pick
-              // up in one town reads as one block. Two visits to the same
-              // vendor (their stock grows per quest) read as one heading now
-              // that it only names the act — "A1" twice in a row looked broken.
-              const stop = item.kind === 'buy' ? item.stop : undefined
-              const prev = plan[i - 1]
-              const prevStop = prev?.kind === 'buy' ? prev.stop : undefined
-              const heading = stop ? stopHeading(stop) : undefined
+              // A heading each time the act changes, rewards and buys alike, so
+              // what you pick up in one town reads as one block. Rewards used to
+              // go without one, and an Act 2 reward sat under "A1" once the
+              // headings stopped naming the vendor.
+              const heading = itemHeading(item)
+              const prevHeading = i > 0 ? itemHeading(plan[i - 1]) : undefined
               return (
                 <Fragment key={i}>
-                  {/* No heading for the mule: the Mule picker right above says
-                      it already, and a heading made the rewards after it read
-                      as part of the mule trip. */}
-                  {stop && heading && stop.key !== 'mule' && heading !== (prevStop && stopHeading(prevStop)) && (
+                  {heading && heading.text !== prevHeading?.text && (
                     <div
                       className={
-                        'col-span-3 mt-0.5 ' + HEADING +
-                        (stop.npc && !item.later ? sourceTone(sourceName(stop.npc)) : 'text-overlay-muted')
+                        'col-span-3 mt-0.5 ' + HEADING + (heading.library && !item.later ? sourceTone('Library') : 'text-overlay-muted')
                       }
                     >
-                      {heading}
+                      {heading.text}
                     </div>
                   )}
                   {item.kind === 'reward' ? (
@@ -231,13 +225,18 @@ export function GemBody(): React.JSX.Element {
 }
 
 /**
- * A shopping stop's heading. The act is the stop: one gem vendor per town, and
- * everyone past their first league knows who (owner). Only the Library is
- * named — a second Act 3 stop you have to walk to, in its own colour.
+ * The heading a to-do item sits under. The act is the stop: one gem vendor per
+ * town, and everyone past their first league knows who (owner). Only the
+ * Library is named — a second Act 3 stop you have to walk to, in its own
+ * colour — for Siosa's stock and his quest's rewards alike. The mule has none:
+ * the Mule picker right above says it, and a heading made the rewards after it
+ * read as part of the mule trip.
  */
-function stopHeading(stop: NonNullable<Extract<AcquisitionItemBridge, { kind: 'buy' }>['stop']>): string {
-  if (!stop.npc) return stop.label
-  const named = sourceName(stop.npc)
-  const where = named !== stop.npc ? named : null
-  return [stop.act ? `A${stop.act}` : null, where].filter(Boolean).join(' · ') || named
+function itemHeading(item: AcquisitionItemBridge): { text: string; library: boolean } | undefined {
+  const act = item.kind === 'reward' ? item.group.act : item.entry.act
+  const from = item.kind === 'reward' ? item.group.quest : item.stop?.npc
+  if (item.kind === 'buy' && (item.stop?.key === 'mule' || !item.stop)) return undefined
+  const library = from != null && sourceName(from) === 'Library'
+  if (act == null) return item.kind === 'buy' && item.stop ? { text: item.stop.label, library } : undefined
+  return { text: library ? `A${act} · Library` : `A${act}`, library }
 }

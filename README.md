@@ -187,7 +187,7 @@ save** and shows validation problems in the panel.
   visits never skip pending steps, so portal trips to sell don't derail it. Hideouts
   and endgame maps are ignored entirely.
 - `"rewardHint": true` marks quest-reward steps: the guide tags them `REWARD`, and
-  while one is the current step the Gems tab's list reads *take rewards now*.
+  while one is the current step the Gems tab's list is framed in gold.
 - Fix mistakes with the next/previous hotkeys or by clicking a step (needs
   interactive mode, `Ctrl+Shift+C`).
 
@@ -256,11 +256,9 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
   thing you do before you start. It also leaves its quest pick, so that quest hands
   over the next gem you want instead.
 - A quest that offers several of your gems is one **pick**, so it gets its own box
-  reading `PICK ONE, BUY REST` — with the price of the ones you don't take and
-  `↳ buy the rest`. There's one gem vendor per town, so that's where; the line only
-  says more when it's somewhere else: `in the Library` (violet) or `in Act 6`. Those
-  gems are quest rewards, so nothing else on the tab would ever have told you where
-  to buy them. (*The Caged Brute* is two picks — a
+  reading `PICK ONE, BUY REST` — with the price of the ones you don't take. There's
+  one gem vendor per town, so that's where; a line under the gems only appears when
+  it's somewhere else: `↳ buy the rest in the Library` (violet) or `in Act 6`. (*The Caged Brute* is two picks — a
   support and a skill — and shows as two.) On the **next** stage the rest come back
   once, as one buy row reading `↳ whichever you didn't pick`: the quest handed over
   exactly one, and the overlay can't see your inventory.
@@ -276,8 +274,8 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
   preview of every act it covers. Which acts a stage covers comes from its level
   range and the level each act starts at. Before the overlay has seen a zone, the
   live stage uses its own acts too.
-- Buys are headed by the **act** you make them in — `A1`, `A2` — so what you pick up
-  in one town reads as one block. Every town has one gem vendor; the name is in the
+- The list is headed by **act** — `A1`, `A2` — rewards and buys alike, so what you
+  pick up in one town reads as one block. Every town has one gem vendor; the name is in the
   source column. The one exception is **`A3 · Library`**, in violet: Siosa, a second
   Act 3 vendor you walk to. He counts from Act 3 on, like the rest of the act; the
   heading says where to go. His quest, *A Fixture of Fate*, reads `Library` too.

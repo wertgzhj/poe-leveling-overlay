@@ -179,16 +179,17 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      drawn the way the real rows draw it and said in words. It stays open when
      you close and reopen Settings; a screen reader announces it as expanded
      or collapsed.
-   - Buys are headed by their act (`A1`, `A2`), one heading per town even
-     where the vendor's stock grows per quest; only the Library is named
-     (`A3 · Library`, violet).
-   - A `PICK ONE, BUY REST` box ends in `↳ buy the rest` when the quest's town
-     sells them — e.g. Act 2's *Intruders in Black* (Yeena stocks all three) —
-     `↳ buy the rest in the Library` (violet) when only Siosa does, and
-     `↳ buy the rest in Act N` when it's a later town. The vendor's name is in
-     the tooltip. Act 3's *Lost in Love* on a Marauder (Vulnerability /
-     Infernal Cry) must say plain `buy the rest`: Clarissa sells both right
-     after it, half an act before the Library.
+   - The list is headed by act (`A1`, `A2`), rewards and buys alike, one
+     heading per town even where the vendor's stock grows per quest; only the
+     Library is named (`A3 · Library`, violet). An Act 2 reward sits under
+     `A2`, never under the `A1` above it. The list's title is just
+     *Get these gems* — framed in gold while the guide's step is a reward.
+   - A `PICK ONE, BUY REST` box has no line under its gems when the quest's
+     town sells the rest — e.g. Act 2's *Intruders in Black* (Yeena stocks all
+     three); `↳ buy the rest in the Library` (violet) when only Siosa does,
+     `↳ buy the rest in Act N` when it's a later town. Act 3's *Lost in Love*
+     on a Marauder (Vulnerability / Infernal Cry) must have **no** line:
+     Clarissa sells both right after it, half an act before the Library.
    - And once that stage rolls over, those gems must **still be on the list**,
      now as **one** buy row for the pick: the gems stacked, `↳ whichever you
      didn't pick` (or `the 2 you didn't pick`) under them. The quest gave you
@@ -278,7 +279,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    overlay, Settings and the editor (`src/styles/tokens.css`):
    - **Gold** — now / you / active: the active tab, the current guide step, the
      trial you stand in ("you are here" is a gold row, like the guide step),
-     "take rewards now", a *Pick one* box, the bandit/pantheon bar.
+     the list framed while the guide's step is a reward, a *Pick one* box, the
+     bandit/pantheon bar.
    - **Orange + ⚠ or △** — careful: the trial-zone bar, a wrong-class or
      not-English log, a regex past 250, a hotkey without a modifier. Never
      orange without its glyph.
