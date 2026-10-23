@@ -9,6 +9,7 @@ import { ProfileService } from './profile/service.ts'
 import { TrialsService } from './trials/service.ts'
 import { EditorWindow } from './editor-window.ts'
 import { UpdateService } from './update/service.ts'
+import { denyPermissions, hardenWebContents } from './security.ts'
 
 // Set to a number of ms via SMOKE=<ms> to auto-quit after startup — used by the
 // headless launch check in CI/dev to prove the app boots without a display.
@@ -36,7 +37,11 @@ if (!app.requestSingleInstanceLock()) {
     }
   })
 
+  // Before any window exists, so none slips through.
+  hardenWebContents()
+
   app.whenReady().then(() => {
+    denyPermissions()
     overlay.create()
     registerIpc(overlay, logService, guideService, profileService, trialsService, editorWindow, updateService)
     logService.start()

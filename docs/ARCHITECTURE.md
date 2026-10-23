@@ -220,7 +220,8 @@ No server, no account, no telemetry, no analytics, no crash reporting.
 | Debug panel | Parsed events only, in memory, dev builds only, never written to disk. |
 | Log fixtures | Raw `Client.txt` excerpts are never committed. `scripts/sanitize-fixtures.ts` replaces character names and strips account names, chat, whispers and instance-server IP addresses first. |
 | Settings & profiles | Local only. No personal data beyond file paths and the optional in-game character name. |
-| Electron hardening | `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, allow-listed IPC, no remote content in windows. |
+| Electron hardening | `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, a CSP, allow-listed IPC, no remote content in windows. Every window is held to its own page: navigation elsewhere, `window.open`, webviews and permission requests are refused (`electron/security.ts`, rules in `navigation.ts`). |
+| Imports | PoB links: 4 MB download cap, read as a stream; redirects must stay on the paste host. PoB codes: 16 MB cap on what they unpack to. |
 | Supply chain | Committed lockfile, small dependency surface, `npm audit` in CI. |
 
 Two outbound requests exist, both documented in [`SECURITY.md`](../SECURITY.md):

@@ -41,10 +41,22 @@ export function encodePobCode(xml: string): string {
     .replace(/\//g, '_')
 }
 
+/** A build's XML is tens of KB, a huge one a few MB. A code that inflates past
+ *  this isn't a build — a few KB of zeros compress a thousandfold, so without a
+ *  cap a pasted code could ask for gigabytes. */
+export const MAX_POB_XML_BYTES = 16 * 1024 * 1024
+
 export function decodePobCode(code: string): string {
   const cleaned = code.trim().replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/')
   const buf = Buffer.from(cleaned, 'base64')
-  return inflateSync(buf).toString('utf8')
+  try {
+    return inflateSync(buf, { maxOutputLength: MAX_POB_XML_BYTES }).toString('utf8')
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ERR_BUFFER_TOO_LARGE') {
+      throw new Error('it unpacks to far more than any build — not a Path of Building code')
+    }
+    throw e
+  }
 }
 
 export function importPobCode(code: string, opts: PobImportOptions = {}): PobImportResult {
@@ -60,6 +72,9 @@ export function importPobCode(code: string, opts: PobImportOptions = {}): PobImp
 export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImportResult {
   const warnings: string[] = []
   const errors: string[] = []
+  if (xml.length > MAX_POB_XML_BYTES) {
+    return { profile: null, warnings, errors: ['far too large to be a Path of Building build'] }
+  }
 
   let doc: Record<string, unknown>
   try {

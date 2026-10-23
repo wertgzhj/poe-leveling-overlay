@@ -12,15 +12,26 @@ person — expect a reply in days, not hours.
 Worth knowing before assessing anything, because it bounds the attack surface:
 
 - It **reads one file**, the game's own `Client.txt`, and matches a handful of
-  regexes against each line. Every other line is discarded immediately.
+  regexes against each line. Every other line is discarded immediately. To
+  *find* that file on first launch it also looks, read-only, at Steam's library
+  list (`libraryfolders.vdf`), Epic's install manifests and one registry value
+  (`HKCU\Software\Valve\Steam` → `SteamPath`) — nothing else, and nothing of
+  it leaves the machine.
 - It **never writes to, injects into, or sends anything to** the Path of Exile
   process. No memory access, no simulated input, no automation.
 - It stores settings, your route/profile files and progress locally
   (`electron-store`, in the OS userData folder). No server, no account, no
   telemetry.
 - Renderer windows run **sandboxed with context isolation**, `nodeIntegration`
-  off, and reach the main process only through an explicitly allow-listed IPC
-  surface (`electron/channels.ts`, exposed via `electron/preload.ts`).
+  off, under a Content-Security-Policy, and reach the main process only through
+  an explicitly allow-listed IPC surface (`electron/channels.ts`, exposed via
+  `electron/preload.ts`).
+- No window may navigate away from its own page, open another window, embed a
+  webview, or get a permission (camera, microphone, notifications, …) —
+  `electron/security.ts` refuses all of it for every window the app creates.
+- Imports are size-capped: a pasted PoB link stops downloading at 4 MB (a
+  `Content-Length` over that is refused unread) and may not redirect off its
+  paste host; a PoB code may not unpack to more than 16 MB.
 
 Outbound network requests, in full:
 
