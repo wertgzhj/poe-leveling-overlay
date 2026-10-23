@@ -70,8 +70,8 @@ export function vendorCostFor(requiredLevel: number | undefined): string | undef
 
 /**
  * PoE's experience "safe range" above your level: `3 + one per 16 complete
- * levels` (wiki: SafeZone = 3 + PlayerLevel/16 — unconfirmed in game, see
- * docs/TESTING.md). A gem whose required level is
+ * levels` (poewiki, *Experience*: SafeZone = ⌊3 + PlayerLevel/16⌋, and the
+ * penalty counts the gap beyond it either way — what zoneFit does). A gem whose required level is
  * more than this above yours is "coming up", not for right now — the Gems tab
  * uses it to split the plan into now vs. dimmed-later, gating by level (which we
  * track reliably) instead of act (which we can't always map to a level).
