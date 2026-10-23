@@ -824,7 +824,7 @@ test('the gem you mule is flagged with the class that hands it over', () => {
   assert.equal(acq.other.find((e) => e.gem === 'Fireball')?.mule, undefined)
 })
 
-test('mulable gems head the plan, whatever act their vendor sits in', () => {
+test('a muled gem is not on the list: the choice is in Settings, the links say Mule', () => {
   const gems = new GemData({
     // Sold in Act 3, but a level-1 Marauder hands it over before you start.
     'Ruthless Support': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
@@ -845,7 +845,7 @@ test('mulable gems head the plan, whatever act their vendor sits in', () => {
 
   assert.deepEqual(
     plan.map((it) => (it.kind === 'reward' ? it.group.gems[0].gem : it.entry.gem)),
-    ['Ruthless Support', 'Reward A1', 'Buy A1']
+    ['Reward A1', 'Buy A1']
   )
 })
 
@@ -1367,9 +1367,7 @@ test('the muled gem leaves the quest pick, and the pick goes to the next gem', (
   const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
   const acq = acquisitionsForStage(profile, 0, gems, { mule: momentum, playerLevel: 2 })
 
-  const first = acq.plan[0]
-  assert.equal(first?.kind === 'buy' ? first.entry.gem : null, 'Momentum Support')
-  assert.equal(first?.kind === 'buy' ? first.stop?.key : null, 'mule')
+  assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'), 'no mule row')
   assert.ok(!acq.rewards.some((e) => e.gem === 'Momentum Support'), 'never also the quest pick')
   const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
   assert.deepEqual(mercy?.gems.map((e) => e.gem), ['Chance to Bleed Support'])
@@ -1392,67 +1390,18 @@ test('only the chosen gem is muled — never two alts', () => {
   assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.mule))
 })
 
-test('a mule for a later stage is still done first, before the run', () => {
-  // Choose Chance to Bleed (needed from level 8): it's muled at the start, and
-  // Mercy Mission hands over Momentum instead.
+test('a mule for a later stage still frees its quest pick', () => {
+  // Choose Chance to Bleed (needed from level 8): Mercy Mission hands over
+  // Momentum instead, and neither stage lists the mule.
   const profile = berserker()
   const gems = exampleGems()
   const bleed = muleOptions(profile, gems, startingClasses()).find((o) => o.gem === 'Chance to Bleed Support')!
   const acq = acquisitionsForStage(profile, 0, gems, { mule: bleed, playerLevel: 2 })
-  const first = acq.plan[0]
-  assert.equal(first?.kind === 'buy' ? first.entry.gem : null, 'Chance to Bleed Support')
-  assert.deepEqual(first?.kind === 'buy' ? first.entry.mule : null, ['Duelist'])
+  assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
   const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
   assert.deepEqual(mercy?.gems.map((e) => e.gem), ['Momentum Support'])
-  // And it is done then: the stage that first slots it doesn't send you back.
   const later = acquisitionsForStage(profile, 1, gems, { mule: bleed, playerLevel: 9 })
   assert.ok(!later.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
-})
-
-test('the mule trip stays on the opening stages, however finely they are sliced', () => {
-  // Levels 1-2 and 3-4 as two stages: still the run's opening, still muling.
-  // From level 5 on, it's done.
-  const profile = parseProfile(
-    JSON.stringify({
-      meta: { name: 'B', class: 'Marauder' },
-      stages: [
-        { range: [1, 2], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] },
-        { range: [3, 4], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] },
-        { range: [5, 9], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] }
-      ],
-      gemPlan: ['Ground Slam', 'Momentum Support'].map((gem) => ({ gem }))
-    })
-  ).profile!
-  const gems = exampleGems()
-  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
-  const muled = (i: number): boolean =>
-    acquisitionsForStage(profile, i, gems, { mule: momentum, playerLevel: 3 }).plan.some(
-      (it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'
-    )
-  assert.deepEqual([0, 1, 2].map(muled), [true, true, false])
-})
-
-test('the mule trip is not carried through every stage', () => {
-  // Momentum first slotted in the third stage: muled before the run, and the
-  // stages in between don't repeat it.
-  const profile = parseProfile(
-    JSON.stringify({
-      meta: { name: 'B', class: 'Marauder' },
-      stages: [
-        { range: [1, 4], socketGroups: [{ gems: ['Ground Slam'] }] },
-        { range: [5, 9], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support'] }] },
-        { range: [10, 20], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support'] }] }
-      ],
-      gemPlan: ['Ground Slam', 'Ruthless Support', 'Momentum Support'].map((gem) => ({ gem }))
-    })
-  ).profile!
-  const gems = exampleGems()
-  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
-  const muled = (i: number): boolean =>
-    acquisitionsForStage(profile, i, gems, { mule: momentum, playerLevel: 12 }).plan.some(
-      (it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'
-    )
-  assert.deepEqual([0, 1, 2].map(muled), [true, false, false])
 })
 
 test('no mule makes every gem a quest or a buy again', () => {
@@ -1462,27 +1411,6 @@ test('no mule makes every gem a quest or a buy again', () => {
   assert.ok(all.every((e) => !e.mule))
   const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
   assert.equal(mercy?.pickOne, true, 'Momentum and Chance to Bleed: pick one')
-})
-
-test('a mule is never hidden behind act progress', () => {
-  // The vendor that would otherwise sell it is in Act 3 and you are in Act 1 —
-  // but the mule is done at level 1, before the run, so it shows.
-  const gems = new GemData({
-    'Momentum Support': { attr: 'dex', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
-    'Ground Slam': { attr: 'str', requiredLevel: 1 }
-  })
-  const profile = parseProfile(
-    JSON.stringify({
-      meta: { name: 'B', class: 'Marauder' },
-      stages: [{ range: [1, 10], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support'] }] }],
-      gemPlan: [{ gem: 'Ground Slam' }, { gem: 'Momentum Support' }]
-    })
-  ).profile!
-  const acq = acquisitionsForStage(profile, 0, gems, {
-    mule: { gem: 'Momentum Support', classes: ['Ranger'] },
-    actReached: 1
-  })
-  assert.ok(acq.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'))
 })
 
 test('a low-level alt of a class this build mules from is a mule, not the wrong profile', () => {

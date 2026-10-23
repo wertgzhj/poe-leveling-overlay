@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 284 tests: parser, tracker, watcher, guide, profile,
+npm test        # 282 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table,
                 # finding Client.txt, window and import hardening,
@@ -101,22 +101,20 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - A long gem name (`Melee Physical Damage Support`) and a long quest name
      (`The Siren's Cadence`) truncate with `…` and keep their row one line high;
      hovering shows the full text.
-   - **One mule per character, your choice.** A *Mule* dropdown sits under the
-     class/level line — above the stage arrows, so paging stages never moves
-     it — whenever the build has a gem another class gets by clearing the
+   - **One mule per character, your choice — in Settings → Build profile →
+     Mule**, whenever the build has a gem another class gets by clearing the
      Twilight Strand — its starting gems, Hillock's reward, or Nessa's first
      stock — that yours doesn't. On a fresh character it defaults to
-     **Momentum** (else the gem the build needs first). The chosen gem reads
-     `Mule` in turquoise with the class to roll, in the list **and** the links,
-     at the top of the list — and never *also* as a quest pick: on a Marauder
+     **Momentum** (else the gem the build needs first). The Gems tab has **no**
+     mule row and no dropdown; the chosen gem's line in the links reads
+     `Mule · Ranger` — and it's never *also* a quest pick: on a Marauder
      muling Momentum, Mercy Mission must hand over Chance to Bleed, with no
      "pick one". Pick Chance to Bleed instead and they swap. **No mule** turns
      it off for that character: Mercy Mission is a pick between both again, and
      no `Mule` appears anywhere. The choice is per character and survives a
-     restart; another character keeps its own. The `Mule` row is on the
-     **opening stages only** — every stage that starts at level 4 or below
-     (split 1-2 / 3-4, both show it); a stage from level 5 on doesn't repeat
-     it, even when the gem is first slotted there. The open dropdown is dark with readable text.
+     restart; another character keeps its own. Before the log names a
+     character, Settings says so instead of a dropdown. The open dropdown is
+     dark with readable text.
    - A quest reward reads `Reward`, and one your build needs twice `Reward +1`.
    - **The Caged Brute gives two rewards** — a support and a skill, each its own
      pick. A Marauder build with Faster Attacks, Leap Slam and Intimidating Cry
@@ -337,7 +335,6 @@ that once: a table everyone believed, wrong in two tiers.
 | A new character's first level-up is to level 2, on the Strand | `FRESH_CHARACTER_MAX_LEVEL` | ✓ log — all 46 |
 | A partymate's level-up can't take the new-character reset | tracker, `onFreshCharacter` | ○ — the Strand is solo, but a group can meet from Lioneye's Watch and the Coast on. It holds because you reach level 2 on the Strand, before anyone can join; a partymate levelling first, after you leave the Strand at level 1, would take it. Not seen in the capture (8 partymates, none before level 3) — which shows it's rare, not that it can't happen |
 | A mule is deleted by level 3 | `MULE_MAX_LEVEL` | ✓ log — every mule stopped at level 2 |
-| The mule trip pays until Mercy Mission, so stages starting by level 4 carry it | `MULE_TRIP_LAST_START` | ✓ log — Tidal Island reached at level 4 in 14 of 23 runs (2–5) |
 | Within an act, the vendor whose quest comes first sells it first (Clarissa after *Lost in Love* before Siosa after *A Fixture of Fate*) | `GemData.questRank` | ✓ data — quest order reproduced for every act |
 | Vendor price tiers: Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+ | `COST_TIERS` | ✓ game — every tier |
 | The stash/vendor search box takes 250 characters | `SEARCH_BOX_LIMIT` | ✓ game |

@@ -1,7 +1,6 @@
-import { type MuleHow, muleInstruction, sourceName, sourceTone } from '../../lib/sources'
+import { sourceName, sourceTone } from '../../lib/sources'
 import { HEADING } from '../../lib/ui'
 import { Pip } from '../shared'
-import { LINE_TONE } from './LinkGroup'
 
 // The rows of the Gems tab's plan box, on the tab's three columns: cost, gem, source.
 
@@ -35,16 +34,11 @@ function CostCell({
   cost,
   count,
   free,
-  mule,
-  muleHow,
   later
 }: {
   cost?: string
   count?: number
   free?: boolean
-  /** the classes whose level-1 alt hands this gem over — no price to put here */
-  mule?: string[]
-  muleHow?: MuleHow
   later?: boolean
 }): React.JSX.Element {
   const n = count ?? 1
@@ -52,18 +46,6 @@ function CostCell({
   // 2.4:1, unreadable. The "lvl N" next to the gem says why it waits.
   const cls = 'text-right text-[10px] '
   const now = (tone: string): string => (later ? 'text-overlay-muted' : tone)
-
-  if (mule?.length) {
-    return (
-      <span
-        className={cls + now('text-mule')}
-        title={muleInstruction(mule, muleHow)}
-      >
-        {n > 1 && `${n}× `}
-        Mule
-      </span>
-    )
-  }
 
   if (free) {
     // A quest hands out exactly ONE reward. Needing the gem twice means one is
@@ -353,12 +335,8 @@ function GemCell({
 // A single vendor purchase in the merged acquisition box — same three cells as a
 // reward row, so buys and takes read as one list. The cost column carries the
 // take-it-free vs. pay-for-it distinction that the old take/buy badges did,
-// without spending a second column on it (owner: cost matters a lot).
-//
-// A gem another class starts with is the same row with both ends swapped out:
-// "Mule" where the price would be, because there isn't one, and the class you
-// roll where the vendor would be, because that is where you get it. Both in
-// turquoise, so muling never reads as shopping.
+// without spending a second column on it (owner: cost matters a lot). The mule
+// has no row here: it's chosen in Settings, and its line in the links says so.
 export function BuyRow({
   entry: e,
   comingUpAt,
@@ -368,30 +346,11 @@ export function BuyRow({
   comingUpAt?: number
   later?: boolean
 }): React.JSX.Element {
-  const mule = e.mule?.length ? e.mule : undefined
-  const cells = (
+  return (
     <>
-      <CostCell cost={e.cost} count={e.count} mule={mule} muleHow={e.muleHow} later={later} />
+      <CostCell cost={e.cost} count={e.count} later={later} />
       <GemCell entry={e} comingUpAt={comingUpAt} later={later} />
-      {mule ? (
-        <SourceCell
-          what={mule.join('/')}
-          tone="text-mule"
-          title={`Roll a level-1 ${mule.join(' or ')}, stash its starting gems, delete it. Otherwise ${e.npc ?? 'a vendor'}${e.act ? ` in Act ${e.act}` : ''} sells it${e.cost ? ` for ${e.cost}` : ''}.`}
-          later={later}
-        />
-      ) : (
-        <SourceCell act={e.act} what={e.npc ?? 'vendor'} approx={e.fallback} later={later} />
-      )}
+      <SourceCell act={e.act} what={e.npc ?? 'vendor'} approx={e.fallback} later={later} />
     </>
-  )
-  // The mule's line is tinted turquoise as a whole, like its line in the links
-  // below (LINE_TONE). A subgrid, so the cells still sit on the plan's columns.
-  return mule ? (
-    <div className={'col-span-3 grid grid-cols-subgrid items-baseline gap-x-1.5 rounded-sm py-px ' + LINE_TONE.mule}>
-      {cells}
-    </div>
-  ) : (
-    cells
   )
 }

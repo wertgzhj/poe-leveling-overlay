@@ -4,6 +4,7 @@ import { useOverlayStore } from '../stores/overlayStore'
 import { acceleratorFromEvent, formatAccelerator } from '../lib/accelerator'
 import { HEADING, OPACITY_READABLE, button, panelSurface } from '../lib/ui'
 import { Legend } from './gems/Legend'
+import { MulePicker } from './MulePicker'
 
 type HotkeyField = keyof HotkeyBindingsBridge
 
@@ -51,6 +52,7 @@ export function SettingsPanel(): React.JSX.Element {
     clickThrough,
     clientTxtPath,
     library,
+    muleChoice,
     activeId,
     characterName,
     visibleTabs,
@@ -63,6 +65,7 @@ export function SettingsPanel(): React.JSX.Element {
       clickThrough: s.clickThrough,
       clientTxtPath: s.clientTxtPath,
       library: s.profile?.library ?? NO_PROFILES,
+      muleChoice: s.profile?.muleChoice ?? null,
       activeId: s.profile?.activeId ?? null,
       characterName: s.characterName,
       visibleTabs: s.visibleTabs,
@@ -252,6 +255,19 @@ export function SettingsPanel(): React.JSX.Element {
             </div>
             <p className="mt-1 text-[10px] text-overlay-muted">
               Drives the Gems tab. A character switches back to the profile it was last played with.
+            </p>
+            <label className="mt-2 block text-[11px] text-overlay-muted">Mule</label>
+            {muleChoice ? (
+              <MulePicker choice={muleChoice} />
+            ) : (
+              <p className="mt-1 text-[10px] text-overlay-muted">
+                Shown once the log names your character, for a build with a gem another class gets
+                on the Twilight Strand.
+              </p>
+            )}
+            <p className="mt-1 text-[10px] text-overlay-muted">
+              Per character, like the profile: a level-1 alt of another class hands over a gem
+              your build needs. In the Gems tab its line says <span className="text-mule">Mule · Ranger</span>.
             </p>
             <label className="mt-2 block text-[11px] text-overlay-muted">
               Import from Path of Building

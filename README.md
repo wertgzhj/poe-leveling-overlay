@@ -229,7 +229,6 @@ The tab reads in three columns — **cost, gem, source** — and every list shar
 so the prices line up under each other and so do the acts:
 
 ```
-  Mule   Ⓖ Momentum                       Ranger
 Reward   Ⓑ Freezing Pulse                 A1 · Enemy at the Gate
 Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
 2× Alt   Ⓑ Summon Raging Spirit           A3 · Clarissa ≈
@@ -248,13 +247,12 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
   `Reward +1` — one free, the rest you buy or find.
 - **Muling** — rolling a throwaway level-1 character of another class for a gem it
   gets on the Twilight Strand (its starting gems, Hillock's reward, or Nessa's first
-  stock) — is your call, per character: the **Mule** dropdown under the character
-  line picks the gem (Momentum by default, when the build uses it) or **No mule**,
-  which is the better answer in a party. The mule row in the list is tinted
-  **turquoise**, reads `Mule` in the cost column and the class to roll in the source
-  column, and comes first on the opening stages (up to level 4) only: it's the one
-  thing you do before you start. It also leaves its quest pick, so that quest hands
-  over the next gem you want instead.
+  stock) — is your call, per character, in **Settings → Build profile → Mule**, next
+  to the profile that's also chosen per character: the gem (Momentum by default,
+  when the build uses it) or **No mule**. Solo or in a party makes no difference. The
+  Gems tab doesn't list the mule as something to get; the gem's line in the links
+  says `Mule · Ranger`. It also leaves its quest pick, so that quest hands over the
+  next gem you want instead.
 - A quest that offers several of your gems is one **pick**, so it gets its own box
   reading `PICK ONE, BUY REST` — with the price of the ones you don't take. There's
   one gem vendor per town, so that's where; a line under the gems only appears when

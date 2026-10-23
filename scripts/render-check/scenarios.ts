@@ -187,7 +187,7 @@ const scenarios: Scenario[] = [
     trials,
     guide
   },
-  // The opening stage: the mule trip in the plan, the starting gem's line.
+  // The opening stage: no mule row, the starting gem and the mule plain.
   {
     name: 'gems-mule',
     tab: 'Gems',
