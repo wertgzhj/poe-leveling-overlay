@@ -43,7 +43,7 @@ export function GemBody(): React.JSX.Element {
   ]) {
     acqByGem.set(e.gem.toLowerCase(), e)
   }
-  const freshGems = new Set(profile.acquisitions?.newGems ?? [])
+  const changes = profile.acquisitions?.linkChanges
 
   return (
     <>
@@ -201,7 +201,8 @@ export function GemBody(): React.JSX.Element {
                 group={group}
                 acq={acqByGem}
                 marks={profile.acquisitions?.linkMarks ?? {}}
-                fresh={freshGems}
+                fresh={changes?.fresh[i] ?? []}
+                relinked={changes?.relinked[i] ?? false}
               />
             ))}
             {stage.note && (

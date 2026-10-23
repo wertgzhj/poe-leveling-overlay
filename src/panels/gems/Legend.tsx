@@ -60,7 +60,12 @@ export function Legend(): React.JSX.Element {
             New with this stage, from your mule (another class&apos;s alt)
           </Row>
           <Row sample={<Line tone={LINE_TONE.start}>Ruthless</Line>}>New with this stage, and you start with it</Row>
-          <Row sample={<Tag tone="neutral">new</Tag>}>Not in the previous stage&apos;s links</Row>
+          <Row sample={<Tag tone="neutral">new</Tag>}>
+            Not in the previous stage&apos;s links — a gem, or another copy of one
+          </Row>
+          <Row sample={<Tag tone="neutral">relinked</Tag>}>
+            On a link: a gem moved in from another link, or one left it
+          </Row>
 
           <div className={HEAD}>Where it comes from</div>
           <Row sample={<span className="text-[10px] text-ok">Reward</span>}>A free quest reward — take it</Row>

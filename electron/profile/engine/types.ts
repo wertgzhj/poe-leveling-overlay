@@ -2,6 +2,7 @@
 // groups, the plan.
 
 import { type ColoredGem } from '../gems.ts'
+import { type LinkChanges } from './links.ts'
 import { type MuleChoice, type MuleHow } from './mule.ts'
 
 export interface ColoredSocketGroup {
@@ -76,11 +77,11 @@ export interface Acquisitions {
   /** how each of this stage's gems sits against the act you've reached, keyed
    *  by lowercased name (see LinkMark); a gem with no mark is left plain. */
   linkMarks: Record<string, LinkMark>
-  /** this stage's gems that the previous stage's links don't have, lowercased:
-   *  what changed. Every gem, whatever its act or source, on every stage you
-   *  look at — and none on the first stage, which has nothing to compare with.
-   *  By name: a gem that only moves to another link hasn't changed. */
-  newGems: string[]
+  /** What changed in the links since the previous stage, per group and gem:
+   *  NEW copies (by copy — a second Autoexertion is new) and RELINKED groups.
+   *  Nothing on the first stage, which has nothing to compare with. See
+   *  links.ts. */
+  linkChanges: LinkChanges
 }
 
 /**
@@ -90,7 +91,7 @@ export interface Acquisitions {
  * - `notYet`: from an act you haven't reached (or Siosa before the Library).
  *
  * Earlier-act gems, starting gems and the mule have none. Whether a gem is new
- * to this stage is a separate question (Acquisitions.newGems): the two stack.
+ * to this stage is a separate question (Acquisitions.linkChanges): the two stack.
  */
 export type LinkMark = 'thisAct' | 'notYet'
 

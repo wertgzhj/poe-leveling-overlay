@@ -1,10 +1,11 @@
 // Part of the build-profile engine (see ../engine.ts). One stage's acquisitions: everything the Gems tab shows for it.
 
 import { actsOfLevels } from '../acts.ts'
-import { normalizeGemName, type GemData } from '../gems.ts'
+import { normalizeGemName, vendorCostFor, type GemData } from '../gems.ts'
 import { type CharClass, type GemPlanEntry, type Profile, type Stage } from '../profile.ts'
 import { acquisitionOrder, classify } from './classify.ts'
 import { type MuleChoice } from './mule.ts'
+import { linkChanges, stageCopies } from './links.ts'
 import { buildPlan } from './plan.ts'
 import { buildRewardGroups, owedFromPicks, upcomingRewards } from './rewards.ts'
 import { type AcquisitionContext, type AcquisitionEntry, type Acquisitions, type LinkMark, type RewardGroup } from './types.ts'
@@ -45,6 +46,7 @@ export function acquisitionsForStage(
   // it, and this only touches the plan — the full lists (and link tags) stay put.
   const prevGems = stageIndex > 0 ? gemsOf(profile.stages[stageIndex - 1]) : new Set<string>()
   const isNewThisStage = (e: AcquisitionEntry): boolean => !prevGems.has(e.gem.toLowerCase())
+  const prevCopies = stageCopies(stageIndex > 0 ? profile.stages[stageIndex - 1] : undefined)
 
   const { rewards, purchases, other } = sortIntoLists(profile, used, copies, gems, startingGems, startingOwners)
 
@@ -78,14 +80,18 @@ export function acquisitionsForStage(
     ),
     // No mule row (owner): the choice lives in Settings, and the gem's line in
     // the links says "Mule · Ranger". The list is for what you get in the run.
-    [...purchases.filter((e) => !e.mule?.length && isNewThisStage(e)), ...stillOwed],
+    [
+      ...purchases.filter((e) => !e.mule?.length && isNewThisStage(e)),
+      ...moreCopies([...rewards, ...purchases, ...other], prevCopies, copies, gems, cls),
+      ...stillOwed
+    ],
     playerLevel,
     acts.to
   )
   markMuleHow(mule, [...rewards, ...purchases, ...other, ...upcoming])
   const linkMarks = linkMarksFor([...rewards, ...purchases, ...other], actReached)
-  const newGems = stageIndex > 0 ? [...used].filter((g) => !prevGems.has(g)) : []
-  return { rewards, purchases, other, upcoming, rewardGroups, plan, linkMarks, newGems }
+  const changes = linkChanges(stageIndex > 0 ? profile.stages[stageIndex - 1] : undefined, stage)
+  return { rewards, purchases, other, upcoming, rewardGroups, plan, linkMarks, linkChanges: changes }
 }
 
 /**
@@ -176,6 +182,51 @@ function sortIntoLists(
     else other.push(acq)
   }
   return { rewards, purchases, other }
+}
+
+/**
+ * The copies this stage slots beyond the previous one's, for a gem the previous
+ * stage already had: a second Autoexertion. Deduping by name read "already
+ * handled" and the second copy was never listed. Always a purchase — the quest
+ * gave its one, a starting gem is one — from the earliest vendor, counting only
+ * the extra copies. A gem nobody sells (a drop) has no row; it stays in the
+ * links as NEW.
+ */
+function moreCopies(
+  entries: readonly AcquisitionEntry[],
+  before: ReadonlyMap<string, number>,
+  now: ReadonlyMap<string, number>,
+  gems: GemData | undefined,
+  cls: CharClass
+): AcquisitionEntry[] {
+  const out: AcquisitionEntry[] = []
+  for (const e of entries) {
+    const key = e.gem.toLowerCase()
+    const had = before.get(key) ?? 0
+    const more = (now.get(key) ?? 0) - had
+    if (had === 0 || more <= 0 || e.mule?.length) continue
+    const count = more > 1 ? more : undefined
+    if (e.bucket === 'purchase') {
+      out.push({ ...e, count })
+      continue
+    }
+    const vendor = gems?.earliestVendor(e.gem, cls)
+    if (!vendor) continue
+    out.push({
+      ...e,
+      bucket: 'purchase',
+      count,
+      starting: undefined,
+      act: vendor.act,
+      npc: vendor.npc,
+      quest: vendor.quest,
+      note: undefined,
+      fallback: vendor.fallback,
+      cost: vendorCostFor(e.requiredLevel),
+      questRank: gems?.questRank(vendor.act, vendor.quest)
+    })
+  }
+  return out
 }
 
 /**

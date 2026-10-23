@@ -48,16 +48,36 @@ export function SocketGroup({
   group,
   acq,
   marks,
-  fresh
+  fresh,
+  relinked
 }: {
   group: ColoredSocketGroupBridge
   acq: Map<string, AcquisitionEntryBridge>
   marks: Record<string, LinkMark>
-  /** gems the previous stage's links don't have — they wear NEW */
-  fresh: ReadonlySet<string>
+  /** per gem: a copy the previous stage's links don't have — it wears NEW */
+  fresh: readonly boolean[]
+  /** the link was rearranged since the previous stage (see links.ts) */
+  relinked: boolean
 }): React.JSX.Element {
   return (
-    <div className="col-span-3 mb-1.5 grid grid-cols-subgrid items-center gap-x-1.5 gap-y-px rounded-md border border-overlay-border/70 bg-black/20 px-0.5 py-1">
+    <div
+      className={
+        'relative col-span-3 mb-1.5 grid grid-cols-subgrid items-center gap-x-1.5 gap-y-px rounded-md border border-overlay-border/70 bg-black/20 px-0.5 py-1 ' +
+        (relinked ? 'mt-2.5' : '')
+      }
+    >
+      {/* On the box's top edge, like NEW on a gem: the link itself changed —
+          a gem moved in from another link, or one left it. Text, so it reads
+          without colour; NEW alone said nothing about either. */}
+      {relinked && (
+        <Tag
+          tone="neutral"
+          className="absolute -top-2 right-2"
+          title="Rearranged since the previous stage — a gem moved into this link from another, or left it"
+        >
+          relinked
+        </Tag>
+      )}
       {group.gems.map((gem, i) => {
         const entry = acq.get(gem.name.toLowerCase())
         const mark = sourceMark(entry)
@@ -72,15 +92,15 @@ export function SocketGroup({
             title={linkMarkTitle(link, entry?.act)}
             className={
               'col-span-3 grid grid-cols-subgrid items-center gap-x-1.5 rounded-sm px-1 py-px ' +
-              lineTone(entry, link, fresh.has(gem.name.toLowerCase()))
+              lineTone(entry, link, fresh[i] ?? false)
             }
           >
             <div className="col-span-2 flex min-w-0 items-center gap-1.5">
               <Pip gem={gem} dim={notYet} />
               <span className={'min-w-0 truncate text-xs ' + (notYet ? 'text-overlay-muted' : 'text-overlay-text')}>
                 {gem.name}
-                {fresh.has(gem.name.toLowerCase()) && (
-                  <Tag tone="neutral" className="ml-1" title="Not in the previous stage's links — new with this stage">
+                {fresh[i] && (
+                  <Tag tone="neutral" className="ml-1" title="A copy the previous stage's links don't have — new with this stage">
                     new
                   </Tag>
                 )}

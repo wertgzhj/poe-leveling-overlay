@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 282 tests: parser, tracker, watcher, guide, profile,
+npm test        # 284 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table,
                 # finding Client.txt, window and import hardening,
@@ -168,7 +168,15 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      wasn't in the previous stage's links, whatever its act or line colour
      (Herald of Ash in After Fidelitas: gold line *and* `NEW`). On every stage,
      also one you page to with ◀/▶; never on the first stage. A gem that only
-     moves to another link is not `NEW`.
+     moves to another link is not `NEW`. By **copy**: a stage that slots
+     Autoexertion twice after one that slotted it once shows `NEW` on the
+     second link's copy only, and the list asks for **one** more (`Alt`, not
+     `2× Alt`).
+   - **`RELINKED`** sits on a link's top edge when the link was rearranged
+     since the previous stage: a gem moved in from another link, or one left
+     it (e.g. Sunder replacing Ground Slam). A link that only gained new gems,
+     or a wholly new link, has none — `NEW` already says it. Never on the
+     first stage.
    - The ▶ of the stage switch says where the next stage starts (`lvl 56 ▶`),
      its tooltip names it; on the last stage it's greyed out with no level.
      Nothing follows the last link group but the version. No line repeats

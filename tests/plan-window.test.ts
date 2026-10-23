@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { parseProfile } from '../electron/profile/profile.ts'
 import { GemData, type GemSourceInfo } from '../electron/profile/gems.ts'
-import { acquisitionsForStage, planWindow, type AcquisitionContext } from '../electron/profile/engine.ts'
+import { acquisitionsForStage, linkChanges, planWindow, type AcquisitionContext } from '../electron/profile/engine.ts'
 import { ACT_START_LEVEL, actAtLevel, actsOfLevels } from '../electron/profile/acts.ts'
 
 // The shopping list's scenarios, as agreed with the owner: a stage lists what
@@ -148,4 +148,58 @@ test("a stage counts its own copies, not the build's most", () => {
     acquisitionsForStage(build, stage, data, { actReached: 3 }).purchases.find((e) => e.gem === 'Autoexertion')?.count
   assert.equal(countOn(0), undefined, 'one copy: no count')
   assert.equal(countOn(1), 2)
+})
+
+// ---------- what changed in the links ----------
+
+test('a second copy is new: on the list, and NEW on the copy that is', () => {
+  // After Crematorium slots Autoexertion once, Endgame twice (two links).
+  const data = new GemData({
+    Autoexertion: { attr: 'str', requiredLevel: 24, sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa' }] },
+    'Intimidating Cry': { attr: 'str', requiredLevel: 4, sources: [q(1, 'The Caged Brute')] },
+    "Battlemage's Cry": { attr: 'str', requiredLevel: 24, sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa' }] }
+  })
+  const build = parseProfile(
+    JSON.stringify({
+      meta: { name: 'copies', class: 'Marauder' },
+      stages: [
+        { range: [30, 50], socketGroups: [{ gems: ['Autoexertion', 'Intimidating Cry'] }] },
+        {
+          range: [51, 70],
+          socketGroups: [{ gems: ['Autoexertion', 'Intimidating Cry'] }, { gems: ['Autoexertion', "Battlemage's Cry"] }]
+        }
+      ],
+      gemPlan: [{ gem: 'Autoexertion', count: 2 }, { gem: 'Intimidating Cry' }, { gem: "Battlemage's Cry" }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(build, 1, data, { actReached: 10, playerLevel: 60 })
+  // The list asks for the one more copy — no "2×", that's the extra only.
+  const buys = acq.plan.flatMap((it) => (it.kind === 'buy' ? [it.entry] : []))
+  const auto = buys.filter((e) => e.gem === 'Autoexertion')
+  assert.equal(auto.length, 1)
+  assert.equal(auto[0].count, undefined)
+  // NEW on the second link's copy, not on the one you already had.
+  assert.deepEqual(acq.linkChanges.fresh, [
+    [false, false],
+    [true, true]
+  ])
+  // The first link is unchanged, the second wholly new: no RELINKED.
+  assert.deepEqual(acq.linkChanges.relinked, [false, false])
+})
+
+test('RELINKED: a gem moved between links or one left — not a link that only grew', () => {
+  const stage = (...groups: string[][]) => ({ range: [1, 10] as [number, number], socketGroups: groups.map((gems) => ({ gems })) })
+  const prev = stage(['A', 'B', 'C'], ['D'])
+  // Grew by a new gem: NEW explains it.
+  assert.deepEqual(linkChanges(prev, stage(['A', 'B', 'C', 'E'], ['D'])).relinked, [false, false])
+  // Lost a gem (C gone from the build): rearranged.
+  assert.deepEqual(linkChanges(prev, stage(['A', 'B'], ['D'])).relinked, [true, false])
+  // C moved to D's link: both changed.
+  assert.deepEqual(linkChanges(prev, stage(['A', 'B'], ['D', 'C'])).relinked, [true, true])
+  // Merged: one link of old gems that were apart.
+  assert.deepEqual(linkChanges(prev, stage(['A', 'B', 'C', 'D'])).relinked, [true])
+  // Order inside a link doesn't matter.
+  assert.deepEqual(linkChanges(prev, stage(['C', 'A', 'B'], ['D'])).relinked, [false, false])
+  // The first stage has nothing to compare with.
+  assert.deepEqual(linkChanges(undefined, prev), { fresh: [[false, false, false], [false]], relinked: [false, false] })
 })

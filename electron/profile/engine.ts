@@ -9,3 +9,4 @@ export { type ColoredSocketGroup, type ResolvedStage, type AcquisitionEntry, typ
 export { actFromAreaId, activeStageIndex, stepStageView, resolveStage } from './engine/stages.ts'
 export { MULE_MAX_LEVEL, STRAND_QUEST, muleOptions, defaultMule, mulingClass, type MuleChoice, type MuleHow, type MuleOption } from './engine/mule.ts'
 export { acquisitionsForStage, planWindow } from './engine/acquisitions.ts'
+export { linkChanges, stageCopies, type LinkChanges } from './engine/links.ts'
