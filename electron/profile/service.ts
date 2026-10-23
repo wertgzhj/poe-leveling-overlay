@@ -80,7 +80,7 @@ export class ProfileService {
   private library: LibraryEntry[] = []
   /** The editor window, when there is one: it lists the same library. */
   private editor: EditorWindow | null = null
-  /** Each character's run: act, Library, dismissed reminders — in the settings file. */
+  /** Each character's run: act, dismissed reminders — in the settings file. */
   private readonly runs = new CharacterRuns(store)
 
   constructor(overlay: OverlayController, log: LogService) {
@@ -104,8 +104,7 @@ export class ProfileService {
     // moved. They're also where campaign progress shows up.
     log.addAreaListener((area) => {
       const reloaded = this.syncCharacter()
-      const moved =
-        this.runs.noteAct(this.character, actFromAreaId(area.areaId)) || this.runs.noteLibrary(this.character, area.name)
+      const moved = this.runs.noteAct(this.character, actFromAreaId(area.areaId))
       if (moved && !reloaded) this.push()
     })
     log.addFreshCharacterListener((name) => this.forgetRun(name))
@@ -372,15 +371,15 @@ export class ProfileService {
    *  for an identical result. */
   private acquisitions(profile: Profile, stageIndex: number): Acquisitions {
     const act = this.runs.act(this.character)
-    const library = this.runs.library(this.character)
+    const liveIndex = activeStageIndex(profile, this.level)
     const mule = this.chosenMule(profile)
-    const key = `${this.profileRevision}|${stageIndex}|${this.level ?? ''}|${act ?? ''}|${library}|${mule?.gem ?? ''}`
+    const key = `${this.profileRevision}|${stageIndex}|${liveIndex}|${this.level ?? ''}|${act ?? ''}|${mule?.gem ?? ''}`
     if (this.acqCache?.key === key) return this.acqCache.value
     const value = acquisitionsForStage(profile, stageIndex, this.gems, {
       startingGems: this.startingByClass.get(profile.meta.class),
       playerLevel: this.level,
       actReached: act,
-      reachedLibrary: library,
+      liveIndex,
       mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null
     })
     this.acqCache = { key, value }

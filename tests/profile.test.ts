@@ -471,7 +471,7 @@ test('rewards and purchases sort by gem level requirement, then name', () => {
   assert.deepEqual(acq.purchases.map((e) => e.gem), ['Alpha Early', 'Beta Early', 'Zealotry Late'])
 })
 
-test('upcoming rewards from later acts are dimmed by level, never hidden', () => {
+test("a stage's plan holds later rewards from its own acts, not from later acts", () => {
   const gems = new GemData({
     'Act One Gift': { attr: 'str', requiredLevel: 4, sources: [{ kind: 'quest', act: 1, quest: 'q1' }] },
     'Act Three Gift': { attr: 'str', requiredLevel: 28, sources: [{ kind: 'quest', act: 3, quest: 'q3' }] }
@@ -487,20 +487,23 @@ test('upcoming rewards from later acts are dimmed by level, never hidden', () =>
     })
   ).profile!
 
-  // Both are listed whatever act you're in: act detection lags behind reality,
-  // and dropping a row is how gems went missing from the plan ("dim, don't
-  // hide" — owner). The level does the gating instead.
+  // Both are later stages' business, so both are known…
   const acq = acquisitionsForStage(profile, 0, gems, { playerLevel: 5 })
   assert.deepEqual(acq.upcoming.map((e) => e.gem), ['Act One Gift', 'Act Three Gift'])
 
-  // At level 5 the XP safe range is 3, so the level-4 gift is actionable now
-  // and the level-28 one is shown dimmed with the level it comes online.
-  const byGem = new Map(
-    acq.plan.map((it) => [it.kind === 'reward' ? it.group.gems[0].gem : it.entry.gem, it])
-  )
-  assert.equal(byGem.get('Act One Gift')?.later, false)
-  assert.equal(byGem.get('Act Three Gift')?.later, true)
-  assert.equal(byGem.get('Act Three Gift')?.atLevel, 28)
+  // …but levels 1-11 are Act 1: its plan takes the Act 1 gift along and
+  // leaves the Act 3 one to the stage you'll be in Act 3 on. Same with no act
+  // known yet (here) as with Act 1 reached.
+  const byGem = (a: typeof acq) =>
+    new Map(a.plan.map((it) => [it.kind === 'reward' ? it.group.gems[0].gem : it.entry.gem, it]))
+  for (const a of [acq, acquisitionsForStage(profile, 0, gems, { playerLevel: 5, actReached: 1 })]) {
+    assert.equal(byGem(a).get('Act One Gift')?.later, false)
+    assert.equal(byGem(a).has('Act Three Gift'), false)
+  }
+  // In Act 3 — a low level for it — the live stage lists it, dimmed until usable.
+  const inAct3 = byGem(acquisitionsForStage(profile, 0, gems, { playerLevel: 5, actReached: 3 }))
+  assert.equal(inAct3.get('Act Three Gift')?.later, true)
+  assert.equal(inAct3.get('Act Three Gift')?.atLevel, 28)
 })
 
 test('reward groups flag same-quest gems as a pick-one choice', () => {
@@ -1003,11 +1006,12 @@ test('the plan drops acts you have not reached, and only those', () => {
   assert.deepEqual(gemsIn(1), ['Contagion', 'Flame Wall', 'Placeless'])
   // Reaching Act 3 brings its quest along, Act 4 still waits.
   assert.deepEqual(gemsIn(3), ['Bane', 'Contagion', 'Flame Wall', 'Herald of Ice', 'Placeless'])
-  // Unknown progress hides nothing — never blank the list on a missing signal.
-  assert.deepEqual(gemsIn(null), ['Bane', 'Contagion', 'Decay', 'Flame Wall', 'Herald of Ice', 'Placeless'])
+  // Unknown progress falls back on the stage's own acts: levels 1-27 run into
+  // Act 3, so Act 4's quest still waits. Never a blank list on a missing signal.
+  assert.deepEqual(gemsIn(null), ['Bane', 'Contagion', 'Flame Wall', 'Herald of Ice', 'Placeless'])
 })
 
-test('Siosa waits for the Library, not for Act 3', () => {
+test('Siosa counts as Act 3, like Clarissa', () => {
   const gems = new GemData({
     // Siosa is the earliest source for ~195 gems in the shipped data, so when
     // he unlocks decides whether entering Act 3 dumps two hundred purchases in.
@@ -1030,16 +1034,16 @@ test('Siosa waits for the Library, not for Act 3', () => {
       gemPlan: names.map((gem) => ({ gem }))
     })
   ).profile!
-  const buys = (reachedLibrary: boolean | null): string[] =>
-    acquisitionsForStage(profile, 0, gems, { playerLevel: 30, actReached: 3, reachedLibrary })
+  const buys = (actReached: number): string[] =>
+    acquisitionsForStage(profile, 0, gems, { playerLevel: 30, actReached })
       .plan.flatMap((it) => (it.kind === 'buy' ? [it.entry.gem] : []))
       .sort()
 
-  // In Act 3 but not yet at the Library: the other Act 3 vendor is fine, Siosa isn't.
-  assert.deepEqual(buys(false), ['Clarissa Gem'])
-  assert.deepEqual(buys(true), ['Clarissa Gem', 'Siosa Gem'])
-  // Unknown never hides — same rule as the act filter.
-  assert.deepEqual(buys(null), ['Clarissa Gem', 'Siosa Gem'])
+  // The list is what you can get from the acts you've reached (owner's call):
+  // Siosa is in Act 3, so entering it lists him — the "Library" label says
+  // where to go. Before Act 3, neither.
+  assert.deepEqual(buys(2), [])
+  assert.deepEqual(buys(3), ['Clarissa Gem', 'Siosa Gem'])
 })
 
 test('purchases carry the shopping stop they belong to', () => {
@@ -1476,8 +1480,7 @@ test('a mule is never hidden behind act progress', () => {
   ).profile!
   const acq = acquisitionsForStage(profile, 0, gems, {
     mule: { gem: 'Momentum Support', classes: ['Ranger'] },
-    actReached: 1,
-    reachedLibrary: false
+    actReached: 1
   })
   assert.ok(acq.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'))
 })
@@ -1593,7 +1596,6 @@ test('link rows mark this act and what is not reachable yet', () => {
   const { linkMarks, newGems } = acquisitionsForStage(profile, 1, gems, {
     startingGems: new Set(startingClasses().Marauder.map((g) => g.toLowerCase().replace(/ support$/, ''))),
     actReached: 2,
-    reachedLibrary: false,
     mule: momentum
   })
   // Act state: earlier-act gems, the start gem and the mule have none.

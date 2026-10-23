@@ -159,29 +159,26 @@ export function GemBody(): React.JSX.Element {
                 wrapper element here would become a grid item and break them. */}
             {plan.map((item, i) => {
               // A heading each time the shopping stop changes, so what you pick
-              // up in one visit reads as one block. A vendor's stock grows with
-              // each quest, so the same NPC can head two blocks — that's two
-              // trips, not a duplicate.
+              // up in one town reads as one block. Two visits to the same
+              // vendor (their stock grows per quest) read as one heading now
+              // that it only names the act — "A1" twice in a row looked broken.
               const stop = item.kind === 'buy' ? item.stop : undefined
               const prev = plan[i - 1]
               const prevStop = prev?.kind === 'buy' ? prev.stop : undefined
+              const heading = stop ? stopHeading(stop) : undefined
               return (
                 <Fragment key={i}>
                   {/* No heading for the mule: the Mule picker right above says
                       it already, and a heading made the rewards after it read
                       as part of the mule trip. */}
-                  {stop && stop.key !== 'mule' && stop.key !== prevStop?.key && (
+                  {stop && heading && stop.key !== 'mule' && heading !== (prevStop && stopHeading(prevStop)) && (
                     <div
                       className={
                         'col-span-3 mt-0.5 ' + HEADING +
                         (stop.npc && !item.later ? sourceTone(sourceName(stop.npc)) : 'text-overlay-muted')
                       }
                     >
-                      {stop.npc
-                        ? [stop.act ? `A${stop.act}` : null, sourceName(stop.npc)]
-                            .filter(Boolean)
-                            .join(' · ')
-                        : stop.label}
+                      {heading}
                     </div>
                   )}
                   {item.kind === 'reward' ? (
@@ -231,4 +228,16 @@ export function GemBody(): React.JSX.Element {
 
     </>
   )
+}
+
+/**
+ * A shopping stop's heading. The act is the stop: one gem vendor per town, and
+ * everyone past their first league knows who (owner). Only the Library is
+ * named — a second Act 3 stop you have to walk to, in its own colour.
+ */
+function stopHeading(stop: NonNullable<Extract<AcquisitionItemBridge, { kind: 'buy' }>['stop']>): string {
+  if (!stop.npc) return stop.label
+  const named = sourceName(stop.npc)
+  const where = named !== stop.npc ? named : null
+  return [stop.act ? `A${stop.act}` : null, where].filter(Boolean).join(' · ') || named
 }

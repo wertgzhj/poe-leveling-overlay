@@ -6,10 +6,11 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 275 tests: parser, tracker, watcher, guide, profile,
+npm test        # 284 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table,
-                # finding Client.txt, window and import hardening
+                # finding Client.txt, window and import hardening,
+                # the shopping list's act scenarios
 npm run typecheck
 npm run build
 ```
@@ -129,7 +130,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      choices must appear when you reach Act 2 and not before — and portalling
      back to Act 1's town must not make them disappear again. Rolling a new
      character with a name you used last league starts **the whole run** over
-     on its first level-up (to 2): the act, the Library, the Trials tab, the
+     on its first level-up (to 2): the act, the Trials tab, the
      guide's ticks and dismissed bandit/pantheon reminders — none inherited
      from last league's namesake. Steps ticked on the Strand before that
      level-up stay. The profile the name uses and its mule choice stay too.
@@ -139,12 +140,29 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      The Crypt) must bring in Act 2's rewards and Yeena's stock (Herald of Ash,
      Blood Rage) — the act is the *second* number of the area id (`1_2_…`), and
      reading the first made every zone of Acts 1-5 count as Act 1.
+   - **The list holds the acts a stage stands for** (the scenarios agreed with
+     the owner, `tests/plan-window.test.ts`):
+     1. New character in Lioneye's Watch: Act 1's gems for now **and** Act 1's
+        picks for later (Caged Brute box, Sunder) — no box from Act 2 on.
+     2. First time in the Forest Encampment: Act 2's picks come in; an Act 1
+        pick that's only for a later stage is **gone** from the list (it stays
+        grey in the links).
+     3. Level 38 in Act 4, ◀ back to the opening stage: Act 1 only.
+     4. In Act 1, ▶ forward to an Act 2–3 stage: a preview of its Act 2 and 3
+        gems.
+     5. A gem the live stage wants from an act you haven't reached: not on the
+        list, grey in the links, listed the moment you enter that act.
+     6. Portal back to an earlier town: nothing changes.
+     7. Siosa: from **Act 3** on, like Clarissa — the heading says
+        `A3 · Library`, in violet.
+     8. Before any zone is known, the live stage uses its own acts.
    - **The links at the bottom read against your act.** In Act 2: the lines
      of Act 2 gems (Herald of Ash, Cruelty) are **tinted gold with a gold bar
      on the left** — the whole line, the name stays white and the source keeps
-     its colour. The mule's line (in the links **and** in the plan above) is
-     tinted **turquoise** with a turquoise bar, a starting gem's line
-     **green** with a green bar; earlier-act gems are plain; an Act 3 gem
+     its colour. A mule gem's line is **turquoise** and a starting gem's
+     **green** only on a stage where it's `NEW` — never on the first stage:
+     Momentum and Ruthless on the opening stage are plain lines that say
+     `Mule · Ranger` and `✓ start`; earlier-act gems are plain; an Act 3 gem
      (Cyclone) is grey (still readable), tooltip "Not yet — from Act 3".
      Portalling back to Act 1's town changes nothing — it's the furthest act
      reached.
@@ -161,11 +179,16 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      drawn the way the real rows draw it and said in words. It stays open when
      you close and reopen Settings; a screen reader announces it as expanded
      or collapsed.
-   - Buys are headed by their stop (`A1 · NESSA`). The same vendor heading twice
-     is correct — their stock grows per quest, so that's two visits.
-   - A `PICK ONE, BUY REST` box names where to buy the ones you don't take —
-     e.g. Act 2's *Intruders in Black* (Herald of Ice / Herald of Thunder /
-     Cold Snap) should point at **A2 · Yeena**, who stocks all three.
+   - Buys are headed by their act (`A1`, `A2`), one heading per town even
+     where the vendor's stock grows per quest; only the Library is named
+     (`A3 · Library`, violet).
+   - A `PICK ONE, BUY REST` box ends in `↳ buy the rest` when the quest's town
+     sells them — e.g. Act 2's *Intruders in Black* (Yeena stocks all three) —
+     `↳ buy the rest in the Library` (violet) when only Siosa does, and
+     `↳ buy the rest in Act N` when it's a later town. The vendor's name is in
+     the tooltip. Act 3's *Lost in Love* on a Marauder (Vulnerability /
+     Infernal Cry) must say plain `buy the rest`: Clarissa sells both right
+     after it, half an act before the Library.
    - And once that stage rolls over, those gems must **still be on the list**,
      now as **one** buy row for the pick: the gems stacked, `↳ whichever you
      didn't pick` (or `the 2 you didn't pick`) under them. The quest gave you
@@ -176,12 +199,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      that way — you took it, it's done.
    - `A3 · Library` is violet and `A3 · Gravicius` rose, in the shopping rows,
      the stop headings **and** the link rows below — a rename that only colours
-     in one of the three is the failure mode here.
-   - **Siosa is the one to watch.** Entering Act 3 must *not* bring his stock in;
-     walking into **The Library** must. He is the earliest source for around 195
-     gems, so the difference is a screenful. On a non-English client the zone
-     name won't match and his gems stay hidden for that character — the same
-     limitation as the trial zones.
+     in one of the three is the failure mode here. Siosa's quest, *A Fixture of
+     Fate*, reads `A3 · Library` too.
    - Ascend a character: the "wrong profile loaded?" banner must **not** appear
      for an Elementalist on a Witch build. It should still appear for a genuinely
      different base class.
@@ -313,7 +332,7 @@ that once: a table everyone believed, wrong in two tiers.
 | A partymate's level-up can't take the new-character reset | tracker, `onFreshCharacter` | ○ — the Strand is solo, but a group can meet from Lioneye's Watch and the Coast on. It holds because you reach level 2 on the Strand, before anyone can join; a partymate levelling first, after you leave the Strand at level 1, would take it. Not seen in the capture (8 partymates, none before level 3) — which shows it's rare, not that it can't happen |
 | A mule is deleted by level 3 | `MULE_MAX_LEVEL` | ✓ log — every mule stopped at level 2 |
 | The mule trip pays until Mercy Mission, so stages starting by level 4 carry it | `MULE_TRIP_LAST_START` | ✓ log — Tidal Island reached at level 4 in 14 of 23 runs (2–5) |
-| Siosa's stock opens on walking into "The Library" | `LIBRARY_ZONE` | ✓ log (the zone name) |
+| Within an act, the vendor whose quest comes first sells it first (Clarissa after *Lost in Love* before Siosa after *A Fixture of Fate*) | `GemData.questRank` | ✓ data — quest order reproduced for every act |
 | Vendor price tiers: Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+ | `COST_TIERS` | ✓ game — every tier |
 | The stash/vendor search box takes 250 characters | `SEARCH_BOX_LIMIT` | ✓ game |
 | The Caged Brute gives two rewards (a skill and a support) | `TWO_REWARD_QUESTS` | ✓ game. Other quests: ○ — by the data, no other quest mixes skills and supports for every class |
@@ -322,7 +341,7 @@ that once: a table everyone believed, wrong in two tiers.
 | `Client.txt` in Steam's default folder | `locate.ts` | ✓ game. Other Steam libraries, standalone, Epic: ○ — from the launchers' documented layouts |
 | The experience safe range is `3 + level/16` | `safeLevelRange` | ○ — poewiki's formula, not checked in game |
 | The bandits are due from Act 2, the Pantheon from Act 5 | `BANDIT_ACT`, `PANTHEON_ACT` | ○ |
-| The level you start each act at, for PoB stages named "Act N" | `ACT_START_LEVEL` | Acts 1–6 ✓ log. Acts 7–10 ○ — the table says 52/58/64/67, the captured runs reached those towns at 49–50/53–54/59/61–62 (median) |
+| The level you reach each act at: for PoB stages named "Act N", and for which acts a stage's shopping list covers | `ACT_START_LEVEL` (`acts.ts`) | ✓ log — the median level on first entering each act's town across ten full runs; Acts 7–10 were lowered to it (49/53/59/61, from 52/58/64/67) |
 | Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
 
 ## Known limitations

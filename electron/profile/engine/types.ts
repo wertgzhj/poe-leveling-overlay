@@ -148,13 +148,15 @@ export interface AcquisitionContext {
   startingGems?: ReadonlySet<string>
   /** Tracked character level — drives the now/coming-up split. */
   playerLevel?: number | null
-  /** The furthest campaign act this character has reached. Entries from beyond
-   *  it are dropped from the plan: at level 2 in Act 1, an Act 4 quest choice is
-   *  not a preview, it is six hours of noise. null = unknown, show everything. */
+  /** The furthest campaign act this character has reached. On the live stage,
+   *  entries from beyond it are dropped from the plan: at level 2 in Act 1, an
+   *  Act 4 quest choice is not a preview, it is six hours of noise. null =
+   *  unknown: the stage's own acts stand in (see planWindow). */
   actReached?: number | null
-  /** Whether this character has been to Act 3's Library. Siosa is gated on it
-   *  separately from the act — see LIBRARY_VENDOR. null/undefined = unknown. */
-  reachedLibrary?: boolean | null
+  /** The stage your level is on. A stage paged to with ◀/▶ is bounded by its
+   *  own acts, not by where you are (see planWindow). Unset = the stage asked
+   *  for is the live one. */
+  liveIndex?: number | null
   /**
    * The one gem you mule on this character, and the classes that can hand it
    * over (see muleOptions). null/undefined = no mule: every gem comes from its

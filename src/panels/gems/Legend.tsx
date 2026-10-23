@@ -56,8 +56,10 @@ export function Legend(): React.JSX.Element {
           <div className={HEAD}>Your links</div>
           <Row sample={<Line tone={LINE_TONE.thisAct}>Cleave</Line>}>From the act you&apos;re in</Row>
           <Row sample={<Line muted>Cyclone</Line>}>From a later act — not yet</Row>
-          <Row sample={<Line tone={LINE_TONE.mule}>Momentum</Line>}>Mule: another class&apos;s alt gets it for you</Row>
-          <Row sample={<Line tone={LINE_TONE.start}>Ruthless</Line>}>You start with it</Row>
+          <Row sample={<Line tone={LINE_TONE.mule}>Momentum</Line>}>
+            New with this stage, from your mule (another class&apos;s alt)
+          </Row>
+          <Row sample={<Line tone={LINE_TONE.start}>Ruthless</Line>}>New with this stage, and you start with it</Row>
           <Row sample={<Tag tone="neutral">new</Tag>}>Not in the previous stage&apos;s links</Row>
 
           <div className={HEAD}>Where it comes from</div>

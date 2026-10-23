@@ -104,6 +104,27 @@ function CostCell({
 // line up down the list. Right-aligning would put them at a different x in
 // every row — the raggedness this whole layout exists to remove. Truncated
 // rather than wrapped, so a long quest name can't change a row's height.
+/**
+ * Where "buy the rest" happens, in as few words as hold. Every town has one gem
+ * vendor and anyone past their first league knows who (owner), so the name
+ * only clutters: "buy the rest" says it when it's the quest's own town. Two
+ * cases need more: the Library, a second vendor in Act 3 you have to walk to
+ * (in its colour), and a later act, when this town doesn't stock them. The
+ * vendor's name stays in the tooltip.
+ */
+function RestWhere({ act, questAct, npc }: { act?: number; questAct?: number; npc: string }): React.JSX.Element {
+  const named = sourceName(npc)
+  if (named !== npc) {
+    return (
+      <>
+        ↳ buy the rest in the <span className={sourceTone(named)}>{named}</span>
+      </>
+    )
+  }
+  if (act != null && questAct != null && act !== questAct) return <>↳ buy the rest in Act {act}</>
+  return <>↳ buy the rest</>
+}
+
 function SourceCell({
   act,
   what,
@@ -223,14 +244,17 @@ export function RewardGroupRow({
           quest reward — a quest is its earliest source — so none of them ever
           reached the shopping list, and the instruction had no address. */}
       {rest && (rest.npc || rest.partial) && (
-        <div className="col-span-2 col-start-2 text-[10px] text-overlay-muted">
-          ↳ the rest:{' '}
+        <div
+          className="col-span-2 col-start-2 text-[10px] text-overlay-muted"
+          title={rest.npc ? `${rest.act ? `Act ${rest.act}: ` : ''}${rest.npc}` : undefined}
+        >
           {rest.npc ? (
-            <span className={sourceTone(sourceName(rest.npc))}>
-              {[rest.act ? `A${rest.act}` : null, sourceName(rest.npc)].filter(Boolean).join(' · ')}
-            </span>
+            <RestWhere act={rest.act} questAct={group.act} npc={rest.npc} />
           ) : (
-            <span title="No vendor we know of stocks them — a drop or a trade">nobody sells them</span>
+            <>
+              ↳ the rest:{' '}
+              <span title="No vendor we know of stocks them — a drop or a trade">nobody sells them</span>
+            </>
           )}
           {rest.npc && rest.partial && (
             <span title="At least one of these isn't sold by any vendor in the gem data">

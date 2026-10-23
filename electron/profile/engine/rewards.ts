@@ -212,11 +212,9 @@ export function groupQuestRank(group: RewardGroup): number {
 /** Gems first used in LATER stages that a quest rewards this class — worth
  *  grabbing the moment the quest offers them (free beats buying later).
  *
- *  Nothing is dropped by act. Act detection needs a numeric area id and lags
- *  behind reality, and hiding an Act 3 reward while you stand in Act 1 was one
- *  of the ways gems went missing from the list — "dim, don't hide" (owner).
- *  `buildPlan` dims what your level can't use yet, which is the signal we can
- *  actually track. */
+ *  All of them, whatever their act: this is the build's list. Which ones a
+ *  stage's to-do list shows is decided later, by the acts the stage stands
+ *  for (planWindow) — `buildPlan` then dims what your level can't use yet. */
 export function upcomingRewards(
   profile: Profile,
   stageIndex: number,

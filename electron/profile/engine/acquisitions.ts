@@ -1,6 +1,7 @@
 // Part of the build-profile engine (see ../engine.ts). One stage's acquisitions: everything the Gems tab shows for it.
 
-import { needsLibrary, normalizeGemName, type GemData } from '../gems.ts'
+import { actsOfLevels } from '../acts.ts'
+import { normalizeGemName, type GemData } from '../gems.ts'
 import { type CharClass, type GemPlanEntry, type Profile, type Stage } from '../profile.ts'
 import { acquisitionOrder, classify } from './classify.ts'
 import { MULE_TRIP_LAST_START, type MuleChoice } from './mule.ts'
@@ -25,7 +26,7 @@ export function acquisitionsForStage(
   gems?: GemData,
   ctx: AcquisitionContext = {}
 ): Acquisitions {
-  const { startingGems, playerLevel, actReached, reachedLibrary, mule } = ctx
+  const { startingGems, playerLevel, actReached, liveIndex, mule } = ctx
   const cls = profile.meta.class
   // The mule lookup classify() reads, holding only the one gem you chose — so
   // every other gem a different class could hand you stays a quest or a buy,
@@ -72,19 +73,54 @@ export function acquisitionsForStage(
 
   // Only the to-do plan is deduped against the previous stage; rewardGroups and
   // the reward/purchase lists (which drive the link-overview tags) stay full.
+  const acts = planWindow(stage, stageIndex, liveIndex, actReached)
   const plan = buildPlan(
-    buildRewardGroups(rewards.filter(isNewThisStage), upcoming, gems, cls),
+    buildRewardGroups(rewards.filter(isNewThisStage), upcoming, gems, cls).filter((g) =>
+      // A pick only for later stages belongs to the stages of its own act: an
+      // Act 1 quest isn't on an Act 2 stage's list, however far off its gems'
+      // use. A group holding one of this stage's gems is this stage's business.
+      g.gems.some((e) => !e.fromLevel) || g.act == null || g.act >= acts.from
+    ),
     // The mule trip belongs to the early stages — each of them, even when the
     // one before already slotted the gem; past them, the gem is already yours.
     [...purchases.filter((e) => (e.mule?.length ? muleTrip : isNewThisStage(e))), ...stillOwed],
     playerLevel,
-    actReached,
-    reachedLibrary
+    acts.to
   )
   markMuleHow(mule, [...rewards, ...purchases, ...other, ...upcoming])
-  const linkMarks = linkMarksFor([...rewards, ...purchases, ...other], actReached, reachedLibrary)
+  const linkMarks = linkMarksFor([...rewards, ...purchases, ...other], actReached)
   const newGems = stageIndex > 0 ? [...used].filter((g) => !prevGems.has(g)) : []
   return { rewards, purchases, other, upcoming, rewardGroups, plan, linkMarks, newGems }
+}
+
+/**
+ * The acts a stage's shopping list may draw on: what you could get there, now
+ * or for later. A stage's level range says which acts it covers (see acts.ts);
+ * where you've been says what you can reach.
+ *
+ * - The live stage: everything up to the furthest act you've reached. Before
+ *   any zone has said, the stage's own acts stand in.
+ * - A stage you paged BACK to: what it showed when it was live — its own acts,
+ *   never past where you've been. At level 38 in Act 4, the opening stage
+ *   still lists Act 1 only.
+ * - A stage you paged FORWARD to: a preview of everything it covers.
+ *
+ * `from` is the stage's first act; a pick that's only for later stages and
+ * comes from an earlier act isn't listed (owner's call: once you've moved on a
+ * stage, a forgotten Act 1 pick stays in the link rows, not on the list).
+ */
+export function planWindow(
+  stage: Stage | undefined,
+  stageIndex: number,
+  liveIndex: number | null | undefined,
+  actReached: number | null | undefined
+): { from: number; to: number } {
+  const [first, last] = stage ? actsOfLevels(stage.range) : [1, 10]
+  let to: number
+  if (liveIndex == null || stageIndex === liveIndex) to = actReached ?? last
+  else if (stageIndex < liveIndex) to = Math.min(last, actReached ?? last)
+  else to = Math.max(last, actReached ?? last)
+  return { from: Math.min(first, to), to }
 }
 
 /** The stage's gems (lowercased), and how many copies of each it needs: the
@@ -227,19 +263,19 @@ function markMuleHow(mule: MuleChoice | null | undefined, entries: readonly Acqu
 }
 
 /** Each listed gem's act state for the links (see LinkMark). None without an
- *  act; none for a starting gem, the mule, or a gem with no act. */
+ *  act; none for a starting gem, the mule, or a gem with no act. Siosa counts
+ *  as Act 3 like everyone there (owner's call): the "Library" label says where
+ *  to go, the act says when. */
 function linkMarksFor(
   entries: readonly AcquisitionEntry[],
-  actReached: number | null | undefined,
-  reachedLibrary: boolean | null | undefined
+  actReached: number | null | undefined
 ): Record<string, LinkMark> {
   const marks: Record<string, LinkMark> = {}
   if (actReached == null) return marks
   for (const e of entries) {
     if (e.starting || e.mule?.length || e.act == null) continue
     const key = e.gem.toLowerCase()
-    const pastLibrary = reachedLibrary !== false || !needsLibrary(e.npc)
-    if (e.act > actReached || (e.act === actReached && !pastLibrary)) marks[key] = 'notYet'
+    if (e.act > actReached) marks[key] = 'notYet'
     else if (e.act === actReached) marks[key] = 'thisAct'
   }
   return marks

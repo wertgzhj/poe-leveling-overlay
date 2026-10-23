@@ -19,20 +19,22 @@ type LinkMark = 'thisAct' | 'notYet'
 // you're in is gold-lined AND violet, not one or the other. Never colour
 // alone: the bar is a shape, and the tooltip says it in words.
 //
-// The mule and a starting gem colour their whole line too, in their own
-// colour: turquoise for "another class's alt hands it over", green for "you
-// start with it". Neither gets an act mark, so a line is only ever one of the
-// three. The words in the source column ("Mule · Ranger", "✓ start") say the
-// same without colour.
+// The mule and a starting gem colour their whole line in their own colour —
+// turquoise for "another class's alt hands it over", green for "you start with
+// it" — but only on a stage where they're NEW (owner's call): the line is the
+// "look here", and a gem you've had since level 1 isn't news. So never on the
+// first stage, where nothing is. Neither gets an act mark, so a line is only
+// ever one of the three. The words in the source column ("Mule · Ranger",
+// "✓ start") say what they are on every stage, coloured or not.
 export const LINE_TONE = {
   thisAct: 'bg-overlay-accent/10 shadow-[inset_2px_0_0_var(--color-overlay-accent)]',
   mule: 'bg-mule/10 shadow-[inset_2px_0_0_var(--color-mule)]',
   start: 'bg-ok/10 shadow-[inset_2px_0_0_var(--color-ok)]'
 } as const
 
-function lineTone(entry: AcquisitionEntryBridge | undefined, link: LinkMark | undefined): string {
-  if (entry?.mule?.length) return LINE_TONE.mule
-  if (entry?.starting) return LINE_TONE.start
+function lineTone(entry: AcquisitionEntryBridge | undefined, link: LinkMark | undefined, isNew: boolean): string {
+  if (entry?.mule?.length) return isNew ? LINE_TONE.mule : ''
+  if (entry?.starting) return isNew ? LINE_TONE.start : ''
   return link === 'thisAct' ? LINE_TONE.thisAct : ''
 }
 
@@ -69,7 +71,8 @@ export function SocketGroup({
             key={i}
             title={linkMarkTitle(link, entry?.act)}
             className={
-              'col-span-3 grid grid-cols-subgrid items-center gap-x-1.5 rounded-sm px-1 py-px ' + lineTone(entry, link)
+              'col-span-3 grid grid-cols-subgrid items-center gap-x-1.5 rounded-sm px-1 py-px ' +
+              lineTone(entry, link, fresh.has(gem.name.toLowerCase()))
             }
           >
             <div className="col-span-2 flex min-w-0 items-center gap-1.5">

@@ -250,37 +250,44 @@ Wisdom   Ⓡ Holy Flame Totem               A1 · Nessa
   gets on the Twilight Strand (its starting gems, Hillock's reward, or Nessa's first
   stock) — is your call, per character: the **Mule** dropdown under the character
   line picks the gem (Momentum by default, when the build uses it) or **No mule**,
-  which is the better answer in a party. The muled gem's line is tinted
+  which is the better answer in a party. The mule row in the list is tinted
   **turquoise**, reads `Mule` in the cost column and the class to roll in the source
   column, and comes first on the opening stages (up to level 4) only: it's the one
   thing you do before you start. It also leaves its quest pick, so that quest hands
   over the next gem you want instead.
 - A quest that offers several of your gems is one **pick**, so it gets its own box
-  reading `PICK ONE, BUY REST` — with the price of the ones you don't take **and the
-  vendor who has them all**. Those gems are quest rewards, so nothing else on the tab
-  would ever have told you where to buy them. (*The Caged Brute* is two picks — a
+  reading `PICK ONE, BUY REST` — with the price of the ones you don't take and
+  `↳ buy the rest`. There's one gem vendor per town, so that's where; the line only
+  says more when it's somewhere else: `in the Library` (violet) or `in Act 6`. Those
+  gems are quest rewards, so nothing else on the tab would ever have told you where
+  to buy them. (*The Caged Brute* is two picks — a
   support and a skill — and shows as two.) On the **next** stage the rest come back
   once, as one buy row reading `↳ whichever you didn't pick`: the quest handed over
   exactly one, and the overlay can't see your inventory.
-- Gems you'll want later turn grey and read `— for later (lvl 32+)`, ordered by
-  when you actually need them. A quest choice from an act you **haven't reached** is
-  left out entirely rather than greyed — at level 2 in Act 1, an Act 4 quest is not a
-  preview. It appears when you get there. Before the overlay has seen a zone it shows
-  everything.
-- Buys are headed by the **stop** you make them at — `A1 · Nessa`, `A3 · Library` —
-  so what you pick up in one visit reads as one block. A vendor's stock
-  grows with each quest you finish, so the same NPC can head two blocks: that's two
-  trips, not a duplicate.
-- **Siosa waits for the Library.** He's the earliest source for around 195 gems —
-  three times Nessa, the next biggest — but you reach him by walking into Act 3's
-  Library and handing over the Golden Page, not by entering the act. His stock stays
-  out of the list until you've been there, and reads as **`A3 · Library`** in violet,
-  because the trip is the thing you have to remember, not the man.
-- **The links at the bottom** are the build as it should be socketed now. Each line
-  is tinted by what it is — **gold** for a gem from the act you're in, **turquoise**
-  for the mule, **green** for a starting gem — and a gem from an act you haven't
-  reached is grey. **`NEW`** marks a gem the previous stage's links didn't have, so
-  you see what changed at a glance, on any stage you page to with ◀ ▶.
+- **The list holds what you can get from the acts you've reached** — for this stage,
+  and quest picks for later stages. Gems you'll want later turn grey and read
+  `— for later (lvl 32+)`. Anything from an act you **haven't reached** is left out:
+  at level 2 in Act 1, an Act 4 quest is not a preview; it appears when you get
+  there, and until then the gem waits in grey in the links below. A pick that's only
+  for later shows on the stages of its own act — an Act 1 pick isn't carried onto an
+  Act 2 stage.
+- **Paging with ◀ ▶** shows a stage on its own terms: back, what it showed when it
+  was live (the opening stage lists Act 1, however far you've got); forward, a
+  preview of every act it covers. Which acts a stage covers comes from its level
+  range and the level each act starts at. Before the overlay has seen a zone, the
+  live stage uses its own acts too.
+- Buys are headed by the **act** you make them in — `A1`, `A2` — so what you pick up
+  in one town reads as one block. Every town has one gem vendor; the name is in the
+  source column. The one exception is **`A3 · Library`**, in violet: Siosa, a second
+  Act 3 vendor you walk to. He counts from Act 3 on, like the rest of the act; the
+  heading says where to go. His quest, *A Fixture of Fate*, reads `Library` too.
+- **The links at the bottom** are the build as it should be socketed now. A line
+  from the act you're in is tinted **gold**; a gem from an act you haven't reached is
+  grey. **`NEW`** marks a gem the previous stage's links didn't have, so you see what
+  changed at a glance, on any stage you page to with ◀ ▶. A mule gem's line turns
+  **turquoise** and a starting gem's **green** only on a stage where they're new —
+  never on the first, where nothing is; the source column (`Mule · Ranger`,
+  `✓ start`) says what they are on every stage.
 - Reward / buy hints come from each gem's `source` in the profile's `gemPlan`. If a
   gem has no `source`, the app looks it up by class from `data/gems.json`'s `sources`,
   filled from the Path of Exile Wiki. **Easiest way to (re)fill it:** repo → Actions →
