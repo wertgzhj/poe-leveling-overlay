@@ -6,10 +6,10 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 266 tests: parser, tracker, watcher, guide, profile,
+npm test        # 275 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table,
-                # finding Client.txt
+                # finding Client.txt, window and import hardening
 npm run typecheck
 npm run build
 ```

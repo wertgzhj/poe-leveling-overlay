@@ -19,8 +19,15 @@ Worth knowing before assessing anything, because it bounds the attack surface:
   (`electron-store`, in the OS userData folder). No server, no account, no
   telemetry.
 - Renderer windows run **sandboxed with context isolation**, `nodeIntegration`
-  off, and reach the main process only through an explicitly allow-listed IPC
-  surface (`electron/channels.ts`, exposed via `electron/preload.ts`).
+  off, under a Content-Security-Policy, and reach the main process only through
+  an explicitly allow-listed IPC surface (`electron/channels.ts`, exposed via
+  `electron/preload.ts`).
+- No window may navigate away from its own page, open another window, embed a
+  webview, or get a permission (camera, microphone, notifications, …) —
+  `electron/security.ts` refuses all of it for every window the app creates.
+- Imports are size-capped: a pasted PoB link stops downloading at 4 MB (a
+  `Content-Length` over that is refused unread) and may not redirect off its
+  paste host; a PoB code may not unpack to more than 16 MB.
 
 Outbound network requests, in full:
 

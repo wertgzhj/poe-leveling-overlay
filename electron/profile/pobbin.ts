@@ -28,11 +28,14 @@ export async function resolvePobInput(input: string): Promise<ResolvedPobInput> 
       redirect: 'follow',
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
     })
-    if (!res.ok) return { error: `could not fetch the link (HTTP ${res.status})` }
-    const body = await res.arrayBuffer()
-    if (body.byteLength > MAX_BYTES) {
-      return { error: 'the link returned far too much data to be a Path of Building export' }
+    // A redirect may only land on the same paste host: following it anywhere
+    // would turn the importer into a way to fetch arbitrary URLs.
+    if (res.url && !sameHost(res.url, raw)) {
+      return { error: 'the link redirected somewhere else — paste the export code instead' }
     }
+    if (!res.ok) return { error: `could not fetch the link (HTTP ${res.status})` }
+    const body = await readCapped(res, MAX_BYTES)
+    if (!body) return { error: TOO_MUCH }
     const text = new TextDecoder().decode(body).trim()
     if (!text) return { error: 'the link returned nothing' }
     return text.startsWith('<') ? { xml: text } : { code: text }
@@ -42,6 +45,52 @@ export async function resolvePobInput(input: string): Promise<ResolvedPobInput> 
       return { error: 'the link took too long to respond — try again, or paste the export code' }
     }
     return { error: `could not fetch the link: ${err.message}` }
+  }
+}
+
+const TOO_MUCH = 'the link returned far too much data to be a Path of Building export'
+
+/**
+ * The response body, or null once it passes `max` bytes. Stops reading right
+ * there — reading it all and measuring after would let a hostile or broken
+ * host fill memory first. A Content-Length over the cap is refused unread.
+ */
+export async function readCapped(res: Response, max: number): Promise<Uint8Array | null> {
+  const declared = Number(res.headers.get('content-length'))
+  if (Number.isFinite(declared) && declared > max) {
+    await res.body?.cancel()
+    return null
+  }
+  if (!res.body) return new Uint8Array()
+  const reader = res.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > max) {
+      await reader.cancel()
+      return null
+    }
+    chunks.push(value)
+  }
+  const out = new Uint8Array(total)
+  let at = 0
+  for (const c of chunks) {
+    out.set(c, at)
+    at += c.byteLength
+  }
+  return out
+}
+
+/** Same host, give or take a www. — pastebin answers on both. */
+function sameHost(a: string, b: string): boolean {
+  const host = (u: string): string => new URL(u).hostname.replace(/^www\./, '')
+  try {
+    return host(a) === host(b)
+  } catch {
+    return false
   }
 }
 
