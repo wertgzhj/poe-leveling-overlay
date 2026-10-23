@@ -55,7 +55,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    machine with both a Steam and a standalone install it must pick the one you
    played last.
    All take effect immediately. The sections run in the order the work does:
-   Updates, the editor button, Build profile, Game log, Overlay, Search regex,
+   Updates, the editor button, Build profile, Game log, Overlay, Search regex, Gems tab,
    Hotkeys. The three tabs split the window into equal thirds at any size — drag
    the resize grip and they should stay even, with no dead space after "Guide".
 
@@ -153,11 +153,14 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      (Herald of Ash in After Fidelitas: gold line *and* `NEW`). On every stage,
      also one you page to with ◀/▶; never on the first stage. A gem that only
      moves to another link is not `NEW`.
-   - **"▸ What the colours mean"** at the bottom of the tab unfolds a legend:
+   - The ▶ of the stage switch says where the next stage starts (`lvl 56 ▶`),
+     its tooltip names it; on the last stage it's greyed out with no level.
+     Nothing follows the last link group but the version.
+   - **Settings → Gems tab → "▸ What the colours mean"** unfolds a legend:
      every line colour, `NEW`, the source colours and the socket pips, each
      drawn the way the real rows draw it and said in words. It stays open when
-     you switch tabs and back; a screen reader announces it as expanded or
-     collapsed.
+     you close and reopen Settings; a screen reader announces it as expanded
+     or collapsed.
    - Buys are headed by their stop (`A1 · NESSA`). The same vendor heading twice
      is correct — their stock grows per quest, so that's two visits.
    - A `PICK ONE, BUY REST` box names where to buy the ones you don't take —

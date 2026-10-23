@@ -4,7 +4,6 @@ import { sourceName, sourceTone } from '../../lib/sources'
 import { HEADING } from '../../lib/ui'
 import { useOverlayStore } from '../../stores/overlayStore'
 import { article, ErrorBox } from '../shared'
-import { Legend } from './Legend'
 import { SocketGroup } from './LinkGroup'
 import { MulePicker } from './MulePicker'
 import { BuyRow, RewardGroupRow } from './PlanRows'
@@ -31,6 +30,8 @@ export function GemBody(): React.JSX.Element {
   const onLiveStage = viewedIndex === liveIndex
   const canPrev = viewedIndex > 0
   const canNext = viewedIndex >= 0 && viewedIndex < stageCount - 1
+  const next = profile.nextStage
+  const nextTitle = next ? `Next stage: ${next.label}, from level ${next.range[0]}` : 'Next stage'
   // One merged, chronologically-ordered acquisition list (rewards + buys),
   // reward-first on ties (owner: don't buy what you can take free).
   const plan = profile.acquisitions?.plan ?? []
@@ -101,14 +102,17 @@ export function GemBody(): React.JSX.Element {
             <span className={'flex-1 truncate text-center ' + HEADING + 'text-overlay-muted'}>
               {stage.label}
             </span>
+            {/* Where the next stage starts, on the control that goes there —
+                it used to be a line of its own under the links. */}
             <button
               disabled={!canNext}
               onClick={() => window.overlay?.stageStep(1)}
-              title="Next stage"
-              aria-label="Next stage"
-              className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-40"
+              title={nextTitle}
+              aria-label={nextTitle}
+              className="flex shrink-0 items-center gap-1 rounded px-1 text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-40"
             >
-              ▶
+              {next && <span className="text-[10px]">lvl {next.range[0]}</span>}
+              <span className="text-xs">▶</span>
             </button>
           </div>
         ) : (
@@ -225,12 +229,6 @@ export function GemBody(): React.JSX.Element {
         )}
       </div>
 
-      {profile.nextStage && (
-        <div className="mt-2 px-1 text-[10px] text-overlay-muted">
-          From level {profile.nextStage.range[0]}: {profile.nextStage.label}
-        </div>
-      )}
-      <Legend />
     </>
   )
 }
