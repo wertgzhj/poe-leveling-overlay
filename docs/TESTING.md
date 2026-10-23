@@ -357,7 +357,7 @@ that once: a table everyone believed, wrong in two tiers.
 | The starting skill and support per class | `data/starting-gems.json` | ✓ game (owner-confirmed) |
 | Quest order within an act, derived from the levels its rewards need | `GemData` | ✓ data — reproduces the real order for every act |
 | `Client.txt` in Steam's default folder | `locate.ts` | ✓ game. Other Steam libraries, standalone, Epic: ○ — from the launchers' documented layouts |
-| The experience safe range is `3 + level/16` | `safeLevelRange` | ○ — poewiki's formula, not checked in game |
+| The experience safe range is `3 + level/16`, applied in both directions | `safeLevelRange`, `zoneFit` | ✓ poewiki (*Experience*: SafeZone = ⌊3 + PlayerLevel/16⌋, EffectiveDifference = max(\|player − monster\| − SafeZone, 0)) |
 | The bandits are due from Act 2, the Pantheon from Act 5 | `BANDIT_ACT`, `PANTHEON_ACT` | ○ |
 | The level you reach each act at: for PoB stages named "Act N", and for which acts a stage's shopping list covers | `ACT_START_LEVEL` (`acts.ts`) | ✓ log — the median level on first entering each act's town across ten full runs; Acts 7–10 were lowered to it (49/53/59/61, from 52/58/64/67) |
 | Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
