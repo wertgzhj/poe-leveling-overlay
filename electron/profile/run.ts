@@ -7,7 +7,8 @@
 import { BANDITS, type ProfileMeta } from './profile.ts'
 import { LIBRARY_ZONE } from './gems.ts'
 
-/** Act 2 asks you to deal with the bandits; the Pantheon opens up in Act 5. */
+/** Act 2 asks you to deal with the bandits; the Pantheon opens up in Act 5.
+ *  Unconfirmed in game (docs/TESTING.md, "What the code takes as given"). */
 const BANDIT_ACT = 2
 const PANTHEON_ACT = 5
 

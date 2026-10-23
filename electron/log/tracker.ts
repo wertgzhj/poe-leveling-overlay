@@ -14,7 +14,9 @@ export const TWILIGHT_STRAND_ID = '1_1_1'
 
 /** A character's first level-up is to level 2. After entering the Twilight
  *  Strand, a level-up to this level or below is the new character; anything
- *  higher means you went back to an old one instead. */
+ *  higher means you went back to an old one instead. Confirmed against a real
+ *  capture: all 46 new characters in it (see "What the code takes as given",
+ *  docs/TESTING.md). */
 export const FRESH_CHARACTER_MAX_LEVEL = 2
 
 export interface AreaState {

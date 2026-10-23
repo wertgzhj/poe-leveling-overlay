@@ -62,7 +62,8 @@ export function button(variant: keyof typeof BUTTON_VARIANT, size: keyof typeof 
  * (OPACITY_READABLE).
  */
 /** Below this, text over a bright scene (snow, a white effect) can drop under
- *  readable contrast whatever we do; Settings says so instead of stopping you. */
+ *  readable contrast whatever we do; Settings says so instead of stopping you.
+ *  From contrast arithmetic — not yet looked at over snow in game. */
 export const OPACITY_READABLE = 0.7
 
 export function panelSurface(opacity: number): { className: string; style: CSSProperties } {

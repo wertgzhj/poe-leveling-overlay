@@ -27,7 +27,9 @@ export interface PobImportOptions {
 }
 
 // Approximate campaign level at the START of each act — used to turn "Act N"
-// labels into level ranges. Rough on purpose; the author can adjust.
+// labels into level ranges. Rough on purpose; the author can adjust. Acts 1-6
+// match a real capture's runs; 7-10 run a few levels above them (see
+// docs/TESTING.md, "What the code takes as given").
 const ACT_START_LEVEL: Record<number, number> = {
   1: 1, 2: 12, 3: 22, 4: 32, 5: 40, 6: 45, 7: 52, 8: 58, 9: 64, 10: 67
 }
