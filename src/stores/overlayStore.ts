@@ -18,7 +18,7 @@ interface OverlayStore {
   searchRegex: string
   /** Your short names for gems (real name -> short), display only. */
   gemNames: Record<string, string>
-  /** Experimental: the run timer window is on. */
+  /** The run timer is on: it records runs and shows its window. */
   runTimer: boolean
   // log tracking
   logStatus: WatcherStatusBridge | null

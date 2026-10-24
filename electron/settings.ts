@@ -51,8 +51,8 @@ export interface AppSettings {
   /** Your short names for gems, real name -> short ("CwDT"). Display only, in
    *  the Gems tab (see gem-names.ts). */
   gemNames: Record<string, string>
-  /** Experimental: record runs and show the run timer window. Off unless
-   *  switched on — nothing is recorded until then. */
+  /** Record runs and show the run timer window. Off unless switched on —
+   *  nothing is recorded until then. */
   runTimer: boolean
 }
 

@@ -466,7 +466,7 @@ export function SettingsPanel(): React.JSX.Element {
             </div>
           </Section>
 
-          <Section title="Run timer (experimental)">
+          <Section title="Run timer">
             <div className="flex items-center justify-between">
               <span className="text-xs text-overlay-text">Record runs and show the timer</span>
               <Toggle on={runTimer} onChange={setRunTimer} />

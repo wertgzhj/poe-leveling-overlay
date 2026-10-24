@@ -33,6 +33,14 @@ semi-automatically from a Path of Building import.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
   you finish it, telling you when a Labyrinth is ready to run, and noticing when
   you've beaten it.
+- **Times your runs, if you want it to.** Switch on Settings → *Run timer* and
+  a small window of its own times each campaign from the Twilight Strand to
+  Kitava in Act 10: zones, towns, hideout, Labyrinth and loading screens, act
+  splits against your best run, and the deaths, quest skill points, Labyrinths
+  and Pantheon gods that make two runs comparable. It counts only while the
+  run's character is in the game — not character select, AFK, a mule or your
+  main in maps — and lands within a few percent of the game's own `/played`.
+- **Ticks your Pantheon gods by itself** as they fall.
 - **Keeps your search regex one click away.** Store a stash or vendor search
   string in Settings, and a **Regex** button in the header copies it — paste it
   into the game yourself. The overlay never types into the game.

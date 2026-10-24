@@ -62,7 +62,7 @@ Main
 ├── ProfileService      Build profile with hot reload, gem data, and the active
 │                       stage derived from the tracked character's level.
 ├── TrialsService       Trial-of-Ascendancy state per character.
-├── TimerService        Experimental, off by default. Times each run from the
+├── TimerService        Off until switched on in Settings. Times each run from the
 │                       Twilight Strand to Kitava in Act 10, from every
 │                       line's stamp, while the run's character is in the
 │                       world; keeps it in userData/runs.json.
