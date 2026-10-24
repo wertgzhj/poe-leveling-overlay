@@ -116,7 +116,7 @@ export class ProfileService {
       const reloaded = this.syncCharacter()
       const moved = this.runs.noteAct(this.character, actFromAreaId(area.areaId))
       // Walking into (or out of) a Pantheon god's zone changes the hint.
-      const godHere = godsFor(this.profile?.meta.pantheon).some((g) => isHere(g, area.areaId, area.name))
+      const godHere = godsFor(this.profile?.meta.pantheon).some((g) => isHere(g, area.areaId))
       if ((moved || godHere || this.godWasHere) && !reloaded) this.push()
       this.godWasHere = godHere
     })
@@ -472,7 +472,7 @@ export class ProfileService {
       where: whereIs(g),
       side: g.sideArea ?? g.sideAreaHint,
       unlocked: have.has(g.soul),
-      here: isHere(g, area?.areaId, area?.name)
+      here: isHere(g, area?.areaId)
     }))
   }
 

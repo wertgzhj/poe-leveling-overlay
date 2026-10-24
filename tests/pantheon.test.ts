@@ -25,11 +25,9 @@ test("each god's zone is a real campaign zone, in its act, by the name it has", 
 
 test("a god is here by its zone's id — Act 1's Prisoner's Gate is not Act 6's", () => {
   const abberath = PANTHEON_GODS.find((g) => g.soul === 'Soul of Abberath')!
-  assert.equal(isHere(abberath, '2_6_8', "Prisoner's Gate"), true)
-  assert.equal(isHere(abberath, '1_1_8', "Prisoner's Gate"), false)
-  // Its side area, by name (no capture has had it yet).
-  assert.equal(isHere(abberath, 'SomeSideAreaId', 'The Valley of the Fire Drinker'), true)
-  assert.equal(isHere(abberath, null, null), false)
+  assert.equal(isHere(abberath, '2_6_8'), true)
+  assert.equal(isHere(abberath, '1_1_8'), false)
+  assert.equal(isHere(abberath, null), false)
 })
 
 test('where a god is, in words', () => {

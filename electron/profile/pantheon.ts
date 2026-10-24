@@ -3,9 +3,11 @@
 //
 // Sources: poewiki's The Pantheon (powers become available when you defeat the
 // gods in Acts 6-10) and the owner's list of where each god is fought, from the
-// gods' poewiki pages (2026-10-23). The parent zones' area ids are verified
-// against a real capture (data/areas/en.json); the side areas weren't in it, so
-// they're matched by name and named in the hint.
+// gods' poewiki pages (2026-10-23). The zones' area ids are verified against a
+// real capture (data/areas/en.json). The side areas some gods are fought in
+// aren't zones of their own in the log — two years of it, those zones visited
+// throughout, and not one of them ever loaded — so the hint shows in the zone
+// they belong to, and names the side area in words.
 //
 // Upgrades are left out on purpose: the map bosses that upgrade a power rotate
 // with the atlas, and a stale list would send you to the wrong map.
@@ -21,7 +23,8 @@ export interface PantheonGod {
   /** The campaign zone it's in (or whose side area it's in). */
   areaId: string
   zone: string
-  /** The side area of that zone it's fought in, when it is one. */
+  /** The side area of that zone it's fought in, when it is one — a name to
+   *  look for, not a zone the log reports. */
   sideArea?: string
   /** Wording for a side area whose name we don't have. */
   sideAreaHint?: string
@@ -95,12 +98,8 @@ export function godsFor(pantheon: Pantheon | undefined): PantheonGod[] {
     .filter((g): g is PantheonGod => g != null)
 }
 
-/**
- * Whether you're where a god is fought: its zone (by area id — Prisoner's Gate
- * and The Wetlands exist in Act 1 too) or its side area (by name; the side
- * areas haven't shown up in a capture yet).
- */
-export function isHere(god: PantheonGod, areaId: string | null | undefined, zoneName: string | null | undefined): boolean {
-  if (areaId && areaId === god.areaId) return true
-  return !!god.sideArea && !!zoneName && zoneName.trim().toLowerCase() === god.sideArea.toLowerCase()
+/** Whether you're where a god is fought: its zone, by area id — Prisoner's
+ *  Gate and The Wetlands exist in Act 1 too. */
+export function isHere(god: PantheonGod, areaId: string | null | undefined): boolean {
+  return !!areaId && areaId === god.areaId
 }
