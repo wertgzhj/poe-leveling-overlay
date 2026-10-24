@@ -258,7 +258,7 @@ export class ProgressTracker {
       const ev = parser.parseLine(line)
       if (!ev) continue
       if (ev.kind === 'levelUp') lastName = ev.name
-      if (ev.kind !== 'izaro') counts[ev.kind]++
+      if (ev.kind === 'areaGenerated' || ev.kind === 'zoneEntered' || ev.kind === 'levelUp') counts[ev.kind]++
       this.apply(ev, false)
     }
     // The log ends on the Twilight Strand: a new character is mid-roll and

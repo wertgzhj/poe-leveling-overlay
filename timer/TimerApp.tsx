@@ -10,10 +10,11 @@ const CATEGORY_LABEL: Record<TimeCategoryBridge, string> = {
   zone: 'Zones',
   town: 'Towns',
   hideout: 'Hideout',
+  lab: 'Labyrinth',
   loading: 'Loading',
   other: 'Other'
 }
-const CATEGORY_ORDER: TimeCategoryBridge[] = ['zone', 'town', 'hideout', 'loading', 'other']
+const CATEGORY_ORDER: TimeCategoryBridge[] = ['zone', 'town', 'hideout', 'lab', 'loading', 'other']
 
 export function TimerApp(): React.JSX.Element {
   const [snap, setSnap] = useState<RunTimerSnapshotBridge | null>(null)
@@ -88,8 +89,8 @@ function LiveView({ snap, now }: { snap: RunTimerSnapshotBridge; now: number }):
   if (!live) {
     return (
       <p className="py-3 text-xs text-overlay-muted">
-        No run yet. A run starts when a new character enters the Twilight Strand, and ends on the
-        first load into Karui Shores.
+        No run yet. A run starts when a new character enters the Twilight Strand, and ends when
+        Kitava falls in Act 10.
         {best && (
           <>
             {' '}
@@ -132,7 +133,13 @@ function LiveView({ snap, now }: { snap: RunTimerSnapshotBridge; now: number }):
             {live.charClass && ` (${live.charClass})`}
             {live.level != null && ` · level ${live.level}`}
           </span>
-          {stale && <span title="No log line for a while — the game may be closed.">⏸ paused</span>}
+          {snap.away ? (
+            <span title="Another character is playing — the run waits until its own logs back in.">
+              ⏸ other character
+            </span>
+          ) : (
+            stale && <span title="No log line for a while — the game may be closed.">⏸ paused</span>
+          )}
         </div>
       </div>
 
@@ -148,11 +155,13 @@ function LiveView({ snap, now }: { snap: RunTimerSnapshotBridge; now: number }):
       {snap.pending && (
         <p className="rounded border border-warn/40 bg-warn/10 px-2 py-1 text-[11px] text-warn">
           △ {snap.pending.character ?? 'A new character'} entered the Twilight Strand — a mule, or a new
-          run? Both are timed until it's clear: leveling past 3 or leaving Act 1 decides.
+          run? This run waits meanwhile. Levelling past 3 or reaching the Coast makes it a new run;
+          coming back here makes it a mule.
         </p>
       )}
 
       <Breakdown byCategory={byCategory} total={total} />
+      <RunFacts run={live} />
       <Splits acts={acts} best={best} live />
     </div>
   )
@@ -193,6 +202,7 @@ function RunsView({ snap }: { snap: RunTimerSnapshotBridge }): React.JSX.Element
             {expanded && (
               <div className="space-y-2 px-2 pb-2">
                 <Breakdown byCategory={run.byCategory} total={run.total} />
+                <RunFacts run={run} />
                 <Splits acts={run.acts} best={run.id === snap.bestId ? null : best} />
                 <SlowestZones run={run} />
                 <div className="flex justify-end">
@@ -218,6 +228,28 @@ function RunsView({ snap }: { snap: RunTimerSnapshotBridge }): React.JSX.Element
         )
       })}
     </ul>
+  )
+}
+
+/** What else makes two runs comparable: how often you died, how many quest
+ *  skill points you claimed, which Labyrinths and Pantheon gods you did, and
+ *  the AFK time left out of the total. */
+function RunFacts({ run }: { run: RunSummaryBridge }): React.JSX.Element {
+  const facts: Array<[string, string, string]> = [
+    ['Deaths', String(run.deaths), 'Your character dying, suicides included'],
+    ['Skill pts', String(run.questPoints), 'Quest passive skill points claimed — a Book of Skill used, not just a quest done'],
+    ['Labs', String(run.labs.length), run.labs.length ? `Beaten: ${run.labs.join(', ')}` : 'No Labyrinth beaten yet'],
+    ['Gods', String(run.gods.length), run.gods.length ? run.gods.join(', ') : 'No Pantheon god defeated yet']
+  ]
+  if (run.afk > 0) facts.push(['AFK', fmt(run.afk), 'Time the game marked you AFK — not part of the run time'])
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
+      {facts.map(([label, value, title]) => (
+        <span key={label} title={title}>
+          <span className="text-overlay-muted">{label}</span> <span className="font-mono tabular-nums">{value}</span>
+        </span>
+      ))}
+    </div>
   )
 }
 

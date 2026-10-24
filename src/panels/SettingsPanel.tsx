@@ -472,7 +472,7 @@ export function SettingsPanel(): React.JSX.Element {
               <Toggle on={runTimer} onChange={setRunTimer} />
             </div>
             <p className="mt-1 text-[10px] text-overlay-muted">
-              Times each run from the Twilight Strand to Karui Shores, zone by zone, in its own
+              Times each run from the Twilight Strand to Kitava in Act 10, zone by zone, in its own
               window. It shows and hides with the overlay and moves in move mode. Nothing is
               recorded while this is off.
             </p>

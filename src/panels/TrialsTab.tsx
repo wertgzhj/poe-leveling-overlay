@@ -101,7 +101,7 @@ export function TrialsBody(): React.JSX.Element {
 }
 
 /** The profile's Pantheon powers: where each god is fought, and a tick once
- *  it's yours. Ticked by hand — the log doesn't say when a god falls. */
+ *  it's yours: ticked by itself when Sin bids the god farewell, or by hand. */
 function PantheonList({ gods }: { gods: PantheonStatusBridge[] }): React.JSX.Element {
   const done = gods.filter((g) => g.unlocked).length
   return (

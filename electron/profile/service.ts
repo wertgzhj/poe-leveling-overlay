@@ -16,7 +16,7 @@ import { existsSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 
 import { join } from 'node:path'
 import { parseProfile, validateProfile, baseClassOf, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
-import { godsFor, isHere, whereIs } from './pantheon.ts'
+import { godsFallen, godsFor, isHere, whereIs } from './pantheon.ts'
 import {
   activeStageIndex,
   actFromAreaId,
@@ -121,6 +121,16 @@ export class ProfileService {
       this.godWasHere = godHere
     })
     log.addFreshCharacterListener((name) => this.forgetRun(name))
+    // Sin bids each god farewell as it falls: tick its power, whichever god it
+    // is — a profile picked later finds it already unlocked.
+    log.addSinListener((line) => {
+      const area = this.log.getSnapshot().state.area
+      let changed = false
+      for (const god of godsFallen(line, area?.areaId)) {
+        changed = this.runs.unlockPantheon(this.character, god.soul) || changed
+      }
+      if (changed) this.push()
+    })
   }
 
   start(): void {

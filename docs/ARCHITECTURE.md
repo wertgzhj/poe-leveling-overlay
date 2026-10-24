@@ -63,8 +63,9 @@ Main
 │                       stage derived from the tracked character's level.
 ├── TrialsService       Trial-of-Ascendancy state per character.
 ├── TimerService        Experimental, off by default. Times each run from the
-│                       Twilight Strand to Karui Shores, from every line's
-│                       stamp; keeps it in userData/runs.json.
+│                       Twilight Strand to Kitava in Act 10, from every
+│                       line's stamp, while the run's character is in the
+│                       world; keeps it in userData/runs.json.
 ├── TimerWindow         The run timer's own overlay window: placed on its own,
 │                       shown with the overlay, following its click-through
 │                       and move mode.
@@ -239,7 +240,7 @@ No server, no account, no telemetry, no analytics, no crash reporting.
 | Debug panel | Parsed events only, in memory, dev builds only, never written to disk. |
 | Log fixtures | Raw `Client.txt` excerpts are never committed. `scripts/sanitize-fixtures.ts` replaces character names and strips account names, chat, whispers and instance-server IP addresses first. |
 | Settings & profiles | Local only. No personal data beyond file paths and the optional in-game character name. |
-| Recorded runs | Local only (`runs.json`), and only while the run timer is switched on: area ids and names, load times, your character's name and levels. |
+| Recorded runs | Local only (`runs.json`), and only while the run timer is switched on: area ids and names, load times, your character's name and levels, deaths, claimed skill points, Labyrinths and Pantheon gods. |
 | Electron hardening | `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, a CSP, allow-listed IPC, no remote content in windows. Every window is held to its own page: navigation elsewhere, `window.open`, webviews and permission requests are refused (`electron/security.ts`, rules in `navigation.ts`). |
 | Imports | PoB links: 4 MB download cap, read as a stream; redirects must stay on the paste host. PoB codes: 16 MB cap on what they unpack to. |
 | Supply chain | Committed lockfile, small dependency surface, `npm audit` in CI. |

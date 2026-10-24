@@ -6,7 +6,7 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 307 tests: parser, tracker, watcher, guide, profile,
+npm test        # 316 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table,
                 # finding Client.txt, window and import hardening,
@@ -240,7 +240,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    Pit, a side area of The Oasis"). Entering **The Oasis** (Act 9) shows a gold
    bar "Pantheon: Shakari — The Sand Pit" with *Done ✓*; a god in the zone itself
    reads "… is here". Done ✓ or a click in the list ticks it for that character
-   (and unticks on a second click); a new character starts with none. Act 6's
+   (and unticks on a second click); a new character starts with none. Killing
+   the god ticks it by itself — Sin's farewell line says it fell. Act 6's
    Prisoner's Gate and Wetlands show their gods, Act 1's never do. The bar ranks
    below a trial in the same zone.
 8. **Trials.** Entering a trial zone shows an orange △ "Trial of Ascendancy in this
@@ -343,13 +344,18 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    (`Ctrl+Shift+O`). In move mode (`Ctrl+Shift+M`) it drags and resizes on
    its own, and comes back where you left it after a restart. Roll a
    character: the clock starts on the Twilight Strand, the current zone below
-   it counts up, *Where the time went* splits zones, towns, hideout and loading
-   screens. Close the game for a few minutes and come back: that time is not in
-   the run. Roll a mule mid-run: the *mule or a new run?* note appears, and
-   goes once you are back on your main — with no second run in *Runs*. Finish
-   a run: the first load into Karui Shores ends it, and it shows under *Runs*
-   as *Best*; the next run's act splits compare against it. Settings →
-   *Run timer* off: the window closes and nothing more is recorded.
+   it counts up, *Where the time went* splits zones, towns, hideout, Labyrinth
+   and loading screens; deaths, claimed skill points, Labyrinths and Pantheon
+   gods count up below. Close the game, or log out to character select, for a
+   few minutes: that time is not in the run. Log in on another character and
+   run a map: the window says *other character* and the clock waits until the
+   run's character is back out in a zone. Roll a mule mid-run: the *mule or a
+   new run?* note appears, and goes once you are back on your main — with no
+   second run in *Runs*. Finish a run: the clock stops as Kitava falls in
+   Act 10, and the run shows under *Runs* as *Best*; the next run's act splits
+   compare against it. Type `/played` at the end: the run time should be a few
+   minutes above it, never below. Settings → *Run timer* off: the window
+   closes and nothing more is recorded.
 
 ## What the code takes as given
 
@@ -384,10 +390,15 @@ that once: a table everyone believed, wrong in two tiers.
 | The bandits are due from Act 2; the Pantheon from Act 6, where its gods start | `BANDIT_ACT`, `PANTHEON_ACT` | Bandits ○. Pantheon ✓ poewiki (*The Pantheon*: "defeat certain gods in Acts 6 through 10") |
 | Where each Pantheon god is fought | `PANTHEON_GODS` (`pantheon.ts`) | Zones: owner, from poewiki's god pages; their area ids ✓ log. The side areas (Sand Pit, Spawning Ground, Valley of the Fire Drinker, Den of Despair, Garukhan's) aren't zones in the log — ✓ log, two years with those zones visited and none ever loaded — so the hint shows in the parent zone and names them in words |
 | The level you reach each act at: for PoB stages named "Act N", and for which acts a stage's shopping list covers | `ACT_START_LEVEL` (`acts.ts`) | ✓ log — the median level on first entering each act's town across ten full runs; Acts 7–10 were lowered to it (49/53/59/61, from 52/58/64/67) |
-| Run timer: the number after the clock in every line is a millisecond tick, and the number in `[… Client N]` is the game's process id, new at every launch | `parseStamp`, `LogClock` | ✓ log for the tick (act1-real.log: 24 188 between lines 24 s apart). The process id: ○ — two launches in act1-real.log carry two ids, which fits |
-| Run timer: a run ends on the first load into Karui Shores, a few seconds after Kitava dies in Act 10 | `KARUI_SHORES_ID` | ○ — Kitava's death line would be exact, but we haven't got it verbatim |
-| Run timer: a mule never leaves the Strand and Lioneye's Watch, nor levels past 3 — so either says a new character is a real run, and the old character's level-up or an Act 2+ zone says it was a mule | `RunTimer.onGenerated`, `onLevelUp` | ○ — the level half rests on `MULE_MAX_LEVEL` (✓ log); the zone half wants a look at real mule trips |
-| Run timer: with the game closed, the log is silent — the clock stops at the last line before closing and starts again at the next launch | `RunTimer.feed`, `TICK_STALE_MS` | ○ — logging out to character select without closing the game still counts |
+| Run timer: the number after the clock in every line is a millisecond tick, and the number in `[… Client N]` is the game's process id, new at every launch | `parseStamp`, `LogClock` | ✓ log — the tick moves with the clock, and every `LOG FILE OPENING` brings a new id |
+| Run timer: Act 10's Kitava falls when Sin says "May a new dawn arise!" in The Feeding Trough (`2_10_6`); the merciless resistance penalty follows within seconds. Sin says the line again for every map Kitava, so only that zone counts | `KITAVA_ARENA_ID`, `KITAVA_FALLS` | ✓ log — all ten finished campaigns; 14 s apart, once 150 s |
+| Run timer: every trip to the login server — logout, character select, a disconnect, the launch — logs `Async connecting to <region>.login.pathofexile.com` | `loginServer` pattern | ✓ log |
+| Run timer: you log back in where you logged out, so the first area after a login says who logged in — a zone of an act the run has reached is its character, an act beyond it isn't, a town, hideout or league area doesn't say. A map is never a campaign character | `RunTimer.onGenerated`, `isForeignArea` | ✓ log — checked against `/played` typed throughout ten campaigns: the run time stays 1–4 % above it, every run, and a parked alt in the same town was the case that made towns not count as proof |
+| Run timer: what's left above `/played` grows evenly, a minute or two an hour | — | ○ — loading screens, by the size of it; `/played` isn't documented |
+| Run timer: "You have received a Passive Skill Point." is a Book of Skill being used — a quest's reward claimed, not the quest done | `passivePoint` pattern | ✓ log (owner: the quest gives the book, using it gives the point). A book used after Kitava isn't in the run |
+| Run timer: the game's AFK toggle is logged, ON and OFF | `afk` pattern | ✓ log |
+| Run timer: a mule never leaves the Strand and Lioneye's Watch, nor levels past 3 — so either says a new character is a real run, and the old character's level-up or an Act 2+ zone says it was a mule | `RunTimer.onGenerated`, `onLevelUp` | ✓ log — ten finished campaigns, none split or merged by a mule |
+| Pantheon: when a god falls, Sin bids it farewell — one line per god, the same every time; Lunaris and Solaris share one | `PANTHEON_GODS[].farewell`, `godsFallen` | ✓ log — every god, two years. An optional god left alone has none |
 | Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
 
 ## Known limitations

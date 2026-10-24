@@ -65,6 +65,32 @@ class Log {
     return this
   }
 
+  /** A system message ("] : text"). */
+  say(text: string): this {
+    this.lines.push(`${this.stamp()} : ${text}`)
+    return this
+  }
+
+  /** An NPC's voice line. */
+  npc(name: string, text: string): this {
+    this.lines.push(`${this.stamp()} ${name}: ${text}`)
+    return this
+  }
+
+  /** Back to the login server: logout, character select. */
+  logout(): this {
+    this.lines.push(`${this.stamp()} Async connecting to lon01.login.pathofexile.com:20481`)
+    return this
+  }
+
+  /** One zone per act, Act 2 to Act `to`, a minute each, levelling as it goes. */
+  through(to: number, name = 'Racer'): this {
+    for (let act = 2; act <= to; act++) {
+      this.enter(act <= 5 ? `1_${act}_1` : `2_${act}_1`).wait(MIN).level(name, act * 7)
+    }
+    return this
+  }
+
   /** Any other line: the game is still running, now. */
   mark(): this {
     this.lines.push(`${this.stamp()} Got Instance Details from login server`)
@@ -146,27 +172,33 @@ test('acts split on first entry, and a trip back is booked on the act you are in
   assert.equal(acts[1].byCategory.town, 2 * MIN)
 })
 
-test('closing the game stops the clock; logging back in counts as loading', () => {
+test('closing the game stops the clock until the next zone loads', () => {
   const log = new Log()
     .enter('1_1_1').wait(2 * MIN).level('Racer', 2)
+    .enter('1_1_town').wait(1 * MIN).mark()
     .wait(1 * MIN)
     .restart(60 * MIN) // an hour away
     .wait(20_000)      // the launcher, login, character select
-    .enter('1_1_1', 2000).wait(1 * MIN).mark()
+    .enter('1_1_town', 2000).wait(1 * MIN).mark()
   const t = timer()
   feed(t, log.lines)
   const live = t.snapshot().live!
   // The minute after the last line before closing is lost: the log can't
-  // say when the game went, only that its last line was then.
-  assert.equal(live.byCategory.loading, 22_000)
-  assert.equal(live.total, 2 * MIN + 22_000 + 1 * MIN)
+  // say when the game went, only that its last line was then. The launcher
+  // and character select aren't the run's either — nor are they in /played.
+  assert.equal(live.byCategory.loading, 1000 + 2000)
+  assert.equal(live.total, 2 * MIN + 1000 + 1 * MIN + 2000 + 1 * MIN)
 })
 
-test('a run ends on the first load into Karui Shores and becomes the best', () => {
+test('a run ends as Kitava falls in Act 10, and becomes the best', () => {
   const log = new Log()
     .enter('1_1_1').wait(5 * MIN).level('Racer', 2)
-    .enter('2_10_9').wait(5 * MIN).level('Racer', 68)
-    .enter('2_11_endgame_town', 2000)
+    .through(10)
+    .enter('2_10_6').wait(4 * MIN)
+    .npc('Sin', 'May a new dawn arise!')
+    .wait(14_000) // the penalty message follows the kill
+    .say("You have been permanently weakened by Kitava's merciless affliction. You now have a total of -60% to all Resistances.")
+    .enter('2_10_town')
   const t = timer()
   feed(t, log.lines)
   const snap = t.snapshot()
@@ -174,17 +206,35 @@ test('a run ends on the first load into Karui Shores and becomes the best', () =
   assert.equal(snap.history.length, 1)
   const run = snap.history[0]
   assert.equal(run.status, 'finished')
-  assert.equal(run.total, 10 * MIN + 1000)
-  assert.equal(run.level, 68)
+  // 5 min on the Strand, nine acts at a minute and a load each, 4 min to the kill
+  assert.equal(run.total, 5 * MIN + 9 * (MIN + 1000) + 1000 + 4 * MIN)
+  assert.equal(run.level, 70)
   assert.equal(snap.bestId, run.id)
   assert.equal(run.acts.at(-1)?.act, 10)
 })
 
-test('a mule rolled mid-run does not restart it — its time stays in the run', () => {
+test("Sin's line over Kitava elsewhere ends nothing; Karui Shores is the fallback", () => {
+  const log = new Log()
+    .enter('1_1_1').wait(5 * MIN).level('Racer', 2)
+    .through(10)
+    .npc('Sin', 'May a new dawn arise!') // not in The Feeding Trough
+    .say("You have been permanently weakened by Kitava's cruel affliction. You now have -30% to all Resistances.")
+    .mark()
+  const t = timer()
+  feed(t, log.lines)
+  assert.equal(t.snapshot().history.length, 0)
+  const n = log.lines.length
+  feed(t, log.enter('2_11_endgame_town').lines.slice(n))
+  assert.equal(t.snapshot().history[0]?.status, 'finished')
+})
+
+test("a mule rolled mid-run does not restart it, and its time isn't the run's", () => {
   const log = new Log()
     .enter('1_1_1').wait(5 * MIN).level('Main', 2)
+    .through(3, 'Main')
     .enter('1_3_town').wait(20 * MIN).level('Main', 30)
     // the mule: Strand, Hillock, Lioneye's Watch
+    .logout().wait(10_000)
     .enter('1_1_1').wait(2 * MIN).level('Mule', 2, 'Ranger')
     .enter('1_1_town').wait(1 * MIN)
   const t = timer()
@@ -195,19 +245,20 @@ test('a mule rolled mid-run does not restart it — its time stays in the run', 
 
   // back on the main, in Act 3: the mule was a mule
   const n = log.lines.length
-  feed(t, log.enter('1_3_town').wait(1 * MIN).level('Main', 31).lines.slice(n))
+  feed(t, log.logout().wait(10_000).enter('1_3_town').wait(1 * MIN).level('Main', 31).lines.slice(n))
   snap = t.snapshot()
   assert.equal(snap.pending, null)
   assert.equal(snap.live?.character, 'Main')
   assert.equal(snap.history.length, 0)
-  // the mule's three minutes are part of the run's wall-clock time
-  assert.ok(snap.live!.total >= 5 * MIN + 20 * MIN + 3 * MIN)
+  // the mule's three minutes aren't the run's: /played doesn't count them either
+  assert.equal(snap.live!.total, 5 * MIN + 2 * (MIN + 1000) + 1000 + 20 * MIN + 1000 + 1 * MIN)
 })
 
 test('a new character that keeps going ends the old run as abandoned', () => {
   const log = new Log()
     .enter('1_1_1').wait(5 * MIN).level('Old', 2)
-    .enter('1_4_1').wait(20 * MIN).level('Old', 40)
+    .through(4, 'Old')
+    .enter('1_4_2').wait(20 * MIN).level('Old', 40)
     .enter('1_1_1').wait(2 * MIN).level('New', 2)
     .enter('1_1_town').wait(1 * MIN)
     .enter('1_1_2').wait(3 * MIN).mark() // the Coast: no mule goes there
@@ -220,7 +271,7 @@ test('a new character that keeps going ends the old run as abandoned', () => {
   assert.equal(snap.history.length, 1)
   assert.equal(snap.history[0].status, 'abandoned')
   assert.equal(snap.history[0].character, 'Old')
-  assert.equal(snap.history[0].total, 25 * MIN + 1000)
+  assert.equal(snap.history[0].total, 5 * MIN + 3 * (MIN + 1000) + 20 * MIN + 1000)
 })
 
 test('in Act 1 the Coast proves nothing; levelling past a mule does', () => {
@@ -278,13 +329,124 @@ test('the live clock ticks for a while past the last line, and only with a run',
 })
 
 test('deleting a run drops it from the history', () => {
-  const log = new Log().enter('1_1_1').wait(5 * MIN).level('A', 2).enter('2_11_endgame_town')
+  const log = new Log().enter('1_1_1').wait(5 * MIN).level('A', 2).through(10, 'A').enter('2_11_endgame_town')
   const t = timer()
   feed(t, log.lines)
   const id = t.snapshot().history[0].id
   assert.equal(t.deleteRun(id), true)
   assert.equal(t.snapshot().history.length, 0)
   assert.equal(t.snapshot().bestId, null)
+})
+
+test('another character in maps is not the run: it waits for its own to log back in', () => {
+  const log = new Log()
+    .enter('1_1_1').wait(5 * MIN).level('Racer', 2)
+    .through(2)
+    .logout().wait(30_000)
+    .enter('HideoutWorldTurtle').wait(1 * MIN) // anyone's hideout: can't tell yet
+    .enter('MapWorldsLavaLake').wait(30 * MIN) // a map: someone else is playing
+    .enter('HideoutWorldTurtle').wait(5 * MIN)
+    .mark()
+  const t = timer()
+  feed(t, log.lines)
+  let snap = t.snapshot()
+  assert.equal(snap.away, true)
+  assert.equal(snap.current, null)
+  assert.equal(snap.tickUntil, null)
+  const before = snap.live!.total
+  // logged in to a hideout, then a map: that login was someone else's
+  assert.equal(before, 5 * MIN + MIN + 1000)
+  const n = log.lines.length
+  feed(t, log.logout().wait(20_000).enter('1_2_town').wait(1 * MIN).mark().lines.slice(n))
+  snap = t.snapshot()
+  assert.equal(snap.away, false)
+  assert.equal(snap.live!.total, before + 1000 + 1 * MIN)
+})
+
+test('logging in to an act the run has not reached is someone else', () => {
+  const log = new Log()
+    .enter('1_1_1').wait(5 * MIN).level('Racer', 2)
+    .through(2)
+    .logout().wait(10_000)
+    .enter('1_3_town').wait(10 * MIN) // an alt in Act 3
+    .enter('HideoutWorldTurtle').wait(5 * MIN)
+    .logout().wait(10_000)
+    .enter('1_2_1').wait(2 * MIN).mark() // the run, back where it left
+  const t = timer()
+  feed(t, log.lines)
+  const snap = t.snapshot()
+  assert.equal(snap.away, false)
+  assert.equal(snap.live!.total, 5 * MIN + MIN + 1000 + 1000 + 2 * MIN)
+})
+
+test("a town login that never reaches a zone was someone else's", () => {
+  const log = new Log()
+    .enter('1_1_1').wait(5 * MIN).level('Racer', 2)
+    .through(3)
+    .enter('1_3_town').wait(1 * MIN)
+    .logout().wait(10_000)
+    .enter('1_3_town').wait(1 * MIN) // an alt parked in the same town
+    .enter('KalguuranSettlersLeague').wait(20 * MIN)
+    .logout().wait(10_000)
+    .enter('1_3_town').wait(1 * MIN)
+    .enter('1_3_2').wait(1 * MIN).mark() // out into Act 3: the run after all
+  const t = timer()
+  feed(t, log.lines)
+  assert.equal(t.snapshot().live!.total, 5 * MIN + 2 * (MIN + 1000) + 1000 + MIN + 1000 + MIN + 1000 + MIN)
+})
+
+test('a hideout login that a campaign zone follows was the run', () => {
+  const log = new Log()
+    .enter('1_1_1').wait(5 * MIN).level('Racer', 2)
+    .through(2)
+    .logout().wait(10_000)
+    .enter('HideoutWorldTurtle').wait(1 * MIN)
+    .enter('1_2_town').wait(1 * MIN).mark()
+  const t = timer()
+  feed(t, log.lines)
+  assert.equal(t.snapshot().live!.total, 5 * MIN + MIN + 1000 + 1000 + MIN + 1000 + MIN)
+})
+
+test('AFK time is kept apart, and a logout ends the zone', () => {
+  const log = new Log()
+    .enter('1_1_1').wait(2 * MIN).level('Racer', 2)
+    .enter('1_1_town').wait(1 * MIN)
+    .say('AFK mode is now ON. Autoreply "This player is AFK."').wait(10 * MIN)
+    .say('AFK mode is now OFF.').wait(1 * MIN)
+    .logout().wait(5 * MIN).mark()
+  const t = timer()
+  feed(t, log.lines)
+  const live = t.snapshot().live!
+  assert.equal(live.afk, 10 * MIN)
+  assert.equal(live.byCategory.town, 2 * MIN)
+  assert.equal(live.total, 2 * MIN + 1000 + 2 * MIN)
+})
+
+test('a run counts its deaths, quest points, Labyrinths and Pantheon gods', () => {
+  const log = new Log()
+    .enter('1_1_1').wait(2 * MIN).level('Racer', 2)
+    .say('Hillock has been slain.')
+    .say('Racer has been slain.')
+    .enter('1_1_town')
+    .say('You have received a Passive Skill Point.')
+    .through(3)
+    .enter('1_Labyrinth_boss_2_end').wait(1 * MIN)
+    .npc('Izaro', 'I die for the Empire!')
+    .through(6)
+    .enter('2_6_5').wait(2 * MIN)
+    .npc('Sin', 'Tukohama!')
+    .npc('Sin', 'The soil wants for your blood no more.')
+    .npc('Sin', 'At last your thirst is quenched.') // Abberath's, not in his zone
+    .say('Racer has committed suicide.')
+    .mark()
+  const t = timer()
+  feed(t, log.lines)
+  const live = t.snapshot().live!
+  assert.equal(live.deaths, 2)
+  assert.equal(live.questPoints, 1)
+  assert.deepEqual(live.labs, ['normal'])
+  assert.deepEqual(live.gods, ['Soul of Tukohama'])
+  assert.equal(live.byCategory.lab, 1 * MIN)
 })
 
 test('the real Act 1 capture: one run, all of it in Act 1', () => {

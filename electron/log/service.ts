@@ -42,6 +42,8 @@ export class LogService {
   /** In-main consumers of Izaro voice lines (the trials service). */
   private izaroListeners: Array<(line: string) => void> = []
   private freshListeners: Array<(name: string) => void> = []
+  /** In-main consumers of Sin's voice lines, live only (the profile's Pantheon). */
+  private sinListeners: Array<(line: string) => void> = []
   /** In-main consumers of every line's time (the run timer). They get the
    *  stamp and the parser's reading — never the line itself. */
   private lineListeners: Array<(stamp: LineStamp, ev: ParsedLogEvent | null) => void> = []
@@ -137,6 +139,12 @@ export class LogService {
     this.freshListeners.push(listener)
   }
 
+  /** Sin's voice lines as they're written — never from the backscan, which may
+   *  reach back to another character's fights. */
+  addSinListener(listener: (line: string) => void): void {
+    this.sinListeners.push(listener)
+  }
+
   /** Every line, backscan included: when it was written, and what the parser
    *  made of it (null for most). The backscan replays lines a listener may
    *  have seen live before a restart — telling them apart is its job. */
@@ -225,6 +233,10 @@ export class LogService {
       if (!ev) continue
       if (ev.kind === 'izaro') {
         for (const listener of this.izaroListeners) listener(ev.line)
+        continue
+      }
+      if (ev.kind === 'sin') {
+        for (const listener of this.sinListeners) listener(ev.line)
         continue
       }
       this.tracker.handle(ev)
