@@ -58,6 +58,7 @@ export function SettingsPanel(): React.JSX.Element {
     characterName,
     visibleTabs,
     searchRegex,
+    runTimer,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -71,6 +72,7 @@ export function SettingsPanel(): React.JSX.Element {
       characterName: s.characterName,
       visibleTabs: s.visibleTabs,
       searchRegex: s.searchRegex,
+      runTimer: s.runTimer,
       patch: s.patch
     }))
   )
@@ -132,6 +134,11 @@ export function SettingsPanel(): React.JSX.Element {
   const setClickThrough = (value: boolean): void => {
     patch({ clickThrough: value })
     void window.overlay?.setSettings({ clickThrough: value })
+  }
+
+  const setRunTimer = (value: boolean): void => {
+    patch({ runTimer: value })
+    void window.overlay?.setSettings({ runTimer: value })
   }
 
   const setVisibleTabs = (value: VisibleTabsBridge): void => {
@@ -457,6 +464,18 @@ export function SettingsPanel(): React.JSX.Element {
                 {regexDraft.length}/{SEARCH_BOX_LIMIT}
               </span>
             </div>
+          </Section>
+
+          <Section title="Run timer">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-overlay-text">Record runs and show the timer</span>
+              <Toggle on={runTimer} onChange={setRunTimer} />
+            </div>
+            <p className="mt-1 text-[10px] text-overlay-muted">
+              Times each run from the Twilight Strand to Kitava in Act 10, zone by zone, in its own
+              window. It shows and hides with the overlay and moves in move mode. Nothing is
+              recorded while this is off.
+            </p>
           </Section>
 
           <Section title="Gems tab">

@@ -59,7 +59,6 @@ test('drops whispers, party, guild and trade chat', () => {
 
 test('ignores unrelated system lines', () => {
   for (const line of [
-    '2024/01/15 10:00:30 140 cffb0734 [INFO Client 1234] : Hillock has been slain.',
     '2024/01/15 10:04:00 500 cffb0734 [INFO Client 1234] Connecting to instance server at 203.0.113.42:6112',
     ''
   ]) {
@@ -72,8 +71,8 @@ test('real capture: every line parses and the event mix is right', () => {
   const events = lines.map((l) => parser.parseLine(l))
   events.forEach((e, i) => assert.ok(e !== null, `unparsed real line ${i + 1}: ${lines[i]}`))
 
-  const byKind = { areaGenerated: 0, levelUp: 0, zoneEntered: 0, izaro: 0 }
-  for (const e of events) byKind[e!.kind]++
+  const byKind: Record<string, number> = { areaGenerated: 0, levelUp: 0, zoneEntered: 0 }
+  for (const e of events) byKind[e!.kind] = (byKind[e!.kind] ?? 0) + 1
   assert.equal(byKind.levelUp, 3)
   assert.equal(byKind.areaGenerated + byKind.zoneEntered, lines.length - 3)
 
@@ -97,6 +96,7 @@ test('fixture sweep: expected event mix from the synthetic Act 1 log', () => {
   assert.deepEqual(kinds, [
     'areaGenerated',
     'zoneEntered',
+    'slain', // Hillock: the run timer counts deaths, and only its character's
     'areaGenerated',
     'zoneEntered',
     'levelUp',
@@ -106,4 +106,26 @@ test('fixture sweep: expected event mix from the synthetic Act 1 log', () => {
     'zoneEntered',
     'levelUp'
   ])
+})
+
+test('the run timer\'s lines, verbatim from a real capture', () => {
+  const at = '2025/03/20 22:38:11 99934671 cff94598 [INFO Client 14204]'
+  assert.deepEqual(parser.parseLine(`${at} Async connecting to lon01.login.pathofexile.com:20481`), { kind: 'loginServer' })
+  assert.deepEqual(parser.parseLine(`${at} : AFK mode is now ON. Autoreply "This player is AFK."`), { kind: 'afk', on: true })
+  assert.deepEqual(parser.parseLine(`${at} : AFK mode is now OFF.`), { kind: 'afk', on: false })
+  assert.deepEqual(parser.parseLine(`${at} Sin: May a new dawn arise!`), { kind: 'sin', line: 'May a new dawn arise!' })
+  assert.deepEqual(
+    parser.parseLine(`${at} : You have been permanently weakened by Kitava's merciless affliction. You now have a total of -60% to all Resistances.`),
+    { kind: 'kitava', tier: 'merciless' }
+  )
+  assert.deepEqual(
+    parser.parseLine(`${at} : You have been permanently weakened by Kitava's cruel affliction. You now have -30% to all Resistances.`),
+    { kind: 'kitava', tier: 'cruel' }
+  )
+  assert.deepEqual(parser.parseLine(`${at} : You have received a Passive Skill Point.`), { kind: 'passivePoint' })
+  assert.deepEqual(parser.parseLine(`${at} : Exile1 has been slain.`), { kind: 'slain', name: 'Exile1' })
+  assert.deepEqual(parser.parseLine(`${at} : Exile1 has committed suicide.`), { kind: 'slain', name: 'Exile1' })
+  // A whisper saying the same is chat, and never parsed.
+  assert.equal(parser.parseLine(`${at} @From Someone: You have received a Passive Skill Point.`), null)
+  assert.equal(parser.parseLine(`${at} : You have received a Passive Respec Point.`), null)
 })

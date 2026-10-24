@@ -13,6 +13,7 @@ import {
   type PobImportResponse,
   type ProfileSnapshot,
   type RouteImportResult,
+  type RunTimerSnapshot,
   type SettingsSetResult,
   type TrialsSnapshot,
   type UpdateStatus
@@ -81,6 +82,10 @@ const api = {
   trialsToggle: (id: string): void => ipcRenderer.send(Channels.trialsToggle, id),
   trialsReset: (): void => ipcRenderer.send(Channels.trialsReset),
   trialsDismissLab: (lab: string): void => ipcRenderer.send(Channels.trialsDismissLab, lab),
+
+  getRunTimer: (): Promise<RunTimerSnapshot> => ipcRenderer.invoke(Channels.timerGet),
+  onRunTimer: (cb: (snap: RunTimerSnapshot) => void): (() => void) => subscribe(Channels.timerState, cb),
+  deleteRun: (id: string): void => ipcRenderer.send(Channels.timerDeleteRun, id),
 
   getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(Channels.updateGet),
   onUpdateStatus: (cb: (status: UpdateStatus) => void): (() => void) =>

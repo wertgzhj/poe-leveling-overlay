@@ -27,7 +27,7 @@ export interface RunData {
   actReached: Record<string, number>
   dismissedChoices: Record<string, string[]>
   /** The Pantheon powers this character has unlocked ("Soul of Tukohama"),
-   *  ticked by hand — the log doesn't say when a god falls. */
+   *  ticked when Sin bids its god farewell, or by hand. */
   pantheonUnlocked: Record<string, string[]>
 }
 
@@ -87,6 +87,17 @@ export class CharacterRuns {
   pantheon(name: string | null): string[] {
     if (!name) return []
     return this.store.get('pantheonUnlocked')[name] ?? []
+  }
+
+  /** Mark a Pantheon power unlocked — its god fell (see godsFallen). Returns
+   *  true when it wasn't already. */
+  unlockPantheon(name: string | null, soul: string): boolean {
+    if (!name || !soul) return false
+    const map = this.store.get('pantheonUnlocked')
+    const have = map[name] ?? []
+    if (have.includes(soul)) return false
+    this.store.set('pantheonUnlocked', { ...map, [name]: [...have, soul] })
+    return true
   }
 
   /** Tick or untick a Pantheon power as unlocked. Returns true when it changed. */

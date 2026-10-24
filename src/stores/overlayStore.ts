@@ -18,6 +18,8 @@ interface OverlayStore {
   searchRegex: string
   /** Your short names for gems (real name -> short), display only. */
   gemNames: Record<string, string>
+  /** The run timer is on: it records runs and shows its window. */
+  runTimer: boolean
   // log tracking
   logStatus: WatcherStatusBridge | null
   tracked: TrackerStateBridge | null
@@ -62,6 +64,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   visibleTabs: { guide: true, gems: true, trials: true },
   searchRegex: '',
   gemNames: {},
+  runTimer: false,
   logStatus: null,
   tracked: null,
   languageMismatch: false,

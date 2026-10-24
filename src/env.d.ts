@@ -56,6 +56,12 @@ type LabTierBridge = import('../electron/trials/engine.ts').LabTier
 type TrialStateBridge = import('../electron/trials/engine.ts').TrialState
 type TrialsSnapshotBridge = import('../electron/trials/engine.ts').TrialsSnapshot
 
+// --- run timer ---
+type TimeCategoryBridge = import('../electron/timer/engine.ts').TimeCategory
+type ActSplitBridge = import('../electron/timer/engine.ts').ActSplit
+type RunSummaryBridge = import('../electron/timer/engine.ts').RunSummary
+type RunTimerSnapshotBridge = import('../electron/timer/engine.ts').RunTimerSnapshot
+
 // --- editor: profile and route files as they're written ---
 type SocketGroupFileBridge = import('../electron/profile/profile.ts').SocketGroup
 type StageFileBridge = import('../electron/profile/profile.ts').Stage
