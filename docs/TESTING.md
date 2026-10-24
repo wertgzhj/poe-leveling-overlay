@@ -368,7 +368,7 @@ that once: a table everyone believed, wrong in two tiers.
 | `Client.txt` in Steam's default folder | `locate.ts` | ✓ game. Other Steam libraries, standalone, Epic: ○ — from the launchers' documented layouts |
 | The experience safe range is `3 + level/16`, applied in both directions | `safeLevelRange`, `zoneFit` | ✓ poewiki (*Experience*: SafeZone = ⌊3 + PlayerLevel/16⌋, EffectiveDifference = max(\|player − monster\| − SafeZone, 0)) |
 | The bandits are due from Act 2; the Pantheon from Act 6, where its gods start | `BANDIT_ACT`, `PANTHEON_ACT` | Bandits ○. Pantheon ✓ poewiki (*The Pantheon*: "defeat certain gods in Acts 6 through 10") |
-| Where each Pantheon god is fought | `PANTHEON_GODS` (`pantheon.ts`) | Zones: owner, from poewiki's god pages; their area ids ✓ log. Side area names (Sand Pit, Spawning Ground, Valley of the Fire Drinker, Den of Despair) ○ — never in a capture yet; Garukhan's is unnamed |
+| Where each Pantheon god is fought | `PANTHEON_GODS` (`pantheon.ts`) | Zones: owner, from poewiki's god pages; their area ids ✓ log. The side areas (Sand Pit, Spawning Ground, Valley of the Fire Drinker, Den of Despair, Garukhan's) aren't zones in the log — ✓ log, two years with those zones visited and none ever loaded — so the hint shows in the parent zone and names them in words |
 | The level you reach each act at: for PoB stages named "Act N", and for which acts a stage's shopping list covers | `ACT_START_LEVEL` (`acts.ts`) | ✓ log — the median level on first entering each act's town across ten full runs; Acts 7–10 were lowered to it (49/53/59/61, from 52/58/64/67) |
 | Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
 
