@@ -9,6 +9,8 @@ import { ProfileService } from './profile/service.ts'
 import { TrialsService } from './trials/service.ts'
 import { EditorWindow } from './editor-window.ts'
 import { UpdateService } from './update/service.ts'
+import { TimerService } from './timer/service.ts'
+import { TimerWindow } from './timer-window.ts'
 import { denyPermissions, hardenWebContents } from './security.ts'
 
 // Set to a number of ms via SMOKE=<ms> to auto-quit after startup — used by the
@@ -23,6 +25,9 @@ const trialsService = new TrialsService(overlay, logService)
 const editorWindow = new EditorWindow()
 profileService.attachEditor(editorWindow)
 const updateService = new UpdateService(overlay)
+const timerWindow = new TimerWindow()
+const timerService = new TimerService(logService, timerWindow)
+overlay.addStateListener((state) => timerWindow.follow(state))
 let tray: ReturnType<typeof createTray> = null
 
 // Single instance: a second launch just resurfaces the existing overlay.
@@ -43,7 +48,17 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     denyPermissions()
     overlay.create()
-    registerIpc(overlay, logService, guideService, profileService, trialsService, editorWindow, updateService)
+    registerIpc(
+      overlay,
+      logService,
+      guideService,
+      profileService,
+      trialsService,
+      editorWindow,
+      updateService,
+      timerService,
+      timerWindow
+    )
     logService.start()
     guideService.start()
     profileService.start()
@@ -73,7 +88,9 @@ app.on('will-quit', () => {
   profileService.stop()
   trialsService.stop()
   updateService.stop()
+  timerService.stop()
   logService.stop()
+  timerWindow.destroy()
   editorWindow.destroy()
   tray?.destroy()
 })

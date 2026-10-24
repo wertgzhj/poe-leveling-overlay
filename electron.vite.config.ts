@@ -3,7 +3,8 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// Main process in electron/, overlay renderer in src/, editor renderer in editor/.
+// Main process in electron/, overlay renderer in src/, editor renderer in editor/,
+// run timer renderer in timer/.
 export default defineConfig({
   main: {
     // electron-store is ESM-only; exclude it from externalization so it is bundled
@@ -33,7 +34,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve(__dirname, 'index.html'),
-          editor: resolve(__dirname, 'editor/index.html')
+          editor: resolve(__dirname, 'editor/index.html'),
+          timer: resolve(__dirname, 'timer/index.html')
         }
       }
     }

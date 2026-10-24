@@ -18,6 +18,7 @@ export class OverlayController {
   private settingsOpen = false
   private hoverUi = false
   private saveTimer: NodeJS.Timeout | null = null
+  private stateListeners: Array<(state: OverlayState) => void> = []
 
   constructor() {
     this.clickThrough = store.get('clickThrough')
@@ -159,8 +160,16 @@ export class OverlayController {
     this.win.setIgnoreMouseEvents(ignore, { forward: true })
   }
 
+  /** In-main consumers of the interaction state (the run timer window
+   *  follows the overlay's visibility, click-through and move mode). */
+  addStateListener(listener: (state: OverlayState) => void): void {
+    this.stateListeners.push(listener)
+  }
+
   private pushState(): void {
-    this.win?.webContents.send(Channels.overlayState, this.getState())
+    const state = this.getState()
+    this.win?.webContents.send(Channels.overlayState, state)
+    for (const listener of this.stateListeners) listener(state)
   }
 
   private persistBoundsSoon(): void {

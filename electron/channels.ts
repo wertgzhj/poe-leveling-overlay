@@ -9,8 +9,9 @@ import type { ResolvedStage, Acquisitions, MuleOption } from './profile/engine.t
 import type { TrialsSnapshot } from './trials/engine.ts'
 import type { LibraryEntry, LibraryResult } from './profile/library.ts'
 import type { ChoiceDue } from './profile/run.ts'
+import type { RunTimerSnapshot } from './timer/engine.ts'
 
-export type { TrialsSnapshot, LibraryEntry, LibraryResult }
+export type { TrialsSnapshot, LibraryEntry, LibraryResult, RunTimerSnapshot }
 
 export const Channels = {
   /** main -> renderer: overlay interaction state changed */
@@ -121,6 +122,12 @@ export const Channels = {
   trialsReset: 'trials:reset',
   /** renderer -> main: acknowledge a Labyrinth's "unlocked" notice */
   trialsDismissLab: 'trials:dismiss-lab',
+  /** main -> timer window: the run timer changed (a load, a level-up) */
+  timerState: 'timer:state',
+  /** timer window -> main (invoke): current run timer state */
+  timerGet: 'timer:get',
+  /** timer window -> main: drop a run, by id (the live one included) */
+  timerDeleteRun: 'timer:delete-run',
   /** main -> renderer: auto-update status changed (checking/downloading/ready/…) */
   updateStatus: 'update:status',
   /** renderer -> main (invoke): current auto-update status */

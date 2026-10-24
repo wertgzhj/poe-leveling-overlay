@@ -51,6 +51,9 @@ export interface AppSettings {
   /** Your short names for gems, real name -> short ("CwDT"). Display only, in
    *  the Gems tab (see gem-names.ts). */
   gemNames: Record<string, string>
+  /** Experimental: record runs and show the run timer window. Off unless
+   *  switched on — nothing is recorded until then. */
+  runTimer: boolean
 }
 
 /** What the renderer may change through the settings channel (see ipc.ts:
@@ -58,7 +61,14 @@ export interface AppSettings {
 export type SettingsPatch = Partial<
   Pick<
     AppSettings,
-    'opacity' | 'clickThrough' | 'clientTxtPath' | 'characterName' | 'visibleTabs' | 'searchRegex' | 'gemNames'
+    | 'opacity'
+    | 'clickThrough'
+    | 'clientTxtPath'
+    | 'characterName'
+    | 'visibleTabs'
+    | 'searchRegex'
+    | 'gemNames'
+    | 'runTimer'
   >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
@@ -66,6 +76,8 @@ export type SettingsPatch = Partial<
  *  per-character guide progress. */
 interface StoreSchema extends AppSettings {
   progress: TrackerSnapshot | null
+  /** where the run timer window sits — its own, not the overlay's */
+  timerBounds: OverlayBounds
   guideProgress: Record<string, string[]>
   trialsProgress: Record<string, string[]>
   /** character -> Labyrinth tiers whose unlock notice was dismissed. */
@@ -110,7 +122,9 @@ const defaults: StoreSchema = {
   visibleTabs: { guide: true, gems: true, trials: true },
   searchRegex: '',
   gemNames: {},
+  runTimer: false,
   progress: null,
+  timerBounds: { width: 260, height: 360 },
   guideProgress: {},
   trialsProgress: {},
   trialsDismissedLabs: {},
@@ -161,6 +175,7 @@ export function getSettings(): AppSettings {
     logLanguage: store.get('logLanguage'),
     visibleTabs: getVisibleTabs(),
     searchRegex: store.get('searchRegex'),
-    gemNames: store.get('gemNames')
+    gemNames: store.get('gemNames'),
+    runTimer: store.get('runTimer')
   }
 }

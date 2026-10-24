@@ -5,7 +5,8 @@
 
 import { execFileSync } from 'node:child_process'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { LogParser, type LogPatterns } from './parser.ts'
+import { LogParser, type LogPatterns, type ParsedLogEvent } from './parser.ts'
+import { parseStamp, type LineStamp } from '../timer/stamp.ts'
 import { locateClientTxt, steamPathFromReg, type LocateFs } from './locate.ts'
 import { ProgressTracker, zoneFit, type AreaState, type LevelUpEvent } from './tracker.ts'
 // Both are pure modules; the safe-range formula is the gem panel's too, and
@@ -41,6 +42,9 @@ export class LogService {
   /** In-main consumers of Izaro voice lines (the trials service). */
   private izaroListeners: Array<(line: string) => void> = []
   private freshListeners: Array<(name: string) => void> = []
+  /** In-main consumers of every line's time (the run timer). They get the
+   *  stamp and the parser's reading — never the line itself. */
+  private lineListeners: Array<(stamp: LineStamp, ev: ParsedLogEvent | null) => void> = []
   /** The backscan saw locale-independent lines but none of the localized ones —
    *  i.e. the game runs in a language we have no patterns for. */
   private languageMismatch = false
@@ -133,6 +137,13 @@ export class LogService {
     this.freshListeners.push(listener)
   }
 
+  /** Every line, backscan included: when it was written, and what the parser
+   *  made of it (null for most). The backscan replays lines a listener may
+   *  have seen live before a restart — telling them apart is its job. */
+  addLineListener(listener: (stamp: LineStamp, ev: ParsedLogEvent | null) => void): void {
+    this.lineListeners.push(listener)
+  }
+
   getSnapshot(): LogSnapshot {
     const state = this.tracker.snapshot()
     return {
@@ -198,11 +209,19 @@ export class LogService {
     const state = this.tracker.snapshot()
     if (state.level != null) for (const listener of this.levelListeners) listener(state.level)
     if (state.area) for (const listener of this.areaListeners) listener(state.area)
+    if (this.lineListeners.length > 0) for (const line of lines) this.emitLine(line, this.parser.parseLine(line))
+  }
+
+  private emitLine(line: string, ev: ParsedLogEvent | null): void {
+    const stamp = parseStamp(line)
+    if (!stamp) return
+    for (const listener of this.lineListeners) listener(stamp, ev)
   }
 
   private onLines(lines: string[]): void {
     for (const line of lines) {
       const ev = this.parser.parseLine(line)
+      if (this.lineListeners.length > 0) this.emitLine(line, ev)
       if (!ev) continue
       if (ev.kind === 'izaro') {
         for (const listener of this.izaroListeners) listener(ev.line)

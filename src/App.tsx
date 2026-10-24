@@ -26,7 +26,8 @@ export function App(): React.JSX.Element {
         characterName: s.characterName,
         visibleTabs: s.visibleTabs,
         searchRegex: s.searchRegex,
-        gemNames: s.gemNames
+        gemNames: s.gemNames,
+        runTimer: s.runTimer
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()

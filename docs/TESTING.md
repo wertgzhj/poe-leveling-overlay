@@ -6,11 +6,12 @@ running can confirm, and which parts are known to be provisional.
 ## Automated
 
 ```bash
-npm test        # 293 tests: parser, tracker, watcher, guide, profile,
+npm test        # 307 tests: parser, tracker, watcher, guide, profile,
                 # PoB import, trials, editor ops, gem data, mouse passthrough,
                 # search regex, profile library, update errors, area table,
                 # finding Client.txt, window and import hardening,
-                # the shopping list's act scenarios, gem short names, Pantheon gods
+                # the shopping list's act scenarios, gem short names, Pantheon gods,
+                # the run timer
 npm run typecheck
 npm run build
 ```
@@ -337,6 +338,19 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      shows a thin gold outline. The update arrow on the version badge doesn't
      pulse when Windows has animations turned off.
 
+12. **Run timer (experimental).** Settings → *Run timer* on: a second window
+   opens in the top-right corner, and hides and shows with the overlay
+   (`Ctrl+Shift+O`). In move mode (`Ctrl+Shift+M`) it drags and resizes on
+   its own, and comes back where you left it after a restart. Roll a
+   character: the clock starts on the Twilight Strand, the current zone below
+   it counts up, *Where the time went* splits zones, towns, hideout and loading
+   screens. Close the game for a few minutes and come back: that time is not in
+   the run. Roll a mule mid-run: the *mule or a new run?* note appears, and
+   goes once you are back on your main — with no second run in *Runs*. Finish
+   a run: the first load into Karui Shores ends it, and it shows under *Runs*
+   as *Best*; the next run's act splits compare against it. Settings →
+   *Run timer* off: the window closes and nothing more is recorded.
+
 ## What the code takes as given
 
 Every value below looks like a fact in the code. This is where each one stands,
@@ -370,6 +384,10 @@ that once: a table everyone believed, wrong in two tiers.
 | The bandits are due from Act 2; the Pantheon from Act 6, where its gods start | `BANDIT_ACT`, `PANTHEON_ACT` | Bandits ○. Pantheon ✓ poewiki (*The Pantheon*: "defeat certain gods in Acts 6 through 10") |
 | Where each Pantheon god is fought | `PANTHEON_GODS` (`pantheon.ts`) | Zones: owner, from poewiki's god pages; their area ids ✓ log. The side areas (Sand Pit, Spawning Ground, Valley of the Fire Drinker, Den of Despair, Garukhan's) aren't zones in the log — ✓ log, two years with those zones visited and none ever loaded — so the hint shows in the parent zone and names them in words |
 | The level you reach each act at: for PoB stages named "Act N", and for which acts a stage's shopping list covers | `ACT_START_LEVEL` (`acts.ts`) | ✓ log — the median level on first entering each act's town across ten full runs; Acts 7–10 were lowered to it (49/53/59/61, from 52/58/64/67) |
+| Run timer: the number after the clock in every line is a millisecond tick, and the number in `[… Client N]` is the game's process id, new at every launch | `parseStamp`, `LogClock` | ✓ log for the tick (act1-real.log: 24 188 between lines 24 s apart). The process id: ○ — two launches in act1-real.log carry two ids, which fits |
+| Run timer: a run ends on the first load into Karui Shores, a few seconds after Kitava dies in Act 10 | `KARUI_SHORES_ID` | ○ — Kitava's death line would be exact, but we haven't got it verbatim |
+| Run timer: a mule never leaves the Strand and Lioneye's Watch, nor levels past 3 — so either says a new character is a real run, and the old character's level-up or an Act 2+ zone says it was a mule | `RunTimer.onGenerated`, `onLevelUp` | ○ — the level half rests on `MULE_MAX_LEVEL` (✓ log); the zone half wants a look at real mule trips |
+| Run timer: with the game closed, the log is silent — the clock stops at the last line before closing and starts again at the next launch | `RunTimer.feed`, `TICK_STALE_MS` | ○ — logging out to character select without closing the game still counts |
 | Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
 
 ## Known limitations

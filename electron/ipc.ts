@@ -17,6 +17,8 @@ import type { GuideService } from './guide/service.ts'
 import type { ProfileService } from './profile/service.ts'
 import type { TrialsService } from './trials/service.ts'
 import type { UpdateService } from './update/service.ts'
+import type { TimerService } from './timer/service.ts'
+import type { TimerWindow } from './timer-window.ts'
 import { importPobCode, importPobXml } from './profile/pob.ts'
 import { resolvePobInput } from './profile/pobbin.ts'
 import type { EditorSaveResult, LibraryResult, PobImportResponse, RouteImportResult } from './channels'
@@ -38,7 +40,9 @@ export function registerIpc(
   profile: ProfileService,
   trials: TrialsService,
   editor: EditorWindow,
-  update: UpdateService
+  update: UpdateService,
+  timer: TimerService,
+  timerWindow: TimerWindow
 ): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
 
@@ -84,6 +88,10 @@ export function registerIpc(
     if ('gemNames' in patch) {
       store.set('gemNames', sanitizeGemNames(patch.gemNames, (gem) => profile.canonicalGemName(gem)))
     }
+    if (typeof patch.runTimer === 'boolean') {
+      store.set('runTimer', patch.runTimer)
+      timer.setEnabled(patch.runTimer)
+    }
 
     let failed: string[] = []
     if (patch.hotkeys) {
@@ -104,12 +112,18 @@ export function registerIpc(
     overlay.setSettingsOpen(!!on)
   })
 
-  ipcMain.on(Channels.overlayResizeBy, (_e, delta: { dx: number; dy: number }) => {
+  // The timer window shares the overlay's page bridge: hover and resize go to
+  // whichever window sent them.
+  ipcMain.on(Channels.overlayResizeBy, (e, delta: { dx: number; dy: number }) => {
     if (!delta || typeof delta.dx !== 'number' || typeof delta.dy !== 'number') return
-    overlay.resizeBy(delta.dx, delta.dy)
+    if (timerWindow.owns(e.sender)) timerWindow.resizeBy(delta.dx, delta.dy)
+    else overlay.resizeBy(delta.dx, delta.dy)
   })
 
-  ipcMain.on(Channels.overlayHoverUi, (_e, over: unknown) => overlay.setHoverUi(!!over))
+  ipcMain.on(Channels.overlayHoverUi, (e, over: unknown) => {
+    if (timerWindow.owns(e.sender)) timerWindow.setHoverUi(!!over)
+    else overlay.setHoverUi(!!over)
+  })
 
   ipcMain.handle(Channels.logGetSnapshot, () => log.getSnapshot())
   ipcMain.handle(Channels.logDetectCharacter, () => log.detectCharacter())
@@ -210,6 +224,11 @@ export function registerIpc(
   ipcMain.on(Channels.trialsReset, () => trials.reset())
   ipcMain.on(Channels.trialsDismissLab, (_e, lab: unknown) => {
     if (typeof lab === 'string') trials.dismissLab(lab)
+  })
+
+  ipcMain.handle(Channels.timerGet, () => timer.snapshot())
+  ipcMain.on(Channels.timerDeleteRun, (_e, id: unknown) => {
+    if (typeof id === 'string') timer.deleteRun(id)
   })
 
   ipcMain.handle(Channels.updateGet, () => update.snapshot())

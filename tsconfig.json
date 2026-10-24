@@ -16,5 +16,5 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "editor/**/*.ts", "editor/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "editor/**/*.ts", "editor/**/*.tsx", "timer/**/*.ts", "timer/**/*.tsx"]
 }
