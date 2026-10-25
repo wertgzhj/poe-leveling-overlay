@@ -9,7 +9,7 @@ const s = JSON.parse(readFileSync(file, 'utf8'))[Number(index)]
 
 const ok = (v) => Promise.resolve(v)
 const answers = {
-  getState: () => ok({ visible: true, clickThrough: false, moveMode: false, settingsOpen: !!s.settings }),
+  getState: () => ok({ visible: true, clickThrough: false, moveMode: !!s.moveMode, settingsOpen: !!s.settings }),
   getSettings: () =>
     ok({
       bounds: { width: 380, height: 1100 },

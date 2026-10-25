@@ -173,6 +173,8 @@ export interface Scenario {
   /** short names from Settings (real name -> short) */
   gemNames?: Record<string, string>
   settings?: boolean
+  /** move mode on: draggable header, Done, the resize grip */
+  moveMode?: boolean
   opacity?: number
   /** a long regex, so the counter shows its warning */
   regex?: string
@@ -244,6 +246,17 @@ const scenarios: Scenario[] = [
     settings: true,
     opacity: 0.4,
     regex: '"' + 'a|'.repeat(130) + '"',
+    profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
+    guide
+  },
+  // Settings in move mode: it shares the overlay's window, so it drags and
+  // resizes it the same way — gold header, Done, the grip.
+  {
+    name: 'settings-move',
+    settings: true,
+    moveMode: true,
     profile: profileSnapshot(3, 22, 2),
     log: crypt,
     trials,
