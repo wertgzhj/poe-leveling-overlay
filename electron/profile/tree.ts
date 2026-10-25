@@ -107,6 +107,8 @@ const LOOKAHEAD = 6
 /** A respec is shown while the stage that needs it is this many points in. */
 const RESPEC_WINDOW = 3
 const KEY_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'jewel'])
+/** What the game's search boxes take; the rest is cut off (✓ owner). */
+const SEARCH_BOX_LIMIT = 250
 /** Stages before the current one the Tree button still searches. */
 const SEARCH_BACK = 2
 /** What the Tree button searches for: nodes with a name of their own. */
@@ -285,14 +287,27 @@ export function passivesView(
   // The two stages before the current one stay in: levelling outruns placing
   // points, and the overlay counts points, it can't see which you placed. A
   // node the current stage refunds is out — it's going, not coming.
+  // The search box takes 250 characters and cuts the rest: the current stage
+  // goes in first, then the one before, then the one before that, each only
+  // whole and only while it fits — never half a name.
   const dropped = new Set(due ? (plan.stages[due.stage].refund ?? []) : [])
-  const targets = due
-    ? flat
-        .filter((s) => s.stage >= due.stage - SEARCH_BACK && s.stage <= due.stage && !dropped.has(s.id))
-        .filter((s) => SEARCH_KINDS.has(tree.node(s.id)?.kind as NodeKind))
-        .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
-    : []
-  const treeSearch = targets.length ? `"${[...new Set(targets)].join('|')}"` : null
+  const namesOf = (stage: number): string[] =>
+    flat
+      .filter((s) => s.stage === stage && !dropped.has(s.id) && SEARCH_KINDS.has(tree.node(s.id)?.kind as NodeKind))
+      .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
+  const quoted = (names: string[]): string => `"${[...new Set(names)].join('|')}"`
+  let targets: string[] = []
+  if (due) {
+    for (const name of namesOf(due.stage)) {
+      if (quoted([...targets, name]).length <= SEARCH_BOX_LIMIT) targets.push(name)
+    }
+    for (let back = 1; back <= SEARCH_BACK && due.stage - back >= 0; back++) {
+      const earlier = [...namesOf(due.stage - back), ...targets]
+      if (quoted(earlier).length > SEARCH_BOX_LIMIT) break
+      targets = earlier
+    }
+  }
+  const treeSearch = targets.length ? quoted(targets) : null
 
   return {
     treeSearch,
