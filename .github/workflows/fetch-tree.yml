@@ -1,0 +1,71 @@
+name: Fetch tree data
+
+# One-click passive-tree refresh (Actions tab -> "Fetch tree data" -> Run
+# workflow), for when a league changes the tree. Runs `npm run fetch-tree`
+# against GGG's skilltree-export, verifies the new data/tree.json still passes
+# the test suite, and pushes it to a tree-data/<run> branch — open the PR from
+# the link on the run's summary page (main only takes PRs).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release the export is for (e.g. 3.30.0) — blank reads it from the export's latest commit
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts skips the Electron binary postinstall — not needed for
+      # a Node-only fetch + tests, and it makes the run much faster.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Fetch the passive tree from GGG's export
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -n "$VERSION" ]]; then
+            npm run fetch-tree -- --version "$VERSION"
+          else
+            npm run fetch-tree
+          fi
+
+      # Guard: the new tree.json must still satisfy the test suite before it
+      # may land on main.
+      - name: Verify
+        run: npm test
+
+      - name: Push updated tree data to a branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet data/tree.json; then
+            echo "tree.json unchanged — nothing to commit."
+            exit 0
+          fi
+          version=$(node -e "console.log(require('./data/tree.json').version)")
+          branch="tree-data/${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add data/tree.json
+          git commit -m "Update the passive tree to $version (Fetch tree data workflow)"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$branch"
+          url="https://github.com/${{ github.repository }}/compare/main...$branch?expand=1"
+          echo "Pushed $branch — open the PR: $url"
+          echo "The passive tree $version is on \`$branch\`: [open the pull request]($url)" >> "$GITHUB_STEP_SUMMARY"

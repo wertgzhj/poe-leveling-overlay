@@ -37,7 +37,12 @@ if (source) {
   raw = await res.text()
   if (!version) {
     // The export's commits are titled with the release ("3.29.1").
-    const commit = await fetch(TAGS).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    // Unauthenticated, GitHub's API rate-limits hard; the workflow passes its token.
+    const token = process.env['GH_TOKEN']
+    const headers: Record<string, string> = token ? { authorization: `Bearer ${token}` } : {}
+    const commit = await fetch(TAGS, { headers })
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
     const title = (commit as { commit?: { message?: string } } | null)?.commit?.message?.split('\n')[0]
     if (title && /^\d+\.\d+\.\d+/.test(title)) version = title
   }

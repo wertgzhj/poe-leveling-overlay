@@ -153,7 +153,7 @@ class/ascendancy start), mastery effects, group, and links. Cut down by
 `scripts/fetch-tree.ts` (transform in `scripts/tree-extract.ts`, tested) from
 Grinding Gear Games' own export for tool authors,
 [grindinggear/skilltree-export](https://github.com/grindinggear/skilltree-export)
-— ~630 KB of its 6.5 MB. Re-run (`npm run fetch-tree`) when a league changes
+— ~630 KB of its 6.5 MB. Re-run (`npm run fetch-tree`, or the *Fetch tree data* workflow) when a league changes
 the tree; a build made for another tree version gets a warning. Read at runtime,
 like the gem data.
 
