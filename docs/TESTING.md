@@ -238,8 +238,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      points. Beat a Labyrinth: the *Lab* line moves to the next lab's
      ascendancy notable — never a small node on the way. Click a name: *✓ copied*, and pasting it into the in-game tree's
      search highlights that node. *Tree* next to the heading copies the stage's
-     notables, keystones and masteries — and the two stages' before it, since
-     levelling outruns placing points — as one regex — at most 250 characters, the search box's limit (✓ owner), the oldest stage left out first —
+     notables, keystones and masteries — the two stages' before it, since
+     levelling outruns placing points, and ahead every notable the list shows — as one regex — at most 250 characters, the search box's limit (✓ owner), the oldest stage left out first —
      (`"barbarism|resolute technique|life mastery"`): pasted into the tree
      search, it lights those and nothing else — no small nodes (✓ owner:
      quoted, the search reads a regex; unquoted, it splits at spaces).

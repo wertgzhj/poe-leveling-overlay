@@ -216,8 +216,9 @@ test('the Tree search: notables, keystones and masteries of this stage and the t
     stages: [{ take: [5, 6] }, { take: [7] }, { take: [8, 9] }, { take: [2, 3, 4], refund: [6] }]
   }
   // small nodes (c, d, a, b) left out: their names repeat all over a real tree
-  assert.equal(passivesView(searchPlan, tree, 1, 0, 0).treeSearch, '"near"', 'first stage: nothing before it')
-  assert.equal(passivesView(searchPlan, tree, 5, 0, 0).treeSearch, '"near|mastery|key"', 'placed ones stay in')
+  // level 1: nothing before, and the six shown reach into stage 4
+  assert.equal(passivesView(searchPlan, tree, 1, 0, 0).treeSearch, '"near|mastery|key|far"')
+  assert.equal(passivesView(searchPlan, tree, 5, 0, 0).treeSearch, '"near|mastery|key|far"', 'placed ones stay in')
   // stage 4: stages 2 and 3 with it, NEAR's stage too far back — and refunded anyway
   assert.equal(passivesView(searchPlan, tree, 6, 0, 0).treeSearch, '"mastery|key|far"')
   assert.equal(passivesView(searchPlan, tree, 99, 0, 0).treeSearch, null, 'plan done')
@@ -238,4 +239,11 @@ test('the Tree search fits the 250-character search box, dropping the oldest sta
   const big: PassivePlan = { tree: '3_29', stages: [{ take: [1, 2, 3, 4, 5, 6] }] }
   const cut = passivesView(big, tree, 1, 0, 0).treeSearch ?? ''
   assert.ok(cut.length <= 250 && cut.endsWith('x"'), 'ends on a whole name')
+})
+
+test('the Tree search reaches ahead as far as the list shows', () => {
+  const tree = tiny()
+  // NEAR is due; KEY, two points on, is in the next stage — and shown under "then"
+  const p: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6] }, { take: [8, 9] }] }
+  assert.equal(passivesView(p, tree, 2, 0, 0).treeSearch, '"near|key"')
 })
