@@ -70,6 +70,8 @@ Security and the app's network behaviour: [`SECURITY.md`](SECURITY.md).
 Gem data — attributes, level requirements and per-class quest/vendor sources —
 comes from the Path of Exile Wiki and is refreshed with one command
 (`npm run fetch-gems`, or the *Fetch gem data* GitHub Action) after a patch.
+The passive tree comes from Grinding Gear Games' own export and is refreshed the
+same way when a league changes it (`npm run fetch-tree`, or *Fetch tree data*).
 
 The version in `package.json` stays `0.0.0`; a release takes its version from
 the `v*` tag that builds it.
