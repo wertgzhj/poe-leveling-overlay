@@ -8,8 +8,18 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
+      # Vite, its React plugin and electron-vite pin each other's versions:
+      # a major of one alone can't install. They move together, in one PR.
+      build-tooling:
+        patterns: ['vite', 'electron-vite', '@vitejs/*', '@tailwindcss/vite', 'tailwindcss']
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # electron-store holds every player's settings, profiles and runs. A
+      # major rewrites how it reads and writes them for nothing the app needs;
+      # take one deliberately, not from a weekly PR.
+      - dependency-name: electron-store
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:

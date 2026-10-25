@@ -31,7 +31,7 @@ the manual pass below rather than by tests.
 ## Manual pass (Windows, with the game running)
 
 Get a build from **Actions → Build Windows → latest run → Artifacts →
-`windows-build`**, unzip, and run the installer or the portable exe (SmartScreen
+`windows-nsis`** (installer) or **`windows-portable`**, unzip, and run the installer or the portable exe (SmartScreen
 → *More info → Run anyway*). From source: `npm ci && npm run make-icon &&
 npm run dev`.
 
