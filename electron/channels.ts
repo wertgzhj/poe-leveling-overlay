@@ -234,6 +234,8 @@ export interface ProfileSnapshot {
   /** The stage being shown (the viewed one — see viewedIndex vs liveIndex). */
   activeStage: ResolvedStage | null
   nextStage: ResolvedStage | null
+  /** the stage before the shown one, for the ◀ button's level */
+  prevStage: ResolvedStage | null
   acquisitions: Acquisitions | null
   /** Total stages in the profile (for the ◀/▶ paging bounds). */
   stageCount: number

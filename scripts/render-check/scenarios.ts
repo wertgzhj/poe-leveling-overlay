@@ -113,6 +113,7 @@ function profileSnapshot(
     classMismatch: extra.classMismatch ?? null,
     muling: null,
     activeStage: resolveStage(profile.stages[stageIndex], stageIndex, gems),
+    prevStage: stageIndex > 0 ? resolveStage(profile.stages[stageIndex - 1], stageIndex - 1, gems) : null,
     nextStage: profile.stages[stageIndex + 1] ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, gems) : null,
     acquisitions: acquisitionsForStage(profile, stageIndex, gems, ctx),
     stageCount: profile.stages.length,

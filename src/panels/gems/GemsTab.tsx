@@ -32,6 +32,8 @@ export function GemBody(): React.JSX.Element {
   const canNext = viewedIndex >= 0 && viewedIndex < stageCount - 1
   const next = profile.nextStage
   const nextTitle = next ? `Next stage: ${next.label}, from level ${next.range[0]}` : 'Next stage'
+  const prev = profile.prevStage
+  const prevTitle = prev ? `Previous stage: ${prev.label}, from level ${prev.range[0]}` : 'Previous stage'
   // One merged, chronologically-ordered acquisition list (rewards + buys),
   // reward-first on ties (owner: don't buy what you can take free).
   const plan = profile.acquisitions?.plan ?? []
@@ -85,14 +87,16 @@ export function GemBody(): React.JSX.Element {
       {stage &&
         (stageCount > 1 ? (
           <div className="mb-1 flex items-center gap-1 px-1">
+            {/* Mirrors ▶: where the stage it goes to starts. */}
             <button
               disabled={!canPrev}
               onClick={() => window.overlay?.stageStep(-1)}
-              title="Previous stage"
-              aria-label="Previous stage"
-              className="shrink-0 rounded px-1 text-xs text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-40"
+              title={prevTitle}
+              aria-label={prevTitle}
+              className="flex shrink-0 items-center gap-1 rounded px-1 text-overlay-muted enabled:hover:text-overlay-text disabled:opacity-40"
             >
-              ◀
+              <span className="text-xs">◀</span>
+              {prev && <span className="text-[10px]">lvl {prev.range[0]}</span>}
             </button>
             <span className={'flex-1 truncate text-center ' + HEADING + 'text-overlay-muted'}>
               {stage.label}
