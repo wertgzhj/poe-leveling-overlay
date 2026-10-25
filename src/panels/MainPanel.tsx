@@ -13,7 +13,8 @@ import { GemBody } from './gems/GemsTab'
 // Steps/stage auto-advance from the log; interacting needs interactive mode
 // (Ctrl+Shift+C) while forward/back hotkeys work regardless.
 
-function ResizeGrip(): React.JSX.Element {
+/** Move mode's bottom-right handle; Settings shows it too (same window). */
+export function ResizeGrip(): React.JSX.Element {
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)

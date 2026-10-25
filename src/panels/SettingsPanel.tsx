@@ -6,6 +6,7 @@ import { HEADING, OPACITY_READABLE, button, panelSurface } from '../lib/ui'
 import { Legend } from './gems/Legend'
 import { GemShortNames } from './GemShortNames'
 import { MulePicker } from './MulePicker'
+import { ResizeGrip } from './MainPanel'
 
 type HotkeyField = keyof HotkeyBindingsBridge
 
@@ -60,6 +61,7 @@ export function SettingsPanel(): React.JSX.Element {
     visibleTabs,
     searchRegex,
     runTimer,
+    moveMode,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -74,6 +76,7 @@ export function SettingsPanel(): React.JSX.Element {
       visibleTabs: s.visibleTabs,
       searchRegex: s.searchRegex,
       runTimer: s.runTimer,
+      moveMode: s.moveMode,
       patch: s.patch
     }))
   )
@@ -209,20 +212,41 @@ export function SettingsPanel(): React.JSX.Element {
     <div className="flex h-screen w-screen items-start justify-center p-2">
       <div
         data-interactive
-        className={'flex max-h-full w-full flex-col overflow-hidden border-overlay-border ' + surface.className}
+        className={
+          'relative flex max-h-full w-full flex-col overflow-hidden ' +
+          surface.className +
+          (moveMode ? 'border-overlay-accent' : 'border-overlay-border')
+        }
         style={surface.style}
       >
-        <header className="flex items-center justify-between border-b border-overlay-border px-3 py-2">
+        {/* Settings shares the overlay's window: in move mode its header drags
+            that window and the grip resizes it, as on the main panel. */}
+        <header
+          className={
+            'flex items-center justify-between border-b border-overlay-border px-3 py-2 ' +
+            (moveMode ? 'drag-region cursor-move bg-overlay-accent/10' : '')
+          }
+        >
           <div className="flex items-center gap-2">
             <span className="text-overlay-accent">⚙</span>
             <span className="text-sm font-semibold tracking-wide">Settings</span>
           </div>
-          <button
-            className={button('quiet', 'md')}
-            onClick={() => window.overlay?.setSettingsOpen(false)}
-          >
-            Close
-          </button>
+          <div className="flex items-center gap-1.5">
+            {moveMode && (
+              <button
+                className={'no-drag ' + button('primary', 'sm')}
+                onClick={() => window.overlay?.exitMoveMode()}
+              >
+                Done
+              </button>
+            )}
+            <button
+              className={'no-drag ' + button('quiet', 'md')}
+              onClick={() => window.overlay?.setSettingsOpen(false)}
+            >
+              Close
+            </button>
+          </div>
         </header>
 
         <div className="space-y-4 overflow-y-auto px-3 py-3">
@@ -521,6 +545,7 @@ export function SettingsPanel(): React.JSX.Element {
             </p>
           </Section>
         </div>
+        {moveMode && <ResizeGrip />}
       </div>
     </div>
   )

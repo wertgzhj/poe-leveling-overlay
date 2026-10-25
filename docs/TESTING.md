@@ -45,7 +45,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    the bundle, so a packaging mistake surfaces here and nowhere in CI. It would
    also say so in a red box at the top of the tab.
 2. **Overlay.** Stays on top of the game; `Ctrl+Shift+O/C/M` toggle visibility,
-   click-through and move mode; drag to reposition in move mode. Check non-100%
+   click-through and move mode; drag to reposition in move mode —
+   with Settings open too: its header drags the window and its grip resizes it. Check non-100%
    DPI and a second monitor. In interactive mode, clicks on the transparent area
    around the panel must reach the game — only the visible panel captures the
    mouse.
