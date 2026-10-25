@@ -3,28 +3,42 @@ name: Build Windows
 # Produces the double-clickable Windows build on a Windows runner (electron-builder
 # can't build a Windows target from Linux without wine).
 #
-#  - Manual run (Actions tab -> Run workflow): a DEV build. Uploads the exes as a
-#    run artifact only — no release, and the version stays package.json's 0.0.0.
+#  - Manual run (Actions tab -> Run workflow): a DEV build. Uploads the exes as
+#    run artifacts only — no release, and the version stays package.json's 0.0.0.
 #  - Push a v* tag (e.g. v0.1.0): a RELEASE build. The version comes FROM THE TAG
 #    (0.1.0), and the exes are attached to a GitHub Release. package.json is never
 #    bumped for dev.
+#
+# Packing is nearly all of the time, so the installer and the portable exe are
+# built at once on two runners; a short job on Linux then publishes both.
 on:
   workflow_dispatch:
   push:
     tags:
       - 'v*'
 
-# Nothing by default; the one job asks for what a release needs.
+# Nothing by default; each job asks for what it needs.
 permissions: {}
 
 jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: write # attach the files to the GitHub Release
-      id-token: write # sign the build provenance (tag builds)
-      attestations: write # store it
+      contents: read # list the published releases for the tag check
+    strategy:
+      matrix:
+        # nsis: the installer, plus latest.yml + .blockmap for the updater.
+        target: [nsis, portable]
     steps:
+      # Real-time scanning checks every file the packer writes, which is most
+      # of its time on a Windows runner. The runner is thrown away after the
+      # job; nothing else runs on it.
+      - name: Turn off Defender real-time scanning on the runner
+        shell: pwsh
+        run: |
+          try { Set-MpPreference -DisableRealtimeMonitoring $true; "Real-time scanning off." }
+          catch { "Couldn't turn it off ($_) - building with it on." }
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -62,46 +76,70 @@ jobs:
 
       # Dev (manual) builds keep package.json's version (0.0.0). Tag builds take
       # the version from the tag (v0.1.0 -> 0.1.0) without committing a bump.
-      - name: Package Windows installer + portable exe
+      - name: Package (${{ matrix.target }})
         shell: bash
         run: |
+          version=()
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            npx electron-builder --win --config electron-builder.yml --publish never \
-              -c.extraMetadata.version="${GITHUB_REF_NAME#v}"
-          else
-            npx electron-builder --win --config electron-builder.yml --publish never
+            version=(-c.extraMetadata.version="${GITHUB_REF_NAME#v}")
           fi
+          npx electron-builder --win ${{ matrix.target }} --config electron-builder.yml --publish never "${version[@]}"
+
+      # The updater's feed is the installer's alone: whatever the portable
+      # build leaves next to its exe mustn't reach the release.
+      - name: Keep the portable exe only
+        if: matrix.target == 'portable'
+        shell: bash
+        run: rm -f dist/latest.yml dist/*.blockmap
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: windows-build
+          name: windows-${{ matrix.target }}
           path: |
             dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest.yml
           if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # attach the files to the GitHub Release
+      id-token: write # sign the build provenance
+      attestations: write # store it
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: windows-*
+          path: dist
+          merge-multiple: true
 
       # The build is unsigned, so this is how anyone can check a download came
       # from this repository's own workflow, at the commit the tag names:
       # `gh attestation verify <file>.exe -R wertgzhj/poe-leveling-overlay`.
       # SHA256SUMS.txt carries the same files' hashes for a quick look.
-      - name: Checksums (tag builds only)
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: bash
-        run: cd dist && sha256sum *.exe > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Checksums
+        run: |
+          cd dist
+          ls -l
+          ls *-setup.exe *-portable.exe
+          # The feed must name the installer, or every install 404s on update.
+          grep -q -- '-setup.exe' latest.yml
+          sha256sum *.exe > SHA256SUMS.txt && cat SHA256SUMS.txt
 
-      - name: Attest build provenance (tag builds only)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: dist/*.exe
 
       # latest.yml + the .blockmap must be on the release for the in-app updater
       # (electron-updater) to see the new version and download it.
-      # Pinned to a commit, not the movable v2 tag: this step writes the files
-      # every installation auto-updates from, so it must not change under us.
-      # Bump deliberately (git ls-remote https://github.com/softprops/action-gh-release).
-      - name: Publish release (tag builds only)
-        if: startsWith(github.ref, 'refs/tags/')
+      # Pinned to a commit, not a movable tag: this step writes the files every
+      # installation auto-updates from, so it must not change under us.
+      - name: Publish release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |

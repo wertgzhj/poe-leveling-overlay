@@ -53,7 +53,8 @@ Build the change as a throwaway dev build that never touches the update feed:
 
 1. Repo → **Actions → Build Windows → Run workflow** → in **"Use workflow from"**
    pick your branch → **Run**.
-2. Download the **`windows-build`** artifact from the finished run, unzip it, and
+2. Download the **`windows-portable`** artifact from the finished run (the
+   installer is in **`windows-nsis`**), unzip it, and
    run the **portable** `.exe` in its own folder.
 
 That build is version `0.0.0` and is an **artifact, not a release** — your
