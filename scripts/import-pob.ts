@@ -5,6 +5,7 @@
 // Without --out the profile is printed to stdout; warnings go to stderr.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { importPobCode, importPobXml } from '../electron/profile/pob.ts'
+import { TreeData, type TreeFile } from '../electron/profile/tree.ts'
 
 const argv = process.argv.slice(2)
 let name: string | undefined
@@ -23,7 +24,8 @@ if (!arg) {
 }
 
 const input = existsSync(arg) ? readFileSync(arg, 'utf8').trim() : arg
-const result = input.startsWith('<') ? importPobXml(input, { name }) : importPobCode(input, { name })
+const tree = new TreeData(JSON.parse(readFileSync(new URL('../data/tree.json', import.meta.url), 'utf8')) as TreeFile)
+const result = input.startsWith('<') ? importPobXml(input, { name, tree }) : importPobCode(input, { name, tree })
 
 for (const w of result.warnings) console.error(`warning: ${w}`)
 if (!result.profile) {

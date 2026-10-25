@@ -1,7 +1,10 @@
 // Build-profile schema + validation (pure, no Electron imports — unit-tested).
 // Profiles are hand-written JSON (same workflow as routes): hot-reloaded on
 // save with author-facing validation. Two axes: `stages` = loadout
-// per level range, `gemPlan` = where each gem is acquired.
+// per level range, `gemPlan` = where each gem is acquired — and optionally
+// `passives`, the passive tree in the order to take it (see tree.ts).
+
+import type { PassivePlan, PassiveStage } from './tree.ts'
 
 export const CLASSES = [
   'Marauder',
@@ -127,6 +130,8 @@ export interface Profile {
   meta: ProfileMeta
   stages: Stage[]
   gemPlan: GemPlanEntry[]
+  /** The passive tree, node by node (from a PoB import; editable). */
+  passives?: PassivePlan
 }
 
 export interface ProfileParseResult {
@@ -154,9 +159,12 @@ export function validateProfile(raw: unknown): ProfileParseResult {
   const meta = validateMeta(obj['meta'], errors)
   const stages = validateStages(obj['stages'], errors)
   const gemPlan = validateGemPlan(obj['gemPlan'], errors)
+  const passives = validatePassives(obj['passives'], errors)
 
   if (errors.length > 0 || !meta || !stages) return { profile: null, errors }
-  return { profile: { meta, stages, gemPlan }, errors: [] }
+  const profile: Profile = { meta, stages, gemPlan }
+  if (passives) profile.passives = passives
+  return { profile, errors: [] }
 }
 
 function validateMeta(raw: unknown, errors: string[]): ProfileMeta | null {
@@ -302,6 +310,57 @@ function validateGemPlan(raw: unknown, errors: string[]): GemPlanEntry[] {
     }
     plan.push({ gem, count: typeof e['count'] === 'number' ? e['count'] : undefined, source })
   })
+  return plan
+}
+
+/** Node ids are the tree's numbers; anything else is a typo that would quietly
+ *  show "unknown node", so it's reported. */
+function validatePassives(raw: unknown, errors: string[]): PassivePlan | undefined {
+  if (raw === undefined) return undefined
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    errors.push('"passives" must be an object with "tree" and "stages"')
+    return undefined
+  }
+  const p = raw as Record<string, unknown>
+  const tree = str(p['tree'])
+  if (!tree) errors.push('passives.tree must name the tree version, e.g. "3_29"')
+  const ids = (v: unknown, where: string): number[] | undefined => {
+    if (v === undefined) return undefined
+    if (!Array.isArray(v) || !v.every((x) => Number.isInteger(x))) {
+      errors.push(`${where} must be an array of node ids (numbers)`)
+      return undefined
+    }
+    return v as number[]
+  }
+  if (!Array.isArray(p['stages'])) {
+    errors.push('passives.stages must be an array')
+    return undefined
+  }
+  const stages: PassiveStage[] = []
+  ;(p['stages'] as unknown[]).forEach((s, i) => {
+    const where = `passives stage ${i + 1}`
+    const o = (typeof s === 'object' && s !== null ? s : {}) as Record<string, unknown>
+    const take = ids(o['take'], `${where}: "take"`)
+    if (!take) {
+      if (o['take'] === undefined) errors.push(`${where}: needs a "take" array`)
+      return
+    }
+    const stage: PassiveStage = { take }
+    const label = str(o['label'])
+    if (label) stage.label = label
+    const refund = ids(o['refund'], `${where}: "refund"`)
+    if (refund?.length) stage.refund = refund
+    const m = o['masteries']
+    if (m !== undefined) {
+      if (typeof m !== 'object' || m === null || Array.isArray(m) || !Object.values(m).every((x) => Number.isInteger(x))) {
+        errors.push(`${where}: "masteries" must map mastery node ids to effect ids`)
+      } else if (Object.keys(m).length) stage.masteries = m as Record<string, number>
+    }
+    stages.push(stage)
+  })
+  const plan: PassivePlan = { tree: tree ?? '', stages }
+  const ascendancy = ids(p['ascendancy'], 'passives.ascendancy')
+  if (ascendancy?.length) plan.ascendancy = ascendancy
   return plan
 }
 

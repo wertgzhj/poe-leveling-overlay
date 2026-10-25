@@ -87,6 +87,8 @@ export interface ProfileDraft {
   meta: ProfileMetaDraft
   stages: StageDraft[]
   gemPlan: GemPlanDraft[]
+  /** The passive tree from a PoB import — not edited here, kept as it is. */
+  passives?: unknown
 }
 
 /** Move an item within an array, returning a new array (clamped, no-op if out of range). */
@@ -190,6 +192,7 @@ export function serializeProfile(profile: ProfileDraft): unknown {
       })),
       ...(st.note?.trim() ? { note: st.note.trim() } : {})
     })),
-    gemPlan: profile.gemPlan
+    gemPlan: profile.gemPlan,
+    ...(profile.passives !== undefined ? { passives: profile.passives } : {})
   }
 }

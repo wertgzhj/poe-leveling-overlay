@@ -9,6 +9,7 @@ import type { ResolvedStage, Acquisitions, MuleOption } from './profile/engine.t
 import type { TrialsSnapshot } from './trials/engine.ts'
 import type { LibraryEntry, LibraryResult } from './profile/library.ts'
 import type { ChoiceDue } from './profile/run.ts'
+import type { PassivesView } from './profile/tree.ts'
 import type { RunTimerSnapshot } from './timer/engine.ts'
 import type { ImportResult } from './timer/service.ts'
 
@@ -72,6 +73,9 @@ export const Channels = {
    *  Copies what's in Settings, never text the renderer supplies — this channel
    *  can't be used to write arbitrary content to the clipboard. */
   clipboardCopySearchRegex: 'clipboard:copy-search-regex',
+  /** renderer -> main (invoke): copy a passive's name (by node id, looked up in
+   *  the tree data) for the in-game tree's search box */
+  clipboardCopyPassive: 'clipboard:copy-passive',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
   /** renderer -> main (invoke): current guide state */
@@ -240,6 +244,9 @@ export interface ProfileSnapshot {
   liveIndex: number
   /** a bandit/pantheon reminder that is due and not yet acknowledged. */
   choiceDue: ChoiceDue | null
+  /** The profile's passive tree: the next nodes for the points you have —
+   *  null when the profile has none. */
+  passives: PassivesView | null
   /** Every profile you have, bundled example first. */
   library: LibraryEntry[]
   /** The active profile's library id; null if it isn't in the library. */
@@ -268,6 +275,8 @@ export interface PantheonStatus {
   /** you're standing where its god is fought */
   here: boolean
 }
+
+export type { PassivesView, PassiveNodeView } from './profile/tree.ts'
 
 /** A one-shot build decision you've reached the point for (profile/run.ts). */
 export type { ChoiceDue } from './profile/run.ts'

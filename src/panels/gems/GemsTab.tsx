@@ -5,6 +5,7 @@ import { HEADING } from '../../lib/ui'
 import { useOverlayStore } from '../../stores/overlayStore'
 import { article, ErrorBox } from '../shared'
 import { SocketGroup } from './LinkGroup'
+import { Passives } from './Passives'
 import { BuyRow, RewardGroupRow } from './PlanRows'
 
 // The Gems tab: what to socket at your level, and where each gem comes from.
@@ -214,6 +215,7 @@ export function GemBody(): React.JSX.Element {
         )}
       </div>
 
+      {profile.passives && <Passives view={profile.passives} />}
     </>
   )
 }

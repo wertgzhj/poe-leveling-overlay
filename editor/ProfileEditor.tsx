@@ -38,7 +38,8 @@ function toDraft(p: ProfileFileBridge | null): ProfileDraft {
       socketGroups: st.socketGroups.map((g) => ({ gems: [...g.gems], note: g.note })),
       note: st.note
     })),
-    gemPlan: p.gemPlan
+    gemPlan: p.gemPlan,
+    ...(p.passives ? { passives: p.passives } : {})
   }
 }
 

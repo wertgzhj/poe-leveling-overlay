@@ -17,7 +17,8 @@ import {
   resolveStage,
   type AcquisitionContext
 } from '../../electron/profile/engine.ts'
-import type { ChoiceDue, GuideState, LogSnapshot, PantheonStatus, ProfileSnapshot } from '../../electron/channels.ts'
+import type { ChoiceDue, GuideState, LogSnapshot, PantheonStatus, PassivesView, ProfileSnapshot } from '../../electron/channels.ts'
+import { TreeData, passivesView, planFromSpecs, type TreeFile } from '../../electron/profile/tree.ts'
 import type { TrialsSnapshot } from '../../electron/trials/engine.ts'
 
 const root = new URL('../../', import.meta.url).pathname
@@ -61,6 +62,30 @@ const profile: Profile = (() => {
 const options = muleOptions(profile, gems, starting)
 const mule = defaultMule(options)
 
+// A Marauder tree for the passives scenario: the nodes nearest the start, in
+// two specs (the first 12, then 26) plus two Berserker nodes, planned the way
+// an import plans a real build.
+const tree = new TreeData(JSON.parse(readFileSync(join(root, 'data', 'tree.json'), 'utf8')) as TreeFile)
+function nearest(start: number, count: number): number[] {
+  const order: number[] = [start]
+  for (let i = 0; i < order.length && order.length < count + 1; i++) {
+    for (const next of tree.node(order[i])?.links ?? []) {
+      if (!order.includes(next) && order.length < count + 1) order.push(next)
+    }
+  }
+  return order
+}
+const marauderTree = ((): PassivesView => {
+  const berserker = nearest(29294, 2)
+  const specs = [12, 26].map((n, i) => ({
+    title: i === 0 ? 'Act 2' : 'Act 3',
+    nodes: [...nearest(47175, n), ...berserker],
+    masteries: {}
+  }))
+  // Level 9 with one Book of Skill: the ninth point is due.
+  return passivesView(planFromSpecs(specs, tree, tree.treeVersion), tree, 9, 1, 0)
+})()
+
 function profileSnapshot(
   stageIndex: number,
   level: number,
@@ -70,6 +95,7 @@ function profileSnapshot(
     choiceDue?: ChoiceDue | null
     classMismatch?: string | null
     pantheon?: PantheonStatus[]
+    passives?: PassivesView | null
   } = {}
 ): ProfileSnapshot {
   const ctx: AcquisitionContext = {
@@ -96,7 +122,8 @@ function profileSnapshot(
     library: [],
     activeId: null,
     muleChoice: { options, chosen: mule?.gem ?? null },
-    pantheon: extra.pantheon ?? []
+    pantheon: extra.pantheon ?? [],
+    passives: extra.passives ?? null
   }
 }
 
@@ -258,6 +285,15 @@ const scenarios: Scenario[] = [
     settings: true,
     moveMode: true,
     profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
+    guide
+  },
+  // The passive tree under the gems: the next point, the ones after, the lab.
+  {
+    name: 'gems-passives',
+    tab: 'Gems',
+    profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
     log: crypt,
     trials,
     guide

@@ -19,6 +19,16 @@ https://www.poewiki.net/wiki/Path_of_Exile_Wiki:Copyrights — consult that page
 before redistributing this data outside the overlay.
 
 
+Grinding Gear Games' passive tree export
+----------------------------------------
+
+`data/tree.json` — the passive tree's node names, stats and links — is cut down
+from the export Grinding Gear Games publishes for tool authors at
+https://github.com/grindinggear/skilltree-export (see `scripts/fetch-tree.ts`).
+The export carries no licence file; it is their data, used here the way other
+Path of Exile tools use it.
+
+
 Route and build-profile content
 -------------------------------
 

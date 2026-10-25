@@ -131,3 +131,16 @@ test('an undecided pantheon is left out of the saved profile entirely', () => {
   assert.deepEqual(meta({ pantheonMinor: 'Soul of Yugul' }).pantheon, { minor: 'Soul of Yugul' })
   assert.equal(meta({ bandit: 'Kill all' }).bandit, 'Kill all')
 })
+
+test('saving a profile in the editor keeps its imported passive tree', () => {
+  const passives = { tree: '3_29', stages: [{ label: '12', take: [1, 2, 3] }] }
+  const out = serializeProfile({
+    meta: { name: 'B', class: 'Marauder' },
+    stages: [],
+    gemPlan: [],
+    passives
+  }) as { passives?: unknown }
+  assert.deepEqual(out.passives, passives)
+  const none = serializeProfile({ meta: { name: 'B', class: 'Marauder' }, stages: [], gemPlan: [] }) as object
+  assert.equal('passives' in none, false)
+})

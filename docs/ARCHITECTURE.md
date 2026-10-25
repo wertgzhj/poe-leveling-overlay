@@ -10,8 +10,9 @@ which gems to take as quest rewards, what to buy from vendors, and which gems to
 have socketed at your current level. Build-specific content comes from a Path of
 Building import; build-independent content (routes) is authored per install.
 
-Deliberately out of scope: trading and pricing, endgame and maps, PoE 2, item
-filters, and a skill-tree renderer.
+Deliberately out of scope: trading and pricing, endgame and maps, PoE 2, and item
+filters. The passive tree is in as a list — which node to take with your next
+point — not as a drawn tree (yet).
 
 ## ToS position
 
@@ -145,6 +146,36 @@ The file is generated from the Path of Exile Wiki's Cargo API
 It ships as a resource rather than being bundled, and the app reports a loud
 error if it can't be read.
 
+### Passive tree — `data/tree.json`
+
+Per node: name, stats, kind (small, notable, keystone, mastery, jewel socket,
+class/ascendancy start), mastery effects, group, and links. Cut down by
+`scripts/fetch-tree.ts` (transform in `scripts/tree-extract.ts`, tested) from
+Grinding Gear Games' own export for tool authors,
+[grindinggear/skilltree-export](https://github.com/grindinggear/skilltree-export)
+— ~630 KB of its 6.5 MB. Re-run (`npm run fetch-tree`) when a league changes
+the tree; a build made for another tree version gets a warning. Read at runtime,
+like the gem data.
+
+**The order is computed, not authored — and then editable.** Path of Building
+stores a build's trees as specs, usually one per levelling milestone, and each
+is only the *set* of allocated nodes. The import (`planFromSpecs`,
+electron/profile/tree.ts) turns them into the profile's `passives`: per spec,
+the new nodes in the order to take them — from what's allocated, walk to the
+nearest notable, keystone or jewel socket the spec adds, taking every node on
+the way, then the next nearest; a mastery right after its group's first
+notable — plus the nodes the spec drops, as a respec. Ascendancy nodes are a
+separate list, two per Labyrinth. It's stored as node ids, so a guide's order
+can replace the computed one.
+
+**Which node is due** follows the points the character has: level − 1, plus
+every "You have received a Passive Skill Point." line (a Book of Skill used, not
+the quest finished) — counted per character, once each, the backscan's replays
+skipped by their timestamps (`CharacterRuns.addQuestPoint`). The next
+ascendancy points follow the Labyrinths the trials service saw beaten. Clicking
+a node copies its name for the in-game tree's search box; the renderer asks by
+node id, so it can't put arbitrary text on the clipboard.
+
 ### Build profiles — JSON, one per build
 
 **Where they live.** Every profile is its own file in `userData/profiles/`,
@@ -163,7 +194,8 @@ versions referenced from elsewhere on disk are copied in on launch and the
 references repointed.
 
 Two independent axes: `stages` is the **loadout per level range**, `gemPlan` is
-the **acquisition timeline** — where each gem comes from.
+the **acquisition timeline** — where each gem comes from. An imported build may
+also carry `passives`, the tree in order (see *Passive tree* above).
 
 ```json
 {
