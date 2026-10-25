@@ -95,10 +95,11 @@ export interface PassivesView {
   ascendancy: { labs: number; next: PassiveNodeView[] } | null
   /** the plan was made for another tree than the one shipped */
   treeMismatch: string | null
-  /** For the in-game tree's search box: the masteries still to take in the
-   *  current stage, as one quoted regex ("life mastery|axe mastery") — the
-   *  quotes keep the search from splitting it at its spaces. null: none. */
-  masteryRegex: string | null
+  /** For the in-game tree's search box: the notables, keystones and masteries
+   *  of the current stage and the two before it, as one quoted regex
+   *  ("barbarism|resolute technique|life mastery") — the quotes keep the
+   *  search from splitting it at its spaces. null: none. */
+  treeSearch: string | null
 }
 
 /** How many nodes ahead the overlay lists. */
@@ -106,6 +107,12 @@ const LOOKAHEAD = 6
 /** A respec is shown while the stage that needs it is this many points in. */
 const RESPEC_WINDOW = 3
 const KEY_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'jewel'])
+/** What the game's search boxes take; the rest is cut off (✓ owner). */
+const SEARCH_BOX_LIMIT = 250
+/** Stages before the current one the Tree button still searches. */
+const SEARCH_BACK = 2
+/** What the Tree button searches for: nodes with a name of their own. */
+const SEARCH_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'mastery'])
 
 export class TreeData {
   readonly version: string
@@ -273,18 +280,37 @@ export function passivesView(
   const ascNext = (labPoints.some(isBig) ? labPoints.filter(isBig) : towards != null ? [towards] : []).map((id) =>
     tree.view(id)
   )
-  // Mastery names repeat across the tree ("Life Mastery" sits in several
-  // places): the search lights every one, which is still where to look.
-  const masteries = due
-    ? flat
-        .slice(at)
-        .filter((s) => s.stage === due.stage && tree.node(s.id)?.kind === 'mastery')
-        .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
-    : []
-  const masteryRegex = masteries.length ? `"${[...new Set(masteries)].join('|')}"` : null
+  // The stage's targets, by name. Notables and keystones have their own;
+  // a small node's ("Strength") and a jewel socket's repeat all over the tree
+  // and would light half of it. Mastery names repeat too ("Life Mastery"), but
+  // only a handful of times — still where to look.
+  // The two stages before the current one stay in: levelling outruns placing
+  // points, and the overlay counts points, it can't see which you placed. A
+  // node the current stage refunds is out — it's going, not coming.
+  // The search box takes 250 characters and cuts the rest: the current stage
+  // goes in first, then the one before, then the one before that, each only
+  // whole and only while it fits — never half a name.
+  const dropped = new Set(due ? (plan.stages[due.stage].refund ?? []) : [])
+  const namesOf = (stage: number): string[] =>
+    flat
+      .filter((s) => s.stage === stage && !dropped.has(s.id) && SEARCH_KINDS.has(tree.node(s.id)?.kind as NodeKind))
+      .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
+  const quoted = (names: string[]): string => `"${[...new Set(names)].join('|')}"`
+  let targets: string[] = []
+  if (due) {
+    for (const name of namesOf(due.stage)) {
+      if (quoted([...targets, name]).length <= SEARCH_BOX_LIMIT) targets.push(name)
+    }
+    for (let back = 1; back <= SEARCH_BACK && due.stage - back >= 0; back++) {
+      const earlier = [...namesOf(due.stage - back), ...targets]
+      if (quoted(earlier).length > SEARCH_BOX_LIMIT) break
+      targets = earlier
+    }
+  }
+  const treeSearch = targets.length ? quoted(targets) : null
 
   return {
-    masteryRegex,
+    treeSearch,
     points,
     questPoints,
     total: flat.length,

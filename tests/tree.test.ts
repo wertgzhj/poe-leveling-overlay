@@ -209,10 +209,33 @@ test('a hand-edited passives block is checked', () => {
   assert.match(validateProfile({ ...base, passives: { stages: [] } }).errors.join(), /passives\.tree/)
 })
 
-test('the current stage\'s masteries, as one quoted regex for the tree search', () => {
+test('the Tree search: notables, keystones and masteries of this stage and the two before', () => {
   const tree = tiny()
-  const masteryPlan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6, 7, 8] }, { take: [9] }] }
-  assert.equal(passivesView(masteryPlan, tree, 1, 0, 0).masteryRegex, '"mastery"')
-  assert.equal(passivesView(masteryPlan, tree, 4, 0, 0).masteryRegex, null, 'taken already')
-  assert.equal(passivesView(masteryPlan, tree, 5, 0, 0).masteryRegex, null, 'next stage has none')
+  const searchPlan: PassivePlan = {
+    tree: '3_29',
+    stages: [{ take: [5, 6] }, { take: [7] }, { take: [8, 9] }, { take: [2, 3, 4], refund: [6] }]
+  }
+  // small nodes (c, d, a, b) left out: their names repeat all over a real tree
+  assert.equal(passivesView(searchPlan, tree, 1, 0, 0).treeSearch, '"near"', 'first stage: nothing before it')
+  assert.equal(passivesView(searchPlan, tree, 5, 0, 0).treeSearch, '"near|mastery|key"', 'placed ones stay in')
+  // stage 4: stages 2 and 3 with it, NEAR's stage too far back — and refunded anyway
+  assert.equal(passivesView(searchPlan, tree, 6, 0, 0).treeSearch, '"mastery|key|far"')
+  assert.equal(passivesView(searchPlan, tree, 99, 0, 0).treeSearch, null, 'plan done')
+})
+
+test('the Tree search fits the 250-character search box, dropping the oldest stage first', () => {
+  const long = (i: number): TreeNode => ({ name: `notable number ${i} ${'x'.repeat(40)}`, kind: 'notable', stats: [], links: [] })
+  const nodes: Record<string, TreeNode> = {}
+  for (let i = 1; i <= 12; i++) nodes[i] = long(i)
+  const tree = new TreeData({ version: '3.29.1', treeVersion: '3_29', nodes })
+  // three stages of two ~57-character names each
+  const p: PassivePlan = { tree: '3_29', stages: [{ take: [1, 2] }, { take: [3, 4] }, { take: [5, 6] }] }
+  const search = passivesView(p, tree, 5, 0, 0).treeSearch ?? ''
+  assert.ok(search.length <= 250, `${search.length} characters`)
+  assert.match(search, /number 3 .*number 4 .*number 5 .*number 6 /, 'current and previous stage whole')
+  assert.doesNotMatch(search, /number [12] /, 'the oldest stage left out')
+  // one stage longer than the box: as many whole names as fit
+  const big: PassivePlan = { tree: '3_29', stages: [{ take: [1, 2, 3, 4, 5, 6] }] }
+  const cut = passivesView(big, tree, 1, 0, 0).treeSearch ?? ''
+  assert.ok(cut.length <= 250 && cut.endsWith('x"'), 'ends on a whole name')
 })
