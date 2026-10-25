@@ -129,7 +129,8 @@ test('a finished plan has nothing next', () => {
 
 test('two ascendancy points per Labyrinth beaten', () => {
   const tree = tiny()
-  assert.deepEqual(passivesView(plan, tree, 5, 0, 0).ascendancy?.next.map((n) => n.name), ['Asc one', 'Asc two'])
+  // the small node on the way isn't listed, just the notable
+  assert.deepEqual(passivesView(plan, tree, 5, 0, 0).ascendancy?.next.map((n) => n.name), ['Asc two'])
   assert.deepEqual(passivesView(plan, tree, 5, 0, 1).ascendancy?.next, [])
 })
 
@@ -206,4 +207,12 @@ test('a hand-edited passives block is checked', () => {
     /node ids/
   )
   assert.match(validateProfile({ ...base, passives: { stages: [] } }).errors.join(), /passives\.tree/)
+})
+
+test('the current stage\'s masteries, as one quoted regex for the tree search', () => {
+  const tree = tiny()
+  const masteryPlan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6, 7, 8] }, { take: [9] }] }
+  assert.equal(passivesView(masteryPlan, tree, 1, 0, 0).masteryRegex, '"mastery"')
+  assert.equal(passivesView(masteryPlan, tree, 4, 0, 0).masteryRegex, null, 'taken already')
+  assert.equal(passivesView(masteryPlan, tree, 5, 0, 0).masteryRegex, null, 'next stage has none')
 })

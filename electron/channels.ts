@@ -76,6 +76,9 @@ export const Channels = {
   /** renderer -> main (invoke): copy a passive's name (by node id, looked up in
    *  the tree data) for the in-game tree's search box */
   clipboardCopyPassive: 'clipboard:copy-passive',
+  /** renderer -> main (invoke): copy the current tree stage's masteries as a
+   *  search regex (computed in main from the profile) */
+  clipboardCopyMasteryRegex: 'clipboard:copy-mastery-regex',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
   /** renderer -> main (invoke): current guide state */
@@ -234,6 +237,8 @@ export interface ProfileSnapshot {
   /** The stage being shown (the viewed one — see viewedIndex vs liveIndex). */
   activeStage: ResolvedStage | null
   nextStage: ResolvedStage | null
+  /** the stage before the shown one, for the ◀ button's level */
+  prevStage: ResolvedStage | null
   acquisitions: Acquisitions | null
   /** Total stages in the profile (for the ◀/▶ paging bounds). */
   stageCount: number

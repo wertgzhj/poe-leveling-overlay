@@ -392,6 +392,8 @@ export class ProfileService {
       classMismatch: muling ? null : mismatch,
       muling,
       activeStage: stage ? resolveStage(stage, stageIndex, this.gems) : null,
+      prevStage:
+        profile && stageIndex > 0 ? resolveStage(profile.stages[stageIndex - 1], stageIndex - 1, this.gems) : null,
       nextStage:
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
@@ -420,6 +422,11 @@ export class ProfileService {
     if (!plan || !this.tree) return null
     this.labsShown = this.labsDone()
     return passivesView(plan, this.tree, this.level, this.runs.questPoints(this.character), this.labsShown)
+  }
+
+  /** The current tree stage's masteries as a search regex, for the button. */
+  masteryRegex(): string | null {
+    return this.passives()?.masteryRegex ?? null
   }
 
   /** Labyrinths the tracked character has beaten (the trials service records
