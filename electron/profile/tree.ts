@@ -96,7 +96,8 @@ export interface PassivesView {
   /** the plan was made for another tree than the one shipped */
   treeMismatch: string | null
   /** For the in-game tree's search box: the notables, keystones and masteries
-   *  of the current stage and the two before it, as one quoted regex
+   *  of the current stage, the two before it and the next ones as far as
+   *  `next` reaches, as one quoted regex
    *  ("barbarism|resolute technique|life mastery") — the quotes keep the
    *  search from splitting it at its spaces. null: none. */
   treeSearch: string | null
@@ -296,10 +297,18 @@ export function passivesView(
       .filter((s) => s.stage === stage && !dropped.has(s.id) && SEARCH_KINDS.has(tree.node(s.id)?.kind as NodeKind))
       .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
   const quoted = (names: string[]): string => `"${[...new Set(names)].join('|')}"`
+  // Ahead, it reaches as far as the list shows: a notable named under "then"
+  // belongs in the search even when it's the next stage's (owner).
   let targets: string[] = []
   if (due) {
     for (const name of namesOf(due.stage)) {
       if (quoted([...targets, name]).length <= SEARCH_BOX_LIMIT) targets.push(name)
+    }
+    const lastShown = flat[Math.min(at + LOOKAHEAD, flat.length) - 1].stage
+    for (let ahead = due.stage + 1; ahead <= lastShown; ahead++) {
+      const later = [...targets, ...namesOf(ahead)]
+      if (quoted(later).length > SEARCH_BOX_LIMIT) break
+      targets = later
     }
     for (let back = 1; back <= SEARCH_BACK && due.stage - back >= 0; back++) {
       const earlier = [...namesOf(due.stage - back), ...targets]
