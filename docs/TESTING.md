@@ -237,10 +237,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      drops nodes: an orange *Respec first* box names them for its first few
      points. Beat a Labyrinth: the *Lab* line moves to the next lab's
      ascendancy notable — never a small node on the way. Click a name: *✓ copied*, and pasting it into the in-game tree's
-     search highlights that node. A stage with masteries still to take shows
-     *Masteries* next to the heading: it copies them as `"life mastery|axe
-     mastery"`, and the tree search lights exactly those (✓ owner: quoted, the
-     search reads a regex; unquoted, it splits at spaces and lights them all).
+     search highlights that node. *Tree* next to the heading copies the stage's
+     notables, keystones and masteries still to take as one regex
+     (`"barbarism|resolute technique|life mastery"`): pasted into the tree
+     search, it lights those and nothing else — no small nodes (✓ owner:
+     quoted, the search reads a regex; unquoted, it splits at spaces).
 7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a gold
    bar naming your choice; with `meta.pantheon` set, **Act 6** does the same
    (not Act 5: the Pantheon's gods are fought in Acts 6–10). The

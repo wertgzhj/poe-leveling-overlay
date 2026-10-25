@@ -144,8 +144,8 @@ export function registerIpc(
     return true
   })
 
-  ipcMain.handle(Channels.clipboardCopyMasteryRegex, (): boolean => {
-    const regex = profile.masteryRegex()
+  ipcMain.handle(Channels.clipboardCopyTreeSearch, (): boolean => {
+    const regex = profile.treeSearch()
     if (!regex) return false
     clipboard.writeText(regex)
     return true

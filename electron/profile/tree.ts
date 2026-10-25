@@ -95,10 +95,11 @@ export interface PassivesView {
   ascendancy: { labs: number; next: PassiveNodeView[] } | null
   /** the plan was made for another tree than the one shipped */
   treeMismatch: string | null
-  /** For the in-game tree's search box: the masteries still to take in the
-   *  current stage, as one quoted regex ("life mastery|axe mastery") — the
-   *  quotes keep the search from splitting it at its spaces. null: none. */
-  masteryRegex: string | null
+  /** For the in-game tree's search box: the notables, keystones and masteries
+   *  still to take in the current stage, as one quoted regex ("barbarism|
+   *  resolute technique|life mastery") — the quotes keep the search from
+   *  splitting it at its spaces. null: none. */
+  treeSearch: string | null
 }
 
 /** How many nodes ahead the overlay lists. */
@@ -106,6 +107,8 @@ const LOOKAHEAD = 6
 /** A respec is shown while the stage that needs it is this many points in. */
 const RESPEC_WINDOW = 3
 const KEY_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'jewel'])
+/** What the Tree button searches for: nodes with a name of their own. */
+const SEARCH_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'mastery'])
 
 export class TreeData {
   readonly version: string
@@ -273,18 +276,20 @@ export function passivesView(
   const ascNext = (labPoints.some(isBig) ? labPoints.filter(isBig) : towards != null ? [towards] : []).map((id) =>
     tree.view(id)
   )
-  // Mastery names repeat across the tree ("Life Mastery" sits in several
-  // places): the search lights every one, which is still where to look.
-  const masteries = due
+  // The stage's targets, by name. Notables and keystones have their own;
+  // a small node's ("Strength") and a jewel socket's repeat all over the tree
+  // and would light half of it. Mastery names repeat too ("Life Mastery"), but
+  // only a handful of times — still where to look.
+  const targets = due
     ? flat
         .slice(at)
-        .filter((s) => s.stage === due.stage && tree.node(s.id)?.kind === 'mastery')
+        .filter((s) => s.stage === due.stage && SEARCH_KINDS.has(tree.node(s.id)?.kind as NodeKind))
         .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
     : []
-  const masteryRegex = masteries.length ? `"${[...new Set(masteries)].join('|')}"` : null
+  const treeSearch = targets.length ? `"${[...new Set(targets)].join('|')}"` : null
 
   return {
-    masteryRegex,
+    treeSearch,
     points,
     questPoints,
     total: flat.length,

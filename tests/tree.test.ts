@@ -209,10 +209,11 @@ test('a hand-edited passives block is checked', () => {
   assert.match(validateProfile({ ...base, passives: { stages: [] } }).errors.join(), /passives\.tree/)
 })
 
-test('the current stage\'s masteries, as one quoted regex for the tree search', () => {
+test('the current stage\'s notables, keystones and masteries, as one quoted regex for the tree search', () => {
   const tree = tiny()
-  const masteryPlan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6, 7, 8] }, { take: [9] }] }
-  assert.equal(passivesView(masteryPlan, tree, 1, 0, 0).masteryRegex, '"mastery"')
-  assert.equal(passivesView(masteryPlan, tree, 4, 0, 0).masteryRegex, null, 'taken already')
-  assert.equal(passivesView(masteryPlan, tree, 5, 0, 0).masteryRegex, null, 'next stage has none')
+  const searchPlan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6, 7, 8, 9] }, { take: [2] }] }
+  // small nodes (c, d) left out: their names repeat all over a real tree
+  assert.equal(passivesView(searchPlan, tree, 1, 0, 0).treeSearch, '"near|mastery|key"')
+  assert.equal(passivesView(searchPlan, tree, 4, 0, 0).treeSearch, '"key"', 'what\'s taken drops out')
+  assert.equal(passivesView(searchPlan, tree, 6, 0, 0).treeSearch, null, 'the next stage has only a small node')
 })

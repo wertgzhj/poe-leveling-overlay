@@ -424,9 +424,9 @@ export class ProfileService {
     return passivesView(plan, this.tree, this.level, this.runs.questPoints(this.character), this.labsShown)
   }
 
-  /** The current tree stage's masteries as a search regex, for the button. */
-  masteryRegex(): string | null {
-    return this.passives()?.masteryRegex ?? null
+  /** The current tree stage's targets as a search regex, for the Tree button. */
+  treeSearch(): string | null {
+    return this.passives()?.treeSearch ?? null
   }
 
   /** Labyrinths the tracked character has beaten (the trials service records

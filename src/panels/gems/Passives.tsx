@@ -18,7 +18,7 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
       <div className="mb-1 flex items-baseline justify-between gap-2">
         <span className="flex items-baseline gap-1.5">
           <span className={HEADING + 'text-overlay-muted'}>Passives</span>
-          {view.masteryRegex && <MasteryButton regex={view.masteryRegex} />}
+          {view.treeSearch && <TreeButton regex={view.treeSearch} />}
         </span>
         <span className="truncate text-[10px] text-overlay-muted" title={pointsTitle}>
           {/* the PoB tree the next points build towards */}
@@ -72,12 +72,13 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
 
 const LAB_NAMES = ['Normal', 'Cruel', 'Merciless', 'Eternal']
 
-/** Copies this stage's masteries as one regex for the tree's search box — it
- *  lights them all at once instead of a copy per mastery. */
-function MasteryButton({ regex }: { regex: string }): React.JSX.Element {
+/** Copies this stage's notables, keystones and masteries as one regex for the
+ *  tree's search box — it lights the stage's targets at once instead of a copy
+ *  per node. Small nodes aren't in it: their names repeat all over the tree. */
+function TreeButton({ regex }: { regex: string }): React.JSX.Element {
   const [flash, setFlash] = useState(false)
   const copy = (): void => {
-    void window.overlay?.copyMasteryRegex().then((ok) => {
+    void window.overlay?.copyTreeSearch().then((ok) => {
       if (!ok) return
       setFlash(true)
       window.setTimeout(() => setFlash(false), 1200)
@@ -86,12 +87,12 @@ function MasteryButton({ regex }: { regex: string }): React.JSX.Element {
   return (
     <button
       onClick={copy}
-      title={`Copy, then paste into the passive tree's search — it lights this stage's masteries:\n${regex}`}
+      title={`Copy, then paste into the passive tree's search — it lights this stage's notables and masteries:\n${regex}`}
       className={
         'rounded bg-white/10 px-1.5 text-[10px] hover:bg-white/15 ' + (flash ? 'text-ok' : 'text-overlay-muted hover:text-overlay-text')
       }
     >
-      {flash ? '✓ copied' : 'Masteries'}
+      {flash ? '✓ copied' : 'Tree'}
     </button>
   )
 }
