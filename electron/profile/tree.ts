@@ -96,9 +96,9 @@ export interface PassivesView {
   /** the plan was made for another tree than the one shipped */
   treeMismatch: string | null
   /** For the in-game tree's search box: the notables, keystones and masteries
-   *  still to take in the current stage, as one quoted regex ("barbarism|
-   *  resolute technique|life mastery") — the quotes keep the search from
-   *  splitting it at its spaces. null: none. */
+   *  of the current stage and the two before it, as one quoted regex
+   *  ("barbarism|resolute technique|life mastery") — the quotes keep the
+   *  search from splitting it at its spaces. null: none. */
   treeSearch: string | null
 }
 
@@ -107,6 +107,8 @@ const LOOKAHEAD = 6
 /** A respec is shown while the stage that needs it is this many points in. */
 const RESPEC_WINDOW = 3
 const KEY_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'jewel'])
+/** Stages before the current one the Tree button still searches. */
+const SEARCH_BACK = 2
 /** What the Tree button searches for: nodes with a name of their own. */
 const SEARCH_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'mastery'])
 
@@ -280,10 +282,14 @@ export function passivesView(
   // a small node's ("Strength") and a jewel socket's repeat all over the tree
   // and would light half of it. Mastery names repeat too ("Life Mastery"), but
   // only a handful of times — still where to look.
+  // The two stages before the current one stay in: levelling outruns placing
+  // points, and the overlay counts points, it can't see which you placed. A
+  // node the current stage refunds is out — it's going, not coming.
+  const dropped = new Set(due ? (plan.stages[due.stage].refund ?? []) : [])
   const targets = due
     ? flat
-        .slice(at)
-        .filter((s) => s.stage === due.stage && SEARCH_KINDS.has(tree.node(s.id)?.kind as NodeKind))
+        .filter((s) => s.stage >= due.stage - SEARCH_BACK && s.stage <= due.stage && !dropped.has(s.id))
+        .filter((s) => SEARCH_KINDS.has(tree.node(s.id)?.kind as NodeKind))
         .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
     : []
   const treeSearch = targets.length ? `"${[...new Set(targets)].join('|')}"` : null

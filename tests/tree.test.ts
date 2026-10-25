@@ -209,11 +209,16 @@ test('a hand-edited passives block is checked', () => {
   assert.match(validateProfile({ ...base, passives: { stages: [] } }).errors.join(), /passives\.tree/)
 })
 
-test('the current stage\'s notables, keystones and masteries, as one quoted regex for the tree search', () => {
+test('the Tree search: notables, keystones and masteries of this stage and the two before', () => {
   const tree = tiny()
-  const searchPlan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6, 7, 8, 9] }, { take: [2] }] }
-  // small nodes (c, d) left out: their names repeat all over a real tree
-  assert.equal(passivesView(searchPlan, tree, 1, 0, 0).treeSearch, '"near|mastery|key"')
-  assert.equal(passivesView(searchPlan, tree, 4, 0, 0).treeSearch, '"key"', 'what\'s taken drops out')
-  assert.equal(passivesView(searchPlan, tree, 6, 0, 0).treeSearch, null, 'the next stage has only a small node')
+  const searchPlan: PassivePlan = {
+    tree: '3_29',
+    stages: [{ take: [5, 6] }, { take: [7] }, { take: [8, 9] }, { take: [2, 3, 4], refund: [6] }]
+  }
+  // small nodes (c, d, a, b) left out: their names repeat all over a real tree
+  assert.equal(passivesView(searchPlan, tree, 1, 0, 0).treeSearch, '"near"', 'first stage: nothing before it')
+  assert.equal(passivesView(searchPlan, tree, 5, 0, 0).treeSearch, '"near|mastery|key"', 'placed ones stay in')
+  // stage 4: stages 2 and 3 with it, NEAR's stage too far back — and refunded anyway
+  assert.equal(passivesView(searchPlan, tree, 6, 0, 0).treeSearch, '"mastery|key|far"')
+  assert.equal(passivesView(searchPlan, tree, 99, 0, 0).treeSearch, null, 'plan done')
 })
