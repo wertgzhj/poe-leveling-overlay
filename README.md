@@ -145,8 +145,9 @@ Two things to know:
   is private, either make it public, or point `publish.repo` in `electron-builder.yml` at
   a separate **public** releases repo. Without a reachable feed the app still runs — it
   just reports "Couldn't check" in Settings and never nags.
-- Auto-update targets the **installer**; the **portable** exe doesn't self-update
-  (download the new portable exe when you want to move up). Dev/unpackaged runs show
+- Auto-update targets the **installer**; the **portable** exe doesn't self-update:
+  it checks, then says a new version is out (Settings → Updates, and the version
+  corner) with a button to the download page. Dev/unpackaged runs show
   updates as *disabled*.
 
 ## Setup

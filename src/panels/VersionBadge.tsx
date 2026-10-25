@@ -24,6 +24,18 @@ export function VersionBadge(): React.JSX.Element | null {
     )
   }
 
+  if (update?.state === 'available') {
+    return (
+      <button
+        onClick={() => window.overlay?.openReleases()}
+        title="A new version is out — this portable copy doesn't update itself. Click to open the download page."
+        className="absolute bottom-1 right-2 rounded-full border border-overlay-accent/50 bg-overlay-accent/20 px-2 py-0.5 text-[10px] font-medium text-overlay-accent hover:bg-overlay-accent/35"
+      >
+        v{appVersion} → v{update.version} ↗
+      </button>
+    )
+  }
+
   if (update?.state === 'downloading') {
     return (
       <span className="pointer-events-none absolute bottom-1 right-2 text-[10px] text-overlay-accent/90">

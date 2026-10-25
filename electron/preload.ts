@@ -97,6 +97,7 @@ const api = {
     subscribe(Channels.updateStatus, cb),
   checkForUpdates: (): void => ipcRenderer.send(Channels.updateCheck),
   installUpdate: (): void => ipcRenderer.send(Channels.updateInstall),
+  openReleases: (): void => ipcRenderer.send(Channels.updateOpenReleases),
 
   openEditor: (tab?: string): void => ipcRenderer.send(Channels.editorOpen, tab),
   onEditorFocusTab: (cb: (tab: string) => void): (() => void) => subscribe(Channels.editorFocusTab, cb),
