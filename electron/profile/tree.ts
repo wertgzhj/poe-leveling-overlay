@@ -90,7 +90,8 @@ export interface PassivesView {
   next: PassiveNodeView[]
   /** the nodes to refund before the next ones, when a respec is due */
   refund: PassiveNodeView[]
-  /** the next ascendancy nodes and how many Labyrinths that is after */
+  /** the ascendancy notables the next Labyrinth's points go to, and how many
+   *  Labyrinths are beaten */
   ascendancy: { labs: number; next: PassiveNodeView[] } | null
   /** the plan was made for another tree than the one shipped */
   treeMismatch: string | null
@@ -259,8 +260,15 @@ export function passivesView(
     if (stage.refund?.length && at - stageStart < RESPEC_WINDOW) refund = stage.refund.map((id) => tree.view(id))
   }
 
+  // Of a Labyrinth's two points, only the notables matter to read; the small
+  // node on the way is just the way. Two small ones: the notable they lead to.
   const asc = plan.ascendancy ?? []
-  const ascNext = asc.slice(labs * 2, labs * 2 + 2).map((id) => tree.view(id))
+  const isBig = (id: number): boolean => tree.node(id)?.kind !== 'small'
+  const labPoints = asc.slice(labs * 2, labs * 2 + 2)
+  const towards = labPoints.length ? asc.slice(labs * 2).find(isBig) : undefined
+  const ascNext = (labPoints.some(isBig) ? labPoints.filter(isBig) : towards != null ? [towards] : []).map((id) =>
+    tree.view(id)
+  )
   return {
     points,
     questPoints,

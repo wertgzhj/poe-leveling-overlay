@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { HEADING } from '../../lib/ui'
 
-// The passive tree under the gems: the node for your next point, the few after
+// The passive tree under the gems: the node for your next point (its stats in
+// the tooltip — under it they were more than anyone reads mid-run), the few after
 // it, a respec when one is due, and the next ascendancy points. Which node is
 // due follows your points — (level - 1) plus the Books of Skill you used — the
 // way the gem stage follows your level. Clicking a name copies it, to paste
@@ -44,13 +45,6 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
             </span>
             <NodeName node={due} strong />
           </div>
-          {due.stats.length > 0 && (
-            <ul className="mb-1 ml-3.5 text-[10px] leading-snug text-overlay-muted">
-              {due.stats.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          )}
           {after.length > 0 && (
             <p className="ml-3.5 text-[10px] leading-snug text-overlay-muted">
               then <NodeList nodes={after} arrows />

@@ -129,7 +129,8 @@ test('a finished plan has nothing next', () => {
 
 test('two ascendancy points per Labyrinth beaten', () => {
   const tree = tiny()
-  assert.deepEqual(passivesView(plan, tree, 5, 0, 0).ascendancy?.next.map((n) => n.name), ['Asc one', 'Asc two'])
+  // the small node on the way isn't listed, just the notable
+  assert.deepEqual(passivesView(plan, tree, 5, 0, 0).ascendancy?.next.map((n) => n.name), ['Asc two'])
   assert.deepEqual(passivesView(plan, tree, 5, 0, 1).ascendancy?.next, [])
 })
 

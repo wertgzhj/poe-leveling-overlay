@@ -230,13 +230,13 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      again — not the mule's level 2. That used to stick until a restart. A
      partymate's level-up must still never move tracking.
    - **Passives.** Import a PoB build with several trees (one per milestone):
-     under the gems, *Passives* names the node for your next point, its stats,
-     and the few after it, with the points counted top right (hover: level − 1
+     under the gems, *Passives* names the node for your next point (its stats in
+     the tooltip) and the few after it, with the points counted top right (hover: level − 1
      plus Books of Skill). Level up: the next node moves on. Use a Book of Skill:
      it moves one more, and a restart doesn't count it twice. Reach a tree that
      drops nodes: an orange *Respec first* box names them for its first few
-     points. Beat a Labyrinth: the *Lab* line moves to the next two ascendancy
-     nodes. Click a name: *✓ copied*, and pasting it into the in-game tree's
+     points. Beat a Labyrinth: the *Lab* line moves to the next lab's
+     ascendancy notable — never a small node on the way. Click a name: *✓ copied*, and pasting it into the in-game tree's
      search highlights that node.
 7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a gold
    bar naming your choice; with `meta.pantheon` set, **Act 6** does the same
