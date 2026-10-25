@@ -58,8 +58,9 @@ Build the change as a throwaway dev build that never touches the update feed:
 
 That build is version `0.0.0` and is an **artifact, not a release** — your
 installed app and the auto-update feed are untouched. Delete it when you're done.
-(The portable exe never self-updates, so it can't accidentally pull the live
-release over your test.)
+(The portable exe never downloads or installs an update — it only says one is
+out — so it can't pull the live release over your test. Before v0.31.1 it did
+download the installer and ran it on quit.)
 
 ### See what a change looks like (render check)
 

@@ -241,6 +241,7 @@ export function registerIpc(
   ipcMain.handle(Channels.updateGet, () => update.snapshot())
   ipcMain.on(Channels.updateCheck, () => update.check())
   ipcMain.on(Channels.updateInstall, () => update.install())
+  ipcMain.on(Channels.updateOpenReleases, () => update.openReleases())
 
   ipcMain.handle(Channels.pobImport, async (_e, input: unknown): Promise<PobImportResponse> => {
     if (typeof input !== 'string' || !input.trim()) {

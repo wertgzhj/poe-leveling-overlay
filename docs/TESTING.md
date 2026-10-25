@@ -296,6 +296,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    runs report updates as *disabled*; an unreachable feed reports *Couldn't
    check* and never nags.
 
+   Run an older **portable** exe: Settings → Updates says *vX is out*, with
+   *Open download page* (opens the Releases page in the browser), and the
+   version badge reads *vOld → vX ↗*. Nothing downloads, and quitting it
+   installs nothing — no new Start Menu entry, no installed copy updated.
+
    Check for updates in the few minutes **after publishing a release, before
    its build finishes**: Settings must say *vX is still being published* in
    ordinary text — not red, no `!` on the version badge. And whatever goes

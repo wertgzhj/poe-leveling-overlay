@@ -5,12 +5,16 @@
 // download a newer version in the background, then show a "restart to update"
 // prompt — one click installs. Nobody has to watch GitHub.
 //
+// The portable exe only checks: electron-updater's feed is the installer, and
+// installing it on quit would turn a portable copy into an installed one behind
+// the player's back. It says a newer version is out and links the Releases page.
+//
 // Only runs in a packaged build: unpackaged/dev has no app-update.yml, so we
 // report `disabled` and never touch the network. All state is pushed to the
 // renderer so the overlay can show progress; nothing here is fatal — a
 // missing/unreachable feed becomes an `error` status, not a crash.
 
-import { app } from 'electron'
+import { app, shell } from 'electron'
 import electronUpdater from 'electron-updater'
 import { Channels, type UpdateStatus } from '../channels.ts'
 import { classifyUpdateError } from './errors.ts'
@@ -22,6 +26,10 @@ const { autoUpdater } = electronUpdater
 const RECHECK_MS = 6 * 60 * 60 * 1000
 // Let the app settle before the first check (don't compete with startup work).
 const FIRST_CHECK_MS = 10 * 1000
+const RELEASES_URL = 'https://github.com/wertgzhj/poe-leveling-overlay/releases/latest'
+
+/** electron-builder's portable launcher sets this before starting the app. */
+const isPortable = (): boolean => !!process.env['PORTABLE_EXECUTABLE_DIR']
 
 export class UpdateService {
   private readonly overlay: OverlayController
@@ -39,12 +47,17 @@ export class UpdateService {
       return
     }
 
-    autoUpdater.autoDownload = true
-    autoUpdater.autoInstallOnAppQuit = true
+    const portable = isPortable()
+    autoUpdater.autoDownload = !portable
+    autoUpdater.autoInstallOnAppQuit = !portable
     // We drive our own UI, so don't let electron-updater pop native dialogs.
     autoUpdater.on('checking-for-update', () => this.set({ state: 'checking' }))
     autoUpdater.on('update-available', (info) =>
-      this.set({ state: 'downloading', version: info.version, percent: 0 })
+      this.set(
+        portable
+          ? { state: 'available', version: info.version }
+          : { state: 'downloading', version: info.version, percent: 0 }
+      )
     )
     autoUpdater.on('update-not-available', (info) =>
       this.set({ state: 'current', version: info.version })
@@ -86,6 +99,11 @@ export class UpdateService {
     // Per-user install (perMachine: false) needs no UAC, so a silent reinstall +
     // relaunch is the "effortless" path: click Restart, it swaps and reopens.
     autoUpdater.quitAndInstall(true, true)
+  }
+
+  /** The Releases page, for a portable copy to fetch its next version from. */
+  openReleases(): void {
+    void shell.openExternal(RELEASES_URL)
   }
 
   /** A failed check, said the way a player can use it (see errors.ts). */

@@ -547,6 +547,8 @@ function UpdateRow(): React.JSX.Element {
         return `Downloading v${update.version}… ${update.percent}%`
       case 'ready':
         return `v${update.version} downloaded — restart to finish.`
+      case 'available':
+        return `v${update.version} is out. This portable copy doesn't update itself — download the new one.`
       case 'publishing':
         return `${update.version ? `v${update.version}` : 'A new version'} is still being published — check again in a few minutes.`
       case 'error':
@@ -566,6 +568,10 @@ function UpdateRow(): React.JSX.Element {
             className={button('primary', 'md')}
           >
             Restart &amp; update
+          </button>
+        ) : state === 'available' ? (
+          <button onClick={() => window.overlay?.openReleases()} className={button('primary', 'md')}>
+            Open download page
           </button>
         ) : (
           <button

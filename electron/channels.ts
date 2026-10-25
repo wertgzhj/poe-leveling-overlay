@@ -144,7 +144,9 @@ export const Channels = {
   /** renderer -> main: check for updates now */
   updateCheck: 'update:check',
   /** renderer -> main: quit and install a downloaded update */
-  updateInstall: 'update:install'
+  updateInstall: 'update:install',
+  /** renderer -> main: open the Releases page (portable copies update by hand) */
+  updateOpenReleases: 'update:open-releases'
 } as const
 
 export interface OverlayState {
@@ -322,6 +324,8 @@ export type UpdateStatus =
   | { state: 'current'; version: string }
   | { state: 'downloading'; version: string; percent: number }
   | { state: 'ready'; version: string }
+  /** A newer release exists; the portable exe doesn't install it itself. */
+  | { state: 'available'; version: string }
   /** A newer release exists but its files aren't attached yet (the build is
    *  still running). Retried on the next check; not a failure. */
   | { state: 'publishing'; version: string | null }
