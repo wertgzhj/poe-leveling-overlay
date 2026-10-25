@@ -229,6 +229,15 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      it **levels up**, the strip, the stage and the Gems tab must be your main's
      again — not the mule's level 2. That used to stick until a restart. A
      partymate's level-up must still never move tracking.
+   - **Passives.** Import a PoB build with several trees (one per milestone):
+     under the gems, *Passives* names the node for your next point, its stats,
+     and the few after it, with the points counted top right (hover: level − 1
+     plus Books of Skill). Level up: the next node moves on. Use a Book of Skill:
+     it moves one more, and a restart doesn't count it twice. Reach a tree that
+     drops nodes: an orange *Respec first* box names them for its first few
+     points. Beat a Labyrinth: the *Lab* line moves to the next two ascendancy
+     nodes. Click a name: *✓ copied*, and pasting it into the in-game tree's
+     search highlights that node.
 7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a gold
    bar naming your choice; with `meta.pantheon` set, **Act 6** does the same
    (not Act 5: the Pantheon's gods are fought in Acts 6–10). The
@@ -429,6 +438,8 @@ that once: a table everyone believed, wrong in two tiers.
 | Run timer: "You have received a Passive Skill Point." is a Book of Skill being used — a quest's reward claimed, not the quest done | `passivePoint` pattern | ✓ log (owner: the quest gives the book, using it gives the point). A book used after Kitava isn't in the run |
 | Run timer: the game's AFK toggle is logged, ON and OFF | `afk` pattern | ✓ log |
 | Run timer: a mule never leaves the Strand and Lioneye's Watch, nor levels past 3 — so either says a new character is a real run, and the old character's level-up or an Act 2+ zone says it was a mule | `RunTimer.onGenerated`, `onLevelUp` | ✓ log — ten finished campaigns, none split or merged by a mule |
+| Passives: "You have received a Passive Skill Point." is logged when a Book of Skill is used, once per point; the quest finishing logs nothing of it | `passivePoint` pattern, `addQuestPoint` | ✓ owner, ✓ log |
+| Passives: a PoB tree spec lists node ids the way GGG's export numbers them, and masteryEffects as `{mastery,effect}` pairs | `readTree` (pob.ts) | ✓ every node of a real 11-spec Berserker build found in the 3.29 export |
 | Run timer: a Labyrinth's split runs from the first lab area of the stretch (the Aspirants' Plaza, `Labyrinth_Airlock`) to Izaro's death line, and its row sits after the act it was beaten in | `labSplit` | ✓ log — every lab in the ten finished campaigns: 4–8 minutes each, Normal mostly in Act 4 |
 | Run timer: another player coming into your instance logs `<name> has joined the area.`, leaving it `<name> has left the area.` — and one who leaves without having come in was there before you: you went to them. In a campaign zone only a party member can be; towns have passers-by, hideouts trade visitors, so neither counts. A partymate's level-up or death is logged only when they're in your instance too (✓ log: none of 59 level-ups and 69 deaths in a town or hideout), which covers a zone you went to them in and left first — that logs neither joined nor left; a short stay where nothing of the kind happens leaves no trace. Three zones or more shared in a run (`PARTY_MIN_ZONES`) is someone you played it with | `areaPresence` pattern, `metHere`, `partyOf` | ✓ log — the four party campaigns: 52–89 zones shared per partymate; the solo ones: none, or one |
 | Run timer: importing a whole log finds the same runs the live timer would have, and only finished ones are kept | `LogImporter`, `RunTimer.mergeRuns` | ✓ log — the two-year capture yields exactly its ten finished campaigns, in 1.4 s for 99 MB |
@@ -437,6 +448,14 @@ that once: a table everyone believed, wrong in two tiers.
 | Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
 
 ## Known limitations
+
+- **The passive order within a tree is a rule, not a guide.** PoB only says
+  which nodes a tree has; the import takes the nearest notable first. Where a
+  build means another order — a notable rushed past a closer one — the stored
+  `passives` node ids are the place to change it, until the editor can.
+- **Passive points are counted, not read.** The game logs Books of Skill, not
+  your tree, so a point you refunded with a regret orb or placed elsewhere
+  isn't seen; the list assumes the plan was followed.
 
 - **English clients only.** Two of the three tracked log lines are localized by
   the game, and only `data/log-patterns/en.json` ships. Another language is

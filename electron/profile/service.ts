@@ -17,6 +17,7 @@ import { join } from 'node:path'
 import { parseProfile, validateProfile, baseClassOf, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
 import { godsFallen, godsFor, isHere, whereIs } from './pantheon.ts'
+import { TreeData, passivesView, type TreeFile } from './tree.ts'
 import {
   activeStageIndex,
   actFromAreaId,
@@ -52,6 +53,7 @@ import {
   type EditorProfileLoad,
   type EditorSaveResult,
   type PantheonStatus,
+  type PassivesView,
   type ProfileSnapshot
 } from '../channels.ts'
 import { CharacterRuns } from './run.ts'
@@ -67,6 +69,11 @@ export class ProfileService {
   /** Set when gems.json couldn't be loaded — surfaced in the Gems tab, because
    *  silently colourless gems with no sources look like a data gap, not a bug. */
   private readonly gemDataError: string | null
+  /** The passive tree (data/tree.json, read at runtime like gems.json); null
+   *  when it couldn't be read — the import then says so. */
+  readonly tree: TreeData | null
+  /** Labyrinths beaten by the tracked character, as last shown. */
+  private labsShown = 0
   private profile: Profile | null = null
   private errors: string[] = []
   private level: number | null = null
@@ -99,6 +106,7 @@ export class ProfileService {
     const loaded = loadGemData()
     this.gems = loaded.gems
     this.gemDataError = loaded.error
+    this.tree = loadTreeData()
     for (const [cls, names] of Object.entries(startingGemsJson.classes as Record<string, string[]>)) {
       this.startingByClass.set(cls, new Set(names.map(normalizeGemName)))
     }
@@ -117,10 +125,17 @@ export class ProfileService {
       const moved = this.runs.noteAct(this.character, actFromAreaId(area.areaId))
       // Walking into (or out of) a Pantheon god's zone changes the hint.
       const godHere = godsFor(this.profile?.meta.pantheon).some((g) => isHere(g, area.areaId))
-      if ((moved || godHere || this.godWasHere) && !reloaded) this.push()
+      // Out of a Labyrinth's finale: the ascendancy points it gave.
+      const labsMoved = this.labsDone() !== this.labsShown
+      if ((moved || godHere || this.godWasHere || labsMoved) && !reloaded) this.push()
       this.godWasHere = godHere
     })
     log.addFreshCharacterListener((name) => this.forgetRun(name))
+    // A Book of Skill used: one more passive point to place.
+    log.addLineListener((stamp, ev) => {
+      if (ev?.kind !== 'passivePoint') return
+      if (this.runs.addQuestPoint(this.character, stamp.wall, stamp.tick) && this.profile?.passives) this.push()
+    })
     // Sin bids each god farewell as it falls: tick its power, whichever god it
     // is — a profile picked later finds it already unlocked.
     log.addSinListener((line) => {
@@ -386,6 +401,7 @@ export class ProfileService {
       viewedIndex: stageIndex,
       liveIndex,
       choiceDue: this.runs.choiceDue(this.character, this.profile?.meta),
+      passives: this.passives(),
       pantheon: this.pantheonStatus(),
       library: this.library,
       activeId: this.activeId(),
@@ -396,6 +412,21 @@ export class ProfileService {
           ? { options, chosen: this.chosenMule(profile)?.gem ?? null }
           : null
     }
+  }
+
+  /** Where the profile's passive tree stands for the tracked character. */
+  private passives(): PassivesView | null {
+    const plan = this.profile?.passives
+    if (!plan || !this.tree) return null
+    this.labsShown = this.labsDone()
+    return passivesView(plan, this.tree, this.level, this.runs.questPoints(this.character), this.labsShown)
+  }
+
+  /** Labyrinths the tracked character has beaten (the trials service records
+   *  them from Izaro's death line). */
+  private labsDone(): number {
+    if (!this.character) return 0
+    return store.get('trialsCompletedLabs')[this.character]?.length ?? 0
   }
 
   /** The acquisition views for a stage, recomputed only when an input actually
@@ -587,5 +618,16 @@ function loadGemData(): { gems: GemData; error: string | null } {
     return { gems: new GemData(gems), error: null }
   } catch (e) {
     return { gems: new GemData({}), error: `could not read gem data (${path}): ${(e as Error).message}` }
+  }
+}
+
+/** data/tree.json, shipped as a resource next to gems.json. */
+function loadTreeData(): TreeData | null {
+  const path = app.isPackaged ? join(process.resourcesPath, 'tree.json') : join(app.getAppPath(), 'data', 'tree.json')
+  try {
+    return new TreeData(JSON.parse(readFileSync(path, 'utf8')) as TreeFile)
+  } catch (e) {
+    console.warn(`[profile] could not read the passive tree (${path}): ${(e as Error).message}`)
+    return null
   }
 }

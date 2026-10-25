@@ -30,6 +30,11 @@ semi-automatically from a Path of Building import.
   name in the tooltip.
 - **Imports your Path of Building build** — paste an export code or a `pobb.in`
   link and it writes the stages for you.
+- **Says which passive to take next.** A build's PoB trees (one per levelling
+  milestone) become an ordered list: under the gems, the node for your next
+  point — by level and the Books of Skill you used — with the few after it, a
+  respec when the build drops nodes, and the next ascendancy points after each
+  Labyrinth. Click a name to copy it for the in-game tree's search box.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
   you finish it, telling you when a Labyrinth is ready to run, and noticing when
   you've beaten it.

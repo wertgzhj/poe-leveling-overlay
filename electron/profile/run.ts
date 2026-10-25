@@ -29,6 +29,15 @@ export interface RunData {
   /** The Pantheon powers this character has unlocked ("Soul of Tukohama"),
    *  ticked when Sin bids its god farewell, or by hand. */
   pantheonUnlocked: Record<string, string[]>
+  questPoints: Record<string, QuestPoints>
+}
+
+/** The passive points a character got from Books of Skill, and when the last
+ *  one was logged: lines up to then are ones already counted. */
+export interface QuestPoints {
+  count: number
+  wall: number
+  tick: number | null
 }
 
 export interface RunStore {
@@ -81,6 +90,30 @@ export class CharacterRuns {
     this.store.set('actReached', { ...this.store.get('actReached'), [name]: 1 })
     this.store.set('dismissedChoices', without(this.store.get('dismissedChoices'), name))
     this.store.set('pantheonUnlocked', without(this.store.get('pantheonUnlocked'), name))
+    // Zero from now on: an older namesake's Book of Skill, replayed by the
+    // backscan, is from before this character existed.
+    this.store.set('questPoints', { ...this.store.get('questPoints'), [name]: { count: 0, wall: Date.now(), tick: null } })
+  }
+
+  /** Book of Skill points this character used. */
+  questPoints(name: string | null): number {
+    if (!name) return 0
+    return this.store.get('questPoints')[name]?.count ?? 0
+  }
+
+  /**
+   * "You have received a Passive Skill Point." for this character, written at
+   * `wall`/`tick`. A line at or before the last one counted is the backscan
+   * replaying it after a restart, and doesn't count again. Returns true when
+   * it counted.
+   */
+  addQuestPoint(name: string | null, wall: number, tick: number | null): boolean {
+    if (!name) return false
+    const map = this.store.get('questPoints')
+    const last = map[name]
+    if (last && (wall < last.wall || (wall === last.wall && (tick ?? 0) <= (last.tick ?? 0)))) return false
+    this.store.set('questPoints', { ...map, [name]: { count: (last?.count ?? 0) + 1, wall, tick } })
+    return true
   }
 
   /** The Pantheon powers this character has unlocked. */

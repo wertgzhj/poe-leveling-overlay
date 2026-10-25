@@ -137,6 +137,13 @@ export function registerIpc(
     return true
   })
 
+  ipcMain.handle(Channels.clipboardCopyPassive, (_e, id: unknown): boolean => {
+    const name = typeof id === 'number' ? profile.tree?.node(id)?.name : undefined
+    if (!name) return false
+    clipboard.writeText(name)
+    return true
+  })
+
   ipcMain.handle(Channels.guideGet, () => guide.snapshot())
   ipcMain.on(Channels.guideToggleStep, (_e, stepId: unknown) => {
     if (typeof stepId === 'string') guide.toggleStep(stepId)
@@ -249,7 +256,8 @@ export function registerIpc(
     }
     const resolved = await resolvePobInput(input)
     if (resolved.error) return { ok: false, warnings: [], errors: [resolved.error] }
-    const result = resolved.xml ? importPobXml(resolved.xml) : importPobCode(resolved.code as string)
+    const opts = { tree: profile.tree }
+    const result = resolved.xml ? importPobXml(resolved.xml, opts) : importPobCode(resolved.code as string, opts)
     if (!result.profile) return { ok: false, warnings: result.warnings, errors: result.errors }
     const added = profile.applyImport(result.profile)
     if (!added.ok) return { ok: false, warnings: result.warnings, errors: added.errors }

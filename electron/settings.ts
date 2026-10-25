@@ -1,5 +1,6 @@
 import Store from 'electron-store'
 import type { TrackerSnapshot } from './log/tracker.ts'
+import type { QuestPoints } from './profile/run.ts'
 
 // Persistent, user-editable settings. electron-store writes JSON into the OS
 // userData folder. No personal data beyond local file paths
@@ -100,6 +101,9 @@ interface StoreSchema extends AppSettings {
   /** character -> build decisions whose reminder was acknowledged ("bandit",
    *  "pantheon"). One-shot choices, so the notice must not come back. */
   /** character -> Pantheon powers ticked as unlocked (see CharacterRuns). */
+  /** character -> Book of Skill points used, and the last such line counted
+   *  (the backscan replays lines already seen). */
+  questPoints: Record<string, QuestPoints>
   pantheonUnlocked: Record<string, string[]>
   dismissedChoices: Record<string, string[]>
   /** character -> the gem you mule on it, or null for none. Absent = the
@@ -140,6 +144,7 @@ const defaults: StoreSchema = {
   actReached: {},
   dismissedChoices: {},
   pantheonUnlocked: {},
+  questPoints: {},
   muleByCharacter: {}
 }
 

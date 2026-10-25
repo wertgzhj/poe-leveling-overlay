@@ -18,6 +18,7 @@ import {
   type CharClass,
   type Bandit
 } from './profile.ts'
+import { planFromSpecs, type PassivePlan, type TreeData, type TreeSpec } from './tree.ts'
 
 export interface PobImportResult {
   profile: Profile | null
@@ -27,6 +28,9 @@ export interface PobImportResult {
 
 export interface PobImportOptions {
   name?: string
+  /** The passive tree: with it, the build's tree specs become the profile's
+   *  `passives`, in the order to take them. */
+  tree?: TreeData | null
 }
 
 
@@ -108,6 +112,8 @@ export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImpor
   const stages = buildStages(sets, warnings)
   const gemPlan = buildGemPlan(stages)
 
+  const passives = readTree(pob['Tree'], opts.tree ?? null, warnings)
+
   const profile: Profile = {
     meta: {
       name: opts.name?.trim() || `${ascend && ascend !== 'None' ? ascend : className} (imported)`,
@@ -119,6 +125,7 @@ export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImpor
     stages,
     gemPlan
   }
+  if (passives) profile.passives = passives
   if (buildLevel) warnings.push(`PoB build level is ${buildLevel}; stage ranges are for levelling.`)
 
   // Round-trip through validation so a bad import surfaces as warnings, not a
@@ -127,6 +134,38 @@ export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImpor
   for (const e of valErrors) warnings.push(`review: ${e}`)
 
   return { profile, warnings, errors }
+}
+
+/** The build's tree specs, in PoB's order, as a plan. PoB lists them the way
+ *  levelling guides do — one per milestone — and that order is kept. */
+function readTree(treeRaw: unknown, tree: TreeData | null, warnings: string[]): PassivePlan | undefined {
+  const specsRaw = (treeRaw as Record<string, unknown> | undefined)?.['Spec']
+  if (!Array.isArray(specsRaw) || specsRaw.length === 0) return undefined
+  const specs: TreeSpec[] = []
+  let version: string | undefined
+  for (const s of specsRaw as Record<string, unknown>[]) {
+    const nodes = (attr(s, 'nodes') ?? '')
+      .split(',')
+      .map(Number)
+      .filter((n) => Number.isInteger(n) && n > 0)
+    if (nodes.length === 0) continue
+    version ??= attr(s, 'treeVersion')
+    const masteries: Record<string, number> = {}
+    for (const m of (attr(s, 'masteryEffects') ?? '').matchAll(/\{(\d+),(\d+)\}/g)) masteries[m[1]] = Number(m[2])
+    specs.push({ title: attr(s, 'title'), nodes, masteries })
+  }
+  if (specs.length === 0) return undefined
+  if (!tree) {
+    warnings.push('the passive tree data is missing, so the build\'s tree was not imported.')
+    return undefined
+  }
+  if (version && version !== tree.treeVersion) {
+    warnings.push(
+      `the build's tree is ${version.replace('_', '.')}, the overlay's is ${tree.version}: ` +
+        'nodes that moved since may come in a strange order.'
+    )
+  }
+  return planFromSpecs(specs, tree, version ?? tree.treeVersion)
 }
 
 interface RawSet {

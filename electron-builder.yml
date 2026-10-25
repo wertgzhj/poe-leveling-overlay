@@ -39,6 +39,9 @@ extraResources:
   # launch. The app reports a loud error if this file is missing.
   - from: data/gems.json
     to: gems.json
+  # The passive tree (scripts/fetch-tree.ts), read at runtime like gems.json.
+  - from: data/tree.json
+    to: tree.json
 win:
   # nsis = an installer that adds Start Menu + Desktop shortcuts.
   # portable = a single .exe you can double-click with no install.

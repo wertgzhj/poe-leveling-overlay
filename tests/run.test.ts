@@ -5,7 +5,7 @@ import type { ProfileMeta } from '../electron/profile/profile.ts'
 
 // The settings file, as a plain object.
 function memoryStore(seed: Partial<RunData> = {}): RunStore & { data: RunData } {
-  const data: RunData = { actReached: {}, dismissedChoices: {}, pantheonUnlocked: {}, ...seed }
+  const data: RunData = { actReached: {}, dismissedChoices: {}, pantheonUnlocked: {}, questPoints: {}, ...seed }
   return {
     data,
     get: (key) => data[key],
@@ -104,3 +104,24 @@ test('Pantheon powers are ticked per character, and a fresh character starts emp
   assert.equal(runs.togglePantheon(null, 'Soul of Shakari'), false)
 })
 
+
+test('Book of Skill points count once each, backscan replays included', () => {
+  const runs = new CharacterRuns(memoryStore())
+  assert.equal(runs.questPoints('Marauder1'), 0)
+  assert.equal(runs.addQuestPoint('Marauder1', 1000, 5), true)
+  assert.equal(runs.addQuestPoint('Marauder1', 2000, 7), true)
+  // a restart's backscan replays both
+  assert.equal(runs.addQuestPoint('Marauder1', 1000, 5), false)
+  assert.equal(runs.addQuestPoint('Marauder1', 2000, 7), false)
+  assert.equal(runs.questPoints('Marauder1'), 2)
+  assert.equal(runs.addQuestPoint(null, 3000, 1), false)
+})
+
+test('a fresh character starts at zero quest points, and ignores its namesake\'s', () => {
+  const runs = new CharacterRuns(memoryStore({ questPoints: { Marauder1: { count: 9, wall: 1000, tick: 1 } } }))
+  runs.forget('Marauder1')
+  assert.equal(runs.questPoints('Marauder1'), 0)
+  assert.equal(runs.addQuestPoint('Marauder1', 2000, 1), false, 'a line from before the new character')
+  assert.equal(runs.addQuestPoint('Marauder1', Date.now() + 1000, 1), true)
+  assert.equal(runs.questPoints('Marauder1'), 1)
+})
