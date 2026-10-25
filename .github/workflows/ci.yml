@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only: CI checks code, it never writes to the repo.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Bundle
+        run: npm run build
+
+      # Screenshots of the overlay in fixed scenarios (scripts/render-check/),
+      # attached to the run: a PR's look can be checked without running it.
+      - name: Render check
+        timeout-minutes: 5
+        run: xvfb-run -a npm run render-check
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: render-check
+          path: out/render-check/*.png
+          if-no-files-found: ignore
+
+      # What ships must be free of known advisories: this one fails the run.
+      - name: Audit (production deps)
+        run: npm audit --omit=dev
+
+      # Build-time tools (electron-builder & co.) run here, not in a release:
+      # their advisories are shown, not blocking.
+      - name: Audit (all deps, informational)
+        run: npm audit
+        continue-on-error: true

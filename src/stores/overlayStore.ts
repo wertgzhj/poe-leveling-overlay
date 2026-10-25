@@ -1,0 +1,91 @@
+import { create } from 'zustand'
+
+interface OverlayStore {
+  // interaction state (mirrors the main process via overlay:state)
+  visible: boolean
+  clickThrough: boolean
+  moveMode: boolean
+  settingsOpen: boolean
+  // app + settings values
+  appVersion: string
+  isDev: boolean
+  opacity: number
+  hotkeys: HotkeyBindingsBridge
+  clientTxtPath: string | null
+  characterName: string | null
+  visibleTabs: VisibleTabsBridge
+  /** Stash/vendor search string; '' hides the copy button. */
+  searchRegex: string
+  /** Your short names for gems (real name -> short), display only. */
+  gemNames: Record<string, string>
+  /** The run timer is on: it records runs and shows its window. */
+  runTimer: boolean
+  // log tracking
+  logStatus: WatcherStatusBridge | null
+  tracked: TrackerStateBridge | null
+  /** The log parses only its locale-independent lines — non-English client. */
+  languageMismatch: boolean
+  /** Level vs. zone monster level, when the gap costs experience. */
+  zoneFit: ZoneFitBridge | null
+  debugOpen: boolean
+  // guide
+  guide: GuideStateBridge | null
+  // build profile
+  profile: ProfileSnapshotBridge | null
+  // trials
+  trials: TrialsSnapshotBridge | null
+  // auto-update
+  update: UpdateStatusBridge | null
+  updateDismissed: boolean
+  tab: 'guide' | 'gems' | 'trials'
+  /** The Gems tab's colour legend is unfolded (kept across tab switches). */
+  legendOpen: boolean
+  patch: (partial: Partial<OverlayStore>) => void
+  applyLogSnapshot: (snap: LogSnapshotBridge) => void
+}
+
+export const useOverlayStore = create<OverlayStore>((set) => ({
+  visible: true,
+  clickThrough: true,
+  moveMode: false,
+  settingsOpen: false,
+  appVersion: '',
+  isDev: false,
+  opacity: 0.95,
+  hotkeys: {
+    toggleVisibility: 'CommandOrControl+Shift+O',
+    toggleTimer: 'CommandOrControl+Shift+T',
+    toggleClickThrough: 'CommandOrControl+Shift+C',
+    toggleMoveMode: 'CommandOrControl+Shift+M',
+    stepForward: 'CommandOrControl+Shift+N',
+    stepBack: 'CommandOrControl+Shift+P'
+  },
+  clientTxtPath: null,
+  characterName: null,
+  visibleTabs: { guide: true, gems: true, trials: true },
+  searchRegex: '',
+  gemNames: {},
+  runTimer: false,
+  logStatus: null,
+  tracked: null,
+  languageMismatch: false,
+  zoneFit: null,
+  debugOpen: false,
+  guide: null,
+  profile: null,
+  trials: null,
+  update: null,
+  updateDismissed: false,
+  // Gems first: it works out of the box (bundled gem data + PoB import), while
+  // the Guide depends on route content the user still has to write.
+  tab: 'gems',
+  legendOpen: false,
+  patch: (partial) => set(partial),
+  applyLogSnapshot: (snap) =>
+    set({
+      logStatus: snap.status,
+      tracked: snap.state,
+      languageMismatch: snap.languageMismatch,
+      zoneFit: snap.zoneFit
+    })
+}))

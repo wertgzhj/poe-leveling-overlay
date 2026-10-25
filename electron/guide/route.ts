@@ -1,0 +1,179 @@
+// Route schema + validation (pure, no Electron imports — unit-tested).
+// Route content is written by whoever uses the overlay: the app ships an
+// engine and a template, not route data imported from elsewhere. Files live in
+// data/campaign/ (dev) or userData/routes/ (override) and hot-reload on save,
+// so authoring feedback must be good: validation returns human messages, not
+// throws.
+
+export const STEP_TYPES = [
+  'quest',
+  'waypoint',
+  'trial',
+  'town',
+  'boss',
+  'kill',
+  'enter',
+  'hint'
+] as const
+
+export type StepType = (typeof STEP_TYPES)[number]
+
+export interface RouteStep {
+  /** Stable unique id — progress is persisted against it, don't rename casually. */
+  id: string
+  type: StepType
+  /** Canonical area id ("1_1_2"). Preferred match key when known. */
+  areaId?: string
+  /** Display name ("The Ledge") — fallback match key while the id is unknown. */
+  zone?: string
+  text: string
+  hints?: string[]
+  /** The Gems tab shows the build's reward choice at this step. */
+  rewardHint?: boolean
+  /** Owning act — set when acts are combined into one campaign list (not authored). */
+  act?: number
+}
+
+export interface Route {
+  act: number
+  name?: string
+  steps: RouteStep[]
+  /** The bundled placeholder route, not a real one. Set on the shipped fallback
+   *  files so the overlay can say so instead of looking broken; DELETE IT once
+   *  you've written this act yourself and the notice disappears. */
+  skeleton?: boolean
+}
+
+export interface RouteParseResult {
+  route: Route | null
+  errors: string[]
+}
+
+/** Parse + validate raw JSON text into a Route. Never throws. */
+export function parseRoute(jsonText: string): RouteParseResult {
+  let raw: unknown
+  try {
+    raw = JSON.parse(jsonText)
+  } catch (e) {
+    return { route: null, errors: [`not valid JSON: ${(e as Error).message}`] }
+  }
+  return validateRoute(raw)
+}
+
+export function validateRoute(raw: unknown): RouteParseResult {
+  const errors: string[] = []
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    return { route: null, errors: ['route must be a JSON object'] }
+  }
+  const obj = raw as Record<string, unknown>
+
+  const act = typeof obj['act'] === 'number' ? obj['act'] : NaN
+  if (!Number.isInteger(act) || act < 1 || act > 10) {
+    errors.push('"act" must be an integer 1–10')
+  }
+
+  if (!Array.isArray(obj['steps']) || obj['steps'].length === 0) {
+    errors.push('"steps" must be a non-empty array')
+    return { route: null, errors }
+  }
+
+  const steps: RouteStep[] = []
+  const seenIds = new Set<string>()
+  ;(obj['steps'] as unknown[]).forEach((rawStep, i) => {
+    const where = `step ${i + 1}`
+    if (typeof rawStep !== 'object' || rawStep === null) {
+      errors.push(`${where}: must be an object`)
+      return
+    }
+    const s = rawStep as Record<string, unknown>
+    const id = typeof s['id'] === 'string' ? s['id'].trim() : ''
+    if (!id) {
+      errors.push(`${where}: missing "id"`)
+      return
+    }
+    if (seenIds.has(id)) {
+      errors.push(`${where}: duplicate id "${id}"`)
+      return
+    }
+    seenIds.add(id)
+
+    const type = s['type']
+    if (typeof type !== 'string' || !STEP_TYPES.includes(type as StepType)) {
+      errors.push(`step "${id}": type must be one of ${STEP_TYPES.join(' | ')}`)
+      return
+    }
+
+    const text = typeof s['text'] === 'string' ? s['text'].trim() : ''
+    if (!text) errors.push(`step "${id}": missing "text"`)
+
+    const areaId = typeof s['areaId'] === 'string' && s['areaId'].trim() ? s['areaId'].trim() : undefined
+    const zone = typeof s['zone'] === 'string' && s['zone'].trim() ? s['zone'].trim() : undefined
+    if (!areaId && !zone && type !== 'hint') {
+      errors.push(`step "${id}": needs "areaId" or "zone" (only type "hint" may have neither)`)
+    }
+
+    const hints = Array.isArray(s['hints'])
+      ? (s['hints'] as unknown[]).filter((h): h is string => typeof h === 'string')
+      : undefined
+
+    steps.push({
+      id,
+      type: type as StepType,
+      areaId,
+      zone,
+      text,
+      hints,
+      rewardHint: s['rewardHint'] === true ? true : undefined
+    })
+  })
+
+  if (errors.length > 0) return { route: null, errors }
+  return {
+    route: {
+      act,
+      name: typeof obj['name'] === 'string' ? obj['name'] : undefined,
+      steps,
+      skeleton: obj['skeleton'] === true ? true : undefined
+    },
+    errors: []
+  }
+}
+
+export interface CombinedRoute {
+  steps: RouteStep[]
+  /** Acts present, in order. */
+  acts: number[]
+  /** Acts still running on the bundled placeholder route (`skeleton: true`). */
+  skeletonActs: number[]
+  errors: string[]
+}
+
+/**
+ * Merge per-act routes into one campaign step list (act order), tagging each
+ * step with its act. Progress is keyed by step id, so ids must be unique across
+ * acts — a collision is reported and the later step dropped (keeping the guide
+ * usable rather than silently overwriting progress).
+ */
+export function combineRoutes(routes: Route[]): CombinedRoute {
+  const errors: string[] = []
+  const steps: RouteStep[] = []
+  const seen = new Set<string>()
+  const ordered = [...routes].sort((a, b) => a.act - b.act)
+
+  for (const route of ordered) {
+    for (const step of route.steps) {
+      if (seen.has(step.id)) {
+        errors.push(`duplicate step id "${step.id}" across acts — later one ignored`)
+        continue
+      }
+      seen.add(step.id)
+      steps.push({ ...step, act: route.act })
+    }
+  }
+  return {
+    steps,
+    acts: ordered.map((r) => r.act),
+    skeletonActs: ordered.filter((r) => r.skeleton).map((r) => r.act),
+    errors
+  }
+}

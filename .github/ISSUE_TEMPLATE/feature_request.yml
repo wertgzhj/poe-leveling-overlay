@@ -1,0 +1,31 @@
+name: Idea / feature request
+description: Something the overlay should do differently
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome. Two things this project deliberately does **not** do,
+        so you know before writing:
+
+        - It never talks to the game — read-only on `Client.txt`, no input, no
+          memory, no automation. Anything needing that is out of scope.
+        - Route and build-profile *content* is written by whoever uses the
+          overlay; the project ships the engine and empty skeletons, not routes
+          copied from elsewhere.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's awkward today
+      description: The situation while levelling, not the solution yet.
+      placeholder: I keep tabbing out to check which gems the next quest offers…
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you'd like instead
+    validations:
+      required: true

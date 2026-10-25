@@ -1,0 +1,1574 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { parseProfile, baseClassOf, ASCENDANCIES, CLASSES, type Profile } from '../electron/profile/profile.ts'
+import {
+  GemData,
+  vendorCostFor,
+  safeLevelRange,
+  normalizeGemName,
+  BROAD_VENDOR_DATA_MIN,
+  type GemSourceInfo
+} from '../electron/profile/gems.ts'
+import {
+  actFromAreaId,
+  activeStageIndex,
+  stepStageView,
+  resolveStage,
+  acquisitionsForStage
+} from '../electron/profile/engine.ts'
+import { repoPath } from './helpers.ts'
+import { defaultMule, muleOptions, mulingClass, MULE_MAX_LEVEL } from '../electron/profile/engine.ts'
+
+function exampleProfile(): Profile {
+  const { profile, errors } = parseProfile(readFileSync(repoPath('data/profiles/example.json'), 'utf8'))
+  assert.deepEqual(errors, [], 'example profile must validate')
+  assert.ok(profile)
+  return profile
+}
+
+function exampleGems(): GemData {
+  const json = JSON.parse(readFileSync(repoPath('data/gems.json'), 'utf8'))
+  return new GemData(json.gems)
+}
+
+// ---------- validation ----------
+
+test('the example profile and gem data load and agree', () => {
+  const profile = exampleProfile()
+  const gems = exampleGems()
+  assert.equal(profile.meta.class, 'Witch')
+  // Every gem referenced by a stage should have a colour in gems.json.
+  for (const stage of profile.stages) {
+    for (const group of stage.socketGroups) {
+      for (const gem of group.gems) {
+        assert.equal(gems.color(gem).unknown, false, `example gem "${gem}" missing from gems.json`)
+      }
+    }
+  }
+})
+
+test('validation catches bad class, empty stages, overlaps, bad sources', () => {
+  const bad = parseProfile(
+    JSON.stringify({
+      meta: { name: 'x', class: 'Necromancer' },
+      stages: [
+        { range: [1, 12], socketGroups: [{ gems: ['A'] }] },
+        { range: [10, 20], socketGroups: [{ gems: ['B'] }] }
+      ],
+      gemPlan: [{ gem: 'A', source: { kind: 'craft' } }]
+    })
+  )
+  assert.equal(bad.profile, null)
+  assert.ok(bad.errors.some((e) => e.includes('meta.class must be one of')))
+  assert.ok(bad.errors.some((e) => e.includes('overlap')))
+  assert.ok(bad.errors.some((e) => e.includes('source.kind')))
+})
+
+test('missing required pieces are reported, not thrown', () => {
+  assert.ok(parseProfile('{ nope').errors.length === 1)
+  const noStages = parseProfile(JSON.stringify({ meta: { name: 'x', class: 'Witch' }, stages: [] }))
+  assert.ok(noStages.errors.some((e) => e.includes('"stages" must be a non-empty array')))
+})
+
+// ---------- socket colours ----------
+
+test('socket colours are computed from gem attributes', () => {
+  const gems = new GemData({
+    'Ground Slam': { attr: 'str' },
+    'Split Arrow': { attr: 'dex' },
+    Fireball: { attr: 'int' }
+  })
+  assert.equal(gems.color('Ground Slam').color, 'R')
+  assert.equal(gems.color('Split Arrow').color, 'G')
+  assert.equal(gems.color('Fireball').color, 'B')
+})
+
+test('unknown gems render neutral and are flagged', () => {
+  const gems = new GemData({ Fireball: { attr: 'int' } })
+  const c = gems.color('Mystery Gem')
+  assert.equal(c.color, 'W')
+  assert.equal(c.unknown, true)
+  assert.equal(c.anyColor, undefined)
+})
+
+test('a gem with no attribute requirement is white on purpose, not for lack of data', () => {
+  // Portal, Convocation and friends have no attribute requirement
+  // in game, so they fit any socket. Flagging them "?" (= "not in gems.json")
+  // made the overlay look broken on gems it knows perfectly well.
+  const gems = new GemData({ Portal: { requiredLevel: 10 }, Fireball: { attr: 'int' } })
+  const portal = gems.color('Portal')
+  assert.equal(portal.color, 'W')
+  assert.equal(portal.unknown, false, 'it IS in the data — do not flag it as a guess')
+  assert.equal(portal.anyColor, true)
+
+  // A gem with an attribute is unaffected, and so is a truly unknown one.
+  assert.equal(gems.color('Fireball').anyColor, undefined)
+  assert.equal(gems.color('Nonexistent Gem').unknown, true)
+})
+
+test('the shipped data has attribute-less gems, and none of them is flagged unknown', () => {
+  const gems = exampleGems()
+  // These are the real cases from data/gems.json that triggered the report.
+  for (const gem of ['Portal', 'Convocation', 'Quickstep']) {
+    const c = gems.color(gem)
+    assert.equal(c.color, 'W', `${gem} has no attribute, so it fits any socket`)
+    assert.equal(c.unknown, false, `${gem} is in the gem data — it must not show "?"`)
+    assert.equal(c.anyColor, true)
+  }
+})
+
+test('gem matching ignores case and a trailing " Support"', () => {
+  const gems = new GemData({ 'Arcane Surge Support': { attr: 'int' } })
+  assert.equal(gems.color('arcane surge').unknown, false)
+  assert.equal(gems.color('Arcane Surge').color, 'B')
+})
+
+test('a skill is not its like-named support gem', () => {
+  // Barrage is a level-12 bow skill Nessa sells in Act 1; Barrage Support is a
+  // level-38 Act 4 quest reward. Stripping " Support" unconditionally folded
+  // them into one entry, and the skill inherited the support's level, act and
+  // price — which also dimmed it as "for later" for twenty-odd levels.
+  const gems = new GemData({
+    Barrage: { attr: 'dex', requiredLevel: 12 },
+    'Barrage Support': { attr: 'dex', requiredLevel: 38 },
+    'Arcane Surge Support': { attr: 'int', requiredLevel: 1 }
+  })
+  assert.equal(gems.info('Barrage')?.requiredLevel, 12)
+  assert.equal(gems.info('Barrage Support')?.requiredLevel, 38)
+  assert.equal(gems.info('barrage')?.requiredLevel, 12, 'case still does not matter')
+  // The forgiving fallback is untouched where nothing owns the exact name.
+  assert.equal(gems.info('Arcane Surge')?.requiredLevel, 1)
+  // Declaration order must not decide it.
+  const reversed = new GemData({
+    'Barrage Support': { attr: 'dex', requiredLevel: 38 },
+    Barrage: { attr: 'dex', requiredLevel: 12 }
+  })
+  assert.equal(reversed.info('Barrage')?.requiredLevel, 12)
+})
+
+test('the shipped data resolves Barrage to the skill, not the support', () => {
+  const gems = exampleGems()
+  const skill = gems.info('Barrage')
+  const support = gems.info('Barrage Support')
+  assert.equal(skill?.requiredLevel, 12)
+  assert.equal(support?.requiredLevel, 38)
+  assert.equal(skill?.sources?.[0]?.npc, 'Nessa')
+})
+
+// ---------- stage selection ----------
+
+test('active stage tracks the character level and clamps at the ends', () => {
+  const profile = exampleProfile()
+  assert.equal(activeStageIndex(profile, 1), 0)
+  assert.equal(activeStageIndex(profile, 11), 0)
+  assert.equal(activeStageIndex(profile, 12), 1)
+  assert.equal(activeStageIndex(profile, 90), 1, 'clamps above the last stage')
+  assert.equal(activeStageIndex(profile, null), 0, 'no level yet -> first stage')
+})
+
+test('a level in a gap falls back to the nearest lower stage', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'gap', class: 'Shadow' },
+      stages: [
+        { range: [1, 10], socketGroups: [{ gems: ['A'] }] },
+        { range: [20, 30], socketGroups: [{ gems: ['B'] }] }
+      ]
+    })
+  ).profile!
+  assert.equal(activeStageIndex(profile, 15), 0)
+})
+
+test('resolveStage colours the active group', () => {
+  const profile = exampleProfile()
+  const gems = exampleGems()
+  const stage = resolveStage(profile.stages[0], 0, gems)
+  assert.equal(stage.label, 'Level 1–11')
+  assert.deepEqual(
+    stage.groups[0].gems.map((g) => g.color),
+    ['B', 'B']
+  )
+})
+
+// ---------- acquisition views ----------
+
+test('acquisitions split the active stage gems into rewards vs purchases (authored)', () => {
+  const profile = exampleProfile()
+  const acq = acquisitionsForStage(profile, 0) // stage 0 uses Frostbolt + Arcane Surge
+  assert.deepEqual(acq.rewards.map((e) => e.gem), ['Frostbolt'])
+  assert.deepEqual(acq.purchases.map((e) => e.gem), ['Arcane Surge Support'])
+})
+
+// ---------- P5: class-aware gem sources ----------
+
+const SOURCED_GEMS = new GemData({
+  Frostbolt: {
+    attr: 'int',
+    sources: [
+      { kind: 'quest', act: 1, quest: 'enemy-at-the-gate', classes: ['Witch', 'Shadow'] },
+      { kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch', 'Shadow', 'Templar'] }
+    ]
+  },
+  'Onslaught Support': {
+    attr: 'dex',
+    requiredLevel: 12,
+    sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] // all classes
+  },
+  'Ground Slam': {
+    attr: 'str',
+    sources: [{ kind: 'quest', act: 1, quest: 'enemy-at-the-gate', classes: ['Marauder', 'Duelist'] }]
+  }
+})
+
+test('earliestSource filters by class and prefers the earliest (act, quest first)', () => {
+  assert.equal(SOURCED_GEMS.earliestSource('Frostbolt', 'Witch')?.kind, 'quest')
+  // Templar isn't in the quest list, so the specific vendor source wins.
+  const templarFrost = SOURCED_GEMS.earliestSource('Frostbolt', 'Templar')
+  assert.equal(templarFrost?.kind, 'vendor')
+  assert.equal(templarFrost?.fallback, undefined) // a real, gem-specific source
+  // Marauder has neither Frostbolt-specific source -> broad-vendor fallback (Siosa).
+  const marauderFrost = SOURCED_GEMS.earliestSource('Frostbolt', 'Marauder')
+  assert.equal(marauderFrost?.npc, 'Siosa')
+  assert.equal(marauderFrost?.fallback, true)
+  // No class filter on Onslaught -> available to anyone.
+  assert.equal(SOURCED_GEMS.earliestSource('Onslaught Support', 'Marauder')?.act, 2)
+})
+
+test('acquisitions resolve sources live from gem data when the plan omits them', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'live', class: 'Witch' },
+      stages: [
+        {
+          range: [1, 12],
+          socketGroups: [{ gems: ['Frostbolt', 'Onslaught Support', 'Ground Slam'] }]
+        }
+      ],
+      gemPlan: [{ gem: 'Frostbolt' }, { gem: 'Onslaught Support' }, { gem: 'Ground Slam' }]
+    })
+  ).profile!
+
+  const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
+  assert.deepEqual(acq.rewards.map((e) => e.gem), ['Frostbolt']) // Witch quest reward
+  // Onslaught has a specific vendor; Ground Slam has no Witch source, so it
+  // falls back to Siosa (the broad vendor) rather than being misattributed.
+  // Level order: Ground Slam (lvl 1) before Onslaught Support (lvl 12).
+  assert.deepEqual(
+    acq.purchases.map((e) => `${e.gem}@${e.npc}`),
+    ['Ground Slam@Siosa', 'Onslaught Support@Yeena']
+  )
+  assert.equal(acq.other.length, 0)
+  assert.equal(acq.purchases.find((e) => e.gem === 'Ground Slam')?.fallback, true)
+  assert.equal(acq.purchases.find((e) => e.gem === 'Onslaught Support')?.fallback, undefined)
+})
+
+test('known gems with no specific source fall back to the broad vendor (Siosa)', () => {
+  // Controlled data: a curated gem with NO sources. (Not the shipped gems.json —
+  // the "Fetch gem data" workflow fills that with real sources, which is exactly
+  // when this fallback stops applying to real gems.)
+  const gems = new GemData({ 'Sourceless Strike': { attr: 'str' } })
+  const src = gems.earliestSource('Sourceless Strike', 'Witch')
+  assert.equal(src?.npc, 'Siosa')
+  assert.equal(src?.act, 3)
+  assert.equal(src?.fallback, true)
+  // An unknown name is not claimed to be sold by Siosa.
+  assert.equal(gems.earliestSource('Totally Fake Gem', 'Witch'), null)
+})
+
+test('once the dataset lists Siosa stock, a sourceless gem is NOT attributed to her', () => {
+  // The wiki fetch writes an explicit Siosa/Lilly row for every gem they sell,
+  // so "no source" becomes an answer, not a data gap. Guessing here used to send
+  // people shopping in Act 3 for Vaal/Awakened/Transfigured gems that only drop.
+  const gems: Record<string, { attr: 'int'; sources?: object[] }> = {}
+  for (let i = 0; i < BROAD_VENDOR_DATA_MIN; i++) {
+    gems[`Sold Gem ${i}`] = {
+      attr: 'int',
+      sources: [{ kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }]
+    }
+  }
+  gems['Awakened Nonsense Support'] = { attr: 'int' } // in the data, sold by nobody
+  const data = new GemData(gems as never)
+
+  assert.equal(data.earliestSource('Sold Gem 0', 'Witch')?.npc, 'Siosa')
+  assert.equal(data.earliestSource('Awakened Nonsense Support', 'Witch'), null)
+
+  // One row below the threshold the dataset isn't trusted, so the guess returns.
+  delete gems['Sold Gem 0']
+  assert.equal(
+    new GemData(gems as never).earliestSource('Awakened Nonsense Support', 'Witch')?.fallback,
+    true
+  )
+})
+
+test('gems.json is shipped as a resource, since it is no longer bundled', () => {
+  // The profile service reads gems.json from process.resourcesPath at runtime
+  // instead of importing it (halves the main bundle). That means the packaging
+  // config is now load-bearing: drop this entry and the installed app starts
+  // with no gem colours and no sources, which nothing else here would catch —
+  // typecheck, tests and the bundle build all stay green.
+  const builder = readFileSync(repoPath('electron-builder.yml'), 'utf8')
+  assert.match(builder, /from:\s*data\/gems\.json/, 'electron-builder must ship data/gems.json')
+  assert.match(builder, /to:\s*gems\.json/, 'it must land at resources/gems.json')
+
+  // And the file the config points at has to be loadable in the shape the
+  // service expects (`{ gems: { … } }`).
+  const raw = JSON.parse(readFileSync(repoPath('data/gems.json'), 'utf8')) as { gems?: object }
+  assert.ok(raw.gems && typeof raw.gems === 'object')
+  assert.ok(Object.keys(raw.gems).length > 100, 'gem data looks truncated')
+})
+
+test('missing gem data degrades to unknown colours instead of throwing', () => {
+  // What the loader falls back to when the resource can't be read. The Gems tab
+  // reports the reason separately (gemDataError); the engine must stay usable.
+  const empty = new GemData({})
+  assert.equal(empty.color('Frostbolt').unknown, true)
+  assert.equal(empty.earliestSource('Frostbolt', 'Witch'), null)
+  assert.equal(empty.info('Frostbolt'), undefined)
+})
+
+test('the shipped gem data never sends you to a vendor for drop-only gems', () => {
+  const gems = exampleGems()
+  // Vaal (corrupted drops), Awakened (endgame drops) and Transfigured ("… of X",
+  // Labyrinth drops) are not vendor stock — no source beats a wrong source.
+  for (const gem of [
+    'Vaal Arc',
+    'Awakened Spell Echo Support',
+    'Ice Nova of Frostbolts',
+    'Empower Support'
+  ]) {
+    assert.ok(gems.info(gem), `${gem} should be present in gems.json`)
+    assert.equal(gems.earliestSource(gem, 'Witch'), null, `${gem} must not resolve to a vendor`)
+  }
+  // Regular campaign gems still resolve, so the dataset is genuinely being read.
+  assert.equal(gems.earliestSource('Frostbolt', 'Witch')?.act, 1)
+  // Wiki scaffolding must never have landed in the gem list.
+  assert.deepEqual(Object.keys(JSON.parse(readFileSync(repoPath('data/gems.json'), 'utf8')).gems).filter((k) => k.includes(':')), [])
+})
+
+test('the shipped gem data carries no HTML entities and no duplicate names', () => {
+  const gems = JSON.parse(readFileSync(repoPath('data/gems.json'), 'utf8')).gems as Record<
+    string,
+    { sources?: Array<{ quest?: string; npc?: string }> }
+  >
+  const entity = /&(#\d+|#[xX][0-9a-fA-F]+|[a-zA-Z]+);/
+  const offenders: string[] = []
+  const seen = new Map<string, string>()
+  for (const [name, info] of Object.entries(gems)) {
+    if (entity.test(name)) offenders.push(`gem name: ${name}`)
+    for (const s of info.sources ?? []) {
+      if (s.quest && entity.test(s.quest)) offenders.push(`${name} quest: ${s.quest}`)
+      if (s.npc && entity.test(s.npc)) offenders.push(`${name} npc: ${s.npc}`)
+    }
+    // Gem lookup is case-insensitive, so two spellings of one name collide and
+    // one silently wins — which is how the escaped duplicates hid.
+    const key = name.toLowerCase()
+    const prev = seen.get(key)
+    if (prev) offenders.push(`duplicate: "${prev}" and "${name}"`)
+    seen.set(key, name)
+  }
+  assert.deepEqual(offenders.slice(0, 10), [], 'run the fetch again after fixing scripts/gem-cargo.ts')
+
+  // The quest that actually tripped this must be spelled the way the game does.
+  const quests = new Set(
+    Object.values(gems).flatMap((g) => (g.sources ?? []).map((s) => s.quest).filter(Boolean))
+  )
+  assert.ok(quests.has("The Siren's Cadence"))
+})
+
+test('vendor cost tier follows the gem level requirement', () => {
+  // Seen in game.
+  assert.equal(vendorCostFor(1), 'Wisdom')
+  assert.equal(vendorCostFor(4), 'Wisdom', 'Dash')
+  assert.equal(vendorCostFor(8), 'Transmutation', 'Faster Attacks')
+  assert.equal(vendorCostFor(12), 'Transmutation', 'Sunder')
+  assert.equal(vendorCostFor(16), 'Alteration', 'Seismic Cry, Molten Shell')
+  assert.equal(vendorCostFor(18), 'Alteration', 'Cruelty')
+  assert.equal(vendorCostFor(24), 'Alteration', 'Punishment')
+  assert.equal(vendorCostFor(28), 'Chance', 'Cyclone')
+  assert.equal(vendorCostFor(34), 'Chance', 'Summon Chaos Golem')
+  assert.equal(vendorCostFor(38), 'Alchemy', 'Multistrike')
+  assert.equal(vendorCostFor(undefined), undefined)
+})
+
+test('purchase entries carry the cost tier when the gem level is known', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'cost', class: 'Marauder' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Onslaught Support'] }] }],
+      gemPlan: [{ gem: 'Onslaught Support' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
+  assert.equal(acq.purchases[0]?.cost, 'Transmutation') // requiredLevel 12
+})
+
+test('upcoming lists later-stage quest-reward gems with their start level', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'up', class: 'Witch' },
+      stages: [
+        { range: [1, 11], socketGroups: [{ gems: ['Frostbolt'] }] },
+        // Ground Slam has no Witch quest source -> not "take when offered".
+        { range: [12, 24], socketGroups: [{ gems: ['Frostbolt', 'Onslaught Support', 'Ground Slam'] }] }
+      ],
+      gemPlan: [{ gem: 'Frostbolt' }, { gem: 'Onslaught Support' }, { gem: 'Ground Slam' }]
+    })
+  ).profile!
+
+  const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
+  // Frostbolt is already in the active stage; Onslaught is vendor-only;
+  // upcoming only lists NEW gems a quest actually rewards this class... none
+  // here except via a quest — Onslaught is vendor, Ground Slam not for Witch.
+  assert.deepEqual(acq.upcoming, [])
+
+  const marauder = parseProfile(
+    JSON.stringify({
+      meta: { name: 'up2', class: 'Marauder' },
+      stages: [
+        { range: [1, 11], socketGroups: [{ gems: ['Onslaught Support'] }] },
+        { range: [12, 24], socketGroups: [{ gems: ['Ground Slam'] }] }
+      ],
+      gemPlan: [{ gem: 'Onslaught Support' }, { gem: 'Ground Slam' }]
+    })
+  ).profile!
+  const acq2 = acquisitionsForStage(marauder, 0, SOURCED_GEMS)
+  assert.deepEqual(
+    acq2.upcoming.map((e) => `${e.gem}@${e.fromLevel}`),
+    ['Ground Slam@12'] // Marauder quest reward, first used in the level-12 stage
+  )
+})
+
+test('actFromAreaId reads the act from numeric ids and ignores word ids', () => {
+  // <part>_<act>_<zone>: the act is the SECOND number.
+  assert.equal(actFromAreaId('1_1_2'), 1)
+  assert.equal(actFromAreaId('1_2_7_1'), 2, 'The Crypt Level 1 is Act 2, not Act 1')
+  assert.equal(actFromAreaId('1_5_town'), 5)
+  assert.equal(actFromAreaId('2_6_town'), 6)
+  assert.equal(actFromAreaId('2_10_town'), 10)
+  assert.equal(actFromAreaId('HideoutWorldTurtle'), null)
+  assert.equal(actFromAreaId('MapWorldsCitySquare'), null)
+  assert.equal(actFromAreaId(null), null)
+  assert.equal(actFromAreaId('1_99_1'), null)
+  assert.equal(actFromAreaId('99_1'), null)
+})
+
+test('rewards and purchases sort by gem level requirement, then name', () => {
+  const gems = new GemData({
+    'Zealotry Late': { attr: 'int', requiredLevel: 12, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] },
+    'Alpha Early': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] },
+    'Beta Early': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'sort', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Zealotry Late', 'Beta Early', 'Alpha Early'] }] }],
+      gemPlan: [{ gem: 'Zealotry Late' }, { gem: 'Beta Early' }, { gem: 'Alpha Early' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems)
+  // Level 1 gems first (alphabetical between equals), the level-12 gem last.
+  assert.deepEqual(acq.purchases.map((e) => e.gem), ['Alpha Early', 'Beta Early', 'Zealotry Late'])
+})
+
+test("a stage's plan holds later rewards from its own acts, not from later acts", () => {
+  const gems = new GemData({
+    'Act One Gift': { attr: 'str', requiredLevel: 4, sources: [{ kind: 'quest', act: 1, quest: 'q1' }] },
+    'Act Three Gift': { attr: 'str', requiredLevel: 28, sources: [{ kind: 'quest', act: 3, quest: 'q3' }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'acts', class: 'Marauder' },
+      stages: [
+        { range: [1, 11], socketGroups: [{ gems: ['Ground Slam'] }] },
+        { range: [12, 40], socketGroups: [{ gems: ['Act One Gift', 'Act Three Gift'] }] }
+      ],
+      gemPlan: [{ gem: 'Ground Slam' }, { gem: 'Act One Gift' }, { gem: 'Act Three Gift' }]
+    })
+  ).profile!
+
+  // Both are later stages' business, so both are known…
+  const acq = acquisitionsForStage(profile, 0, gems, { playerLevel: 5 })
+  assert.deepEqual(acq.upcoming.map((e) => e.gem), ['Act One Gift', 'Act Three Gift'])
+
+  // …but levels 1-11 are Act 1: its plan takes the Act 1 gift along and
+  // leaves the Act 3 one to the stage you'll be in Act 3 on. Same with no act
+  // known yet (here) as with Act 1 reached.
+  const byGem = (a: typeof acq) =>
+    new Map(a.plan.map((it) => [it.kind === 'reward' ? it.group.gems[0].gem : it.entry.gem, it]))
+  for (const a of [acq, acquisitionsForStage(profile, 0, gems, { playerLevel: 5, actReached: 1 })]) {
+    assert.equal(byGem(a).get('Act One Gift')?.later, false)
+    assert.equal(byGem(a).has('Act Three Gift'), false)
+  }
+  // In Act 3 — a low level for it — the live stage lists it, dimmed until usable.
+  const inAct3 = byGem(acquisitionsForStage(profile, 0, gems, { playerLevel: 5, actReached: 3 }))
+  assert.equal(inAct3.get('Act Three Gift')?.later, true)
+  assert.equal(inAct3.get('Act Three Gift')?.atLevel, 28)
+})
+
+test('reward groups flag same-quest gems as a pick-one choice', () => {
+  const gems = new GemData({
+    'Freezing Pulse': { attr: 'int', sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    Frostbolt: { attr: 'int', sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    Fireball: { attr: 'int', sources: [{ kind: 'quest', act: 2, quest: 'Intruders in Black', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'grp', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Freezing Pulse', 'Frostbolt', 'Fireball'] }] }],
+      gemPlan: [{ gem: 'Freezing Pulse' }, { gem: 'Frostbolt' }, { gem: 'Fireball' }]
+    })
+  ).profile!
+  const g = acquisitionsForStage(profile, 0, gems).rewardGroups
+
+  // Two gems share "Enemy at the Gate" -> one pick-one group (choices first).
+  assert.equal(g[0].pickOne, true)
+  assert.equal(g[0].quest, 'Enemy at the Gate')
+  assert.equal(g[0].act, 1)
+  assert.deepEqual(g[0].gems.map((e) => e.gem), ['Freezing Pulse', 'Frostbolt'])
+  // The lone Act 2 reward is its own take-it group.
+  assert.equal(g[1].pickOne, false)
+  assert.deepEqual(g[1].gems.map((e) => e.gem), ['Fireball'])
+  assert.equal(g[1].buyRest, undefined, 'nothing to buy when there is no choice')
+})
+
+test('a pick-one group prices the copies the quest does not give you', () => {
+  const quest = (act: number, q: string): GemSourceInfo => ({
+    kind: 'quest',
+    act,
+    quest: q,
+    classes: ['Witch']
+  })
+  const gems = new GemData({
+    // Four golems from one quest, same price tier (lvl 34 -> Chance).
+    Flame: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
+    Ice: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
+    Lightning: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
+    Stone: { attr: 'int', requiredLevel: 34, sources: [quest(4, 'Breaking the Seal')] },
+    // Mixed tiers: Wisdom (lvl 1) and Chance (lvl 28).
+    Cheap: { attr: 'int', requiredLevel: 1, sources: [quest(1, 'Mercy Mission')] },
+    Dear: { attr: 'int', requiredLevel: 28, sources: [quest(1, 'Mercy Mission')] }
+  })
+  const names = ['Flame', 'Ice', 'Lightning', 'Stone', 'Cheap', 'Dear']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'pick', class: 'Witch' },
+      stages: [{ range: [1, 60], socketGroups: [{ gems: names }] }],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const groups = acquisitionsForStage(profile, 0, gems).rewardGroups
+  const byQuest = new Map(groups.map((g) => [g.quest, g]))
+
+  // Four gems, one free: three buys at the shared tier.
+  const seal = byQuest.get('Breaking the Seal')?.buyRest
+  assert.equal(seal?.count, 3)
+  assert.equal(seal?.cost, 'Chance')
+  // This fixture lists no vendor stock at all, so the dataset can't answer
+  // "who sells it" — and the documented fallback is the broad vendor.
+  assert.equal(seal?.npc, 'Siosa')
+  // Mixed tiers: you take the dearest free, so what is left is the cheap one.
+  const mercy = byQuest.get('Mercy Mission')?.buyRest
+  assert.equal(mercy?.count, 1)
+  assert.equal(mercy?.cost, 'Wisdom')
+})
+
+test('a pick-one group counts copies, not gems', () => {
+  const gems = new GemData({
+    Twice: {
+      attr: 'int',
+      requiredLevel: 12,
+      sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }]
+    },
+    Once: {
+      attr: 'int',
+      requiredLevel: 12,
+      sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }]
+    }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'copies', class: 'Witch' },
+      // "Twice" sits in two links, so the build needs three copies in total.
+      stages: [
+        {
+          range: [1, 20],
+          socketGroups: [{ gems: ['Twice', 'Once'] }, { gems: ['Twice'] }]
+        }
+      ],
+      gemPlan: [{ gem: 'Twice' }, { gem: 'Once' }]
+    })
+  ).profile!
+  const g = acquisitionsForStage(profile, 0, gems).rewardGroups[0]
+  assert.equal(g.pickOne, true)
+  assert.equal(g.buyRest?.count, 2)
+  assert.equal(g.buyRest?.cost, 'Transmutation')
+})
+
+test('purchases sort by cost tier, then act, then name', () => {
+  const gems = new GemData({
+    'Cheap A2': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] },
+    'Cheap A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] },
+    'Pricey A1': { attr: 'int', requiredLevel: 38, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'cost-sort', class: 'Witch' },
+      stages: [{ range: [1, 40], socketGroups: [{ gems: ['Pricey A1', 'Cheap A2', 'Cheap A1'] }] }],
+      gemPlan: [{ gem: 'Pricey A1' }, { gem: 'Cheap A2' }, { gem: 'Cheap A1' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems)
+  // Wisdom (lvl 1) before Alchemy (lvl 38); within Wisdom, Act 1 before Act 2.
+  assert.deepEqual(
+    acq.purchases.map((e) => `${e.gem}/${e.cost}`),
+    ['Cheap A1/Wisdom', 'Cheap A2/Wisdom', 'Pricey A1/Alchemy']
+  )
+})
+
+test('acquisition plan interleaves rewards and buys by act, rewards first on ties', () => {
+  const gems = new GemData({
+    'Reward A1': { attr: 'int', sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    'Buy A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    'Reward A2': { attr: 'int', sources: [{ kind: 'quest', act: 2, quest: 'Intruders in Black', classes: ['Witch'] }] },
+    'Buy A2': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'plan', class: 'Witch' },
+      // deliberately scrambled so the ordering has to do real work.
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Buy A2', 'Reward A2', 'Buy A1', 'Reward A1'] }] }],
+      gemPlan: [{ gem: 'Buy A2' }, { gem: 'Reward A2' }, { gem: 'Buy A1' }, { gem: 'Reward A1' }]
+    })
+  ).profile!
+  const plan = acquisitionsForStage(profile, 0, gems).plan
+
+  // Chronological by act; within an act the free reward comes before the buy.
+  const labels = plan.map((it) =>
+    it.kind === 'reward' ? `take:${it.group.gems.map((g) => g.gem).join('+')}` : `buy:${it.entry.gem}`
+  )
+  assert.deepEqual(labels, ['take:Reward A1', 'buy:Buy A1', 'take:Reward A2', 'buy:Buy A2'])
+})
+
+test('safeLevelRange grows by one every 16 levels', () => {
+  assert.equal(safeLevelRange(1), 3)
+  assert.equal(safeLevelRange(15), 3)
+  assert.equal(safeLevelRange(16), 4)
+  assert.equal(safeLevelRange(31), 4)
+  assert.equal(safeLevelRange(32), 5)
+})
+
+test('the plan flags gems past the safe level range as coming up, without hiding them', () => {
+  const gems = new GemData({
+    Soon: { attr: 'int', requiredLevel: 10, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    Later: { attr: 'int', requiredLevel: 31, sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'safezone', class: 'Witch' },
+      stages: [{ range: [1, 40], socketGroups: [{ gems: ['Soon', 'Later'] }] }],
+      gemPlan: [{ gem: 'Soon' }, { gem: 'Later' }]
+    })
+  ).profile!
+  // At level 12 the safe range is 3 (threshold 15): Soon (lvl 10) is now,
+  // Later (lvl 31) is coming up — but nothing is dropped.
+  const plan = acquisitionsForStage(profile, 0, gems, { playerLevel: 12 }).plan
+  assert.equal(plan.length, 2)
+  const by = new Map(plan.map((it) => [it.kind === 'buy' ? it.entry.gem : '', it]))
+  assert.equal(by.get('Soon')?.later, false)
+  assert.equal(by.get('Later')?.later, true)
+  assert.equal(by.get('Later')?.atLevel, 31)
+  // Unknown player level flags nothing.
+  assert.equal(acquisitionsForStage(profile, 0, gems).plan.every((it) => !it.later), true)
+})
+
+test('the plan drops gems already required (socketed) in the previous stage', () => {
+  const gems = new GemData({
+    Main: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    NewGem: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'dedup', class: 'Witch' },
+      stages: [
+        { range: [1, 5], socketGroups: [{ gems: ['Main'] }] },
+        { range: [6, 12], socketGroups: [{ gems: ['Main', 'NewGem'] }] }
+      ],
+      gemPlan: [{ gem: 'Main' }, { gem: 'NewGem' }]
+    })
+  ).profile!
+  const buys = (i: number): string[] =>
+    acquisitionsForStage(profile, i, gems).plan.map((it) => (it.kind === 'buy' ? it.entry.gem : ''))
+
+  assert.deepEqual(buys(0), ['Main']) // stage 0: Main is new (nothing before it)
+  assert.deepEqual(buys(1), ['NewGem']) // stage 1: Main carried over -> hidden
+  // ...but the purchases list (which drives the link-overview tags) still has both.
+  assert.deepEqual(
+    acquisitionsForStage(profile, 1, gems).purchases.map((e) => e.gem).sort(),
+    ['Main', 'NewGem']
+  )
+})
+
+test('quest rank is derived from gem levels and orders an act chronologically', () => {
+  // Real Act 1 shape: each quest's gems scale with how far in it sits.
+  const gems = new GemData({
+    Early: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    Mid: { attr: 'int', requiredLevel: 8, sources: [{ kind: 'quest', act: 1, quest: 'The Caged Brute', classes: ['Witch'] }] },
+    Late: { attr: 'int', requiredLevel: 12, sources: [{ kind: 'quest', act: 1, quest: "The Siren's Cadence", classes: ['Witch'] }] }
+  })
+  // The rank orders the quests the way you actually play them...
+  assert.ok(gems.questRank(1, 'Enemy at the Gate') < gems.questRank(1, 'The Caged Brute'))
+  assert.ok(gems.questRank(1, 'The Caged Brute') < gems.questRank(1, "The Siren's Cadence"))
+  assert.equal(gems.questRank(1, 'No Such Quest'), Number.MAX_SAFE_INTEGER) // unknown sorts last
+
+  // A vendor's UNLOCK quest must not set the rank: "A Fixture of Fate" unlocks
+  // Siosa, who sells level-1 gems — counting those would rank Act 3's latest
+  // quest as its earliest (caught against real data).
+  const withVendor = new GemData({
+    Cheap: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }] },
+    Reward: { attr: 'int', requiredLevel: 31, sources: [{ kind: 'quest', act: 3, quest: 'A Fixture of Fate', classes: ['Witch'] }] },
+    Earlier: { attr: 'int', requiredLevel: 24, sources: [{ kind: 'quest', act: 3, quest: 'Lost in Love', classes: ['Witch'] }] }
+  })
+  assert.ok(withVendor.questRank(3, 'Lost in Love') < withVendor.questRank(3, 'A Fixture of Fate'))
+
+  // Two quests that both start at level 1 used to tie, and the plan then fell
+  // through to the alphabet — which put Mercy Mission above the first quest of
+  // the game. The average level of what each hands out separates them: Enemy at
+  // the Gate gives level 1 and nothing else, Mercy Mission climbs to 4.
+  const tied = new GemData({
+    'Gate A': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    'Gate B': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] },
+    'Mercy A': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Mercy Mission', classes: ['Witch'] }] },
+    'Mercy B': { attr: 'int', requiredLevel: 4, sources: [{ kind: 'quest', act: 1, quest: 'Mercy Mission', classes: ['Witch'] }] }
+  })
+  assert.ok(tied.questRank(1, 'Enemy at the Gate') < tied.questRank(1, 'Mercy Mission'))
+  // A lower minimum still wins outright, whatever the averages do.
+  const spread = new GemData({
+    'Low then high': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'First', classes: ['Witch'] }] },
+    'Also high': { attr: 'int', requiredLevel: 60, sources: [{ kind: 'quest', act: 1, quest: 'First', classes: ['Witch'] }] },
+    'Steady': { attr: 'int', requiredLevel: 4, sources: [{ kind: 'quest', act: 1, quest: 'Second', classes: ['Witch'] }] }
+  })
+  assert.ok(spread.questRank(1, 'First') < spread.questRank(1, 'Second'))
+
+  // And on the shipped data the first quest of the game leads Act 1.
+  const real = exampleGems()
+  assert.ok(real.questRank(1, 'Enemy at the Gate') < real.questRank(1, 'Mercy Mission'))
+  assert.ok(real.questRank(1, 'Mercy Mission') < real.questRank(1, 'Breaking Some Eggs'))
+
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'order', class: 'Witch' },
+      // Listed in the WRONG order on purpose — the plan must fix it.
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Late', 'Mid', 'Early'] }] }],
+      gemPlan: [{ gem: 'Late' }, { gem: 'Mid' }, { gem: 'Early' }]
+    })
+  ).profile!
+  const plan = acquisitionsForStage(profile, 0, gems)
+  assert.deepEqual(
+    plan.plan.map((it) => (it.kind === 'reward' ? it.group.gems[0].gem : it.entry.gem)),
+    ['Early', 'Mid', 'Late']
+  )
+})
+
+test('a gem needed in two different links is counted (x2)', () => {
+  const gems = new GemData({
+    Twice: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    Once: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'dupes', class: 'Witch' },
+      stages: [
+        {
+          range: [1, 20],
+          // "Twice" is socketed in BOTH links -> you need two copies.
+          socketGroups: [{ gems: ['Twice', 'Once'] }, { gems: ['Twice'] }]
+        }
+      ],
+      gemPlan: [{ gem: 'Twice' }, { gem: 'Once' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems)
+  assert.equal(acq.purchases.find((e) => e.gem === 'Twice')?.count, 2)
+  assert.equal(acq.purchases.find((e) => e.gem === 'Once')?.count, undefined)
+})
+
+test('the gem you mule is flagged with the class that hands it over', () => {
+  const gems = new GemData({
+    'Ruthless Support': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
+    Fireball: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
+  })
+  // Marauder begins with Ruthless Support; the Witch begins with Fireball.
+  const startingOwners = new Map([
+    [normalizeGemName('Ruthless Support'), ['Marauder']],
+    [normalizeGemName('Fireball'), ['Witch']]
+  ])
+  const starting = new Set([normalizeGemName('Fireball')]) // this Witch's own starter
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'mule', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Ruthless Support', 'Fireball'] }] }],
+      gemPlan: [{ gem: 'Ruthless Support' }, { gem: 'Fireball' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems, {
+    startingGems: starting,
+    playerLevel: 10,
+    mule: { gem: 'Ruthless Support', classes: startingOwners.get(normalizeGemName('Ruthless Support'))! }
+  })
+
+  // A Witch can't quest Ruthless Support, but a level-1 Marauder starts with it.
+  assert.deepEqual(acq.purchases.find((e) => e.gem === 'Ruthless Support')?.mule, ['Marauder'])
+  // Your OWN starting gem is never a mule suggestion (you already have it).
+  assert.equal(acq.other.find((e) => e.gem === 'Fireball')?.starting, true)
+  assert.equal(acq.other.find((e) => e.gem === 'Fireball')?.mule, undefined)
+})
+
+test('a muled gem is not on the list: the choice is in Settings, the links say Mule', () => {
+  const gems = new GemData({
+    // Sold in Act 3, but a level-1 Marauder hands it over before you start.
+    'Ruthless Support': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
+    'Buy A1': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    'Reward A1': { attr: 'int', sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'mule-order', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Reward A1', 'Buy A1', 'Ruthless Support'] }] }],
+      gemPlan: [{ gem: 'Reward A1' }, { gem: 'Buy A1' }, { gem: 'Ruthless Support' }]
+    })
+  ).profile!
+  const plan = acquisitionsForStage(profile, 0, gems, {
+    playerLevel: 10,
+    mule: { gem: 'Ruthless Support', classes: ['Marauder'] }
+  }).plan
+
+  assert.deepEqual(
+    plan.map((it) => (it.kind === 'reward' ? it.group.gems[0].gem : it.entry.gem)),
+    ['Reward A1', 'Buy A1']
+  )
+})
+
+test('a choice lists the gem you need soonest first', () => {
+  const quest = (): GemSourceInfo => ({
+    kind: 'quest',
+    act: 3,
+    quest: 'Lost in Love',
+    classes: ['Witch']
+  })
+  const gems = new GemData({
+    Starter: { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa' }] },
+    Discipline: { attr: 'int', requiredLevel: 24, sources: [quest()] },
+    Frostbite: { attr: 'int', requiredLevel: 24, sources: [quest()] },
+    Zealotry: { attr: 'int', requiredLevel: 24, sources: [quest()] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'soonest', class: 'Witch' },
+      stages: [
+        { range: [1, 31], socketGroups: [{ gems: ['Starter'] }] },
+        // Frostbite is slotted at 32, the other two only at 62.
+        { range: [32, 61], socketGroups: [{ gems: ['Starter', 'Frostbite'] }] },
+        { range: [62, 90], socketGroups: [{ gems: ['Discipline', 'Frostbite', 'Zealotry'] }] }
+      ],
+      gemPlan: [{ gem: 'Starter' }, { gem: 'Discipline' }, { gem: 'Frostbite' }, { gem: 'Zealotry' }]
+    })
+  ).profile!
+  // Viewed from stage 0, all three are upcoming — the order must follow when
+  // you actually need them, not the alphabet.
+  const g = acquisitionsForStage(profile, 0, gems).rewardGroups[0]
+  assert.deepEqual(
+    g.gems.map((e) => `${e.gem}@${e.fromLevel}`),
+    ['Frostbite@32', 'Discipline@62', 'Zealotry@62']
+  )
+})
+
+test('stepStageView pages stages and snaps back to auto on the live one', () => {
+  // Live stage is index 2 of 5; null = following the level.
+  assert.equal(stepStageView(null, -1, 2, 5), 1) // step back pins stage 1
+  assert.equal(stepStageView(1, -1, 2, 5), 0) // and again
+  assert.equal(stepStageView(0, -1, 2, 5), 0) // clamped at the start
+  assert.equal(stepStageView(1, 1, 2, 5), null) // stepping onto the live stage resumes auto
+  assert.equal(stepStageView(3, 1, 2, 5), 4) // page forward past live
+  assert.equal(stepStageView(4, 1, 2, 5), 4) // clamped at the end
+  assert.equal(stepStageView(null, -1, 0, 0), null) // no stages
+})
+
+test('a class starting gem is marked and kept off the buy/reward lists', () => {
+  const gems = new GemData({
+    'Arcane Surge Support': { attr: 'int', requiredLevel: 1, sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] },
+    'Frost Bomb': { attr: 'int', sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', classes: ['Witch'] }] }
+  })
+  const starting = new Set(['Arcane Surge Support'].map(normalizeGemName)) // Witch starter
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'start', class: 'Witch' },
+      stages: [{ range: [1, 12], socketGroups: [{ gems: ['Arcane Surge Support', 'Frost Bomb'] }] }],
+      gemPlan: [{ gem: 'Arcane Surge Support' }, { gem: 'Frost Bomb' }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, gems, { startingGems: starting })
+
+  // Arcane Surge would resolve to Nessa, but you already start with it.
+  const start = acq.other.find((e) => e.gem === 'Arcane Surge Support')
+  assert.equal(start?.starting, true)
+  assert.deepEqual(acq.purchases.map((e) => e.gem), ['Frost Bomb'])
+  assert.equal(acq.rewards.length, 0)
+  assert.equal(acq.rewardGroups.length, 0)
+})
+
+test('an authored source overrides the live lookup', () => {
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'override', class: 'Witch' },
+      stages: [{ range: [1, 12], socketGroups: [{ gems: ['Frostbolt'] }] }],
+      gemPlan: [{ gem: 'Frostbolt', source: { kind: 'drop', note: 'using a drop' } }]
+    })
+  ).profile!
+  const acq = acquisitionsForStage(profile, 0, SOURCED_GEMS)
+  assert.equal(acq.rewards.length, 0)
+  assert.deepEqual(acq.other.map((e) => e.gem), ['Frostbolt'])
+})
+
+test('an ascended character still counts as its base class', () => {
+  // Client.txt reports the ascendancy after you ascend, so this is the exact
+  // case that used to warn a Witch build about being played on a Witch.
+  assert.equal(baseClassOf('Elementalist'), 'Witch')
+  assert.equal(baseClassOf('Witch'), 'Witch')
+  assert.equal(baseClassOf('Ascendant'), 'Scion')
+  assert.equal(baseClassOf('juggernaut'), 'Marauder', 'case should not matter')
+  // A name we can't place — a localized log, say — is not a mismatch claim.
+  assert.equal(baseClassOf('Hexenmeisterin'), null)
+  assert.equal(baseClassOf(''), null)
+})
+
+test('every ascendancy belongs to exactly one class', () => {
+  const seen = new Map<string, string>()
+  for (const cls of CLASSES) {
+    assert.ok(ASCENDANCIES[cls].length > 0, `${cls} has no ascendancies`)
+    for (const asc of ASCENDANCIES[cls]) {
+      assert.equal(seen.get(asc), undefined, `${asc} is listed under two classes`)
+      seen.set(asc, cls)
+      assert.equal(baseClassOf(asc), cls)
+    }
+  }
+  // No ascendancy shares a name with a base class, or the lookup would be
+  // ambiguous and the base-class branch would silently win.
+  for (const cls of CLASSES) assert.equal(seen.has(cls), false, `${cls} is also an ascendancy`)
+})
+
+test('the plan drops acts you have not reached, and only those', () => {
+  const quest = (act: number, q: string): GemSourceInfo => ({
+    kind: 'quest',
+    act,
+    quest: q,
+    classes: ['Witch']
+  })
+  const gems = new GemData({
+    // Act 1, wanted now.
+    'Flame Wall': { attr: 'int', requiredLevel: 1, sources: [quest(1, 'Breaking Some Eggs')] },
+    // Act 1, but a later stage needs it — the "take it now, the quest won't come
+    // back" case. Must survive: you can act on it today.
+    Contagion: { attr: 'int', requiredLevel: 28, sources: [quest(1, 'Breaking Some Eggs')] },
+    // Act 3 and Act 4: hours away at level 2.
+    Bane: { attr: 'int', requiredLevel: 28, sources: [quest(3, 'Lost in Love')] },
+    Decay: { attr: 'int', requiredLevel: 28, sources: [quest(4, 'The Eternal Nightmare')] },
+    // An Act 2 vendor buy, likewise out of reach.
+    'Herald of Ice': { attr: 'int', requiredLevel: 16, sources: [{ kind: 'vendor', act: 2, npc: 'Yeena' }] },
+    Placeless: { attr: 'int', requiredLevel: 30 }
+  })
+  const names = ['Flame Wall', 'Contagion', 'Bane', 'Decay', 'Herald of Ice', 'Placeless']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'reach', class: 'Witch' },
+      stages: [
+        // Wanted now: an Act 1 reward, an Act 2 buy, and a buy with no act.
+        { range: [1, 27], socketGroups: [{ gems: ['Flame Wall', 'Herald of Ice', 'Placeless'] }] },
+        // Wanted later: quest rewards from Acts 1, 3 and 4. Only rewards reach
+        // the current stage's plan ("take it now, the quest won't come back").
+        { range: [28, 90], socketGroups: [{ gems: names }] }
+      ],
+      gemPlan: names.map((gem) =>
+        // An authored vendor source that names no act: we can't place it, so we
+        // can't rule it out either. It has to survive every filter.
+        gem === 'Placeless' ? { gem, source: { kind: 'vendor', npc: 'Someone' } } : { gem }
+      )
+    })
+  ).profile!
+
+  const gemsIn = (actReached: number | null): string[] =>
+    acquisitionsForStage(profile, 0, gems, { playerLevel: 2, actReached })
+      .plan.flatMap((it) => (it.kind === 'reward' ? it.group.gems.map((g) => g.gem) : [it.entry.gem]))
+      .sort()
+
+  // Level 2, still in Act 1: everything beyond Act 1 goes, including the Act 2
+  // buy — but the Act 1 group keeps its for-later gem, and the placeless one stays.
+  assert.deepEqual(gemsIn(1), ['Contagion', 'Flame Wall', 'Placeless'])
+  // Reaching Act 3 brings its quest along, Act 4 still waits.
+  assert.deepEqual(gemsIn(3), ['Bane', 'Contagion', 'Flame Wall', 'Herald of Ice', 'Placeless'])
+  // Unknown progress falls back on the stage's own acts: levels 1-27 run into
+  // Act 3, so Act 4's quest still waits. Never a blank list on a missing signal.
+  assert.deepEqual(gemsIn(null), ['Bane', 'Contagion', 'Flame Wall', 'Herald of Ice', 'Placeless'])
+})
+
+test('Siosa counts as Act 3, like Clarissa', () => {
+  const gems = new GemData({
+    // Siosa is the earliest source for ~195 gems in the shipped data, so when
+    // he unlocks decides whether entering Act 3 dumps two hundred purchases in.
+    'Siosa Gem': {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }]
+    },
+    'Clarissa Gem': {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'vendor', act: 3, npc: 'Clarissa', quest: 'Lost in Love' }]
+    }
+  })
+  const names = ['Siosa Gem', 'Clarissa Gem']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'library', class: 'Witch' },
+      stages: [{ range: [1, 90], socketGroups: [{ gems: names }] }],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const buys = (actReached: number): string[] =>
+    acquisitionsForStage(profile, 0, gems, { playerLevel: 30, actReached })
+      .plan.flatMap((it) => (it.kind === 'buy' ? [it.entry.gem] : []))
+      .sort()
+
+  // The list is what you can get from the acts you've reached (owner's call):
+  // Siosa is in Act 3, so entering it lists him — the "Library" label says
+  // where to go. Before Act 3, neither.
+  assert.deepEqual(buys(2), [])
+  assert.deepEqual(buys(3), ['Clarissa Gem', 'Siosa Gem'])
+})
+
+test('purchases carry the shopping stop they belong to', () => {
+  const gems = new GemData({
+    Early: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', quest: 'Enemy at the Gate' }]
+    },
+    // Same vendor, later quest: a second visit, so a second block.
+    Later: {
+      attr: 'int',
+      requiredLevel: 8,
+      sources: [{ kind: 'vendor', act: 1, npc: 'Nessa', quest: 'The Caged Brute' }]
+    },
+    Librarian: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }]
+    },
+    Gift: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [{ kind: 'quest', act: 1, quest: 'Mercy Mission', classes: ['Witch'] }]
+    }
+  })
+  const names = ['Early', 'Later', 'Librarian', 'Gift']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'stops', class: 'Witch' },
+      stages: [{ range: [1, 90], socketGroups: [{ gems: names }] }],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const plan = acquisitionsForStage(profile, 0, gems, { playerLevel: 40 }).plan
+
+  const stops = new Map(
+    plan.flatMap((it) => (it.kind === 'buy' ? [[it.entry.gem, it.stop] as const] : []))
+  )
+  assert.equal(stops.get('Early')?.label, 'A1 · Nessa')
+  assert.equal(stops.get('Later')?.label, 'A1 · Nessa')
+  // Same label, different key: two visits to the same vendor, one block each.
+  assert.notEqual(stops.get('Early')?.key, stops.get('Later')?.key)
+  // The engine stays data-faithful and hands the NPC over separately; renaming
+  // Siosa to "Library" is the renderer's job, so it can colour it too.
+  assert.equal(stops.get('Librarian')?.label, 'A3 · Siosa')
+  assert.equal(stops.get('Librarian')?.npc, 'Siosa')
+  assert.equal(stops.get('Librarian')?.act, 3)
+  // A quest reward is not a stop you stand at.
+  const gift = plan.find((it) => it.kind === 'reward')
+  assert.ok(gift && !('stop' in gift && gift.stop))
+})
+
+test('a "buy the rest" says where, on the real gem data', () => {
+  // The reported case: Intruders in Black offers Herald of Ice, Herald of
+  // Thunder and Cold Snap, so two of the three have to be bought — and the
+  // overlay never said where, because a gem whose earliest source is a quest
+  // is filed as a reward and never reaches the shopping list at all.
+  const gems = exampleGems()
+  const names = ['Herald of Ice', 'Herald of Thunder', 'Cold Snap']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'heralds', class: 'Witch' },
+      stages: [{ range: [1, 90], socketGroups: [{ gems: names }] }],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const group = acquisitionsForStage(profile, 0, gems).rewardGroups.find(
+    (g) => g.quest === 'Intruders in Black'
+  )
+  assert.ok(group?.pickOne, 'one quest, three of your gems -> a choice')
+  assert.equal(group.buyRest?.count, 2)
+  // All three are on Yeena's Act 2 shelf, so that's the address.
+  assert.equal(group.buyRest?.npc, 'Yeena')
+  assert.equal(group.buyRest?.act, 2)
+  assert.equal(group.buyRest?.partial, undefined, 'she stocks all of them')
+})
+
+test('the vendor named is the one who has them all, not the first', () => {
+  const gems = new GemData({
+    Soon: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] },
+        { kind: 'vendor', act: 1, npc: 'Nessa' }
+      ]
+    },
+    // Same quest, but nobody sells this one until Act 3 — naming Nessa would
+    // send you shopping for something she doesn't have.
+    Late: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] },
+        { kind: 'vendor', act: 3, npc: 'Clarissa' }
+      ]
+    }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'latest', class: 'Witch' },
+      stages: [{ range: [1, 90], socketGroups: [{ gems: ['Soon', 'Late'] }] }],
+      gemPlan: [{ gem: 'Soon' }, { gem: 'Late' }]
+    })
+  ).profile!
+  const group = acquisitionsForStage(profile, 0, gems).rewardGroups[0]
+  assert.equal(group.buyRest?.npc, 'Clarissa')
+  assert.equal(group.buyRest?.act, 3)
+})
+
+test('the one-shot build decisions validate against their real option lists', () => {
+  const base = {
+    stages: [{ range: [1, 90], socketGroups: [{ gems: ['Fireball'] }] }],
+    gemPlan: [{ gem: 'Fireball' }]
+  }
+  const meta = (extra: object): string =>
+    JSON.stringify({ ...base, meta: { name: 'x', class: 'Witch', ...extra } })
+
+  const ok = parseProfile(
+    meta({ bandit: 'Alira', pantheon: { major: 'Soul of Lunaris', minor: 'Soul of Shakari' } })
+  )
+  assert.deepEqual(ok.errors, [])
+  assert.equal(ok.profile?.meta.bandit, 'Alira')
+  assert.equal(ok.profile?.meta.pantheon?.major, 'Soul of Lunaris')
+
+  // "Kill all" is a decision too, not the absence of one.
+  assert.equal(parseProfile(meta({ bandit: 'Kill all' })).profile?.meta.bandit, 'Kill all')
+  // Saying nothing is fine — the app has no opinion, so no reminder.
+  assert.equal(parseProfile(meta({})).profile?.meta.bandit, undefined)
+  assert.equal(parseProfile(meta({})).profile?.meta.pantheon, undefined)
+
+  // A typo would otherwise be a reminder that silently never fires.
+  assert.ok(parseProfile(meta({ bandit: 'Alria' })).errors.some((e) => e.includes('meta.bandit')))
+  assert.ok(
+    parseProfile(meta({ pantheon: { major: 'Soul of Lunaris', minor: 'Soul of Lunaris' } })).errors.some(
+      (e) => e.includes('meta.pantheon.minor')
+    ),
+    'a major soul is not a minor one'
+  )
+  assert.ok(parseProfile(meta({ pantheon: 'Lunaris' })).errors.some((e) => e.includes('meta.pantheon')))
+})
+
+test('a gem you lost a quest choice on stays on the list as a buy', () => {
+  // The reported case, on the real data. Cold Snap comes from Intruders in
+  // Black, which offers several of this build's gems — so at most one of them
+  // was free. Deduping against the previous stage assumed the whole group was
+  // settled there, and every loser dropped out of the list for good.
+  const gems = exampleGems()
+  const names = ['Cold Snap', 'Herald of Ice', 'Herald of Thunder']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'carry', class: 'Witch' },
+      // The same links in both stages: nothing was acquired in between.
+      stages: [
+        { range: [1, 27], socketGroups: [{ gems: names }] },
+        { range: [28, 90], socketGroups: [{ gems: names }] }
+      ],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+
+  // Stage 0: one quest, three of your gems -> a choice, not three buys.
+  const first = acquisitionsForStage(profile, 0, gems, { playerLevel: 20, actReached: 2 })
+  const group = first.plan.find((it) => it.kind === 'reward')
+  assert.ok(group?.kind === 'reward' && group.group.pickOne)
+  assert.equal(first.plan.some((it) => it.kind === 'buy'), false, 'nothing to buy yet — you pick first')
+
+  // Stage 1: the quest is behind you and gave you exactly one. The other two
+  // are purchases now, at the vendor who stocks them — one row for the pick,
+  // "buy two of these three", not three rows that read as three buys.
+  const later = acquisitionsForStage(profile, 1, gems, { playerLevel: 32, actReached: 3 })
+  const buys = later.plan.flatMap((it) => (it.kind === 'buy' ? [it.entry] : []))
+  assert.equal(buys.length, 1)
+  const row = buys[0]!
+  assert.deepEqual(row.anyOf?.map((e) => e.gem).sort(), ['Cold Snap', 'Herald of Ice', 'Herald of Thunder'])
+  assert.equal(row.count, 2, 'the quest gave you one of the three')
+  assert.equal(row.bucket, 'purchase')
+  assert.equal(row.npc, 'Yeena')
+  assert.equal(row.fromPickOne, true, 'the row has to admit you may already own them')
+  assert.ok(row.cost, 'a purchase without a price is not a shopping list entry')
+})
+
+test('what a pick left to buy is listed on the next stage only', () => {
+  // The Caged Brute's skill pick, from the report: Leap Slam or Intimidating
+  // Cry, then three more stages of the same links. Listed once, after the
+  // pick — not on every stage until the end of the profile.
+  const gems = exampleGems()
+  const names = ['Ground Slam', 'Leap Slam', 'Intimidating Cry']
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'brute', class: 'Marauder' },
+      stages: [
+        { range: [1, 12], socketGroups: [{ gems: names }] },
+        { range: [13, 21], socketGroups: [{ gems: names }] },
+        { range: [22, 28], socketGroups: [{ gems: names }] },
+        { range: [29, 40], socketGroups: [{ gems: names }] }
+      ],
+      gemPlan: names.map((gem) => ({ gem }))
+    })
+  ).profile!
+  const owed = (i: number): string[] =>
+    acquisitionsForStage(profile, i, gems, { playerLevel: 16 }).plan.flatMap((it) =>
+      it.kind === 'buy' && it.entry.fromPickOne ? [it.entry.gem] : []
+    )
+  assert.deepEqual([0, 1, 2, 3].map(owed), [[], ['Intimidating Cry or Leap Slam'], [], []])
+})
+
+test('an ordinary reward is still assumed handled by the stage that offered it', () => {
+  // The carry-forward must not turn every reward into a permanent buy — only
+  // the ones that competed for a single pick.
+  const gems = new GemData({
+    Solo: {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Witch'] },
+        { kind: 'vendor', act: 1, npc: 'Nessa' }
+      ]
+    }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'solo', class: 'Witch' },
+      stages: [
+        { range: [1, 27], socketGroups: [{ gems: ['Solo'] }] },
+        { range: [28, 90], socketGroups: [{ gems: ['Solo'] }] }
+      ],
+      gemPlan: [{ gem: 'Solo' }]
+    })
+  ).profile!
+  const later = acquisitionsForStage(profile, 1, gems, { playerLevel: 32, actReached: 3 })
+  assert.deepEqual(later.plan, [], 'one quest, one gem — you took it, it is done')
+})
+
+// --- Muling -----------------------------------------------------------------
+// One gem per character, chosen by the player: what a fresh alt of another class
+// gets by clearing the Twilight Strand — its starting gems, Hillock's reward, or
+// Nessa's first stock — that your own class doesn't. Default: Momentum.
+
+function startingClasses(): Record<string, string[]> {
+  return JSON.parse(readFileSync(repoPath('data/starting-gems.json'), 'utf8')).classes
+}
+
+// The build from the report, against the shipped data: Momentum in the first
+// links, Chance to Bleed from level 8.
+function berserker(): Profile {
+  return parseProfile(
+    JSON.stringify({
+      meta: { name: 'Berserker', class: 'Marauder', ascendancy: 'Berserker' },
+      stages: [
+        { range: [1, 7], label: 'After Hillock', socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support'] }] },
+        { range: [8, 20], label: 'After Hailrake', socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Chance to Bleed Support'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Chance to Bleed Support'].map((gem) => ({ gem }))
+    })
+  ).profile!
+}
+
+test('the mule options are what another class gets on the Strand and yours does not', () => {
+  const options = muleOptions(berserker(), exampleGems(), startingClasses())
+  // Momentum: a Ranger starts with it. Chance to Bleed: a Duelist does. Both
+  // only reach a Marauder at Mercy Mission, so both are options — in the order
+  // the build first needs them.
+  assert.deepEqual(
+    options.map((o) => [o.gem, o.classes[0], o.how]),
+    [
+      ['Momentum Support', 'Ranger', 'start'],
+      ['Chance to Bleed Support', 'Duelist', 'start']
+    ]
+  )
+  // Ground Slam is Hillock's reward for a Marauder anyway; Ruthless is its own
+  // starting gem. Neither is worth an alt.
+  assert.ok(!options.some((o) => o.gem === 'Ground Slam' || o.gem === 'Ruthless Support'))
+})
+
+test('Hillock reward and Nessa stock count, not only starting gems', () => {
+  // A gem no class starts with, sold by Nessa to a Witch after Hillock, and
+  // only reachable for this Marauder much later.
+  const gems = new GemData({
+    'Ground Slam': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Marauder'] }] },
+    'Arcane Surge Support': {
+      attr: 'int',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'vendor', act: 1, npc: 'Nessa', quest: 'Enemy at the Gate', classes: ['Witch'] },
+        { kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }
+      ]
+    },
+    'Holy Flame Totem': { attr: 'str', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Templar'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'x', class: 'Marauder' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Ground Slam', 'Arcane Surge Support', 'Holy Flame Totem'] }] }],
+      gemPlan: []
+    })
+  ).profile!
+  const options = muleOptions(profile, gems, { Marauder: ['Heavy Strike'], Witch: ['Fireball'], Templar: ['Glacial Hammer'] })
+  assert.deepEqual(
+    options.map((o) => [o.gem, o.classes, o.how]).sort(),
+    [
+      ['Arcane Surge Support', ['Witch'], 'vendor'],
+      ['Holy Flame Totem', ['Templar'], 'reward']
+    ]
+  )
+})
+
+test('the default mule is Momentum, or else the gem needed first', () => {
+  const options = muleOptions(berserker(), exampleGems(), startingClasses())
+  assert.equal(defaultMule(options)?.gem, 'Momentum Support')
+  assert.equal(defaultMule(options.filter((o) => o.gem !== 'Momentum Support'))?.gem, 'Chance to Bleed Support')
+  assert.equal(defaultMule([]), null)
+})
+
+test('the muled gem leaves the quest pick, and the pick goes to the next gem', () => {
+  // Mercy Mission offers this Marauder Momentum and Chance to Bleed. Mule
+  // Momentum and the quest hands over Chance to Bleed — no choice left to make.
+  const profile = berserker()
+  const gems = exampleGems()
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const acq = acquisitionsForStage(profile, 0, gems, { mule: momentum, playerLevel: 2 })
+
+  assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Momentum Support'), 'no mule row')
+  assert.ok(!acq.rewards.some((e) => e.gem === 'Momentum Support'), 'never also the quest pick')
+  const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
+  assert.deepEqual(mercy?.gems.map((e) => e.gem), ['Chance to Bleed Support'])
+  assert.equal(mercy?.pickOne, false)
+})
+
+test('only the chosen gem is muled — never two alts', () => {
+  // Chance to Bleed could come from a Duelist too, but Momentum is the mule:
+  // Chance to Bleed stays the quest's.
+  const profile = berserker()
+  const gems = exampleGems()
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const acq = acquisitionsForStage(profile, 1, gems, { mule: momentum, playerLevel: 9 })
+  const all = [...acq.rewards, ...acq.purchases, ...acq.other, ...acq.upcoming]
+  // Momentum keeps its "Mule · Ranger" tag in the links — that's where it came
+  // from — and nothing else gets one.
+  assert.deepEqual([...new Set(all.filter((e) => e.mule).map((e) => e.gem))], ['Momentum Support'])
+  assert.ok(acq.rewards.some((e) => e.gem === 'Chance to Bleed Support'))
+  // And the mule trip itself is behind you: it isn't on the to-do list again.
+  assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.mule))
+})
+
+test('a mule for a later stage still frees its quest pick', () => {
+  // Choose Chance to Bleed (needed from level 8): Mercy Mission hands over
+  // Momentum instead, and neither stage lists the mule.
+  const profile = berserker()
+  const gems = exampleGems()
+  const bleed = muleOptions(profile, gems, startingClasses()).find((o) => o.gem === 'Chance to Bleed Support')!
+  const acq = acquisitionsForStage(profile, 0, gems, { mule: bleed, playerLevel: 2 })
+  assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
+  const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
+  assert.deepEqual(mercy?.gems.map((e) => e.gem), ['Momentum Support'])
+  const later = acquisitionsForStage(profile, 1, gems, { mule: bleed, playerLevel: 9 })
+  assert.ok(!later.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
+})
+
+test('no mule makes every gem a quest or a buy again', () => {
+  const profile = berserker()
+  const acq = acquisitionsForStage(profile, 0, exampleGems(), { mule: null, playerLevel: 2 })
+  const all = [...acq.rewards, ...acq.purchases, ...acq.other, ...acq.upcoming]
+  assert.ok(all.every((e) => !e.mule))
+  const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
+  assert.equal(mercy?.pickOne, true, 'Momentum and Chance to Bleed: pick one')
+})
+
+test('a low-level alt of a class this build mules from is a mule, not the wrong profile', () => {
+  const profile = berserker()
+  const classes = muleOptions(profile, exampleGems(), startingClasses()).flatMap((o) => o.classes)
+  assert.equal(mulingClass(profile, 'Ranger', 2, classes), 'Ranger')
+  assert.equal(mulingClass(profile, 'Deadeye', 1, classes), 'Ranger', 'an ascended name reads as its base class')
+  // Past a mule's level, a class this build takes nothing from, or your own
+  // class: not a mule, and the warning stays.
+  assert.equal(mulingClass(profile, 'Ranger', MULE_MAX_LEVEL + 1, classes), null)
+  assert.equal(mulingClass(profile, 'Witch', 2, classes), null)
+  assert.equal(mulingClass(profile, 'Marauder', 2, classes), null)
+  assert.equal(mulingClass(profile, null, 2, classes), null)
+})
+
+// --- Quests with two rewards ----------------------------------------------------
+// The Caged Brute hands a Marauder a support AND a skill gem, each its own pick.
+// The wiki lists all nine under the one quest, and the tab made one box of them:
+// "pick Faster Attacks, Leap Slam or Intimidating Cry, buy the rest". In game the
+// support window offers Faster Attacks and the skill window Leap Slam — both free.
+
+function cagedBrute(faster = 'Faster Attacks Support'): Profile {
+  return parseProfile(
+    JSON.stringify({
+      meta: { name: 'Berserker', class: 'Marauder' },
+      stages: [
+        { range: [1, 20], socketGroups: [{ gems: ['Ground Slam', faster, 'Leap Slam', 'Intimidating Cry'] }] }
+      ],
+      gemPlan: ['Ground Slam', faster, 'Leap Slam', 'Intimidating Cry'].map((gem) => ({ gem }))
+    })
+  ).profile!
+}
+
+test('the support pick is found by the gem, not by a " Support" in its name', () => {
+  // Path of Building writes "Faster Attacks": still the support window.
+  const groups = acquisitionsForStage(cagedBrute('Faster Attacks'), 0, exampleGems(), { playerLevel: 9 }).rewardGroups.filter(
+    (g) => g.quest === 'The Caged Brute'
+  )
+  assert.deepEqual(groups.find((g) => g.slot === 'support')?.gems.map((e) => e.gem), ['Faster Attacks'])
+  assert.deepEqual(groups.find((g) => g.slot === 'skill')?.gems.map((e) => e.gem).sort(), ['Intimidating Cry', 'Leap Slam'])
+})
+
+test('a skill that shares a support\'s name stays a skill', () => {
+  const gems = exampleGems()
+  assert.equal(gems.isSupport('Faster Attacks'), true)
+  assert.equal(gems.isSupport('Faster Attacks Support'), true)
+  assert.equal(gems.isSupport('Leap Slam'), false)
+  assert.equal(gems.isSupport('Barrage'), false)
+  assert.equal(gems.isSupport('Not A Gem'), undefined)
+})
+
+test("The Caged Brute's support and skill are two picks, not one", () => {
+  const groups = acquisitionsForStage(cagedBrute(), 0, exampleGems(), { playerLevel: 9 }).rewardGroups.filter(
+    (g) => g.quest === 'The Caged Brute'
+  )
+  assert.equal(groups.length, 2)
+  const support = groups.find((g) => g.slot === 'support')
+  const skill = groups.find((g) => g.slot === 'skill')
+  // The support window holds only Faster Attacks of this build: just take it.
+  assert.deepEqual(support?.gems.map((e) => e.gem), ['Faster Attacks Support'])
+  assert.equal(support?.pickOne, false)
+  // The skill window offers both skills: that one IS a choice, and only the
+  // other skill is left to buy — not Faster Attacks as well.
+  assert.deepEqual(skill?.gems.map((e) => e.gem).sort(), ['Intimidating Cry', 'Leap Slam'])
+  assert.equal(skill?.pickOne, true)
+  assert.equal(skill?.buyRest?.count, 1)
+})
+
+test('every other quest is still one reward', () => {
+  // Mercy Mission offers two supports here: still a single pick, and no slot.
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'x', class: 'Marauder' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Ground Slam', 'Momentum Support', 'Chance to Bleed Support'] }] }],
+      gemPlan: ['Ground Slam', 'Momentum Support', 'Chance to Bleed Support'].map((gem) => ({ gem }))
+    })
+  ).profile!
+  const mercy = acquisitionsForStage(profile, 0, exampleGems(), { playerLevel: 5 }).rewardGroups.filter(
+    (g) => g.quest === 'Mercy Mission'
+  )
+  assert.equal(mercy.length, 1)
+  assert.equal(mercy[0]?.pickOne, true)
+  assert.equal(mercy[0]?.slot, undefined)
+})
+
+// --- Link marks ---------------------------------------------------------------
+// The gem setup at the bottom of the tab, read against the act you've reached.
+
+test('link rows mark this act and what is not reachable yet', () => {
+  const gems = exampleGems()
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'marks', class: 'Marauder' },
+      stages: [
+        { range: [1, 15], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support'] }] },
+        {
+          range: [16, 30],
+          socketGroups: [
+            { gems: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Cleave'] },
+            { gems: ['Herald of Ash', 'Cruelty Support'] },
+            { gems: ['Cyclone'] }
+          ]
+        }
+      ],
+      gemPlan: ['Ground Slam', 'Ruthless Support', 'Momentum Support', 'Cleave', 'Herald of Ash', 'Cruelty Support', 'Cyclone'].map(
+        (gem) => ({ gem })
+      )
+    })
+  ).profile!
+  const momentum = defaultMule(muleOptions(profile, gems, startingClasses()))!
+  const { linkMarks, linkChanges } = acquisitionsForStage(profile, 1, gems, {
+    startingGems: new Set(startingClasses().Marauder.map((g) => g.toLowerCase().replace(/ support$/, ''))),
+    actReached: 2,
+    mule: momentum
+  })
+  // Act state: earlier-act gems, the start gem and the mule have none.
+  assert.deepEqual(linkMarks, {
+    'herald of ash': 'thisAct',
+    'cruelty support': 'thisAct',
+    cyclone: 'notYet'
+  })
+  // NEW is what changed since the previous stage, whatever the act: Cleave
+  // (Act 1), Herald of Ash (this act, so gold AND new), Cyclone (not yet).
+  assert.deepEqual(newIn(profile, 1, linkChanges), ['cleave', 'cruelty support', 'cyclone', 'herald of ash'])
+})
+
+/** The gems a stage marks NEW, lowercased and sorted. */
+function newIn(profile: Profile, stage: number, changes: { fresh: boolean[][] }): string[] {
+  return profile.stages[stage].socketGroups
+    .flatMap((g, gi) => g.gems.filter((_, i) => changes.fresh[gi][i]))
+    .map((g) => g.toLowerCase())
+    .sort()
+}
+
+test('NEW is the change from the previous stage, on any stage but the first', () => {
+  const gems = exampleGems()
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'changes', class: 'Marauder' },
+      stages: [
+        { range: [1, 9], socketGroups: [{ gems: ['Ground Slam', 'Ruthless Support'] }] },
+        // Ruthless moves to another link: not a change. Leap Slam is.
+        { range: [10, 20], socketGroups: [{ gems: ['Ground Slam'] }, { gems: ['Leap Slam', 'Ruthless Support'] }] }
+      ],
+      gemPlan: ['Ground Slam', 'Ruthless Support', 'Leap Slam'].map((gem) => ({ gem }))
+    })
+  ).profile!
+  // Nothing to compare the first stage with.
+  assert.deepEqual(newIn(profile, 0, acquisitionsForStage(profile, 0, gems).linkChanges), [])
+  // No act or level needed, and the same whether it's the live stage or not.
+  assert.deepEqual(newIn(profile, 1, acquisitionsForStage(profile, 1, gems).linkChanges), ['leap slam'])
+  const later = acquisitionsForStage(profile, 1, gems, { actReached: 3, playerLevel: 40 }).linkChanges
+  assert.deepEqual(newIn(profile, 1, later), ['leap slam'])
+  // …but the move is a rearrangement: both links are RELINKED.
+  assert.deepEqual(later.relinked, [true, true])
+})
+
+test('no act known, no link marks', () => {
+  const profile = berserker()
+  assert.deepEqual(acquisitionsForStage(profile, 1, exampleGems(), { playerLevel: 9 }).linkMarks, {})
+})

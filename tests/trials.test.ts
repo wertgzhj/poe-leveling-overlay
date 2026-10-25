@@ -1,0 +1,307 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { TrialsEngine, CAMPAIGN_TRIALS, NORMAL_TRIALS, labFinaleOf } from '../electron/trials/engine.ts'
+
+test('twelve campaign trials: 6 normal, 3 cruel, 3 merciless', () => {
+  assert.equal(CAMPAIGN_TRIALS.length, 12)
+  assert.equal(NORMAL_TRIALS.length, 6)
+  const byLab = (lab: string): number => CAMPAIGN_TRIALS.filter((t) => t.lab === lab).length
+  assert.equal(byLab('normal'), 6)
+  assert.equal(byLab('cruel'), 3)
+  assert.equal(byLab('merciless'), 3)
+  // Normal gates the first Labyrinth in acts 1-3; the other two come later.
+  assert.deepEqual([...new Set(NORMAL_TRIALS.map((t) => t.act))].sort(), [1, 2, 3])
+  assert.ok(CAMPAIGN_TRIALS.filter((t) => t.lab !== 'normal').every((t) => t.act >= 6))
+  assert.equal(new Set(CAMPAIGN_TRIALS.map((t) => t.id)).size, 12) // ids unique
+})
+
+test('a zone hosting a trial in two difficulties resolves by act', () => {
+  const engine = new TrialsEngine()
+  // The Chamber of Sins Level 2 has a normal trial (Act 2) AND a cruel one (Act 7).
+  assert.equal(engine.matchZone('The Chamber of Sins Level 2', 2)?.lab, 'normal')
+  assert.equal(engine.matchZone('The Chamber of Sins Level 2', 7)?.lab, 'cruel')
+
+  // In Act 7, Izaro's line must tick the CRUEL trial, not the normal one.
+  engine.applyZone('The Chamber of Sins Level 2', 7)
+  assert.equal(engine.completeByIzaro('Any plaque line'), true)
+  const seen = engine.snapshot().trials.filter((t) => t.seen)
+  assert.deepEqual(seen.map((t) => t.id), ['t-a7-chamber-of-sins'])
+})
+
+test('a cruel/merciless trial completes from the zone', () => {
+  const engine = new TrialsEngine()
+  engine.applyZone('The Ossuary', 10)
+  assert.equal(engine.completeByIzaro('An emperor must know precisely where he stands.'), true)
+  assert.equal(engine.snapshot().trials.find((t) => t.id === 't-a10-ossuary')?.seen, true)
+  assert.equal(engine.completeByIzaro('An emperor must know precisely where he stands.'), false)
+})
+
+test("Act 6's trial is in The Lower Prison, like Act 1's: the act decides", () => {
+  const engine = new TrialsEngine()
+  // The zone used to read "The Prison", which doesn't exist: no hint, and the
+  // line fell back to ticking the Act 1 trial instead.
+  assert.equal(engine.matchZone('The Lower Prison', 1)?.id, 't-a1-lower-prison')
+  assert.equal(engine.matchZone('The Lower Prison', 6)?.id, 't-a6-prison')
+  engine.applyZone('The Lower Prison', 6)
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
+  assert.deepEqual(
+    engine.snapshot().trials.filter((t) => t.seen).map((t) => t.id),
+    ['t-a6-prison']
+  )
+})
+
+test('every cruel and merciless trial has its plaque line: the fallback reaches them', () => {
+  // Verified in a real capture: the later trials repeat the normal lines.
+  assert.ok(CAMPAIGN_TRIALS.every((t) => t.izaro))
+  // Act 1's trial done, zone unknown: the same line is now Act 6's.
+  const engine = new TrialsEngine(['t-a1-lower-prison'])
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
+  assert.equal(engine.snapshot().trials.find((t) => t.id === 't-a6-prison')?.seen, true)
+})
+
+test('the endgame trials say the same lines, and tick nothing', () => {
+  // The trials in maps (EndGame_Labyrinth_trials_*) repeat the six plaque lines.
+  // Out of the campaign there's no fallback, or a skipped cruel trial would be
+  // ticked by an endgame one.
+  const engine = new TrialsEngine()
+  engine.applyZone('Trial of Piercing Truth', null, 'EndGame_Labyrinth_trials_spikes')
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), false)
+  assert.equal(engine.snapshot().seenCount, 0)
+  // Back in the campaign, the fallback works again.
+  engine.applyZone('The Coast', 6, '2_6_2')
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
+})
+
+test("each Izaro plaque line completes its own trial; his other chatter doesn't", () => {
+  // The six normal trials alone: the later ones repeat these lines (see the
+  // Act 6 tests above).
+  const engine = new TrialsEngine([], [], NORMAL_TRIALS)
+
+  // A non-plaque line (intro / Labyrinth-fight chatter) matches nothing.
+  assert.equal(engine.completeByIzaro('You have done well to come this far.'), false)
+  assert.equal(engine.snapshot().seenCount, 0)
+
+  // The Lower Prison plaque line completes exactly that trial (and is idempotent).
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), true)
+  assert.equal(engine.snapshot().trials.find((t) => t.id === 't-a1-lower-prison')?.seen, true)
+  assert.equal(engine.completeByIzaro('Belief is the strongest metal of them all.'), false)
+  assert.equal(engine.snapshot().seenCount, 1)
+
+  // The other five plaque lines each check off their own trial — all six seen.
+  for (const line of [
+    'Shine boldly so that all might find you when the night falls.',
+    'There is a fine line between consideration and hesitation. The former is wisdom, the latter is fear.',
+    'Allow your wisdom to be tempered by the flames of the past.',
+    'An emperor must bear two blades. Hope in the left hand. Surety in the right.',
+    'An emperor must know precisely where he stands.'
+  ]) {
+    engine.completeByIzaro(line)
+  }
+  assert.equal(engine.snapshot().seenCount, 6)
+})
+
+test('entering a trial zone hints it — it is NOT auto-completed', () => {
+  const e = new TrialsEngine()
+  assert.equal(e.applyZone('The Lower Prison'), true)
+  const snap = e.snapshot()
+  assert.equal(snap.currentZoneTrialId, 't-a1-lower-prison')
+  // Walking the zone must not check the trial off.
+  assert.equal(snap.seenCount, 0)
+  assert.equal(snap.trials.find((t) => t.id === 't-a1-lower-prison')?.seen, false)
+})
+
+test('zone matching is case-insensitive and tolerates an instance suffix', () => {
+  const e = new TrialsEngine()
+  assert.equal(e.matchZone('the crypt level 1')?.id, 't-a2-crypt')
+  assert.equal(e.matchZone('The Crypt Level 1 (some suffix)')?.id, 't-a2-crypt')
+  assert.equal(e.matchZone('The Coast'), null)
+})
+
+test('a nested zone name does not borrow another trial (Crypt Level 2 is not The Crypt)', () => {
+  const e = new TrialsEngine()
+  // Act 7's trial zone is "The Crypt"; Act 2 also has "The Crypt Level 2", which
+  // holds no trial. A prefix match used to hint the cruel trial there — and, since
+  // completion is zone-first, an Izaro line would have ticked the wrong one.
+  assert.equal(e.matchZone('The Crypt Level 2', 2), null)
+  assert.equal(e.applyZone('The Crypt Level 2', 2), false)
+  assert.equal(e.snapshot().currentZoneTrialId, null)
+  // The real Act 7 zone still matches.
+  assert.equal(e.matchZone('The Crypt', 7)?.id, 't-a7-crypt')
+})
+
+test('leaving for a non-trial zone clears the hint', () => {
+  const e = new TrialsEngine()
+  assert.equal(e.applyZone("Lioneye's Watch"), false) // nothing -> nothing
+  assert.equal(e.applyZone('The Crematorium'), true) // hint on
+  assert.equal(e.snapshot().currentZoneTrialId, 't-a3-crematorium')
+  assert.equal(e.applyZone('The Coast'), true) // hint off
+  assert.equal(e.snapshot().currentZoneTrialId, null)
+})
+
+test('re-entering the same trial zone is not a change', () => {
+  const e = new TrialsEngine()
+  assert.equal(e.applyZone('The Crematorium'), true)
+  assert.equal(e.applyZone('The Crematorium'), false)
+})
+
+test('the hint still shows for an already-completed trial zone', () => {
+  const e = new TrialsEngine(['t-a3-crematorium'])
+  assert.equal(e.applyZone('The Crematorium'), true)
+  // The UI decides to hide it when seen; the engine just reports location.
+  assert.equal(e.snapshot().currentZoneTrialId, 't-a3-crematorium')
+})
+
+test('manual toggle corrects both directions; reset clears', () => {
+  const e = new TrialsEngine()
+  assert.equal(e.toggle('t-a3-imperial-gardens'), true)
+  assert.equal(e.snapshot().seenCount, 1)
+  assert.equal(e.toggle('t-a3-imperial-gardens'), true)
+  assert.equal(e.snapshot().seenCount, 0)
+  assert.equal(e.toggle('not-a-trial'), false)
+
+  e.toggle('t-a1-lower-prison')
+  e.reset()
+  assert.equal(e.snapshot().seenCount, 0)
+})
+
+test('a Labyrinth reports as unlocked only once all of its trials are done', () => {
+  const e = new TrialsEngine()
+  assert.deepEqual(e.snapshot().unlockedLabs, [])
+
+  const normal = CAMPAIGN_TRIALS.filter((t) => t.lab === 'normal')
+  for (const t of normal.slice(0, -1)) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, [], 'five of six is not unlocked')
+
+  e.toggle(normal.at(-1)!.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['normal'])
+
+  // Finishing a later tier reports both, normal first — you run them in order.
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'cruel')) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['normal', 'cruel'])
+
+  // Undoing a trial retracts the notice rather than leaving a stale one.
+  e.toggle(normal[0].id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['cruel'])
+})
+
+test('dismissing an unlock notice sticks, per Labyrinth, and survives a reload', () => {
+  const e = new TrialsEngine()
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'normal')) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['normal'])
+
+  assert.equal(e.dismissLab('normal'), true)
+  assert.deepEqual(e.snapshot().unlockedLabs, [], 'acknowledged, so it stops showing')
+  assert.equal(e.dismissLab('normal'), false, 'idempotent — nothing to persist twice')
+  assert.equal(e.dismissLab('not-a-lab'), false)
+
+  // Cruel is untouched by the normal dismissal.
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'cruel')) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['cruel'])
+
+  // Restored from persistence: the notice stays gone.
+  const restored = new TrialsEngine(e.seenIds(), e.dismissedLabIds())
+  assert.deepEqual(restored.dismissedLabIds().sort(), ['normal'])
+  assert.deepEqual(restored.snapshot().unlockedLabs, ['cruel'])
+})
+
+test('reset clears dismissals too, so a fresh character is notified again', () => {
+  const e = new TrialsEngine()
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'normal')) e.toggle(t.id)
+  e.dismissLab('normal')
+  e.reset()
+  assert.deepEqual(e.dismissedLabIds(), [])
+
+  for (const t of CAMPAIGN_TRIALS.filter((x) => x.lab === 'normal')) e.toggle(t.id)
+  assert.deepEqual(e.snapshot().unlockedLabs, ['normal'])
+})
+
+test('seen state hydrates from persisted ids (ignoring unknown ids)', () => {
+  const e = new TrialsEngine(['t-a1-lower-prison', 'bogus'])
+  assert.equal(e.snapshot().seenCount, 1)
+  assert.deepEqual(e.seenIds(), ['t-a1-lower-prison'])
+})
+
+// ---------- the Labyrinths ----------
+// Lines and area ids from a real capture: the final arena is
+// '<1|2|3>_Labyrinth_boss_2_end', and Izaro's death line there means you won.
+
+const ENTRY = 'An aspirant can afford to be promising. An emperor must keep those promises.'
+const TAUNT = 'The Empire awaits you with open jaws.'
+
+test('the final arena names its Labyrinth; the Eternal one and the rest of the lab do not', () => {
+  assert.equal(labFinaleOf('1_Labyrinth_boss_2_end'), 'normal')
+  assert.equal(labFinaleOf('2_Labyrinth_boss_2_end'), 'cruel')
+  assert.equal(labFinaleOf('3_Labyrinth_boss_2_end_#'), 'merciless')
+  assert.equal(labFinaleOf('EndGame_Labyrinth_boss_2_end'), null)
+  assert.equal(labFinaleOf('1_Labyrinth_boss_2'), null, 'the second Izaro fight is not the last')
+  assert.equal(labFinaleOf('1_Labyrinth_OH_straight'), null)
+  assert.equal(labFinaleOf(null), null)
+})
+
+test("Izaro's death line in the final arena beats the Labyrinth and ticks its trials", () => {
+  // Two trials the log never saw: the Plaza let you in, so they were done.
+  const engine = new TrialsEngine(['t-a1-lower-prison', 't-a2-crypt', 't-a2-chamber-of-sins', 't-a3-crematorium'])
+  engine.applyZone("Aspirant's Trial", null, '1_Labyrinth_boss_2_end')
+  assert.equal(engine.completeByIzaro(ENTRY), false)
+  assert.equal(engine.completeByIzaro(TAUNT), false)
+  assert.equal(engine.completeByIzaro('I die for the Empire!'), true)
+
+  const snap = engine.snapshot()
+  assert.deepEqual(snap.completedLabs, ['normal'])
+  assert.equal(snap.trials.filter((t) => t.lab === 'normal').every((t) => t.seen), true)
+  assert.equal(snap.trials.some((t) => t.lab !== 'normal' && t.seen), false)
+  // Saying it again changes nothing.
+  assert.equal(engine.completeByIzaro('Before your emperor, you are worthy.'), false)
+})
+
+test('each of his six death lines counts, in every campaign Labyrinth', () => {
+  const lines = [
+    'I die for the Empire!',
+    'You are free!',
+    'Triumphant at last!',
+    'Your destination is more dangerous than the journey, ascendant.',
+    'Delight in your gilded dungeon, ascendant.',
+    'The trap of tyranny is inescapable.'
+  ]
+  for (const line of lines) {
+    for (const [id, lab] of [['1_Labyrinth_boss_2_end', 'normal'], ['2_Labyrinth_boss_2_end', 'cruel'], ['3_Labyrinth_boss_2_end_#', 'merciless']]) {
+      const engine = new TrialsEngine()
+      engine.applyZone("Aspirant's Trial", null, id)
+      assert.equal(engine.completeByIzaro(line), true, `${line} in ${id}`)
+      assert.deepEqual(engine.snapshot().completedLabs, [lab])
+    }
+  }
+})
+
+test('dying to Izaro, the Eternal Lab and his earlier fights beat nothing', () => {
+  const engine = new TrialsEngine()
+  // You died: he gloats instead.
+  engine.applyZone("Aspirant's Trial", null, '3_Labyrinth_boss_2_end_#')
+  assert.equal(engine.completeByIzaro('For those who ascend too quickly, the fall is inevitable.'), false)
+  // The Eternal Labyrinth is endgame, not one of the campaign's three.
+  engine.applyZone("Aspirant's Trial", null, 'EndGame_Labyrinth_boss_2_end')
+  assert.equal(engine.completeByIzaro('I die for the Empire!'), false)
+  // His first two fights end with him fleeing, not dying.
+  engine.applyZone("Aspirant's Trial", null, '1_Labyrinth_boss_1')
+  assert.equal(engine.completeByIzaro('Such resilience!'), false)
+  assert.deepEqual(engine.snapshot().completedLabs, [])
+  assert.equal(engine.snapshot().seenCount, 0)
+})
+
+test('a beaten Labyrinth drops its unlock notice, persists, and resets', () => {
+  const six = NORMAL_TRIALS.map((t) => t.id)
+  const engine = new TrialsEngine(six)
+  assert.deepEqual(engine.snapshot().unlockedLabs, ['normal'])
+  engine.applyZone("Aspirant's Trial", null, '1_Labyrinth_boss_2_end')
+  engine.completeByIzaro('Triumphant at last!')
+  assert.deepEqual(engine.snapshot().unlockedLabs, [], 'you went: no more "go there"')
+
+  // Back from the settings file.
+  const again = new TrialsEngine(engine.seenIds(), engine.dismissedLabIds(), undefined, engine.completedLabIds())
+  assert.deepEqual(again.snapshot().completedLabs, ['normal'])
+  assert.deepEqual(new TrialsEngine([], [], undefined, ['bogus', 'cruel']).completedLabIds(), ['cruel'])
+
+  again.reset()
+  assert.deepEqual(again.snapshot().completedLabs, [])
+})
+

@@ -1,0 +1,14 @@
+2024/01/15 10:00:00 111 cffb0734 [DEBUG Client 1234] Generating level 1 area "1_1_1" with seed 1234567
+2024/01/15 10:00:01 112 cffb0734 [INFO Client 1234] : You have entered The Twilight Strand.
+2024/01/15 10:00:30 140 cffb0734 [INFO Client 1234] : Hillock has been slain.
+2024/01/15 10:01:00 200 cffb0734 [DEBUG Client 1234] Generating level 13 area "1_1_town" with seed 1
+2024/01/15 10:01:01 201 cffb0734 [INFO Client 1234] : You have entered Lioneye's Watch.
+2024/01/15 10:02:00 300 cffb0734 [INFO Client 1234] : MyExile (Marauder) is now level 2
+2024/01/15 10:03:00 400 cffb0734 [INFO Client 1234] $Global 820: RandomTrader: MyExile (Marauder) is now level 99
+2024/01/15 10:03:10 410 cffb0734 [INFO Client 1234] @From SomeFriend: where are you
+2024/01/15 10:04:00 500 cffb0734 [INFO Client 1234] Connecting to instance server at 203.0.113.42:6112
+2024/01/15 10:04:30 520 cffb0734 [DEBUG Client 1234] Generating level 2 area "1_1_2" with seed 222333
+2024/01/15 10:04:31 521 cffb0734 [INFO Client 1234] : You have entered The Coast.
+2024/01/15 10:05:00 600 cffb0734 [INFO Client 1234] : SomeFriend (Witch) is now level 3
+2024/01/15 10:08:00 900 cffb0734 [INFO Client 1234] : You have entered Lioneye's Watch.
+2024/01/15 10:12:00 999 cffb0734 [INFO Client 1234] : MyExile (Marauder) is now level 5

@@ -1,0 +1,112 @@
+name: Build Windows
+
+# Produces the double-clickable Windows build on a Windows runner (electron-builder
+# can't build a Windows target from Linux without wine).
+#
+#  - Manual run (Actions tab -> Run workflow): a DEV build. Uploads the exes as a
+#    run artifact only — no release, and the version stays package.json's 0.0.0.
+#  - Push a v* tag (e.g. v0.1.0): a RELEASE build. The version comes FROM THE TAG
+#    (0.1.0), and the exes are attached to a GitHub Release. package.json is never
+#    bumped for dev.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+# Nothing by default; the one job asks for what a release needs.
+permissions: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write # attach the files to the GitHub Release
+      id-token: write # sign the build provenance (tag builds)
+      attestations: write # store it
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # A tag becomes the version every installation updates to, and the
+      # updater only ever moves up — so a wrong one (v19.0.0 for v0.19.0) can't
+      # be taken back. Before anything is built: the tag must be the next patch,
+      # minor or major after the last published release (scripts/release-tag.ts).
+      - name: Check the release tag (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          published=$(gh api "repos/${{ github.repository }}/releases" --paginate \
+            --jq '.[] | select(.draft | not) | select(.prerelease | not) | .tag_name')
+          node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/check-release-tag.ts "$GITHUB_REF_NAME" $published
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate icons
+        run: npm run make-icon
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Bundle (main + preload + renderer)
+        run: npm run build
+
+      # Dev (manual) builds keep package.json's version (0.0.0). Tag builds take
+      # the version from the tag (v0.1.0 -> 0.1.0) without committing a bump.
+      - name: Package Windows installer + portable exe
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            npx electron-builder --win --config electron-builder.yml --publish never \
+              -c.extraMetadata.version="${GITHUB_REF_NAME#v}"
+          else
+            npx electron-builder --win --config electron-builder.yml --publish never
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: windows-build
+          path: |
+            dist/*.exe
+          if-no-files-found: error
+
+      # The build is unsigned, so this is how anyone can check a download came
+      # from this repository's own workflow, at the commit the tag names:
+      # `gh attestation verify <file>.exe -R wertgzhj/poe-leveling-overlay`.
+      # SHA256SUMS.txt carries the same files' hashes for a quick look.
+      - name: Checksums (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: cd dist && sha256sum *.exe > SHA256SUMS.txt && cat SHA256SUMS.txt
+
+      - name: Attest build provenance (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*.exe
+
+      # latest.yml + the .blockmap must be on the release for the in-app updater
+      # (electron-updater) to see the new version and download it.
+      # Pinned to a commit, not the movable v2 tag: this step writes the files
+      # every installation auto-updates from, so it must not change under us.
+      # Bump deliberately (git ls-remote https://github.com/softprops/action-gh-release).
+      - name: Publish release (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          files: |
+            dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest.yml
+            dist/SHA256SUMS.txt
+          generate_release_notes: true

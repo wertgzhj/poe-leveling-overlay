@@ -1,0 +1,68 @@
+appId: com.poelevelingoverlay.app
+productName: PoE Leveling Overlay
+directories:
+  output: dist
+  buildResources: build
+# Auto-update feed (electron-updater). Baked into the app as app-update.yml and
+# used to emit latest.yml + blockmaps next to the installer, which the in-app
+# updater reads from this repo's GitHub Releases. NOTE: releases must be publicly
+# downloadable for the updater to reach them without an embedded token — make the
+# repo public, or point `repo` at a separate public releases repo.
+publish:
+  provider: github
+  owner: wertgzhj
+  repo: poe-leveling-overlay
+# Electron fuses, flipped in the packaged .exe: it can't be started as a plain
+# Node.js runtime (ELECTRON_RUN_AS_NODE), take NODE_OPTIONS or --inspect flags,
+# or load app code from anywhere but its own app.asar — whose contents are
+# checked against the hash baked in at build time. Ways a downloaded app gets
+# turned into something else; none of them is used by this one.
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  onlyLoadAppFromAsar: true
+  enableEmbeddedAsarIntegrityValidation: true
+  enableCookieEncryption: true
+files:
+  - out/**/*
+  - package.json
+extraResources:
+  - from: build/icon.png
+    to: icon.png
+  - from: data/campaign
+    to: campaign
+  - from: data/profiles
+    to: profiles
+  # Read at runtime, not bundled: inlining ~370 KB of gem data as a JS object
+  # literal made it over half the main bundle and cost V8 a parse on every
+  # launch. The app reports a loud error if this file is missing.
+  - from: data/gems.json
+    to: gems.json
+win:
+  # nsis = an installer that adds Start Menu + Desktop shortcuts.
+  # portable = a single .exe you can double-click with no install.
+  target:
+    - nsis
+    - portable
+  icon: build/icon.ico
+  # NO SPACES in artifact file names. electron-builder writes latest.yml with
+  # spaces collapsed to hyphens, but GitHub stores uploaded release assets with
+  # spaces collapsed to dots — the mismatch makes the auto-updater 404 on the
+  # download. A hyphenated literal (not ${productName}, which has spaces) keeps
+  # the built file, latest.yml, and the GitHub asset name identical.
+  artifactName: PoE-Leveling-Overlay-${version}-setup.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: PoE Leveling Overlay
+portable:
+  # NO SPACES — same GitHub/electron-updater naming mismatch as the installer above.
+  artifactName: PoE-Leveling-Overlay-${version}-portable.exe
+# The build is unsigned (no code-signing certificate), so Windows SmartScreen
+# will warn on first run — "More info -> Run anyway". Building the .exe requires
+# a Windows host (see .github/workflows/build-windows.yml, which runs it on a
+# Windows CI runner); it cannot be produced from Linux without wine.

@@ -1,0 +1,144 @@
+// Glue for the trials tracker: consumes area + Izaro events from the log, tracks
+// all twelve campaign trials per bound character, persists, and pushes state to
+// the overlay.
+
+import { TrialsEngine } from './engine.ts'
+import { actFromAreaId } from '../profile/engine.ts'
+import { store } from '../settings.ts'
+import { Channels, type TrialsSnapshot } from '../channels.ts'
+import type { OverlayController } from '../overlay.ts'
+import type { LogService } from '../log/service.ts'
+
+const DEFAULT_CHAR_KEY = '(default)'
+
+export class TrialsService {
+  private readonly overlay: OverlayController
+  private readonly log: LogService
+  private engine: TrialsEngine
+  private charKey = DEFAULT_CHAR_KEY
+  private persistTimer: NodeJS.Timeout | null = null
+
+  constructor(overlay: OverlayController, log: LogService) {
+    this.overlay = overlay
+    this.log = log
+    this.engine = new TrialsEngine()
+    log.addAreaListener((area) => this.onZone(area.name, actFromAreaId(area.areaId), area.areaId))
+    // Izaro's plaque line identifies the trial you just finished — auto-check it.
+    log.addIzaroListener((line) => this.onIzaro(line))
+    // start() runs before the log backscan has identified the character, so the
+    // first load lands under "(default)". Level-ups are the signal that names a
+    // character, so re-check the binding on every one, not just on zone changes.
+    log.addLevelListener(() => this.syncCharacter())
+    log.addFreshCharacterListener((name) => this.freshCharacter(name))
+  }
+
+  start(): void {
+    this.charKey = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
+    this.engine = this.engineFor(this.charKey)
+    this.push()
+  }
+
+  stop(): void {
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistNow()
+  }
+
+  snapshot(): TrialsSnapshot {
+    return this.engine.snapshot()
+  }
+
+  toggle(id: string): void {
+    if (this.engine.toggle(id)) this.afterChange()
+  }
+
+  reset(): void {
+    this.engine.reset()
+    this.afterChange()
+  }
+
+  /** Acknowledge a Labyrinth's unlock notice so it stops showing. */
+  dismissLab(lab: string): void {
+    if (this.engine.dismissLab(lab)) this.afterChange()
+  }
+
+  private onZone(zoneName: string, act: number | null, areaId: string | null): void {
+    this.syncCharacter()
+    if (this.engine.applyZone(zoneName, act, areaId)) this.afterChange()
+  }
+
+  private onIzaro(line: string): void {
+    this.syncCharacter()
+    if (this.engine.completeByIzaro(line)) this.afterChange()
+  }
+
+  /**
+   * A brand-new character: its trials and Labyrinth notices start empty, not
+   * as last league's namesake left them — they were all ticked, and the
+   * notices dismissed. Runs before the level-up that loads the character.
+   *
+   * In auto mode the Strand left us on the placeholder key, so switch to the
+   * name right here (the same level-up adopts it). With a pinned name it's
+   * already loaded, and the in-memory engine has to start over too.
+   */
+  private freshCharacter(name: string): void {
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistTimer = null
+    store.set('trialsProgress', { ...store.get('trialsProgress'), [name]: [], [DEFAULT_CHAR_KEY]: [] })
+    store.set('trialsDismissedLabs', { ...store.get('trialsDismissedLabs'), [name]: [], [DEFAULT_CHAR_KEY]: [] })
+    store.set('trialsCompletedLabs', { ...store.get('trialsCompletedLabs'), [name]: [], [DEFAULT_CHAR_KEY]: [] })
+    if (this.charKey === name || this.charKey === DEFAULT_CHAR_KEY) {
+      this.charKey = name
+      this.engine = new TrialsEngine()
+      this.push()
+    }
+  }
+
+  private syncCharacter(): void {
+    const next = this.log.getSnapshot().state.character ?? DEFAULT_CHAR_KEY
+    if (next === this.charKey) return
+    this.persistNow()
+    this.charKey = next
+    this.engine = this.engineFor(next)
+    this.push()
+  }
+
+  private engineFor(charKey: string): TrialsEngine {
+    return new TrialsEngine(
+      store.get('trialsProgress')[charKey] ?? [],
+      store.get('trialsDismissedLabs')[charKey] ?? [],
+      undefined,
+      store.get('trialsCompletedLabs')[charKey] ?? []
+    )
+  }
+
+  private afterChange(): void {
+    this.persistSoon()
+    this.push()
+  }
+
+  private persistSoon(): void {
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistTimer = setTimeout(() => this.persistNow(), 1000)
+  }
+
+  private persistNow(): void {
+    const seen = this.engine.seenIds()
+    const dismissed = this.engine.dismissedLabIds()
+    const completed = this.engine.completedLabIds()
+    const all = { ...store.get('trialsProgress') }
+    // Don't leave an empty "(default)" bucket behind when the backscan finally
+    // names the character — it's noise in a file people do open and edit.
+    const empty = seen.length === 0 && dismissed.length === 0 && completed.length === 0
+    if (empty && this.charKey === DEFAULT_CHAR_KEY && !(DEFAULT_CHAR_KEY in all)) return
+    all[this.charKey] = seen
+    store.set('trialsProgress', all)
+    const labs = { ...store.get('trialsDismissedLabs') }
+    labs[this.charKey] = dismissed
+    store.set('trialsDismissedLabs', labs)
+    store.set('trialsCompletedLabs', { ...store.get('trialsCompletedLabs'), [this.charKey]: completed })
+  }
+
+  private push(): void {
+    this.overlay.window?.webContents.send(Channels.trialsState, this.snapshot())
+  }
+}

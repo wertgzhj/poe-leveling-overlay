@@ -1,0 +1,20 @@
+{
+  "_note": "Patterns. areaGenerated, levelUp, zoneEntered and izaro are VERIFIED verbatim against real captures (fixtures/act1-real.log 2026-07-17; an Izaro trial line 2026-07-21). The 'chat' sigil filter remains assumption-based — chat lines are stripped from committed fixtures, so revisit it if a real chat line ever gets through. Regexes use named groups; only the distinctive substring is matched, so the timestamp/log-tag prefix is ignored. The tracker drops chat lines BEFORE parsing (privacy + prevents a whisper from spoofing a level-up or zone). izaro captures Izaro's NPC voice line (no channel sigil, so it isn't dropped as chat); each trial has a distinct plaque line, so the trials engine maps the captured line to the exact trial it completes. The run timer's lines are VERIFIED verbatim against a real capture too (two years, ten finished campaigns, 2026-10-24): loginServer marks every trip to the login server — launch, logout to character select, reconnects — so nothing after it is time in a zone; afk is the game's own AFK toggle; sin captures Sin's voice, whose farewell to each Pantheon god and whose 'May a new dawn arise!' in The Feeding Trough mark the kills; kitava is the resistance penalty after each Kitava, cruel in Act 5 and merciless in Act 10; passivePoint is a quest's skill point being handed over; slain covers both death lines. leftGame is the game closing on its own terms ('Closing game gracefully' — Alt+F4 or a crash writes nothing, so those only show at the next launch) or the server dropping you ('Abnormal disconnect: …'); either way the character is out of the world, verified the same way. loadingScreen is the game's own measure of each loading screen, written after it ends — VERIFIED in every load since July 2026 (3597 of them; a median 1.44 s against 0.98 s between the Generating and 'You have entered' lines). areaPresence is another player coming into, or leaving, your instance; in a campaign zone that's only a party member (two years of log: in zones only partymates, in towns once). One who leaves without having come in was there before you — you went to them — so both lines count: what tells a party run from a solo one.",
+  "language": "en",
+  "patterns": {
+    "chat": "\\] (?:[$#@%&]|To |From )",
+    "areaGenerated": "Generating level (?<areaLevel>\\d+) area \"(?<areaId>[^\"]+)\"",
+    "levelUp": "\\] : (?<name>[^:()]+?) \\((?<class>[A-Za-z]+)\\) is now level (?<level>\\d+)",
+    "zoneEntered": "\\] : You have entered (?<zoneName>.+?)\\.\\s*$",
+    "loadingScreen": "\\] \\[LOADING SCREEN\\] \\(.*\\) Duration = (?<seconds>\\d+(?:\\.\\d+)?) seconds",
+    "izaro": "\\] Izaro: (?<line>.+)",
+    "loginServer": "\\] Async connecting to \\S*login\\S*",
+    "leftGame": "\\] (?:Closing game gracefully|Abnormal disconnect:)",
+    "afk": "\\] : AFK mode is now (?<state>ON|OFF)\\b",
+    "sin": "\\] Sin: (?<line>.+)",
+    "kitava": "\\] : You have been permanently weakened by Kitava's (?<tier>cruel|merciless) affliction",
+    "passivePoint": "\\] : You have received a Passive Skill Point\\.",
+    "slain": "\\] : (?<name>[^:]+?) has (?:been slain|committed suicide)\\.\\s*$",
+    "areaPresence": "\\] : (?<name>\\S+) has (?<how>joined|left) the area\\.\\s*$"
+  }
+}

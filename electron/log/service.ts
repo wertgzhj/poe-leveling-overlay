@@ -1,0 +1,337 @@
+// Glue between the pure log pipeline (watcher -> parser -> tracker) and the
+// Electron app: settings, IPC pushes to the overlay window, and persistence of
+// the resume snapshot (restart/resume). The only file in electron/log/ that
+// may import Electron modules.
+
+import { execFileSync } from 'node:child_process'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { LogParser, type LogPatterns, type ParsedLogEvent } from './parser.ts'
+import { parseStamp, type LineStamp } from '../timer/stamp.ts'
+import { locateClientTxt, steamPathFromReg, type LocateFs } from './locate.ts'
+import { ProgressTracker, zoneFit, type AreaState, type LevelUpEvent } from './tracker.ts'
+// Both are pure modules; the safe-range formula is the gem panel's too, and
+// duplicating it here would let the two drift.
+import { safeLevelRange } from '../profile/gems.ts'
+import { LogFileWatcher } from './watcher.ts'
+import { store } from '../settings.ts'
+import { Channels, type DetectedCharacter, type LogEventSummary, type LogSnapshot } from '../channels.ts'
+import type { OverlayController } from '../overlay.ts'
+import patternsEn from '../../data/log-patterns/en.json'
+import areasEn from '../../data/areas/en.json'
+
+const RECENT_MAX = 100
+
+// Log patterns per client language (settings.logLanguage). Only English ships:
+// two of the three tracking lines are localized by the game, and guessing another
+// client's wording would silently mistrack rather than fail loudly. Adding a
+// language is a data change — drop a file next to en.json and register it here.
+const PATTERNS: Record<string, LogPatterns> = { en: patternsEn.patterns }
+const DEFAULT_LANGUAGE = 'en'
+
+export class LogService {
+  private readonly overlay: OverlayController
+  private parser: LogParser
+  private tracker: ProgressTracker
+  private readonly watcher: LogFileWatcher
+  private recent: LogEventSummary[] = []
+  private persistTimer: NodeJS.Timeout | null = null
+  /** In-main consumers of live area events (e.g. the guide). */
+  private areaListeners: Array<(area: AreaState) => void> = []
+  /** In-main consumers of bound-character level changes (e.g. the gem panel). */
+  private levelListeners: Array<(level: number) => void> = []
+  /** In-main consumers of Izaro voice lines (the trials service). */
+  private izaroListeners: Array<(line: string) => void> = []
+  private freshListeners: Array<(name: string) => void> = []
+  /** In-main consumers of Sin's voice lines, live only (the profile's Pantheon). */
+  private sinListeners: Array<(line: string) => void> = []
+  /** In-main consumers of every line's time (the run timer). They get the
+   *  stamp and the parser's reading — never the line itself. */
+  private lineListeners: Array<(stamp: LineStamp, ev: ParsedLogEvent | null) => void> = []
+  /** The backscan saw locale-independent lines but none of the localized ones —
+   *  i.e. the game runs in a language we have no patterns for. */
+  private languageMismatch = false
+
+  constructor(overlay: OverlayController) {
+    this.overlay = overlay
+    this.parser = this.makeParser()
+    this.tracker = this.makeTracker()
+    this.watcher = new LogFileWatcher(
+      {
+        onBackscan: (lines) => this.onBackscan(lines),
+        onLines: (lines) => this.onLines(lines),
+        onStatus: (status) => this.send(Channels.logStatus, status)
+      },
+      { pollMs: 300 }
+    )
+  }
+
+  start(): void {
+    // First launch (or a path cleared in Settings): look before asking.
+    let path = store.get('clientTxtPath')
+    if (!path) {
+      path = this.locateClientTxt()
+      if (path) store.set('clientTxtPath', path)
+    }
+    if (path) {
+      this.watcher.start(path)
+    } else {
+      this.send(Channels.logStatus, this.watcher.status())
+    }
+  }
+
+  stop(): void {
+    this.watcher.stop()
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistNow()
+  }
+
+  setPath(path: string | null): void {
+    this.languageMismatch = false // re-decided by the new file's backscan
+    if (path) {
+      this.watcher.start(path) // restart = fresh backscan on the new file
+    } else {
+      this.watcher.stop()
+      this.send(Channels.logStatus, this.watcher.status())
+    }
+  }
+
+  /** Where this machine keeps Path of Exile's Client.txt, or null when none of
+   *  the usual places has one (see locate.ts). Windows only, like the game. */
+  locateClientTxt(): string | null {
+    if (process.platform !== 'win32') return null
+    try {
+      return locateClientTxt(
+        {
+          programFilesX86: process.env['ProgramFiles(x86)'],
+          programFiles: process.env['ProgramFiles'],
+          programData: process.env['ProgramData'],
+          steamPath: registrySteamPath()
+        },
+        NODE_FS
+      )
+    } catch (err) {
+      console.warn('[log] looking for Client.txt failed:', err)
+      return null
+    }
+  }
+
+  setCharacter(name: string | null): void {
+    this.tracker.setBoundCharacter(name)
+    this.persistSoon()
+    this.pushSnapshot()
+  }
+
+  addAreaListener(listener: (area: AreaState) => void): void {
+    this.areaListeners.push(listener)
+  }
+
+  addLevelListener(listener: (level: number) => void): void {
+    this.levelListeners.push(listener)
+  }
+
+  addIzaroListener(listener: (line: string) => void): void {
+    this.izaroListeners.push(listener)
+  }
+
+  /** A brand-new character's first level-up, before its level listeners run
+   *  (see TrackerCallbacks.onFreshCharacter). */
+  addFreshCharacterListener(listener: (name: string) => void): void {
+    this.freshListeners.push(listener)
+  }
+
+  /** Sin's voice lines as they're written — never from the backscan, which may
+   *  reach back to another character's fights. */
+  addSinListener(listener: (line: string) => void): void {
+    this.sinListeners.push(listener)
+  }
+
+  /** Every line, backscan included: when it was written, and what the parser
+   *  made of it (null for most). The backscan replays lines a listener may
+   *  have seen live before a restart — telling them apart is its job. */
+  addLineListener(listener: (stamp: LineStamp, ev: ParsedLogEvent | null) => void): void {
+    this.lineListeners.push(listener)
+  }
+
+  getSnapshot(): LogSnapshot {
+    const state = this.tracker.snapshot()
+    return {
+      status: this.watcher.status(),
+      state,
+      recent: this.recent,
+      languageMismatch: this.languageMismatch,
+      zoneFit: zoneFit(state.area, state.level, safeLevelRange(state.level ?? 1))
+    }
+  }
+
+  /** Manual re-detect (overlay button): lock tracking onto the character from
+   *  the most recent level-up in the log. Returns the detected character, or
+   *  null when the log has no level-up yet. */
+  detectCharacter(): DetectedCharacter | null {
+    const found = this.tracker.detectCurrentCharacter()
+    this.persistSoon()
+    this.pushSnapshot()
+    return found
+  }
+
+  /** A parser for the configured client language — the run timer's import
+   *  reads the whole log with one of its own. */
+  makeParser(): LogParser {
+    const lang = store.get('logLanguage')
+    const patterns = PATTERNS[lang]
+    if (!patterns) {
+      console.warn(`[log] no patterns for language "${lang}" — using ${DEFAULT_LANGUAGE}`)
+    }
+    return new LogParser(patterns ?? PATTERNS[DEFAULT_LANGUAGE])
+  }
+
+  private makeTracker(): ProgressTracker {
+    return new ProgressTracker({
+      areaNames: areasEn.areas,
+      boundCharacter: store.get('characterName'),
+      callbacks: {
+        onArea: (area) => this.onArea(area),
+        onLevelUp: (ev) => this.onLevelUp(ev),
+        onFreshCharacter: (name) => {
+          for (const listener of this.freshListeners) listener(name)
+        }
+      }
+    })
+  }
+
+  private onBackscan(lines: string[]): void {
+    // Fresh attach (new path or truncated file): rebuild tracker state from
+    // the log tail — the log is ground truth. Persisted state only fills the
+    // gaps the tail couldn't answer (e.g. the log was deleted).
+    this.tracker = this.makeTracker()
+    const seen = this.tracker.backscan(lines, this.parser)
+    // "Generating level N area" is locale-independent; "You have entered" and
+    // the level-up line are not. Seeing only the former means the client speaks
+    // a language we can't read — zone tracking limps on, levels never arrive.
+    this.languageMismatch = seen.areaGenerated > 0 && seen.zoneEntered === 0 && seen.levelUp === 0
+    const persisted = store.get('progress')
+    if (persisted) this.tracker.hydrate(persisted)
+    this.persistSoon()
+    this.pushSnapshot()
+    // The backscan replays silently (no per-line events), so consumers that
+    // registered before it finished would otherwise sit on stale state until
+    // the next LIVE event — the gem panel stuck on stage 1 after a restart
+    // until you happened to level. Push the resumed end state to them once.
+    const state = this.tracker.snapshot()
+    if (state.level != null) for (const listener of this.levelListeners) listener(state.level)
+    if (state.area) for (const listener of this.areaListeners) listener(state.area)
+    if (this.lineListeners.length > 0) for (const line of lines) this.emitLine(line, this.parser.parseLine(line))
+  }
+
+  private emitLine(line: string, ev: ParsedLogEvent | null): void {
+    const stamp = parseStamp(line)
+    if (!stamp) return
+    for (const listener of this.lineListeners) listener(stamp, ev)
+  }
+
+  private onLines(lines: string[]): void {
+    for (const line of lines) {
+      const ev = this.parser.parseLine(line)
+      if (this.lineListeners.length > 0) this.emitLine(line, ev)
+      if (!ev) continue
+      if (ev.kind === 'izaro') {
+        for (const listener of this.izaroListeners) listener(ev.line)
+        continue
+      }
+      if (ev.kind === 'sin') {
+        for (const listener of this.sinListeners) listener(ev.line)
+        continue
+      }
+      this.tracker.handle(ev)
+    }
+  }
+
+  private onArea(area: AreaState): void {
+    this.remember({
+      kind: 'area',
+      ts: area.ts,
+      text: `→ ${area.name}${area.areaLevel != null ? ` (lvl ${area.areaLevel})` : ''}${area.areaId ? ` [${area.areaId}]` : ''}`
+    })
+    this.send(Channels.areaEntered, area)
+    for (const listener of this.areaListeners) listener(area)
+    // zoneFit is derived from the zone AND the level, so it lives on the
+    // snapshot rather than the event — which means the snapshot has to follow.
+    this.pushSnapshot()
+    this.persistSoon()
+  }
+
+  private onLevelUp(ev: LevelUpEvent): void {
+    this.remember({
+      kind: 'levelup',
+      ts: ev.ts,
+      text: `${ev.name} (${ev.charClass}) → level ${ev.level}${ev.isBound ? '' : ' — other player'}`
+    })
+    this.send(Channels.playerLevelUp, ev)
+    if (ev.isBound) {
+      for (const listener of this.levelListeners) listener(ev.level)
+      this.pushSnapshot() // same reason as onArea
+    }
+    this.persistSoon()
+  }
+
+  private remember(entry: LogEventSummary): void {
+    this.recent.push(entry)
+    if (this.recent.length > RECENT_MAX) this.recent.splice(0, this.recent.length - RECENT_MAX)
+  }
+
+  private pushSnapshot(): void {
+    this.send(Channels.logSnapshot, this.getSnapshot())
+  }
+
+  private persistSoon(): void {
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistTimer = setTimeout(() => this.persistNow(), 1000)
+  }
+
+  private persistNow(): void {
+    store.set('progress', this.tracker.snapshot())
+  }
+
+  private send(channel: string, payload: unknown): void {
+    this.overlay.window?.webContents.send(channel, payload)
+  }
+}
+
+/** The real file system, for locate.ts. Every miss is a null, never a throw. */
+const NODE_FS: LocateFs = {
+  read: (path) => {
+    try {
+      return readFileSync(path, 'utf8')
+    } catch {
+      return null
+    }
+  },
+  list: (dir) => {
+    try {
+      return readdirSync(dir)
+    } catch {
+      return []
+    }
+  },
+  mtime: (path) => {
+    try {
+      const st = statSync(path)
+      return st.isFile() ? st.mtimeMs : null
+    } catch {
+      return null
+    }
+  }
+}
+
+/** Steam's folder from the registry — it's often not in Program Files. */
+function registrySteamPath(): string | null {
+  try {
+    const out = execFileSync('reg', ['query', 'HKCU\\Software\\Valve\\Steam', '/v', 'SteamPath'], {
+      encoding: 'utf8',
+      timeout: 2000,
+      windowsHide: true
+    })
+    return steamPathFromReg(out)
+  } catch {
+    return null // no Steam, or no reg.exe: the Program Files guesses remain
+  }
+}

@@ -1,0 +1,262 @@
+// Pure transform from poewiki Cargo-export rows into our gems.json `sources`
+// (unit-tested). Kept separate from the fetching so it can be verified without
+// the network. The wiki's exact column names can drift — the fetch script prints
+// the query URLs so you can inspect them; adjust the field reads here if needed.
+
+export const CLASS_NAMES = [
+  'Marauder',
+  'Ranger',
+  'Witch',
+  'Duelist',
+  'Templar',
+  'Shadow',
+  'Scion'
+] as const
+export type CharClass = (typeof CLASS_NAMES)[number]
+
+export interface GemSourceInfo {
+  kind: 'quest' | 'vendor'
+  act: number
+  quest?: string
+  npc?: string
+  classes?: CharClass[]
+}
+
+/** A Cargo row is an object of string/number fields; we read defensively. */
+export type CargoRow = Record<string, unknown>
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' '
+}
+
+/** Decode the HTML entities the wiki's Cargo API returns in text fields. It
+ *  escapes apostrophes as `&#039;`, so "The Siren's Cadence" arrives mangled —
+ *  which duplicated gems under a second name AND split one quest into two for
+ *  the derived quest ordering, besides being shown to the player verbatim. */
+export function decodeEntities(text: string): string {
+  return text.replace(/&(#\d+|#[xX][0-9a-fA-F]+|[a-zA-Z]+);/g, (whole, body: string) => {
+    if (body[0] !== '#') return NAMED_ENTITIES[body.toLowerCase()] ?? whole
+    const code =
+      body[1] === 'x' || body[1] === 'X'
+        ? Number.parseInt(body.slice(2), 16)
+        : Number.parseInt(body.slice(1), 10)
+    return Number.isFinite(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : whole
+  })
+}
+
+function str(v: unknown): string | undefined {
+  if (typeof v === 'string') return decodeEntities(v).trim() || undefined
+  if (typeof v === 'number') return String(v)
+  return undefined
+}
+
+/** Cargo List fields export as a delimited string. Keep only the 7 classes;
+ *  "all classes" (none listed, or all 7) collapses to undefined = every class. */
+export function parseClasses(raw: unknown): CharClass[] | undefined {
+  const s = str(raw)
+  if (!s) return undefined
+  const found = s
+    .split(/[,;|/]/)
+    .map((x) => x.trim())
+    .filter((x): x is CharClass => (CLASS_NAMES as readonly string[]).includes(x))
+  const unique = [...new Set(found)]
+  if (unique.length === 0 || unique.length === CLASS_NAMES.length) return undefined
+  return unique
+}
+
+/** MediaWiki namespace pages ("Template:…", "Category:…") ride along in Cargo
+ *  results because they carry the same table rows. No gem name contains a
+ *  colon, so this is a safe reject. */
+const WIKI_NAMESPACE = /^[A-Za-z][\w ]*:/
+
+/** The gem name for a rewards row — the reward field (on poewiki an aliased
+ *  _pageName: the tables attach to each gem's page), else the raw page name.
+ *  Wiki disambiguation suffixes like "Blight (gem)" are stripped; namespace
+ *  pages are dropped so wiki scaffolding never lands in gems.json. */
+export function gemName(row: CargoRow): string | undefined {
+  const raw = str(row['reward']) ?? str(row['_pageName']) ?? str(row['reward_id'])
+  if (!raw || WIKI_NAMESPACE.test(raw)) return undefined
+  return raw.replace(/\s*\((?:skill )?gem\)$/i, '')
+}
+
+function actNumber(row: CargoRow): number | undefined {
+  const n = Number(str(row['act']))
+  return Number.isInteger(n) && n >= 1 && n <= 10 ? n : undefined
+}
+
+export function questRowToSource(row: CargoRow): { gem: string; source: GemSourceInfo } | null {
+  const gem = gemName(row)
+  const act = actNumber(row)
+  if (!gem || act === undefined) return null
+  return { gem, source: { kind: 'quest', act, quest: str(row['quest']) ?? str(row['quest_id']), classes: parseClasses(row['classes']) } }
+}
+
+export function vendorRowToSource(row: CargoRow): { gem: string; source: GemSourceInfo } | null {
+  const gem = gemName(row)
+  const act = actNumber(row)
+  if (!gem || act === undefined) return null
+  return {
+    gem,
+    source: {
+      kind: 'vendor',
+      act,
+      npc: str(row['npc']),
+      quest: str(row['quest']) ?? str(row['quest_id']),
+      classes: parseClasses(row['classes'])
+    }
+  }
+}
+
+function sourceKey(s: GemSourceInfo): string {
+  return `${s.kind}|${s.act}|${s.npc ?? ''}|${s.quest ?? ''}|${(s.classes ?? []).join('+')}`
+}
+
+/** Group + dedupe reward rows into per-gem source lists. */
+export function buildSources(questRows: CargoRow[], vendorRows: CargoRow[]): Record<string, GemSourceInfo[]> {
+  const byGem = new Map<string, Map<string, GemSourceInfo>>()
+  const add = (r: { gem: string; source: GemSourceInfo } | null): void => {
+    if (!r) return
+    const existing = byGem.get(r.gem) ?? new Map<string, GemSourceInfo>()
+    existing.set(sourceKey(r.source), r.source)
+    byGem.set(r.gem, existing)
+  }
+  for (const row of questRows) add(questRowToSource(row))
+  for (const row of vendorRows) add(vendorRowToSource(row))
+
+  const out: Record<string, GemSourceInfo[]> = {}
+  for (const [gem, sources] of byGem) {
+    out[gem] = [...sources.values()].sort(
+      (a, b) => a.act - b.act || (a.kind === b.kind ? 0 : a.kind === 'quest' ? -1 : 1)
+    )
+  }
+  return out
+}
+
+export interface GemsFile {
+  _note?: string
+  /** ISO date of the last successful wiki fetch. The data ages with each league
+   *  and nothing in the file used to say when it was pulled, so "is this from
+   *  before the league?" was unanswerable without digging through git. */
+  fetchedAt?: string
+  gems: Record<string, { attr?: string; requiredLevel?: number; sources?: GemSourceInfo[] }>
+}
+
+/** Wiki primary attribute -> our socket-colour attr; undefined for none/white. */
+export function parseAttr(raw: unknown): 'str' | 'dex' | 'int' | undefined {
+  const s = str(raw)?.toLowerCase()
+  if (!s) return undefined
+  if (s.startsWith('str')) return 'str'
+  if (s.startsWith('dex')) return 'dex'
+  if (s.startsWith('int')) return 'int'
+  return undefined
+}
+
+export interface GemBasics {
+  attr?: 'str' | 'dex' | 'int'
+  requiredLevel?: number
+}
+
+/** A skill_gems row -> the gem's basics (attribute + level requirement). */
+export function gemBasicsRow(row: CargoRow): { gem: string; basics: GemBasics } | null {
+  const gem = gemName(row)
+  if (!gem) return null
+  const lvlRaw = Number(str(row['required_level']))
+  const requiredLevel = Number.isInteger(lvlRaw) && lvlRaw >= 1 && lvlRaw <= 100 ? lvlRaw : undefined
+  return { gem, basics: { attr: parseAttr(row['attr']), requiredLevel } }
+}
+
+export function buildGemBasics(rows: CargoRow[]): Record<string, GemBasics> {
+  const out: Record<string, GemBasics> = {}
+  for (const row of rows) {
+    const r = gemBasicsRow(row)
+    if (!r) continue
+    // First row wins per gem (duplicates come from alt-quality/transfigured pages).
+    if (!(r.gem in out)) out[r.gem] = r.basics
+  }
+  return out
+}
+
+/** Merge fetched sources (and optionally gem basics from the wiki) into an
+ *  existing gems.json. Wiki basics win over curated values (the wiki is the
+ *  authority on attribute/level); gems unknown to the wiki are preserved.
+ *  Returns a new object. */
+export function mergeGemData(
+  existing: GemsFile,
+  sources: Record<string, GemSourceInfo[]>,
+  basics?: Record<string, GemBasics>,
+  fetchedAt?: string
+): GemsFile {
+  // The wiki can spell one gem two ways — the October fetch had "Pact of
+  // K'Tash" on the gem's own page and "Pact of K'tash" in a reward row. Gem
+  // lookup ignores case, so two keys would collide and one would silently win.
+  // Every name is folded onto one spelling: the gem page's (basics) first,
+  // since that is the gem's title, then whatever gems.json already used.
+  const spelling = new Map<string, string>()
+  const canonical = (name: string): string => {
+    const key = name.toLowerCase()
+    const known = spelling.get(key)
+    if (known) return known
+    spelling.set(key, name)
+    return name
+  }
+  for (const name of Object.keys(basics ?? {})) canonical(name)
+
+  const gems: GemsFile['gems'] = {}
+  for (const [name, info] of Object.entries(existing.gems)) {
+    const to = canonical(name)
+    gems[to] = { ...(gems[to] ?? {}), ...info }
+  }
+  for (const [name, b] of Object.entries(basics ?? {})) {
+    const prev = gems[name] ?? {}
+    gems[name] = {
+      ...prev,
+      attr: b.attr ?? prev.attr,
+      requiredLevel: b.requiredLevel ?? prev.requiredLevel
+    }
+  }
+  // Sources replace what was there, but two spellings in one fetch are the
+  // same gem's sources — those are combined, once each.
+  const fetched = new Map<string, Map<string, GemSourceInfo>>()
+  for (const [name, srcs] of Object.entries(sources)) {
+    const to = canonical(name)
+    const into = fetched.get(to) ?? new Map<string, GemSourceInfo>()
+    for (const src of srcs) into.set(sourceKey(src), src)
+    fetched.set(to, into)
+  }
+  for (const [name, srcs] of fetched) {
+    gems[name] = {
+      ...(gems[name] ?? {}),
+      sources: [...srcs.values()].sort(
+        (a, b) => a.act - b.act || (a.kind === b.kind ? 0 : a.kind === 'quest' ? -1 : 1)
+      )
+    }
+  }
+  return { ...existing, fetchedAt: fetchedAt ?? existing.fetchedAt, gems }
+}
+
+/** Gems the campaign can reach that came back with no source at all.
+ *
+ *  Some of these are correct — Vaal gems are corruption-only, Empower and
+ *  friends only drop — but a schema drift on the wiki looks exactly like a gem
+ *  legitimately having no source, and silently. Counting them after a fetch
+ *  turns that into a number worth looking at: it should move by a handful
+ *  between leagues, not by three hundred.
+ *
+ *  Transfigured gems (`… of …`) and Awakened supports are excluded: they come
+ *  from the Divine Font and the endgame, and never have a campaign source.
+ */
+export function sourcelessCampaignGems(file: GemsFile, maxLevel = 45): string[] {
+  return Object.entries(file.gems)
+    .filter(([name, info]) => {
+      if (info.sources?.length) return false
+      if (/ of /.test(name) || /^Awakened /.test(name)) return false
+      return (info.requiredLevel ?? 100) <= maxLevel
+    })
+    .map(([name]) => name)
+    .sort()
+}

@@ -1,0 +1,68 @@
+name: Fetch gem data
+
+# One-click gem-data refresh (Actions tab -> "Fetch gem data" -> Run workflow).
+# Runs `npm run fetch-gems` against the poewiki Cargo export on a normal-egress
+# runner (the dev sandbox can't reach poewiki), verifies the merged gems.json
+# still passes the test suite, and pushes it to a gem-data/<run> branch — open
+# the PR from the link on the run's summary page (main only takes PRs). Nobody has
+# to run Node locally to keep gem sources current.
+on:
+  workflow_dispatch:
+    inputs:
+      include_uncurated:
+        description: Also add gems not yet curated in gems.json (--all)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts skips the Electron binary postinstall — not needed for
+      # a Node-only fetch + tests, and it makes the run much faster.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Fetch gem sources from the wiki
+        run: |
+          if [[ "${{ inputs.include_uncurated }}" == "true" ]]; then
+            npm run fetch-gems -- --all
+          else
+            npm run fetch-gems
+          fi
+
+      # Guard: the merged gems.json must still satisfy the test suite before it
+      # may land on main.
+      - name: Verify
+        run: npm test
+
+      - name: Push updated gem data to a branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet data/gems.json; then
+            echo "gems.json unchanged — nothing to commit."
+            exit 0
+          fi
+          branch="gem-data/${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add data/gems.json
+          git commit -m "Update gem sources from poewiki (Fetch gem data workflow)"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$branch"
+          url="https://github.com/${{ github.repository }}/compare/main...$branch?expand=1"
+          echo "Pushed $branch — open the PR: $url"
+          echo "Updated gem data is on \`$branch\`: [open the pull request]($url)" >> "$GITHUB_STEP_SUMMARY"

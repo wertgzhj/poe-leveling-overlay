@@ -1,0 +1,19 @@
+# Weekly update PRs for the npm packages and the pinned GitHub Actions. Nothing
+# merges by itself: each PR runs CI and waits for the maintainer.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
