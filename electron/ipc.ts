@@ -144,6 +144,13 @@ export function registerIpc(
     return true
   })
 
+  ipcMain.handle(Channels.clipboardCopyMasteryRegex, (): boolean => {
+    const regex = profile.masteryRegex()
+    if (!regex) return false
+    clipboard.writeText(regex)
+    return true
+  })
+
   ipcMain.handle(Channels.guideGet, () => guide.snapshot())
   ipcMain.on(Channels.guideToggleStep, (_e, stepId: unknown) => {
     if (typeof stepId === 'string') guide.toggleStep(stepId)

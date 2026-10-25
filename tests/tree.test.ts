@@ -208,3 +208,11 @@ test('a hand-edited passives block is checked', () => {
   )
   assert.match(validateProfile({ ...base, passives: { stages: [] } }).errors.join(), /passives\.tree/)
 })
+
+test('the current stage\'s masteries, as one quoted regex for the tree search', () => {
+  const tree = tiny()
+  const masteryPlan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6, 7, 8] }, { take: [9] }] }
+  assert.equal(passivesView(masteryPlan, tree, 1, 0, 0).masteryRegex, '"mastery"')
+  assert.equal(passivesView(masteryPlan, tree, 4, 0, 0).masteryRegex, null, 'taken already')
+  assert.equal(passivesView(masteryPlan, tree, 5, 0, 0).masteryRegex, null, 'next stage has none')
+})

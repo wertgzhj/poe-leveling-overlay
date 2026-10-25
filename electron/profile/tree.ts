@@ -95,6 +95,10 @@ export interface PassivesView {
   ascendancy: { labs: number; next: PassiveNodeView[] } | null
   /** the plan was made for another tree than the one shipped */
   treeMismatch: string | null
+  /** For the in-game tree's search box: the masteries still to take in the
+   *  current stage, as one quoted regex ("life mastery|axe mastery") — the
+   *  quotes keep the search from splitting it at its spaces. null: none. */
+  masteryRegex: string | null
 }
 
 /** How many nodes ahead the overlay lists. */
@@ -269,7 +273,18 @@ export function passivesView(
   const ascNext = (labPoints.some(isBig) ? labPoints.filter(isBig) : towards != null ? [towards] : []).map((id) =>
     tree.view(id)
   )
+  // Mastery names repeat across the tree ("Life Mastery" sits in several
+  // places): the search lights every one, which is still where to look.
+  const masteries = due
+    ? flat
+        .slice(at)
+        .filter((s) => s.stage === due.stage && tree.node(s.id)?.kind === 'mastery')
+        .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
+    : []
+  const masteryRegex = masteries.length ? `"${[...new Set(masteries)].join('|')}"` : null
+
   return {
+    masteryRegex,
     points,
     questPoints,
     total: flat.length,
