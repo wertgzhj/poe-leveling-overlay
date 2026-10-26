@@ -2,6 +2,7 @@ import Store from 'electron-store'
 import type { TrackerSnapshot } from './log/tracker.ts'
 import type { QuestPoints } from './profile/run.ts'
 import type { CopyChoice } from './copy-rules.ts'
+import type { ActRegex } from './search-regex.ts'
 
 // Persistent, user-editable settings. electron-store writes JSON into the OS
 // userData folder. No personal data beyond local file paths
@@ -61,6 +62,9 @@ export interface AppSettings {
   /** A search string for the game's stash/vendor search box, copied from the
    *  overlay with one click. '' = none, and none means no button. */
   searchRegex: string
+  /** Regexes for some acts only; in those acts "your regex" is the entry's
+   *  instead (regexForAct, search-regex.ts). Empty = the one above everywhere. */
+  actRegexes: ActRegex[]
   /** Your short names for gems, real name -> short ("CwDT"). Display only, in
    *  the Gems tab (see gem-names.ts). */
   gemNames: Record<string, string>
@@ -89,6 +93,7 @@ export type SettingsPatch = Partial<
     | 'characterName'
     | 'visibleTabs'
     | 'searchRegex'
+    | 'actRegexes'
     | 'gemNames'
     | 'runTimer'
     | 'autoCopyTown'
@@ -156,6 +161,7 @@ const defaults: StoreSchema = {
   logLanguage: 'en',
   visibleTabs: { guide: true, gems: true, trials: true },
   searchRegex: '',
+  actRegexes: [],
   gemNames: {},
   runTimer: false,
   autoCopyTown: 'off',
@@ -215,6 +221,7 @@ export function getSettings(): AppSettings {
     logLanguage: store.get('logLanguage'),
     visibleTabs: getVisibleTabs(),
     searchRegex: store.get('searchRegex'),
+    actRegexes: store.get('actRegexes'),
     gemNames: store.get('gemNames'),
     runTimer: store.get('runTimer'),
     autoCopyTown: store.get('autoCopyTown'),

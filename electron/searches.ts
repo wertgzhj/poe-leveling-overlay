@@ -8,6 +8,7 @@
 import { Channels } from './channels.ts'
 import { copyIfFree, copyText } from './clipboard.ts'
 import { AutoCopyTrigger, type CopyTrigger, type SearchKind } from './copy-rules.ts'
+import { regexForAct } from './search-regex.ts'
 import { store } from './settings.ts'
 import type { LogService } from './log/service.ts'
 import type { OverlayController } from './overlay.ts'
@@ -37,7 +38,8 @@ export class SearchService {
   searchFor(kind: SearchKind): string | null {
     if (kind === 'vendor') return this.profile.vendorSearch()
     if (kind === 'tree') return this.profile.treeSearch()
-    return store.get('searchRegex') || null
+    // your own: the one for the act you've reached, if you keep one for it
+    return regexForAct(store.get('searchRegex'), store.get('actRegexes'), this.profile.act())
   }
 
   /** A click or a hotkey: copy, whatever's on the clipboard — it's your doing. */

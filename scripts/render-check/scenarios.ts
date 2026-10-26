@@ -209,6 +209,8 @@ export interface Scenario {
   opacity?: number
   /** a long regex, so the counter shows its warning */
   regex?: string
+  /** regexes for some acts (Settings → Search & copy → Per act) */
+  actRegexes?: Array<{ from: number; to: number; regex: string }>
   profile: ProfileSnapshot
   log: LogSnapshot
   trials: TrialsSnapshot
@@ -280,6 +282,10 @@ const scenarios: Scenario[] = [
     tab: 'Search & copy',
     opacity: 0.4,
     regex: '"' + 'a|'.repeat(130) + '"',
+    actRegexes: [
+      { from: 1, to: 3, regex: '"r-g-b|b-r-g|g-g-r"' },
+      { from: 4, to: 10, regex: '"r-r-g-b|nne|rint"' }
+    ],
     profile: profileSnapshot(3, 22, 2),
     log: crypt,
     trials,

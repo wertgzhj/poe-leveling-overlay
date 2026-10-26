@@ -181,7 +181,10 @@ the tree search and your own regex are *kinds* (`SearchKind`); `searchFor(kind)`
 builds the text — from the profile snapshot last pushed, so a copy is exactly
 what's on screen — and the Vendor/Tree/Regex buttons, the hotkeys and copying
 without a click all go through it and one IPC channel (`clipboard:copy-search`,
-the kind checked in main). Text building is pure (`profile/search.ts`, the tree
+the kind checked in main). Your regex is the one for the act the character has
+reached (`regexForAct` in `search-regex.ts`: the first *Per act* range that
+covers it, else the general one); the reached act is the one the gem plan uses
+too, kept per character. Text building is pure (`profile/search.ts`, the tree
 window in `tree.ts`); so are the copy rules (`copy-rules.ts`).
 
 **Copying without a click** (Settings → Search & copy, off by default): each

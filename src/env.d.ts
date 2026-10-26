@@ -12,6 +12,7 @@ type AppInfoBridge = import('../electron/channels.ts').AppInfo
 type HotkeyBindingsBridge = import('../electron/settings.ts').HotkeyBindings
 type VisibleTabsBridge = import('../electron/settings.ts').VisibleTabs
 type AppSettingsBridge = import('../electron/settings.ts').AppSettings
+type ActRegexBridge = import('../electron/search-regex.ts').ActRegex
 type SettingsPatchBridge = import('../electron/settings.ts').SettingsPatch
 type SettingsSetResultBridge = import('../electron/channels.ts').SettingsSetResult
 type UpdateStatusBridge = import('../electron/channels.ts').UpdateStatus

@@ -16,6 +16,8 @@ interface OverlayStore {
   visibleTabs: VisibleTabsBridge
   /** Stash/vendor search string; '' hides the copy button. */
   searchRegex: string
+  /** Regexes for some acts only, used there instead of searchRegex. */
+  actRegexes: ActRegexBridge[]
   /** Your short names for gems (real name -> short), display only. */
   gemNames: Record<string, string>
   /** The run timer is on: it records runs and shows its window. */
@@ -73,6 +75,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   characterName: null,
   visibleTabs: { guide: true, gems: true, trials: true },
   searchRegex: '',
+  actRegexes: [],
   gemNames: {},
   runTimer: false,
   autoCopyTown: 'off',

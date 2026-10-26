@@ -26,6 +26,7 @@ export function App(): React.JSX.Element {
         characterName: s.characterName,
         visibleTabs: s.visibleTabs,
         searchRegex: s.searchRegex,
+        actRegexes: s.actRegexes,
         gemNames: s.gemNames,
         runTimer: s.runTimer,
         autoCopyTown: s.autoCopyTown,

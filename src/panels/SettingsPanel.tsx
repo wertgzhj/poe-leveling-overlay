@@ -66,6 +66,7 @@ export function SettingsPanel(): React.JSX.Element {
     characterName,
     visibleTabs,
     searchRegex,
+    actRegexes,
     runTimer,
     moveMode,
     autoCopyTown,
@@ -84,6 +85,7 @@ export function SettingsPanel(): React.JSX.Element {
       characterName: s.characterName,
       visibleTabs: s.visibleTabs,
       searchRegex: s.searchRegex,
+      actRegexes: s.actRegexes,
       runTimer: s.runTimer,
       autoCopyTown: s.autoCopyTown,
       autoCopyLevelUp: s.autoCopyLevelUp,
@@ -211,6 +213,17 @@ export function SettingsPanel(): React.JSX.Element {
     setRegexDraft(v)
     patch({ searchRegex: v })
     void window.overlay?.setSettings({ searchRegex: v })
+  }
+
+  // The main process stores the list cleaned (sanitizeActRegexes): rows
+  // without a regex dropped. The store gets the same, so the header button and
+  // the choices below see what's saved; the rows keep their draft.
+  const commitActRegexes = (rows: ActRegexBridge[]): void => {
+    const saved = rows
+      .map((r) => ({ ...r, regex: r.regex.replace(/[\r\n]+/g, '').trim() }))
+      .filter((r) => r.regex)
+    patch({ actRegexes: saved })
+    void window.overlay?.setSettings({ actRegexes: saved })
   }
 
   const commitCharacter = (value: string): void => {
@@ -405,9 +418,21 @@ export function SettingsPanel(): React.JSX.Element {
                 {regexDraft.length}/{SEARCH_BOX_LIMIT}
               </span>
             </div>
+            <div className={'mt-3 ' + HEADING + 'text-overlay-muted'}>Per act</div>
+            <ActRegexRows saved={actRegexes} onCommit={commitActRegexes} />
             <div className={'mt-3 ' + HEADING + 'text-overlay-muted'}>Copy without a click</div>
-            <CopyChoiceRow label="Entering a town" value={autoCopyTown} onChange={setAutoCopyTown} regex={regexDraft} />
-            <CopyChoiceRow label="A level-up" value={autoCopyLevelUp} onChange={setAutoCopyLevelUp} regex={regexDraft} />
+            <CopyChoiceRow
+              label="Entering a town"
+              value={autoCopyTown}
+              onChange={setAutoCopyTown}
+              hasRegex={!!regexDraft.trim() || actRegexes.length > 0}
+            />
+            <CopyChoiceRow
+              label="A level-up"
+              value={autoCopyLevelUp}
+              onChange={setAutoCopyLevelUp}
+              hasRegex={!!regexDraft.trim() || actRegexes.length > 0}
+            />
             <div className="mt-1.5 flex items-center justify-between gap-2">
               <span className="text-xs text-overlay-text">Keep what you copied yourself</span>
               <Toggle on={autoCopyProtect} onChange={setAutoCopyProtect} />
@@ -709,13 +734,13 @@ function CopyChoiceRow({
   label,
   value,
   onChange,
-  regex
+  hasRegex
 }: {
   label: string
   value: CopyChoice
   onChange: (v: CopyChoice) => void
-  /** your regex above; "your regex" can't be picked while it's empty */
-  regex: string
+  /** "your regex" can't be picked while you keep none */
+  hasRegex: boolean
 }): React.JSX.Element {
   return (
     <div className="mt-1 flex items-center justify-between gap-2">
@@ -728,11 +753,123 @@ function CopyChoiceRow({
         <option value="off">nothing</option>
         <option value="vendor">gems to buy (Vendor)</option>
         <option value="tree">passives (Tree)</option>
-        <option value="regex" disabled={!regex.trim()}>
-          your regex above
+        <option value="regex" disabled={!hasRegex}>
+          your regex
         </option>
       </select>
     </div>
+  )
+}
+
+const ACTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+/**
+ * Regexes for some acts only — "2-3 links" stop mattering a few acts in. The
+ * rows are a draft: a new one is empty until you type its regex, and only
+ * filled ones are saved (commitActRegexes). Saved on every change of an act
+ * and when you leave a regex field.
+ */
+function ActRegexRows({
+  saved,
+  onCommit
+}: {
+  saved: ActRegexBridge[]
+  onCommit: (rows: ActRegexBridge[]) => void
+}): React.JSX.Element {
+  const [rows, setRows] = useState(saved)
+  const set = (i: number, change: Partial<ActRegexBridge>, commit: boolean): void => {
+    const next = rows.map((r, j) => {
+      if (j !== i) return r
+      const row = { ...r, ...change }
+      // "to" never before "from": moving one drags the other along
+      if (change.from != null && row.to < row.from) row.to = row.from
+      if (change.to != null && row.from > row.to) row.from = row.to
+      return row
+    })
+    setRows(next)
+    if (commit) onCommit(next)
+  }
+  const remove = (i: number): void => {
+    const next = rows.filter((_, j) => j !== i)
+    setRows(next)
+    onCommit(next)
+  }
+  const add = (): void => {
+    // carries on after the last range
+    const from = Math.min((rows.at(-1)?.to ?? 0) + 1, 10)
+    setRows([...rows, { from, to: from, regex: '' }])
+  }
+  const select =
+    'rounded border border-overlay-border bg-black/30 px-1 py-1 text-[11px] text-overlay-text outline-none focus:border-overlay-accent'
+  return (
+    <>
+      {rows.map((r, i) => (
+        <div key={i} className="mt-1 flex items-center gap-1">
+          <span className="text-[10px] text-overlay-muted">Act</span>
+          <select
+            aria-label="From act"
+            value={r.from}
+            onChange={(e) => set(i, { from: Number(e.target.value) }, true)}
+            className={select}
+          >
+            {ACTS.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+          <span className="text-[10px] text-overlay-muted">–</span>
+          <select
+            aria-label="To act"
+            value={r.to}
+            onChange={(e) => set(i, { to: Number(e.target.value) }, true)}
+            className={select}
+          >
+            {ACTS.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            spellCheck={false}
+            value={r.regex}
+            placeholder='e.g. "r-g-b|b-r-g"'
+            title={
+              r.regex.length > SEARCH_BOX_LIMIT
+                ? `${r.regex.length} characters — the game's search box cuts it off after ${SEARCH_BOX_LIMIT}.`
+                : undefined
+            }
+            onChange={(e) => set(i, { regex: e.target.value }, false)}
+            onBlur={() => onCommit(rows)}
+            onKeyDown={(e) => e.key === 'Enter' && onCommit(rows)}
+            className={
+              'min-w-0 flex-1 rounded border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent ' +
+              (r.regex.length > SEARCH_BOX_LIMIT ? 'border-warn' : 'border-overlay-border')
+            }
+          />
+          <button
+            onClick={() => remove(i)}
+            title="Remove"
+            aria-label="Remove"
+            className="px-1 text-xs text-overlay-muted hover:text-overlay-text"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <div className="mt-1 flex items-start justify-between gap-2">
+        <p className="text-[10px] text-overlay-muted">
+          {rows.length
+            ? 'In these acts, “your regex” — the button, its hotkey, copying without a click — is the one for the act you’ve reached; elsewhere, the one above. The first range that fits wins.'
+            : 'Optional: a different regex for some acts, used there instead of the one above.'}
+        </p>
+        <button onClick={add} className={'shrink-0 ' + button('ghost', 'sm')}>
+          + Acts
+        </button>
+      </div>
+    </>
   )
 }
 

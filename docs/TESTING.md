@@ -72,11 +72,17 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    community regex tools say 50; that is wrong by a factor of five.)
    *Copy without a click* → *Entering a town*: "gems to buy" — walk into a
    town and the header reads `✓ Vendor copied` for a moment; Ctrl+V at the
-   vendor pastes the Gems tab's vendor search. "your regex above" (only with
+   vendor pastes the Gems tab's vendor search. "your regex" (only with
    one set): `✓ Regex copied`, your string. *A level-up* set to "passives (Tree)": level up out in a
    zone, `✓ Tree copied`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it —
    unless *Keep what you copied yourself* is off, when they do. A restart
    in a town copies nothing until you level or walk into a town again.
+   *Per act*: "+ Acts" adds a row starting after the last one; set Acts 1–3
+   with one regex, then click Regex in Act 1 and in Act
+   4: the first pastes the row's, the second the general one. Moving "from"
+   past "to" drags "to" along. A row left without a regex is gone after
+   reopening Settings. With only a *Per act* row and no general regex, the
+   button still shows; in an act no row covers it reads `not set`.
    In Settings → Hotkeys the three *Copy* bindings read *not set*. Bind one
    (e.g. Ctrl+Alt+T for the Tree search): pressing it anywhere copies and the
    header reads `✓ Tree copied`; recording it again and pressing Backspace
