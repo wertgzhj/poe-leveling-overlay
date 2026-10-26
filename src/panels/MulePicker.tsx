@@ -27,7 +27,7 @@ export function MulePicker({
       aria-label="Mule"
       title={
         chosen
-          ? `${muleInstruction(chosen.classes, chosen.how)} Per character — pick another gem, or "No mule".`
+          ? `${muleInstruction(chosen.classes, chosen.how)} Per character: pick another gem, or "No mule".`
           : 'Not muling on this character: every gem comes from a quest or a vendor.'
       }
       className={
@@ -37,7 +37,7 @@ export function MulePicker({
     >
       {choice.options.map((o) => (
         <option key={o.gem} value={o.gem} className={OPTION}>
-          {short(o.gem)} — from a {o.classes[0]}
+          {short(o.gem)} (from a {o.classes[0]})
           {o.classes.length > 1 ? ` (or ${o.classes.slice(1).join(', ')})` : ''}
         </option>
       ))}

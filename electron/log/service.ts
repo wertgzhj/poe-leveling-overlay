@@ -179,7 +179,7 @@ export class LogService {
     const lang = store.get('logLanguage')
     const patterns = PATTERNS[lang]
     if (!patterns) {
-      console.warn(`[log] no patterns for language "${lang}" — using ${DEFAULT_LANGUAGE}`)
+      console.warn(`[log] no patterns for language "${lang}", using ${DEFAULT_LANGUAGE}`)
     }
     return new LogParser(patterns ?? PATTERNS[DEFAULT_LANGUAGE])
   }
@@ -263,7 +263,7 @@ export class LogService {
     this.remember({
       kind: 'levelup',
       ts: ev.ts,
-      text: `${ev.name} (${ev.charClass}) → level ${ev.level}${ev.isBound ? '' : ' — other player'}`
+      text: `${ev.name} (${ev.charClass}) → level ${ev.level}${ev.isBound ? '' : ' (other player)'}`
     })
     this.send(Channels.playerLevelUp, ev)
     if (ev.isBound) {

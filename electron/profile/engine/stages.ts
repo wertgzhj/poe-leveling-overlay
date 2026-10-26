@@ -56,7 +56,7 @@ export function stepStageView(
 export function resolveStage(stage: Stage, index: number, gems: GemData): ResolvedStage {
   return {
     index,
-    label: stage.label ?? `Level ${stage.range[0]}–${stage.range[1]}`,
+    label: stage.label ?? `Level ${stage.range[0]}-${stage.range[1]}`,
     range: stage.range,
     note: stage.note,
     groups: stage.socketGroups.map((g) => ({ gems: gems.colorGroup(g.gems), note: g.note }))

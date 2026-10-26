@@ -21,7 +21,7 @@ export async function resolvePobInput(input: string): Promise<ResolvedPobInput> 
 
   const raw = toRawUrl(t)
   if (!raw) {
-    return { error: 'unsupported link — paste a pobb.in or pastebin link, or the export code itself' }
+    return { error: 'unsupported link. Paste a pobb.in or pastebin link, or the export code itself' }
   }
   try {
     const res = await fetch(raw, {
@@ -31,7 +31,7 @@ export async function resolvePobInput(input: string): Promise<ResolvedPobInput> 
     // A redirect may only land on the same paste host: following it anywhere
     // would turn the importer into a way to fetch arbitrary URLs.
     if (res.url && !sameHost(res.url, raw)) {
-      return { error: 'the link redirected somewhere else — paste the export code instead' }
+      return { error: 'the link redirected somewhere else. Paste the export code instead' }
     }
     if (!res.ok) return { error: `could not fetch the link (HTTP ${res.status})` }
     const body = await readCapped(res, MAX_BYTES)
@@ -42,7 +42,7 @@ export async function resolvePobInput(input: string): Promise<ResolvedPobInput> 
   } catch (e) {
     const err = e as Error
     if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-      return { error: 'the link took too long to respond — try again, or paste the export code' }
+      return { error: 'the link took too long to respond. Try again, or paste the export code' }
     }
     return { error: `could not fetch the link: ${err.message}` }
   }

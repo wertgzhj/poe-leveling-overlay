@@ -68,6 +68,9 @@ async function shoot(index, scenario) {
       // the app, which keeps context isolation and the sandbox on.
       contextIsolation: false,
       sandbox: false,
+      // A hidden window is throttled: timers and painting slow down, and a
+      // shot could catch the frame before the one it waited for.
+      backgroundThrottling: false,
       additionalArguments: [`--render-scenario=${scenariosFile}#${index}`]
     }
   })
@@ -123,6 +126,9 @@ async function shootEditor(index, scenario) {
       preload: join(here, 'bridge.cjs'),
       contextIsolation: false,
       sandbox: false,
+      // A hidden window is throttled: timers and painting slow down, and a
+      // shot could catch the frame before the one it waited for.
+      backgroundThrottling: false,
       additionalArguments: [`--render-scenario=${scenariosFile}#${index}`]
     }
   })

@@ -1,5 +1,5 @@
 {
-  "_note": "Example build profile — a placeholder so the gem panel has something to show. Make your own instead: import a Path of Building build (Settings → Build profile), or open the editor (Profiles → New profile, or Duplicate this one). This file is bundled and read-only — saving it in the editor makes a copy of your own. 'stages' = which gems are linked in which level range; socket colours are computed from data/gems.json, not written here. 'gemPlan' = where each gem comes from (drives the reward pick + shopping list).",
+  "_note": "Example build profile: a placeholder so the gem panel has something to show. Make your own instead: import a Path of Building build (Settings → Build profile), or open the editor (Profiles → New profile, or Duplicate this one). This file is bundled and read-only; saving it in the editor makes a copy of your own. 'stages' = which gems are linked in which level range; socket colours are computed from data/gems.json, not written here. 'gemPlan' = where each gem comes from (drives the reward pick + shopping list).",
   "meta": {
     "name": "Example Cold Witch",
     "class": "Witch",
@@ -8,14 +8,14 @@
   "stages": [
     {
       "range": [1, 11],
-      "label": "Level 1–11",
+      "label": "Level 1-11",
       "socketGroups": [
         { "gems": ["Frostbolt", "Arcane Surge Support"], "note": "3-link as soon as you can" }
       ]
     },
     {
       "range": [12, 27],
-      "label": "Level 12–27",
+      "label": "Level 12-27",
       "socketGroups": [
         { "gems": ["Freezing Pulse", "Added Lightning Damage Support", "Elemental Focus Support"] },
         { "gems": ["Flame Dash"], "note": "movement" }

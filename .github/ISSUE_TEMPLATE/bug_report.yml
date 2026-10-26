@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Thanks for testing. The fields below are the ones that actually let me
-        reproduce something — the version and the tab are usually enough to
+        reproduce something: the version and the tab are usually enough to
         narrow it down, and the 🐞 panel settles anything to do with tracking.
 
   - type: input
@@ -38,10 +38,10 @@ body:
     id: expected
     attributes:
       label: What you expected vs. what happened
-      description: Both halves, please — "wrong gem shown" is hard to act on without knowing which one you expected.
+      description: Both halves, please: "wrong gem shown" is hard to act on without knowing which one you expected.
       placeholder: |
         Expected: Herald of Ice listed as a quest reward from Act 2.
-        Happened: it says "buy · Siosa · Act 3".
+        Happened: it says "buy, Siosa, Act 3".
     validations:
       required: true
 
@@ -61,7 +61,7 @@ body:
       description: >
         If it's about zones, levels, stage switching or trials: run from source
         (`npm run dev`), open the 🐞 button in the overlay header, and paste the
-        last few lines. That panel shows only parsed events — no raw log.
+        last few lines. That panel shows only parsed events: no raw log.
       render: text
 
   - type: input

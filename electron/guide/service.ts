@@ -160,7 +160,7 @@ export class GuideService {
       const { route, errors: routeErrors } = parseRoute(text)
       for (const err of routeErrors) errors.push(`act${act}.json: ${err}`)
       if (route) {
-        if (route.act !== act) errors.push(`act${act}.json declares act ${route.act} — using file position`)
+        if (route.act !== act) errors.push(`act${act}.json declares act ${route.act}, using file position`)
         routes.push({ ...route, act })
       }
     }

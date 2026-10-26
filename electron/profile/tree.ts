@@ -376,7 +376,7 @@ export function passivesView(
     treeMismatch:
       plan.tree === tree.treeVersion
         ? null
-        : `the build's tree is ${plan.tree.replace('_', '.')}, the overlay has ${tree.version} — nodes may have moved`
+        : `the build's tree is ${plan.tree.replace('_', '.')}, the overlay has ${tree.version}, so nodes may have moved`
   }
 }
 

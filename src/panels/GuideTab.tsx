@@ -28,7 +28,7 @@ function SkeletonNotice({ act }: { act: number | undefined }): React.JSX.Element
         {act ? `Act ${act} runs on the placeholder route.` : 'This route is a placeholder.'}
       </div>
       <p className="mt-0.5 text-[10px] leading-snug text-overlay-muted">
-        The overlay ships the engine, not the route — write your own steps and they
+        The overlay ships the engine, not the route. Write your own steps and they
         hot-reload as you save. Everything else (Gems, Trials) works regardless.
       </p>
       <button
@@ -65,7 +65,7 @@ export function GuideBody(): React.JSX.Element {
       )}
       {route && cursor >= steps.length && (
         <p className="px-1 text-xs text-overlay-accent">
-          All steps done — refine any act in data/campaign/act&lt;N&gt;.json.
+          All steps done. Refine any act in data/campaign/act&lt;N&gt;.json.
         </p>
       )}
 
@@ -121,7 +121,7 @@ export function GuideBody(): React.JSX.Element {
       {route && (
         <div className="mt-1 flex items-center justify-between px-1 text-[10px] text-overlay-muted">
           <span>
-            {formatAccelerator(hotkeys.stepForward)} next · {formatAccelerator(hotkeys.stepBack)} back
+            {formatAccelerator(hotkeys.stepForward)} next, {formatAccelerator(hotkeys.stepBack)} back
           </span>
           <button className="hover:text-overlay-text" title="Clear progress" onClick={() => window.overlay?.guideReset()}>
             reset

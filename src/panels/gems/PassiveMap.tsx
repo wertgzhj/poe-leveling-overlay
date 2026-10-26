@@ -91,8 +91,8 @@ export function PassiveMap({ points, due }: { points: number; due: number | unde
           ))}
       </svg>
       <p className="mt-0.5 text-[10px] text-overlay-muted">
-        <span className="text-overlay-accent">●</span> taken by plan · <b className="text-overlay-text">1</b> your next
-        point, 2–6 after · dashed: the way
+        <span className="text-overlay-accent">●</span> taken by plan, <b className="text-overlay-text">1</b> your next
+        point, 2 to 6 after, dashed: the way
       </p>
     </div>
   )
@@ -115,7 +115,7 @@ function MapNodeMark({ node: n, k }: { node: PassiveMapBridge['nodes'][number]; 
   const ring = n.kind === 'mastery' || n.kind === 'start'
   return (
     <g onClick={n.num != null ? copy : undefined} className={n.num != null ? 'cursor-pointer' : undefined}>
-      <title>{n.name + (n.num != null ? ' — click to copy' : '')}</title>
+      <title>{n.name + (n.num != null ? ' (click to copy)' : '')}</title>
       {n.state === 'due' && (
         <circle cx={n.x} cy={n.y} r={r + 5 * k} fill="none" stroke="var(--color-overlay-accent)" strokeWidth={2 * k} opacity={0.6} />
       )}

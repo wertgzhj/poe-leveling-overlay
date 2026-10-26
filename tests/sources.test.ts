@@ -14,16 +14,16 @@ test('a renamed source keeps its colour wherever it is read', () => {
   // and not the reward one, so Gravicius — a QUEST — stayed grey on the link
   // rows, which is the one place you actually read him.
   const gravicius = sourceMark({ bucket: 'reward', act: 3, quest: 'Sever the Right Hand' })
-  assert.equal(gravicius?.label, 'A3 · Gravicius')
+  assert.equal(gravicius?.label, 'A3, Gravicius')
   assert.equal(gravicius?.tone, SOURCE_TONE.Gravicius)
 
   const library = sourceMark({ bucket: 'purchase', act: 3, npc: 'Siosa', cost: 'Chance' })
-  assert.equal(library?.label, 'A3 · Library')
+  assert.equal(library?.label, 'A3, Library')
   assert.equal(library?.tone, SOURCE_TONE.Library)
 
   // Siosa's own quest, the Library's rewards: same name, same colour.
   const fixture = sourceMark({ bucket: 'reward', act: 3, quest: 'A Fixture of Fate' })
-  assert.equal(fixture?.label, 'A3 · Library')
+  assert.equal(fixture?.label, 'A3, Library')
   assert.equal(fixture?.tone, SOURCE_TONE.Library)
 
   // Everything not in the table stays muted, in both branches.
@@ -55,7 +55,7 @@ test('the source mark says the most useful thing first', () => {
   // Muling beats the vendor: an alt hands it over for nothing, so quoting a
   // price next to it is the one thing this row must not do.
   const mule = sourceMark({ bucket: 'purchase', act: 3, npc: 'Siosa', cost: 'Chance', mule: ['Ranger'] })
-  assert.equal(mule?.label, 'Mule · Ranger')
+  assert.equal(mule?.label, 'Mule (Ranger)')
   assert.match(mule?.title ?? '', /Roll a level-1 Ranger/)
   assert.match(mule?.title ?? '', /Otherwise Siosa in Act 3 sells it for Chance/)
 
@@ -83,7 +83,7 @@ test("a muled quest reward says it's a quest reward, not a vendor buy", () => {
   // Momentum on a Marauder: a Ranger starts with it, and Mercy Mission hands it
   // over too. The fallback is the quest — not "a vendor sells it".
   const mark = sourceMark({ bucket: 'reward', act: 1, quest: 'Mercy Mission', mule: ['Ranger'] })
-  assert.equal(mark?.label, 'Mule · Ranger')
+  assert.equal(mark?.label, 'Mule (Ranger)')
   assert.match(mark?.title ?? '', /free quest reward in Act 1: Mercy Mission/)
   assert.match(mark?.title ?? '', /frees that pick/)
   assert.doesNotMatch(mark?.title ?? '', /vendor/)

@@ -29,8 +29,8 @@ export interface GemSourceInfo {
 // source — only used while the dataset can't answer the question itself (see
 // `hasBroadVendorData` below).
 export const BROAD_VENDORS: readonly GemSourceInfo[] = [
-  { kind: 'vendor', act: 3, npc: 'Siosa', classes: undefined, fallback: true, note: 'A3 Library — sells most gems' },
-  { kind: 'vendor', act: 6, npc: 'Lilly Roth', classes: undefined, fallback: true, note: 'A6+ — sells most gems' }
+  { kind: 'vendor', act: 3, npc: 'Siosa', classes: undefined, fallback: true, note: 'A3 Library, sells most gems' },
+  { kind: 'vendor', act: 6, npc: 'Lilly Roth', classes: undefined, fallback: true, note: 'A6+, sells most gems' }
 ] as const
 
 /** NPCs whose stock the wiki lists per gem. Their presence in the data is what

@@ -99,7 +99,7 @@ export function RouteEditor({
           )
         })}
         <span className="ml-2 text-xs text-overlay-muted">
-          Act {act} · {source === 'override' ? 'your copy' : source === 'bundled' ? 'built-in fallback (edit to override)' : 'new'}
+          Act {act}: {source === 'override' ? 'your copy' : source === 'bundled' ? 'built-in fallback (edit to override)' : 'new'}
           {dirty && <span className="ml-2 text-overlay-accent">● unsaved</span>}
         </span>
       </div>

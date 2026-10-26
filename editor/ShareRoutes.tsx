@@ -83,7 +83,7 @@ export function ShareRoutes({ onImported }: { onImported: () => void }): React.J
         {result && <ImportResult result={result} />}
         {!copied && !result && (
           <span className="text-overlay-muted">
-            Importing overwrites the acts in the file — your other acts are untouched.
+            Importing overwrites the acts in the file. Your other acts are untouched.
           </span>
         )}
       </div>
@@ -97,12 +97,12 @@ function ImportResult({ result }: { result: RouteImportResultBridge }): React.JS
     <div className="flex flex-col gap-0.5">
       {acts.length > 0 && (
         <span className="text-ok">
-          Imported {acts.length === 1 ? 'Act' : 'Acts'} {acts.join(', ')} — the overlay reloaded.
+          Imported {acts.length === 1 ? 'Act' : 'Acts'} {acts.join(', ')}. The overlay reloaded.
         </span>
       )}
       {result.errors.map((err, i) => (
         <span key={i} className="text-danger">
-          · {err}
+          - {err}
         </span>
       ))}
       {acts.length === 0 && result.errors.length === 0 && (

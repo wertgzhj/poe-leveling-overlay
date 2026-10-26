@@ -8,7 +8,7 @@ body:
         Ideas are welcome. Two things this project deliberately does **not** do,
         so you know before writing:
 
-        - It never talks to the game — read-only on `Client.txt`, no input, no
+        - It never talks to the game, read-only on `Client.txt`, no input, no
           memory, no automation. Anything needing that is out of scope.
         - Route and build-profile *content* is written by whoever uses the
           overlay; the project ships the engine and empty skeletons, not routes

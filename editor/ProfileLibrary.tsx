@@ -52,7 +52,7 @@ export function ProfileLibrary({
 
   const create = (name: string, charClass: CharClass): void => {
     void window.overlay?.createProfile(name, charClass).then((res) => {
-      report(res, 'Created — it starts with the class’s two starting gems. Edit it to add your stages.')
+      report(res, 'Created. It starts with the class’s two starting gems. Edit it to add your stages.')
       if (res.ok && res.entry) onEdit(res.entry.id)
     })
   }
@@ -89,13 +89,13 @@ export function ProfileLibrary({
                     ) : (
                       [e.ascendancy ?? e.charClass, `${e.stages} stage${e.stages === 1 ? '' : 's'}`]
                         .filter(Boolean)
-                        .join(' · ')
+                        .join(', ')
                     )}
                   </span>
                 </span>
                 <span className="text-right text-[11px]">
                   {e.bundled ? (
-                    <span className="text-overlay-muted">bundled · read-only</span>
+                    <span className="text-overlay-muted">bundled, read-only</span>
                   ) : e.character ? (
                     <span className="text-overlay-muted">→ {e.character}</span>
                   ) : null}
@@ -112,7 +112,7 @@ export function ProfileLibrary({
           <Btn
             variant="primary"
             disabled={selected.id === activeId || selected.errors.length > 0}
-            title={selected.errors.length > 0 ? 'Fix the file first — it won’t load' : undefined}
+            title={selected.errors.length > 0 ? 'Fix the file first, it won’t load' : undefined}
             onClick={() =>
               void window.overlay?.activateProfile(selected.id).then((ok) =>
                 setMessage(ok ? { ok: true, text: `${selected.name} is now active.` } : { ok: false, text: 'It won’t load.' })
@@ -164,7 +164,7 @@ export function ProfileLibrary({
           </span>
           <Btn
             variant="danger"
-            onClick={() => void window.overlay?.deleteProfile(selected.id).then((r) => report(r, 'Deleted — it’s in the recycle bin.'))}
+            onClick={() => void window.overlay?.deleteProfile(selected.id).then((r) => report(r, 'Deleted. It’s in the recycle bin.'))}
           >
             Delete
           </Btn>
@@ -207,7 +207,7 @@ export function ProfileLibrary({
             </Btn>
             <Btn
               title="Copies a profile JSON from anywhere into the library. The original is left alone."
-              onClick={() => void window.overlay?.importProfileFile().then((r) => report(r, 'Imported — a copy is now in the library.'))}
+              onClick={() => void window.overlay?.importProfileFile().then((r) => report(r, 'Imported. A copy is now in the library.'))}
             >
               Import file…
             </Btn>

@@ -71,7 +71,7 @@ export function parseRoutes(text: string): RouteBundleResult {
       continue
     }
     if (seen.has(route.act)) {
-      errors.push(`act ${route.act}: listed twice — keeping the first`)
+      errors.push(`act ${route.act}: listed twice, keeping the first`)
       continue
     }
     seen.add(route.act)

@@ -69,7 +69,7 @@ export function validateRoute(raw: unknown): RouteParseResult {
 
   const act = typeof obj['act'] === 'number' ? obj['act'] : NaN
   if (!Number.isInteger(act) || act < 1 || act > 10) {
-    errors.push('"act" must be an integer 1–10')
+    errors.push('"act" must be an integer 1-10')
   }
 
   if (!Array.isArray(obj['steps']) || obj['steps'].length === 0) {
@@ -163,7 +163,7 @@ export function combineRoutes(routes: Route[]): CombinedRoute {
   for (const route of ordered) {
     for (const step of route.steps) {
       if (seen.has(step.id)) {
-        errors.push(`duplicate step id "${step.id}" across acts — later one ignored`)
+        errors.push(`duplicate step id "${step.id}" across acts, later one ignored`)
         continue
       }
       seen.add(step.id)

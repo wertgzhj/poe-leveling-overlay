@@ -72,7 +72,7 @@ export function muleInstruction(classes: readonly string[], how: MuleHow | undef
     case 'reward':
       return `${alt}, clear the Twilight Strand and take it as Hillock's reward (Enemy at the Gate). Stash it, delete the alt. Free.`
     case 'vendor':
-      return `${alt}, clear the Twilight Strand and buy it from Nessa — a Scroll of Wisdom from your stash. Stash it, delete the alt.`
+      return `${alt}, clear the Twilight Strand and buy it from Nessa with a Scroll of Wisdom from your stash. Stash it, delete the alt.`
     default:
       return `${alt}: it starts with this gem. Stash it, delete the alt. Free.`
   }
@@ -100,7 +100,7 @@ export function sourceMark(e: SourceInput | undefined): SourceMark | null {
   }
   const act = e.act ? `A${e.act}` : null
   const inAct = e.act ? ` in Act ${e.act}` : ''
-  const at = (named: string): string => [act, named].filter(Boolean).join(' · ')
+  const at = (named: string): string => [act, named].filter(Boolean).join(', ')
 
   // Muling wins over the vendor even here: quoting Siosa's price next to a gem
   // an alt hands you for nothing is the one thing the links should not do.
@@ -110,10 +110,10 @@ export function sourceMark(e: SourceInput | undefined): SourceMark | null {
     // people shopping for a gem they'd get for free.
     const otherwise =
       e.bucket === 'reward'
-        ? `Otherwise it's a free quest reward${inAct}: ${e.quest ?? 'a quest'} — and muling it frees that pick for another gem.`
+        ? `Otherwise it's a free quest reward${inAct}: ${e.quest ?? 'a quest'}, and muling it frees that pick for another gem.`
         : `Otherwise ${e.npc ?? 'a vendor'}${inAct} sells it${e.cost ? ` for ${e.cost}` : ''}.`
     return {
-      label: `Mule · ${e.mule.join('/')}`,
+      label: `Mule (${e.mule.join('/')})`,
       title: `${muleInstruction(e.mule, e.muleHow)} ${otherwise}`,
       tone: 'text-mule'
     }
@@ -129,8 +129,8 @@ export function sourceMark(e: SourceInput | undefined): SourceMark | null {
     return {
       label: at(named),
       title:
-        `Buy from ${npc}${inAct}${e.cost ? ` · ${e.cost}` : ''}` +
-        (e.fallback ? ' — general vendor, may show up earlier as a quest reward' : ''),
+        `Buy from ${npc}${inAct}${e.cost ? `, ${e.cost}` : ''}` +
+        (e.fallback ? ' (general vendor, may show up earlier as a quest reward)' : ''),
       tone: sourceTone(named)
     }
   }

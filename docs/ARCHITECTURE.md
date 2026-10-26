@@ -11,8 +11,8 @@ have socketed at your current level. Build-specific content comes from a Path of
 Building import; build-independent content (routes) is authored per install.
 
 Deliberately out of scope: trading and pricing, endgame and maps, PoE 2, and item
-filters. The passive tree is in as a list — which node to take with your next
-point — not as a drawn tree (yet).
+filters. The passive tree is in as a list (which node to take with your next
+point) not as a drawn tree (yet).
 
 ## ToS position
 
@@ -26,7 +26,7 @@ This is the constraint everything else is designed around.
 | Saying it out loud (system voices, Settings → Voice) | |
 
 The app **only reads** and **sends nothing** to the Path of Exile process.
-Hotkeys act on the overlay alone — note that a global hotkey is consumed
+Hotkeys act on the overlay alone: note that a global hotkey is consumed
 system-wide before the game sees it, so the defaults avoid PoE's own binds and
 everything is rebindable.
 
@@ -39,10 +39,10 @@ Leveling.
 | Area | Choice | Why |
 |---|---|---|
 | Shell | Electron + electron-builder | Transparent, frameless, always-on-top window; filesystem access and global hotkeys |
-| UI | React + TypeScript + Vite | — |
+| UI | React + TypeScript + Vite | - |
 | Styling | Tailwind with central design tokens | Consistent dark, compact overlay |
 | State | zustand | Enough for overlay state, no more |
-| Log watching | Polling tail: seek to end, then read only appended bytes | `Client.txt` is append-only and reaches hundreds of MB per league, so it is never read whole — except on request, streamed line by line, when the run timer imports old runs. `fs.watch` is unreliable on Windows for files another process appends to, which makes polling the primary mechanism rather than a fallback |
+| Log watching | Polling tail: seek to end, then read only appended bytes | `Client.txt` is append-only and reaches hundreds of MB per league, so it is never read whole, except on request, streamed line by line, when the run timer imports old runs. `fs.watch` is unreliable on Windows for files another process appends to, which makes polling the primary mechanism rather than a fallback |
 | Settings & profiles | electron-store + JSON in the userData folder | Editable and diffable by hand |
 
 ## Processes
@@ -55,7 +55,7 @@ Main
 │                       'screen-saver' level, backgroundThrottling off (the
 │                       overlay never holds focus while you play). Click-through
 │                       via setIgnoreMouseEvents(…, { forward: true }), plus a
-│                       move/resize mode — a click-through window can't be dragged.
+│                       move/resize mode, a click-through window can't be dragged.
 ├── LogService          Polling tail over Client.txt → parser → tracker.
 │                       On start it backscans the last 64 KB to resume zone and
 │                       level, then follows appended bytes.
@@ -84,10 +84,10 @@ Renderer (overlay)          Renderer (editor)
 │   └── TrialsTab
 ├── SettingsPanel (MulePicker, the Gems tab legend)
 ├── UpdateBanner + VersionBadge
-└── DebugPanel (dev only — parsed events, in memory, never written to disk)
+└── DebugPanel (dev only, parsed events, in memory, never written to disk)
 
 Renderer (timer)
-└── TimerApp — live clock, where the time went, act splits vs. the best run,
+└── TimerApp: live clock, where the time went, act splits vs. the best run,
                past runs
 ```
 
@@ -96,22 +96,22 @@ Renderer and main are connected by an **allow-listed IPC surface**
 sandboxed with context isolation and no node integration, so those channels are
 the only thing it can reach.
 
-Logic that can be tested without Electron lives in pure modules — the log
+Logic that can be tested without Electron lives in pure modules: the log
 parser, tracker and watcher, the guide and profile engines, the trials engine,
-the PoB decoder — with the `*/service.ts` files holding the Electron-facing
+the PoB decoder, with the `*/service.ts` files holding the Electron-facing
 glue. That split is why the test suite runs on plain Node.
 
 ## Data
 
-### Campaign routes — `data/campaign/actN.json`
+### Campaign routes: `data/campaign/actN.json`
 
 Steps are keyed by **`areaId`**, the act-scoped, locale-independent id the game
 itself uses (`"1_1_1"`). Display names live in `data/areas/<lang>.json`, so route
 data never depends on the client language.
 
-Zone *names* are unusable as keys: Acts 6–10 reuse names from Acts 1–5 —
-Lioneye's Watch (A1/A6), The Forest Encampment (A2/A7), The Sarn Encampment
-(A3/A8), Highgate (A4/A9), and several zones besides — and they are localized.
+Zone *names* are unusable as keys: Acts 6-10 reuse names from Acts 1-5
+(Lioneye's Watch (A1/A6), The Forest Encampment (A2/A7), The Sarn Encampment
+(A3/A8), Highgate (A4/A9), and several zones besides), and they are localized.
 
 A step carries an `id` (progress is stored against it, so it must be stable), a
 `type` (`quest | waypoint | trial | town | boss | kill | enter | hint`), and
@@ -122,18 +122,18 @@ placeholder routes; remove it once an act is written.
 Matching is by `areaId` when known and by zone name otherwise, so a route can be
 authored before the ids are known.
 
-### Gem data — `data/gems.json`
+### Gem data: `data/gems.json`
 
-Per gem: attribute, level requirement, and where it comes from per class —
+Per gem: attribute, level requirement, and where it comes from per class,
 which quest rewards it, and which vendor sells it in which act after which
-quest. **Vendor stock is class-gated in Acts 1–5**; without that dimension the
+quest. **Vendor stock is class-gated in Acts 1-5**; without that dimension the
 shopping list would send a Marauder to buy gems Nessa only sells to a Witch.
 
 Siosa (Act 3, after *A Fixture of Fate*) and Lilly Roth (Act 6 onward) sell
-almost everything to any class, and the data lists their stock explicitly — so a
+almost everything to any class, and the data lists their stock explicitly, so a
 gem with no source is one nobody sells, not a gap. Those show as drop/trade.
 Where two vendors in one act sell a gem, the one whose quest comes first wins
-(the quest order is derived from the reward levels, see `GemData.questRank`) —
+(the quest order is derived from the reward levels, see `GemData.questRank`):
 Clarissa after *Lost in Love*, not Siosa half an act later.
 
 **Which acts a stage's list draws on** (`planWindow`, engine/acquisitions.ts):
@@ -147,29 +147,29 @@ The file is generated from the Path of Exile Wiki's Cargo API
 It ships as a resource rather than being bundled, and the app reports a loud
 error if it can't be read.
 
-### Passive tree — `data/tree.json`
+### Passive tree: `data/tree.json`
 
 Per node: name, stats, kind (small, notable, keystone, mastery, jewel socket,
-class/ascendancy start), mastery effects, group, links, and its place (x, y —
+class/ascendancy start), mastery effects, group, links, and its place (x, y,
 its group's centre out along its orbit, PoB's angle tables for the 16- and
 40-node orbits); plus each group's centre, for the map's arcs. Cut down by
 `scripts/fetch-tree.ts` (transform in `scripts/tree-extract.ts`, tested) from
 Grinding Gear Games' own export for tool authors,
-[grindinggear/skilltree-export](https://github.com/grindinggear/skilltree-export)
-— ~700 KB of its 6.5 MB. Re-run (`npm run fetch-tree`, or the *Fetch tree data* workflow) when a league changes
+[grindinggear/skilltree-export](https://github.com/grindinggear/skilltree-export),
+~700 KB of its 6.5 MB. Re-run (`npm run fetch-tree`, or the *Fetch tree data* workflow) when a league changes
 the tree; a build made for another tree version gets a warning. Read at runtime,
 like the gem data.
 
-**The order is computed, not authored — and then editable.** Path of Building
+**The order is computed, not authored, and then editable.** Path of Building
 stores a build's trees as specs, usually one per levelling milestone, and each
 is only the *set* of allocated nodes. The import (`planFromSpecs`,
 electron/profile/tree.ts) turns them into the profile's `passives`: per spec,
-the new nodes in the order to take them — from what's allocated, walk to the
+the new nodes in the order to take them (from what's allocated, walk to the
 nearest notable, keystone or jewel socket the spec adds, taking every node on
 the way, then the next nearest; a mastery right after its group's first
-notable — plus the nodes the spec drops, as a respec. Ascendancy nodes are a
+notable), plus the nodes the spec drops, as a respec. Ascendancy nodes are a
 separate list, two per Labyrinth. It's stored as node ids, so a guide's order
-can replace the computed one — in the editor's *Passive tree* section, node by
+can replace the computed one: in the editor's *Passive tree* section, node by
 node within a stage, and the ascendancy's list (two points per Labyrinth) the
 same way, checked from the ascendancy's own start (`resortAscendancy`). The editor has no tree data: main names the nodes, flags
 each one nothing before it connects to (`checkPlan`, from the class's start,
@@ -178,15 +178,15 @@ stage (`resortStage`) over two invoke channels, the plan validated like a
 file's first.
 
 **The map** (Passives → *Map*, `electron/profile/tree-map.ts`): main lays out
-the piece of the tree around your next points — what's in view, taken by plan
+the piece of the tree around your next points, what's in view, taken by plan
 (a stage's respec counted from its start), your next point and the five
-after, the links between, arcs along an orbit — and the renderer only draws it
+after, the links between, arcs along an orbit, and the renderer only draws it
 (`profile:passive-map`, asked again when the next point moves). The view is the
 next points' bounding box with room around it, at least a few groups wide.
 
 **Which node is due** follows the points the character has: level − 1, plus
 every "You have received a Passive Skill Point." line (a Book of Skill used, not
-the quest finished) — counted per character, once each, the backscan's replays
+the quest finished), counted per character, once each, the backscan's replays
 skipped by their timestamps (`CharacterRuns.addQuestPoint`). A respec gives its
 points back: from the stage that refunds nodes on, the plan is that many nodes
 further along than the points (`planPosition`), and the plan's total is its
@@ -198,8 +198,8 @@ node id, so it can't put arbitrary text on the clipboard.
 
 **One place for the searches** (`electron/searches.ts`): the vendor search,
 the tree search and your own regex are *kinds* (`SearchKind`); `searchFor(kind)`
-builds the text — from the profile snapshot last pushed, so a copy is exactly
-what's on screen — and the Vendor/Tree/Regex buttons, the hotkeys and copying
+builds the text (from the profile snapshot last pushed, so a copy is exactly
+what's on screen) and the Vendor/Tree/Regex buttons, the hotkeys and copying
 without a click all go through it and one IPC channel (`clipboard:copy-search`,
 the kind checked in main). Your regex is the one for the act the character has
 reached (`regexForAct` in `search-regex.ts`: the first *Per act* range that
@@ -208,17 +208,17 @@ too, kept per character. Text building is pure (`profile/search.ts`, the tree
 window in `tree.ts`); so are the copy rules (`copy-rules.ts`).
 
 **Copying without a click** (Settings → Search & copy, off by default): each
-trigger — walking into a town, a level-up — maps to one kind or nothing. Only
+trigger (walking into a town, a level-up) maps to one kind or nothing. Only
 changes count, never the state a restart resumes at (`AutoCopyTrigger`). Every clipboard write goes through
 `electron/clipboard.ts`, which remembers the overlay's own; copying on its own
 replaces only those, an empty clipboard, or a lone quoted search line
-(`mayOverwrite`) — never a whisper, item or link you copied. That guard is a
+(`mayOverwrite`), never a whisper, item or link you copied. That guard is a
 setting too (*Keep what you copied yourself*, on by default).
 
-### Spoken announcements — `electron/announce.ts`
+### Spoken announcements: `electron/announce.ts`
 
-Main watches what the overlay already knows — the zone, the trials, the
-profile snapshot, the zone's level against yours — after each zone, level-up
+Main watches what the overlay already knows (the zone, the trials, the
+profile snapshot, the zone's level against yours) after each zone, level-up
 and finished trial, and `Announcer` (`announce-rules.ts`, pure) turns it into
 news: only changes, never the state it starts from (a restart, a character
 switch or another profile is a baseline), a trial or costly zone once per
@@ -227,25 +227,25 @@ character. Moments switched on in Settings → *Voice* are worded there
 them with the chosen system voice (`src/lib/speak.ts`), queued, never over
 each other.
 
-### Build profiles — JSON, one per build
+### Build profiles: JSON, one per build
 
 **Where they live.** Every profile is its own file in `userData/profiles/`,
 named once from its name when created (`cyclone-slayer.json`, then
-`cyclone-slayer-2.json`) and never renamed — renaming changes `meta.name` inside,
+`cyclone-slayer-2.json`) and never renamed: renaming changes `meta.name` inside,
 so nothing that remembers a profile by path can be left pointing at nothing. The
 active one is `settings.profilePath` (null = the bundled, read-only example), and
 `profileByCharacter` remembers each character's. `electron/profile/library.ts`
 owns the folder and takes it as a parameter, so it is tested against a real temp
 dir; the renderer only ever names a profile by id, never by path.
 
-It used to be two fixed files on a last-write-wins basis — every PoB import went
-to `pob-import.json`, every editor save to `profile.json` — which made a second
+It used to be two fixed files on a last-write-wins basis: every PoB import went
+to `pob-import.json`, every editor save to `profile.json`, which made a second
 character's import silently replace the first one's build. Profiles that older
 versions referenced from elsewhere on disk are copied in on launch and the
 references repointed.
 
 Two independent axes: `stages` is the **loadout per level range**, `gemPlan` is
-the **acquisition timeline** — where each gem comes from. An imported build may
+the **acquisition timeline**, where each gem comes from. An imported build may
 also carry `passives`, the tree in order (see *Passive tree* above).
 
 ```json
@@ -263,14 +263,14 @@ also carry `passives`, the tree in order (see *Passive tree* above).
 }
 ```
 
-**Socket colours are computed, never authored** — each gem's attribute decides
+**Socket colours are computed, never authored**, each gem's attribute decides
 it (Str → red, Dex → green, Int → blue), and a gem with no attribute requirement
 gets an any-colour pip. A `gemPlan` entry may carry a `count`: levelling builds
 routinely socket the same support twice, so the name alone is not an identity.
 
 The active stage follows the tracked character's level, with the next one shown
 as a preview. From this the app derives the shopping list and the reward
-recommendation per quest — and, for the game's search boxes, the gems to buy
+recommendation per quest: and, for the game's search boxes, the gems to buy
 now as one quoted regex (`electron/profile/search.ts`, shared with the tree's:
 quoted so the box doesn't split it at spaces, at most 250 characters, whole
 names only).
@@ -292,7 +292,7 @@ mechanism. Town visits deliberately never skip pending steps, so a portal trip
 to sell doesn't derail the guide.
 
 **Party play.** Level-up lines fire for party members too, so the tracker binds
-progress to one character — adopted from the most frequent name in the backscan,
+progress to one character: adopted from the most frequent name in the backscan,
 or pinned explicitly in settings.
 
 **Restart and resume.** Starting the overlay mid-session must not lose state,
@@ -302,15 +302,15 @@ progress is persisted per character.
 **A reused name is a new run.** Progress is keyed by character name, and names
 come back every league. The Twilight Strand only ever sees a new character, but
 the log names it on its first level-up, so that is when its run (act, trials, guide
-ticks, dismissed reminders) starts over. Choices — its profile,
-its mule — carry on.
+ticks, dismissed reminders) starts over. Choices (its profile,
+its mule) carry on.
 
 **Client language.** Two of the three tracked lines are localized by the game.
 Only English patterns ship; another language is detected and reported rather
 than silently half-working.
 
 **Level for "now", act for "at all".** Whether a gem is for now or for later is
-decided by character level against PoE's XP safe range — level is tracked on
+decided by character level against PoE's XP safe range: level is tracked on
 every level-up. The furthest act reached (the second number of the zone id,
 `1_2_…` = Act 2) decides what's shown at all: a quest in an act you haven't
 reached is left out, and the build's links are tinted by act. A gem for later

@@ -184,7 +184,7 @@ test('resolveStage colours the active group', () => {
   const profile = exampleProfile()
   const gems = exampleGems()
   const stage = resolveStage(profile.stages[0], 0, gems)
-  assert.equal(stage.label, 'Level 1–11')
+  assert.equal(stage.label, 'Level 1-11')
   assert.deepEqual(
     stage.groups[0].gems.map((g) => g.color),
     ['B', 'B']
@@ -1083,13 +1083,13 @@ test('purchases carry the shopping stop they belong to', () => {
   const stops = new Map(
     plan.flatMap((it) => (it.kind === 'buy' ? [[it.entry.gem, it.stop] as const] : []))
   )
-  assert.equal(stops.get('Early')?.label, 'A1 · Nessa')
-  assert.equal(stops.get('Later')?.label, 'A1 · Nessa')
+  assert.equal(stops.get('Early')?.label, 'A1, Nessa')
+  assert.equal(stops.get('Later')?.label, 'A1, Nessa')
   // Same label, different key: two visits to the same vendor, one block each.
   assert.notEqual(stops.get('Early')?.key, stops.get('Later')?.key)
   // The engine stays data-faithful and hands the NPC over separately; renaming
   // Siosa to "Library" is the renderer's job, so it can colour it too.
-  assert.equal(stops.get('Librarian')?.label, 'A3 · Siosa')
+  assert.equal(stops.get('Librarian')?.label, 'A3, Siosa')
   assert.equal(stops.get('Librarian')?.npc, 'Siosa')
   assert.equal(stops.get('Librarian')?.act, 3)
   // A quest reward is not a stop you stand at.

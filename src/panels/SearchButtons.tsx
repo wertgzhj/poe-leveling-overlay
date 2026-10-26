@@ -47,7 +47,7 @@ export function SearchButtons(): React.JSX.Element {
         lit={lit === 'vendor'}
         title={
           vendor
-            ? `The gems to buy now — paste into the vendor's search:\n${vendor}${key(hotkeys.copyVendor)}`
+            ? `The gems to buy now. Paste into the vendor's search:\n${vendor}${key(hotkeys.copyVendor)}`
             : 'Nothing to buy right now'
         }
         enabled={!!vendor}
@@ -58,7 +58,7 @@ export function SearchButtons(): React.JSX.Element {
         lit={lit === 'tree'}
         title={
           tree
-            ? `The passives around your next points — paste into the tree's search:\n${tree}${key(hotkeys.copyTree)}`
+            ? `The passives around your next points. Paste into the tree's search:\n${tree}${key(hotkeys.copyTree)}`
             : 'No passive tree in this build'
         }
         enabled={!!tree}
@@ -69,11 +69,11 @@ export function SearchButtons(): React.JSX.Element {
         lit={lit === 'regex'}
         title={
           regex || perAct
-            ? 'Your regex — paste into a stash or vendor search' +
+            ? 'Your regex. Paste into a stash or vendor search' +
               // which act's it is, only the main process knows (the act you've reached)
               (perAct ? ', the one for the act you are in.' : `:\n${regex}`) +
               key(hotkeys.copyRegex)
-            : 'No regex of your own yet — set one in Settings → Search & copy'
+            : 'No regex of your own yet. Set one in Settings → Search & copy'
         }
         enabled={!!regex || perAct}
       />

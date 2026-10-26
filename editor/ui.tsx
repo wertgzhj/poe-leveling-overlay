@@ -74,7 +74,7 @@ export function Btn(props: {
 
 export function SaveResult({
   result,
-  okText = 'Saved — the overlay reloaded.'
+  okText = 'Saved. The overlay reloaded.'
 }: {
   result: EditorSaveResultBridge | null
   /** What a successful save means here — not every save reloads the overlay. */

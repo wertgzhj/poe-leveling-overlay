@@ -34,17 +34,17 @@ export function DebugPanel(): React.JSX.Element {
 
         <div className="border-b border-overlay-border px-3 py-2 text-[11px] text-overlay-muted">
           <div>
-            Watcher: <b className="text-overlay-text">{logStatus?.state ?? '–'}</b>
-            {logStatus?.sizeBytes != null && ` · ${(logStatus.sizeBytes / 1048576).toFixed(1)} MB`}
+            Watcher: <b className="text-overlay-text">{logStatus?.state ?? '-'}</b>
+            {logStatus?.sizeBytes != null && `, ${(logStatus.sizeBytes / 1048576).toFixed(1)} MB`}
           </div>
           <div className="truncate">{logStatus?.path ?? 'no Client.txt path set'}</div>
           <div>
             Tracking:{' '}
             <b className="text-overlay-text">
-              {tracked?.character ?? '–'}
+              {tracked?.character ?? '-'}
               {tracked?.level != null && ` (lvl ${tracked.level})`}
             </b>
-            {tracked?.area && ` · ${tracked.area.name}`}
+            {tracked?.area && `, ${tracked.area.name}`}
           </div>
         </div>
 

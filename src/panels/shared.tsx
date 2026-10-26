@@ -30,7 +30,7 @@ export function ErrorBox({ title, errors }: { title: string; errors: string[] })
     <div className="mb-2 rounded-md border border-danger/40 bg-danger/10 p-2 text-[11px] text-danger">
       <div className="mb-0.5 font-semibold">{title}</div>
       {errors.map((err, i) => (
-        <div key={i}>· {err}</div>
+        <div key={i}>- {err}</div>
       ))}
     </div>
   )
@@ -63,9 +63,9 @@ export function Pip({ gem, dim }: { gem?: ColoredGemBridge; dim?: boolean }): Re
     <span
       title={
         gem.unknown
-          ? 'Colour unknown — this gem is not in the gem data'
+          ? 'Colour unknown: this gem is not in the gem data'
           : gem.anyColor
-            ? 'No attribute requirement — fits a socket of any colour'
+            ? 'No attribute requirement, fits a socket of any colour'
             : undefined
       }
       className={
