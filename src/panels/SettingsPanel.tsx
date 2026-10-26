@@ -154,11 +154,11 @@ export function SettingsPanel(): React.JSX.Element {
     void window.overlay?.setSettings({ clickThrough: value })
   }
 
-  const setAutoCopyTown = (value: 'off' | 'vendor' | 'regex'): void => {
+  const setAutoCopyTown = (value: CopyChoice): void => {
     patch({ autoCopyTown: value })
     void window.overlay?.setSettings({ autoCopyTown: value })
   }
-  const setAutoCopyLevelUp = (value: boolean): void => {
+  const setAutoCopyLevelUp = (value: CopyChoice): void => {
     patch({ autoCopyLevelUp: value })
     void window.overlay?.setSettings({ autoCopyLevelUp: value })
   }
@@ -277,7 +277,7 @@ export function SettingsPanel(): React.JSX.Element {
         </header>
 
         <div className="space-y-1.5 overflow-y-auto px-3 py-3">
-          <Section title="Updates">
+          <Section id="updates" title="Updates">
             <UpdateRow />
           </Section>
 
@@ -288,7 +288,7 @@ export function SettingsPanel(): React.JSX.Element {
             Open route &amp; profile editor…
           </button>
 
-          <Section title="Build profile">
+          <Section id="profile" title="Build profile">
             <label className="text-[11px] text-overlay-muted">Active profile</label>
             <div className="mt-1 flex gap-1.5">
               <select
@@ -373,7 +373,7 @@ export function SettingsPanel(): React.JSX.Element {
             )}
           </Section>
 
-          <Section title="Search & copy">
+          <Section id="search" title="Search & copy">
             <input
               type="text"
               spellCheck={false}
@@ -406,24 +406,8 @@ export function SettingsPanel(): React.JSX.Element {
               </span>
             </div>
             <div className={'mt-3 ' + HEADING + 'text-overlay-muted'}>Copy without a click</div>
-            <div className="mt-1 flex items-center justify-between gap-2">
-              <span className="text-xs text-overlay-text">Entering a town</span>
-              <select
-                value={autoCopyTown}
-                onChange={(e) => setAutoCopyTown(e.target.value as 'off' | 'vendor' | 'regex')}
-                className="rounded border border-overlay-border bg-black/30 px-2 py-1 text-[11px] text-overlay-text outline-none focus:border-overlay-accent"
-              >
-                <option value="off">nothing</option>
-                <option value="vendor">gems to buy (Vendor)</option>
-                <option value="regex" disabled={!regexDraft.trim()}>
-                  your regex above
-                </option>
-              </select>
-            </div>
-            <div className="mt-1.5 flex items-center justify-between gap-2">
-              <span className="text-xs text-overlay-text">A level-up: the Tree search</span>
-              <Toggle on={autoCopyLevelUp} onChange={setAutoCopyLevelUp} />
-            </div>
+            <CopyChoiceRow label="Entering a town" value={autoCopyTown} onChange={setAutoCopyTown} regex={regexDraft} />
+            <CopyChoiceRow label="A level-up" value={autoCopyLevelUp} onChange={setAutoCopyLevelUp} regex={regexDraft} />
             <div className="mt-1.5 flex items-center justify-between gap-2">
               <span className="text-xs text-overlay-text">Keep what you copied yourself</span>
               <Toggle on={autoCopyProtect} onChange={setAutoCopyProtect} />
@@ -437,7 +421,7 @@ export function SettingsPanel(): React.JSX.Element {
             </p>
           </Section>
 
-          <Section title="Game log">
+          <Section id="log" title="Game log">
             <label className="text-[11px] text-overlay-muted">Client.txt path</label>
             <div className="mt-1 flex gap-1.5">
               <input
@@ -495,7 +479,7 @@ export function SettingsPanel(): React.JSX.Element {
             </p>
           </Section>
 
-          <Section title="Overlay">
+          <Section id="overlay" title="Overlay">
             <div className="flex items-center justify-between">
               <span className="text-xs text-overlay-text">Opacity</span>
               <div className="flex items-center gap-2">
@@ -548,7 +532,7 @@ export function SettingsPanel(): React.JSX.Element {
             </div>
           </Section>
 
-          <Section title="Run timer">
+          <Section id="timer" title="Run timer">
             <div className="flex items-center justify-between">
               <span className="text-xs text-overlay-text">Record runs and show the timer</span>
               <Toggle on={runTimer} onChange={setRunTimer} />
@@ -560,12 +544,12 @@ export function SettingsPanel(): React.JSX.Element {
             </p>
           </Section>
 
-          <Section title="Gems tab">
+          <Section id="gems" title="Gems tab">
             <Legend />
             <GemShortNames />
           </Section>
 
-          <Section title="Hotkeys">
+          <Section id="hotkeys" title="Hotkeys">
             <div className="space-y-1.5">
               {HOTKEY_FIELDS.map(([field, label]) => {
                 const accel = hotkeys[field] ?? ''
@@ -681,8 +665,9 @@ function UpdateRow(): React.JSX.Element {
  * short list of headings, and each remembers whether you left it open (in this
  * window's local storage — a convenience; without it, everything starts closed).
  */
-function Section({ title, children }: { title: string; children: React.ReactNode }): React.JSX.Element {
-  const key = `settings.open.${title}`
+function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }): React.JSX.Element {
+  // keyed by id, not title: renaming a heading mustn't forget it was open
+  const key = `settings.open.${id}`
   const [open, setOpen] = useState(() => {
     try {
       return localStorage.getItem(key) === '1'
@@ -714,6 +699,40 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       </button>
       {open && <div className="mt-1 rounded-md bg-black/25 p-2">{children}</div>}
     </section>
+  )
+}
+
+type CopyChoice = 'off' | 'vendor' | 'tree' | 'regex'
+
+/** What a trigger copies without a click — any of the overlay's searches. */
+function CopyChoiceRow({
+  label,
+  value,
+  onChange,
+  regex
+}: {
+  label: string
+  value: CopyChoice
+  onChange: (v: CopyChoice) => void
+  /** your regex above; "your regex" can't be picked while it's empty */
+  regex: string
+}): React.JSX.Element {
+  return (
+    <div className="mt-1 flex items-center justify-between gap-2">
+      <span className="text-xs text-overlay-text">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as CopyChoice)}
+        className="rounded border border-overlay-border bg-black/30 px-2 py-1 text-[11px] text-overlay-text outline-none focus:border-overlay-accent"
+      >
+        <option value="off">nothing</option>
+        <option value="vendor">gems to buy (Vendor)</option>
+        <option value="tree">passives (Tree)</option>
+        <option value="regex" disabled={!regex.trim()}>
+          your regex above
+        </option>
+      </select>
+    </div>
   )
 }
 

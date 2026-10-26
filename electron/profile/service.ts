@@ -75,6 +75,8 @@ export class ProfileService {
   readonly tree: TreeData | null
   /** Labyrinths beaten by the tracked character, as last shown. */
   private labsShown = 0
+  /** The snapshot last pushed (see current()). */
+  private latest: ProfileSnapshot | null = null
   private profile: Profile | null = null
   private errors: string[] = []
   private level: number | null = null
@@ -423,18 +425,24 @@ export class ProfileService {
   private passives(): PassivesView | null {
     const plan = this.profile?.passives
     if (!plan || !this.tree) return null
-    this.labsShown = this.labsDone()
-    return passivesView(plan, this.tree, this.level, this.runs.questPoints(this.character), this.labsShown)
+    return passivesView(plan, this.tree, this.level, this.runs.questPoints(this.character), this.labsDone())
   }
 
-  /** The current tree stage's targets as a search regex, for the Tree button. */
+  /** The Tree button's search, as the overlay shows it now. */
   treeSearch(): string | null {
-    return this.passives()?.treeSearch ?? null
+    return this.current().passives?.treeSearch ?? null
   }
 
-  /** The gems to buy now, as a vendor-search regex (search.ts). */
+  /** The Vendor button's search, as the overlay shows it now. */
   vendorSearch(): string | null {
-    return this.snapshot().vendorSearch
+    return this.current().vendorSearch
+  }
+
+  /** The snapshot last pushed — what the overlay shows, so a copy is exactly
+   *  that — or a fresh one before the first push. Every change that moves a
+   *  search pushes, so it's never behind what's on screen. */
+  private current(): ProfileSnapshot {
+    return this.latest ?? this.snapshot()
   }
 
   /** Labyrinths the tracked character has beaten (the trials service records
@@ -600,6 +608,8 @@ export class ProfileService {
 
   private push(): void {
     const snap = this.snapshot()
+    this.latest = snap
+    this.labsShown = this.labsDone()
     this.overlay.window?.webContents.send(Channels.profileState, snap)
     this.editor?.send(Channels.profileState, snap)
   }

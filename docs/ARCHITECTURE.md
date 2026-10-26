@@ -176,10 +176,17 @@ ascendancy points follow the Labyrinths the trials service saw beaten. Clicking
 a node copies its name for the in-game tree's search box; the renderer asks by
 node id, so it can't put arbitrary text on the clipboard.
 
-**Copying on its own** (Settings → Search & copy → *Copy without a click*, off
-by default, `electron/autocopy.ts`): on walking into a town the vendor search
-or your own regex — one, chosen — and on a level-up the tree search — changes from what was last seen, never the state a
-restart resumes at (`AutoCopyTrigger`). Every clipboard write goes through
+**One place for the searches** (`electron/searches.ts`): the vendor search,
+the tree search and your own regex are *kinds* (`SearchKind`); `searchFor(kind)`
+builds the text — from the profile snapshot last pushed, so a copy is exactly
+what's on screen — and the Vendor/Tree/Regex buttons, the hotkeys and copying
+without a click all go through it and one IPC channel (`clipboard:copy-search`,
+the kind checked in main). Text building is pure (`profile/search.ts`, the tree
+window in `tree.ts`); so are the copy rules (`copy-rules.ts`).
+
+**Copying without a click** (Settings → Search & copy, off by default): each
+trigger — walking into a town, a level-up — maps to one kind or nothing. Only
+changes count, never the state a restart resumes at (`AutoCopyTrigger`). Every clipboard write goes through
 `electron/clipboard.ts`, which remembers the overlay's own; copying on its own
 replaces only those, an empty clipboard, or a lone quoted search line
 (`mayOverwrite`) — never a whisper, item or link you copied. That guard is a

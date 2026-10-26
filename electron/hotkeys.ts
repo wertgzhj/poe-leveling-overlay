@@ -3,7 +3,7 @@ import { getHotkeys } from './settings'
 import type { OverlayController } from './overlay'
 import type { GuideService } from './guide/service.ts'
 import type { TimerWindow } from './timer-window.ts'
-import type { SearchKind } from './channels.ts'
+import type { SearchService } from './searches.ts'
 
 /**
  * Register the global overlay hotkeys. These only ever drive the overlay — the
@@ -15,7 +15,7 @@ export function registerHotkeys(
   overlay: OverlayController,
   guide: GuideService,
   timer: TimerWindow,
-  copySearch: (kind: SearchKind) => void
+  searches: SearchService
 ): string[] {
   unregisterHotkeys()
   const hk = getHotkeys()
@@ -29,9 +29,9 @@ export function registerHotkeys(
     [hk.stepBack, () => guide.back()],
     // Copy for the game's search boxes — the clipboard only, the paste is
     // yours. Unset ('') by default, skipped below.
-    [hk.copyVendor, () => copySearch('vendor')],
-    [hk.copyTree, () => copySearch('tree')],
-    [hk.copyRegex, () => copySearch('regex')]
+    [hk.copyVendor, () => void searches.copy('vendor')],
+    [hk.copyTree, () => void searches.copy('tree')],
+    [hk.copyRegex, () => void searches.copy('regex')]
   ]
 
   const failed: string[] = []

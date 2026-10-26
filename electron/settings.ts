@@ -1,13 +1,11 @@
 import Store from 'electron-store'
 import type { TrackerSnapshot } from './log/tracker.ts'
 import type { QuestPoints } from './profile/run.ts'
+import type { CopyChoice } from './copy-rules.ts'
 
 // Persistent, user-editable settings. electron-store writes JSON into the OS
 // userData folder. No personal data beyond local file paths
 // and the optional in-game character name.
-
-export const AUTO_COPY_TOWN = ['off', 'vendor', 'regex'] as const
-export type AutoCopyTown = (typeof AUTO_COPY_TOWN)[number]
 
 export interface HotkeyBindings {
   toggleVisibility: string
@@ -69,13 +67,13 @@ export interface AppSettings {
   /** Record runs and show the run timer window. Off unless switched on —
    *  nothing is recorded until then. */
   runTimer: boolean
-  /** What walking into a town copies without a click (autocopy.ts): the
-   *  Gems tab's vendor search, your own search regex above, or nothing. */
-  autoCopyTown: AutoCopyTown
-  /** Whether a level-up copies the passive tree search without a click. */
-  autoCopyLevelUp: boolean
+  /** What walking into a town copies without a click (searches.ts): one of
+   *  the overlay's searches, or 'off'. */
+  autoCopyTown: CopyChoice
+  /** What a level-up copies without a click. */
+  autoCopyLevelUp: CopyChoice
   /** Copying without a click only replaces an empty clipboard or a search,
-   *  never something you copied (mayOverwrite). On by default; off, it
+   *  never something you copied (mayOverwrite, copy-rules.ts). On by default; off, it
    *  replaces anything. */
   autoCopyProtect: boolean
 }
@@ -161,7 +159,7 @@ const defaults: StoreSchema = {
   gemNames: {},
   runTimer: false,
   autoCopyTown: 'off',
-  autoCopyLevelUp: false,
+  autoCopyLevelUp: 'off',
   autoCopyProtect: true,
   progress: null,
   timerBounds: { width: 260, height: 360 },

@@ -12,7 +12,7 @@ import { UpdateService } from './update/service.ts'
 import { TimerService } from './timer/service.ts'
 import { TimerWindow } from './timer-window.ts'
 import { denyPermissions, hardenWebContents } from './security.ts'
-import { AutoCopyService } from './autocopy.ts'
+import { SearchService } from './searches.ts'
 
 // Set to a number of ms via SMOKE=<ms> to auto-quit after startup — used by the
 // headless launch check in CI/dev to prove the app boots without a display.
@@ -28,8 +28,7 @@ profileService.attachEditor(editorWindow)
 const updateService = new UpdateService(overlay)
 const timerWindow = new TimerWindow()
 const timerService = new TimerService(logService, timerWindow)
-const autoCopy = new AutoCopyService(logService, profileService, overlay)
-const copySearch = (kind: Parameters<AutoCopyService['copyNow']>[0]): void => autoCopy.copyNow(kind)
+const searchService = new SearchService(logService, profileService, overlay)
 overlay.addStateListener((state) => timerWindow.follow(state))
 let tray: ReturnType<typeof createTray> = null
 
@@ -61,14 +60,14 @@ if (!app.requestSingleInstanceLock()) {
       updateService,
       timerService,
       timerWindow,
-      copySearch
+      searchService
     )
     logService.start()
     guideService.start()
     profileService.start()
     trialsService.start()
     updateService.start()
-    const failed = registerHotkeys(overlay, guideService, timerWindow, copySearch)
+    const failed = registerHotkeys(overlay, guideService, timerWindow, searchService)
     if (failed.length) {
       console.warn('[hotkeys] failed to register:', failed.join(', '))
     }

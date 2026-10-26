@@ -24,7 +24,7 @@
 // Every rule here is checked against two years of a real Client.txt, ten
 // finished campaigns among them (2026-10-24, never committed).
 
-import { isCampaignAreaId } from '../log/areas.ts'
+import { isCampaignAreaId, isTownId } from '../log/areas.ts'
 import { TWILIGHT_STRAND_ID } from '../log/tracker.ts'
 import type { ParsedLogEvent } from '../log/parser.ts'
 import { actFromAreaId } from '../profile/engine/stages.ts'
@@ -280,7 +280,7 @@ export function categoryOf(areaId: string | null): Exclude<TimeCategory, 'loadin
   if (/^Hideout/i.test(areaId)) return 'hideout'
   if (/^(?:\d_)?Labyrinth_/.test(areaId)) return 'lab'
   if (!isCampaignAreaId(areaId)) return 'other'
-  return areaId.endsWith('_town') ? 'town' : 'zone'
+  return isTownId(areaId) ? 'town' : 'zone'
 }
 
 /**
@@ -583,7 +583,7 @@ export class RunTimer {
         continue
       }
       const campaign = isCampaignAreaId(areaId)
-      const out = campaign && !areaId.endsWith('_town') // a zone, not a town
+      const out = campaign && !isTownId(areaId) // a zone, not a town
       const act = actFromAreaId(areaId)
       if (run === started) {
         // the run's first zone

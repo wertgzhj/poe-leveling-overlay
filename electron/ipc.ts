@@ -1,9 +1,9 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import { copyText } from './clipboard.ts'
-import { Channels, type AppInfo, type SearchKind, type SettingsSetResult } from './channels'
+import { Channels, type AppInfo, type SettingsSetResult } from './channels'
+import { COPY_CHOICES, SEARCH_KINDS, type CopyChoice, type SearchKind } from './copy-rules.ts'
+import type { SearchService } from './searches.ts'
 import {
-  AUTO_COPY_TOWN,
-  type AutoCopyTown,
   getHotkeys,
   getSettings,
   sanitizeVisibleTabs,
@@ -46,7 +46,7 @@ export function registerIpc(
   update: UpdateService,
   timer: TimerService,
   timerWindow: TimerWindow,
-  copySearch: (kind: SearchKind) => void
+  searches: SearchService
 ): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
 
@@ -92,8 +92,8 @@ export function registerIpc(
     if ('gemNames' in patch) {
       store.set('gemNames', sanitizeGemNames(patch.gemNames, (gem) => profile.canonicalGemName(gem)))
     }
-    if (AUTO_COPY_TOWN.includes(patch.autoCopyTown as AutoCopyTown)) store.set('autoCopyTown', patch.autoCopyTown!)
-    if (typeof patch.autoCopyLevelUp === 'boolean') store.set('autoCopyLevelUp', patch.autoCopyLevelUp)
+    if (COPY_CHOICES.includes(patch.autoCopyTown as CopyChoice)) store.set('autoCopyTown', patch.autoCopyTown!)
+    if (COPY_CHOICES.includes(patch.autoCopyLevelUp as CopyChoice)) store.set('autoCopyLevelUp', patch.autoCopyLevelUp!)
     if (typeof patch.autoCopyProtect === 'boolean') store.set('autoCopyProtect', patch.autoCopyProtect)
     if (typeof patch.runTimer === 'boolean') {
       store.set('runTimer', patch.runTimer)
@@ -103,7 +103,7 @@ export function registerIpc(
     let failed: string[] = []
     if (patch.hotkeys) {
       store.set('hotkeys', sanitizeHotkeys(patch.hotkeys))
-      failed = registerHotkeys(overlay, guide, timerWindow, copySearch)
+      failed = registerHotkeys(overlay, guide, timerWindow, searches)
     }
     return { failed }
   })
@@ -111,7 +111,7 @@ export function registerIpc(
   // Suspend/resume global hotkeys around combo capture, so a shortcut that is
   // already bound reaches the renderer instead of firing its handler.
   ipcMain.on(Channels.hotkeysPause, () => unregisterHotkeys())
-  ipcMain.on(Channels.hotkeysResume, () => registerHotkeys(overlay, guide, timerWindow, copySearch))
+  ipcMain.on(Channels.hotkeysResume, () => registerHotkeys(overlay, guide, timerWindow, searches))
 
   ipcMain.on(Channels.overlayExitMoveMode, () => overlay.setMoveMode(false))
 
@@ -137,31 +137,14 @@ export function registerIpc(
 
   // Clipboard only. Pasting into the game is the player's own keystroke — the
   // overlay never types into it (docs/ARCHITECTURE.md#tos-position).
-  ipcMain.handle(Channels.clipboardCopySearchRegex, async (): Promise<boolean> => {
-    const regex = store.get('searchRegex')
-    if (!regex) return false
-    await copyText(regex)
-    return true
-  })
+  ipcMain.handle(Channels.clipboardCopySearch, (_e, kind: unknown): Promise<boolean> =>
+    SEARCH_KINDS.includes(kind as SearchKind) ? searches.copy(kind as SearchKind) : Promise.resolve(false)
+  )
 
   ipcMain.handle(Channels.clipboardCopyPassive, async (_e, id: unknown): Promise<boolean> => {
     const name = typeof id === 'number' ? profile.tree?.node(id)?.name : undefined
     if (!name) return false
     await copyText(name)
-    return true
-  })
-
-  ipcMain.handle(Channels.clipboardCopyVendorSearch, async (): Promise<boolean> => {
-    const regex = profile.vendorSearch()
-    if (!regex) return false
-    await copyText(regex)
-    return true
-  })
-
-  ipcMain.handle(Channels.clipboardCopyTreeSearch, async (): Promise<boolean> => {
-    const regex = profile.treeSearch()
-    if (!regex) return false
-    await copyText(regex)
     return true
   })
 

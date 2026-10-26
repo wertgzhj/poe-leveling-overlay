@@ -55,7 +55,7 @@ export function App(): React.JSX.Element {
       api.onProfileState((profile) => patch({ profile })),
       api.onTrialsState((trials) => patch({ trials })),
       api.onUpdateStatus((update) => patch({ update })),
-      api.onSearchAutoCopied((kind) => patch({ autoCopied: { kind, at: Date.now() } })),
+      api.onSearchCopied((kind) => patch({ autoCopied: { kind, at: Date.now() } })),
       api.onAreaEntered((area) => {
         const tracked = store().tracked
         patch({ tracked: { ...(tracked ?? emptyTracked), area } })

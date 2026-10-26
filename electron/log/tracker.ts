@@ -3,7 +3,7 @@
 // with the localized zoneEntered INFO line (fallback / display-name source),
 // and binds level-ups to one character so party members don't advance stages.
 
-import { isCampaignAreaId } from './areas.ts'
+import { isCampaignAreaId, isTownId } from './areas.ts'
 import type { LogParser, ParsedLogEvent } from './parser.ts'
 
 // The Twilight Strand (Act 1 opening zone) is only ever entered by a brand-new
@@ -65,7 +65,7 @@ export function zoneFit(
   safeRange: number
 ): ZoneFit | null {
   if (!area || area.areaLevel == null || charLevel == null) return null
-  if (!area.areaId || !isCampaignAreaId(area.areaId) || area.areaId.endsWith('_town')) return null
+  if (!area.areaId || !isCampaignAreaId(area.areaId) || isTownId(area.areaId)) return null
   const gap = area.areaLevel - charLevel
   if (gap > safeRange) return { verdict: 'under', areaLevel: area.areaLevel, by: gap - safeRange }
   if (-gap > safeRange) return { verdict: 'over', areaLevel: area.areaLevel, by: -gap - safeRange }

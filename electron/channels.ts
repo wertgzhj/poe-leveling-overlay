@@ -69,21 +69,15 @@ export const Channels = {
   /** renderer -> main (invoke): re-detect + track the character from the most
    *  recent level-up in the log; returns the detected character or null. */
   logDetectCharacter: 'log:detect-character',
-  /** renderer -> main (invoke): put the stored search regex on the clipboard.
-   *  Copies what's in Settings, never text the renderer supplies — this channel
-   *  can't be used to write arbitrary content to the clipboard. */
-  clipboardCopySearchRegex: 'clipboard:copy-search-regex',
+  /** renderer -> main (invoke): copy one of the overlay's searches ("vendor",
+   *  "tree", "regex"). Main builds the text, so this channel can't be used to
+   *  write arbitrary content to the clipboard. */
+  clipboardCopySearch: 'clipboard:copy-search',
   /** renderer -> main (invoke): copy a passive's name (by node id, looked up in
    *  the tree data) for the in-game tree's search box */
   clipboardCopyPassive: 'clipboard:copy-passive',
-  /** renderer -> main (invoke): copy the current tree stage's notables, keystones
-   *  and masteries as a search regex (computed in main from the profile) */
-  clipboardCopyTreeSearch: 'clipboard:copy-tree-search',
-  /** renderer -> main (invoke): copy the gems to buy as a vendor-search regex
-   *  (computed in main from the profile) */
-  clipboardCopyVendorSearch: 'clipboard:copy-vendor-search',
-  /** main -> renderer: a search was copied without a click ("vendor" | "tree" | "regex") */
-  searchAutoCopied: 'search:auto-copied',
+  /** main -> renderer: a search was copied — by a click, a hotkey or on its own */
+  searchCopied: 'search:copied',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
   /** renderer -> main (invoke): current guide state */
@@ -352,5 +346,4 @@ export type UpdateStatus =
   | { state: 'publishing'; version: string | null }
   | { state: 'error'; message: string }
 
-/** The searches the overlay copies for the game's search boxes. */
-export type SearchKind = 'vendor' | 'tree' | 'regex'
+export type { SearchKind } from './copy-rules.ts'

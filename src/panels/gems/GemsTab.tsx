@@ -155,7 +155,7 @@ export function GemBody(): React.JSX.Element {
                   label="Vendor"
                   regex={profile.vendorSearch}
                   what="the vendor's"
-                  copy={() => window.overlay?.copyVendorSearch()}
+                  kind="vendor"
                 />
               )}
             </div>
