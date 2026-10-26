@@ -10,7 +10,7 @@ import { BUTTON, BUTTON_SIZE } from '../lib/ui'
 // Always all three, in the same place — one with nothing to copy is greyed
 // out, not gone, so the row never shifts. Whatever copied a search — a click,
 // a hotkey, a town or a level-up (Settings → Search & copy) — its button
-// lights up for a moment: the clipboard is never a guess.
+// lights up for a moment, its copy icon a tick: the clipboard is never a guess.
 
 type Kind = 'vendor' | 'tree' | 'regex'
 
@@ -95,8 +95,8 @@ function SearchButton(props: {
       title={props.title}
       aria-label={`Copy the ${props.label} search`}
       className={
-        // Fixed width: lit, it reads "✓ Tree" — the row mustn't shift.
-        'min-w-[3.6rem] text-center disabled:opacity-35 ' +
+        // Fixed width, and the icon swaps in place: lit, the row mustn't shift.
+        'inline-flex min-w-[4.1rem] items-center justify-center gap-1 disabled:opacity-35 ' +
         BUTTON +
         BUTTON_SIZE.sm +
         ' ' +
@@ -105,7 +105,39 @@ function SearchButton(props: {
           : 'bg-white/10 text-overlay-text enabled:hover:bg-white/15')
       }
     >
-      {props.lit ? `✓ ${props.label}` : props.label}
+      {/* a copy icon says what clicking does; it turns into a tick once copied */}
+      {props.lit ? <TickIcon /> : <CopyIcon />}
+      {props.label}
     </button>
+  )
+}
+
+const ICON = {
+  width: 10,
+  height: 10,
+  viewBox: '0 0 16 16',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.8,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': true
+} as const
+
+/** Two sheets, one over the other: copy. */
+function CopyIcon(): React.JSX.Element {
+  return (
+    <svg {...ICON}>
+      <rect x="5" y="5" width="9" height="9" rx="1.5" />
+      <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" />
+    </svg>
+  )
+}
+
+function TickIcon(): React.JSX.Element {
+  return (
+    <svg {...ICON} strokeWidth={2.2}>
+      <path d="M3 8.5l3.2 3.2L13 4.5" />
+    </svg>
   )
 }

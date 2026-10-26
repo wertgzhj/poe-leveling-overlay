@@ -241,6 +241,8 @@ export interface Scenario {
   /** move mode on: draggable header, Done, the resize grip */
   moveMode?: boolean
   opacity?: number
+  /** a search copied just now: its header button shows the tick */
+  copied?: 'vendor' | 'tree' | 'regex'
   /** what main answers for the Passives block's map */
   passiveMap?: PassiveMap | null
   /** a long regex, so the counter shows its warning */
@@ -349,6 +351,18 @@ const scenarios: Scenario[] = [
   {
     name: 'gems-passives',
     tab: 'Gems',
+    profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
+    log: crypt,
+    trials,
+    guide
+  },
+  // The header's searches right after Tree was copied (a click, a hotkey or a
+  // level-up): its copy icon a tick, green; your regex set.
+  {
+    name: 'header-copied',
+    tab: 'Gems',
+    copied: 'tree',
+    regex: '"r-g-b|b-r-g"',
     profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
     log: crypt,
     trials,

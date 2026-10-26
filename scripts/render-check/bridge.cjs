@@ -44,6 +44,11 @@ const answers = {
   getLogSnapshot: () => ok(s.log),
   getProfile: () => ok(s.profile),
   passiveMap: () => ok(s.passiveMap ?? null),
+  // a search "just copied" (scenario.copied): its header button lit
+  onSearchCopied: (cb) => {
+    if (s.copied) setTimeout(() => cb(s.copied), 0)
+    return () => {}
+  },
   // the editor window (scenario.editor)
   editorLoad: () => ok({ routes: [] }),
   editorLoadProfile: (id) =>

@@ -68,7 +68,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    side before ⚙, on every tab; one with nothing to copy is greyed out, never
    gone. With the field empty *Regex* is greyed out. Paste a string (a trailing
    line break from a web page must vanish on save), and it lights up. In
-   interactive mode, click it: it reads `✓ Regex` in green for a moment *without*
+   interactive mode, click it: its copy icon turns into a tick, green, for a moment *without*
    nudging its neighbours sideways, and Ctrl+V in a
    stash or vendor search box pastes exactly the string. The counter turns orange
    and gains a ⚠ past **250** characters — the game's search box limit, confirmed in game. (The
