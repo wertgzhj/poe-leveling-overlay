@@ -227,6 +227,15 @@ export function GemBody(): React.JSX.Element {
       </div>
 
       {profile.passives && <Passives view={profile.passives} />}
+      {profile.treeMissing && (
+        // Not a warning: the gems work without it. Where the tree would be,
+        // how to get it.
+        <p className="mt-1 rounded-md border border-overlay-border/60 bg-black/20 px-2 py-1.5 text-[10px] text-overlay-muted">
+          <span className="font-semibold text-overlay-text">No passive tree in this build.</span> It was
+          imported before the overlay read trees (v0.32.0). Import the PoB again (Settings → Build profile)
+          to get it — it comes in as a new profile.
+        </p>
+      )}
     </>
   )
 }

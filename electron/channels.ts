@@ -253,6 +253,9 @@ export interface ProfileSnapshot {
   /** The profile's passive tree: the next nodes for the points you have —
    *  null when the profile has none. */
   passives: PassivesView | null
+  /** An imported PoB build without a passive tree — imported before the
+   *  overlay read trees (v0.32.0); importing it again brings it. */
+  treeMissing: boolean
   /** Every profile you have, bundled example first. */
   library: LibraryEntry[]
   /** The active profile's library id; null if it isn't in the library. */
