@@ -90,6 +90,8 @@ export const Channels = {
   profileState: 'profile:state',
   /** renderer -> main (invoke): current profile snapshot */
   profileGet: 'profile:get',
+  /** renderer -> main (invoke): the passive map around your next points */
+  profilePassiveMap: 'profile:passive-map',
   /** renderer -> main (invoke): every gem's name, for the short-name picker */
   profileGemNames: 'profile:gem-names',
   /** renderer -> main: page the viewed gem stage by a delta (±1); pins a manual
@@ -290,6 +292,7 @@ export interface PantheonStatus {
 }
 
 export type { PassivesView, PassiveNodeView, PlanCheck, PlanRow } from './profile/tree.ts'
+export type { PassiveMap, MapNode, MapLink } from './profile/tree-map.ts'
 
 /** A one-shot build decision you've reached the point for (profile/run.ts). */
 export type { ChoiceDue } from './profile/run.ts'

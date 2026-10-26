@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { extractTree, treeVersionOf, type TreeExport } from '../scripts/tree-extract.ts'
+import { passiveMap } from '../electron/profile/tree-map.ts'
 import {
   TreeData,
   checkPlan,
@@ -174,6 +175,30 @@ test('the export is cut down to what the overlay shows', () => {
   assert.equal(treeVersionOf('3.30.0'), '3_30')
 })
 
+test('each node gets its place on the tree, for the map', () => {
+  const data: TreeExport = {
+    groups: { 1: { x: 1000, y: -500 } },
+    constants: { skillsPerOrbit: [1, 6, 16, 16, 40], orbitRadii: [0, 82, 162, 335, 493] },
+    nodes: {
+      10: { skill: 10, name: 'centre', group: 1, orbit: 0, orbitIndex: 0 },
+      11: { skill: 11, name: 'even', group: 1, orbit: 1, orbitIndex: 3 }, // 180° of six
+      12: { skill: 12, name: 'table', group: 1, orbit: 2, orbitIndex: 4 } // 90° on a 16-node orbit
+    }
+  }
+  const file = extractTree(data, '3.29.1')
+  assert.deepEqual([file.nodes['10'].x, file.nodes['10'].y], [1000, -500])
+  assert.deepEqual([file.nodes['11'].x, file.nodes['11'].y], [1000, -418]) // straight down
+  assert.deepEqual([file.nodes['12'].x, file.nodes['12'].y], [1162, -500]) // to the right
+  assert.deepEqual(file.groups, { 1: [1000, -500] })
+})
+
+test('the shipped tree has every node placed', () => {
+  const tree = shipped()
+  const marauder = tree.node(47175)!
+  assert.ok(marauder.x != null && marauder.y != null)
+  assert.ok(tree.groupCentre(marauder.group!))
+})
+
 // ---------- import ----------
 
 test('a PoB build\'s tree specs become the profile\'s passives', () => {
@@ -294,4 +319,61 @@ test('every class finds its start in the shipped tree', () => {
     assert.equal(tree.node(classStartNode(tree, cls)!)?.kind, 'start', cls)
   }
   assert.equal(classStartNode(tree, 'Nobody'), undefined)
+})
+
+// ---------- the map ----------
+
+// start(1) at the centre; a(2), b(3) up a line; an orbit of three around (0,-1000): c(4), NOTE(5), d(6)
+function placed(): TreeData {
+  const n = (name: string, kind: TreeNode['kind'], links: number[], x: number, y: number, group = 0): TreeNode => ({
+    name, kind, stats: [], links, group, x, y
+  })
+  const nodes: Record<string, TreeNode> = {
+    1: n('START', 'start', [2], 0, 0),
+    2: n('a', 'small', [1, 3], 0, -300),
+    3: n('b', 'small', [2, 4], 0, -600),
+    4: n('c', 'small', [3, 5], -400, -1000, 9),
+    5: n('NOTE', 'notable', [4, 6], 0, -1400, 9),
+    6: n('d', 'small', [5], 400, -1000, 9),
+    50: n('far away', 'notable', [], 20000, 20000)
+  }
+  return new TreeData({ version: '3.29.1', treeVersion: '3_29', nodes, groups: { 9: [0, -1000] } })
+}
+
+test('the map marks what\'s taken, your next point and the ones after', () => {
+  const tree = placed()
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2, 3] }, { take: [4, 5, 6] }] }
+  const map = passiveMap(plan, tree, 2, 1, 1.5)!
+  const state = Object.fromEntries(map.nodes.map((n) => [n.name, [n.state, n.num ?? null]]))
+  assert.deepEqual(state, {
+    START: ['taken', null],
+    a: ['taken', null],
+    b: ['taken', null],
+    c: ['due', 1],
+    NOTE: ['next', 2],
+    d: ['next', 3]
+  }) // 'far away' is out of view
+  // b—c is the way on; a—b is taken; c—NOTE runs along the orbit
+  const onOrbit = map.links.filter((l) => l.arc)
+  assert.equal(onOrbit.length, 2)
+  assert.ok(onOrbit.every((l) => l.arc!.r === 400 && l.state === 'path'))
+  assert.equal(map.links.filter((l) => l.state === 'taken').length, 2) // start—a, a—b
+  // the view holds every numbered node
+  const [bx, by, bw, bh] = map.box
+  for (const n of map.nodes.filter((n) => n.num)) assert.ok(n.x > bx && n.x < bx + bw && n.y > by && n.y < by + bh)
+  assert.ok(Math.abs(bw / bh - 1.5) < 0.01)
+})
+
+test('a respec shows from when its stage begins', () => {
+  const tree = placed()
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2, 3] }, { refund: [3], take: [4] }] }
+  const b = (points: number) => passiveMap(plan, tree, points, 1, 1.5)!.nodes.find((n) => n.name === 'b')!.state
+  assert.equal(b(1), 'due') // its turn
+  assert.equal(b(2), 'off') // taken, but the stage that refunds it is up
+})
+
+test('no map once the plan is done, or without positions', () => {
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2] }] }
+  assert.equal(passiveMap(plan, placed(), 5, 1, 1.5), null)
+  assert.equal(passiveMap({ tree: '3_29', stages: [{ take: [5, 6] }] }, tiny(), 0, 1, 1.5), null)
 })

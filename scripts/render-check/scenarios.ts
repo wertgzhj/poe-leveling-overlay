@@ -18,7 +18,8 @@ import {
   type AcquisitionContext
 } from '../../electron/profile/engine.ts'
 import type { ChoiceDue, GuideState, LogSnapshot, PantheonStatus, PassivesView, ProfileSnapshot } from '../../electron/channels.ts'
-import { TreeData, passivesView, planFromSpecs, type TreeFile } from '../../electron/profile/tree.ts'
+import { TreeData, classStartNode, passivesView, planFromSpecs, type TreeFile } from '../../electron/profile/tree.ts'
+import { passiveMap, type PassiveMap } from '../../electron/profile/tree-map.ts'
 import { vendorSearch } from '../../electron/profile/search.ts'
 import type { TrialsSnapshot } from '../../electron/trials/engine.ts'
 
@@ -76,16 +77,19 @@ function nearest(start: number, count: number): number[] {
   }
   return order
 }
-const marauderTree = ((): PassivesView => {
+const marauderPlan = (() => {
   const berserker = nearest(29294, 2)
   const specs = [12, 26].map((n, i) => ({
     title: i === 0 ? 'Act 2' : 'Act 3',
     nodes: [...nearest(47175, n), ...berserker],
     masteries: {}
   }))
-  // Level 9 with one Book of Skill: the ninth point is due.
-  return passivesView(planFromSpecs(specs, tree, tree.treeVersion), tree, 9, 1, 0)
+  return planFromSpecs(specs, tree, tree.treeVersion)
 })()
+// Level 9 with one Book of Skill: the ninth point is due.
+const marauderTree: PassivesView = passivesView(marauderPlan, tree, 9, 1, 0)
+// ...and the map around it, as main lays it out for the block's 1.7 : 1.
+const marauderMap: PassiveMap | null = passiveMap(marauderPlan, tree, 9, classStartNode(tree, 'Marauder'), 1.7)
 
 function profileSnapshot(
   stageIndex: number,
@@ -209,6 +213,8 @@ export interface Scenario {
   /** move mode on: draggable header, Done, the resize grip */
   moveMode?: boolean
   opacity?: number
+  /** what main answers for the Passives block's map */
+  passiveMap?: PassiveMap | null
   /** a long regex, so the counter shows its warning */
   regex?: string
   /** regexes for some acts (Settings → Search & copy → Per act) */
@@ -308,6 +314,17 @@ const scenarios: Scenario[] = [
   {
     name: 'gems-passives',
     tab: 'Gems',
+    profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
+    log: crypt,
+    trials,
+    guide
+  },
+  // The same, with the map opened.
+  {
+    name: 'gems-passives-map',
+    tab: 'Gems',
+    click: 'Map',
+    passiveMap: marauderMap,
     profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
     log: crypt,
     trials,

@@ -43,6 +43,7 @@ const answers = {
   getAppInfo: () => ok({ version: '0.0.0', electron: process.versions.electron, isDev: false }),
   getLogSnapshot: () => ok(s.log),
   getProfile: () => ok(s.profile),
+  passiveMap: () => ok(s.passiveMap ?? null),
   getGuide: () => ok(s.guide),
   getTrials: () => ok(s.trials),
   getUpdateStatus: () => ok({ state: 'current', version: '0.0.0' })

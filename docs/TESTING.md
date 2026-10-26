@@ -263,6 +263,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      (`"barbarism|resolute technique|life mastery"`): pasted into the tree
      search, it lights those and nothing else — no small nodes (✓ owner:
      quoted, the search reads a regex; unquoted, it splits at spaces).
+     *▸ Map* opens a piece of the tree under the list: gold is taken by plan,
+     **1** (ringed) your next point, 2–6 the ones after, a dashed line the way
+     they go, names only on the numbered notables, every name on hover; a
+     numbered node copies its name on click. Level up: it moves on with the
+     list. Closed or open, it stays that way after a restart.
      A PoB build imported before v0.32.0 shows *No passive tree in this
      build* in its place, saying to import it again; a hand-written profile
      without a tree shows nothing.

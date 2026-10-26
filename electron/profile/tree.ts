@@ -32,6 +32,9 @@ export interface TreeNode {
   classStart?: number
   /** a mastery's effects: effect id -> stats */
   effects?: Record<string, string[]>
+  /** where it sits on the tree (the export's units), for the map */
+  x?: number
+  y?: number
 }
 
 export interface TreeFile {
@@ -40,6 +43,8 @@ export interface TreeFile {
   /** what a PoB build calls it, "3_29" */
   treeVersion: string
   nodes: Record<string, TreeNode>
+  /** group id -> its centre, for the map's arcs */
+  groups?: Record<string, [number, number]>
 }
 
 /** One step of the plan: a PoB spec's new nodes, in the order to take them. */
@@ -106,7 +111,7 @@ export interface PassivesView {
 }
 
 /** How many nodes ahead the overlay lists. */
-const LOOKAHEAD = 6
+export const LOOKAHEAD = 6
 /** A respec is shown while the stage that needs it is this many points in. */
 const RESPEC_WINDOW = 3
 const KEY_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'jewel'])
@@ -119,11 +124,18 @@ export class TreeData {
   readonly version: string
   readonly treeVersion: string
   private readonly nodes: Map<number, TreeNode>
+  private readonly groups: Record<string, [number, number]>
 
   constructor(file: TreeFile) {
     this.version = file.version
     this.treeVersion = file.treeVersion
     this.nodes = new Map(Object.entries(file.nodes).map(([id, n]) => [Number(id), n]))
+    this.groups = file.groups ?? {}
+  }
+
+  /** A group's centre, for the map; undefined in data without positions. */
+  groupCentre(group: number): [number, number] | undefined {
+    return this.groups[String(group)]
   }
 
   node(id: number): TreeNode | undefined {

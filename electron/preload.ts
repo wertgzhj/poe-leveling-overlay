@@ -10,6 +10,7 @@ import {
   type LibraryResult,
   type LogSnapshot,
   type OverlayState,
+  type PassiveMap,
   type PlanCheck,
   type PobImportResponse,
   type ProfileSnapshot,
@@ -62,6 +63,7 @@ const api = {
   guideReset: (): void => ipcRenderer.send(Channels.guideReset),
 
   getProfile: (): Promise<ProfileSnapshot> => ipcRenderer.invoke(Channels.profileGet),
+  passiveMap: (aspect: number): Promise<PassiveMap | null> => ipcRenderer.invoke(Channels.profilePassiveMap, aspect),
   onProfileState: (cb: (snap: ProfileSnapshot) => void): (() => void) =>
     subscribe(Channels.profileState, cb),
   stageStep: (delta: number): void => ipcRenderer.send(Channels.profileStageStep, delta),
