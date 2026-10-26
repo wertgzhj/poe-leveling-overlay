@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import { copyText } from './clipboard.ts'
-import { Channels, type AppInfo, type SettingsSetResult } from './channels'
+import { Channels, type AppInfo, type SearchKind, type SettingsSetResult } from './channels'
 import {
   AUTO_COPY_TOWN,
   type AutoCopyTown,
@@ -45,7 +45,8 @@ export function registerIpc(
   editor: EditorWindow,
   update: UpdateService,
   timer: TimerService,
-  timerWindow: TimerWindow
+  timerWindow: TimerWindow,
+  copySearch: (kind: SearchKind) => void
 ): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
 
@@ -101,7 +102,7 @@ export function registerIpc(
     let failed: string[] = []
     if (patch.hotkeys) {
       store.set('hotkeys', sanitizeHotkeys(patch.hotkeys))
-      failed = registerHotkeys(overlay, guide, timerWindow)
+      failed = registerHotkeys(overlay, guide, timerWindow, copySearch)
     }
     return { failed }
   })
@@ -109,7 +110,7 @@ export function registerIpc(
   // Suspend/resume global hotkeys around combo capture, so a shortcut that is
   // already bound reaches the renderer instead of firing its handler.
   ipcMain.on(Channels.hotkeysPause, () => unregisterHotkeys())
-  ipcMain.on(Channels.hotkeysResume, () => registerHotkeys(overlay, guide, timerWindow))
+  ipcMain.on(Channels.hotkeysResume, () => registerHotkeys(overlay, guide, timerWindow, copySearch))
 
   ipcMain.on(Channels.overlayExitMoveMode, () => overlay.setMoveMode(false))
 
@@ -323,8 +324,16 @@ function sanitizeHotkeys(next: Partial<HotkeyBindings>): HotkeyBindings {
     toggleClickThrough: pickString(next.toggleClickThrough, prev.toggleClickThrough),
     toggleMoveMode: pickString(next.toggleMoveMode, prev.toggleMoveMode),
     stepForward: pickString(next.stepForward, prev.stepForward),
-    stepBack: pickString(next.stepBack, prev.stepBack)
+    stepBack: pickString(next.stepBack, prev.stepBack),
+    copyVendor: pickOptional(next.copyVendor, prev.copyVendor),
+    copyTree: pickOptional(next.copyTree, prev.copyTree),
+    copyRegex: pickOptional(next.copyRegex, prev.copyRegex)
   }
+}
+
+/** A binding that may be cleared: '' unsets it. */
+function pickOptional(value: unknown, fallback: string): string {
+  return typeof value === 'string' ? value : fallback
 }
 
 function pickString(value: unknown, fallback: string): string {

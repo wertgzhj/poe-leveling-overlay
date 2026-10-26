@@ -63,7 +63,10 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     toggleClickThrough: 'CommandOrControl+Shift+C',
     toggleMoveMode: 'CommandOrControl+Shift+M',
     stepForward: 'CommandOrControl+Shift+N',
-    stepBack: 'CommandOrControl+Shift+P'
+    stepBack: 'CommandOrControl+Shift+P',
+    copyVendor: '',
+    copyTree: '',
+    copyRegex: ''
   },
   clientTxtPath: null,
   characterName: null,

@@ -17,7 +17,16 @@ export interface HotkeyBindings {
   toggleMoveMode: string
   stepForward: string
   stepBack: string
+  /** Copy the Gems tab's vendor search / the tree search / your own regex.
+   *  '' = not set, the default: any free Ctrl+Shift combo is someone's
+   *  shortcut elsewhere, so these are yours to pick. */
+  copyVendor: string
+  copyTree: string
+  copyRegex: string
 }
+
+/** Bindings that may be left empty (not set); the rest always have one. */
+export const OPTIONAL_HOTKEYS = ['copyVendor', 'copyTree', 'copyRegex'] as const
 
 export interface OverlayBounds {
   x?: number
@@ -133,7 +142,10 @@ const defaults: StoreSchema = {
     toggleClickThrough: 'CommandOrControl+Shift+C',
     toggleMoveMode: 'CommandOrControl+Shift+M',
     stepForward: 'CommandOrControl+Shift+N',
-    stepBack: 'CommandOrControl+Shift+P'
+    stepBack: 'CommandOrControl+Shift+P',
+    copyVendor: '',
+    copyTree: '',
+    copyRegex: ''
   },
   clientTxtPath: null,
   profilePath: null,
