@@ -3,7 +3,7 @@
 // tests/tree.test.ts. It names nothing new: the same plan, points and next
 // nodes as passivesView, laid out where they sit on the tree.
 
-import { LOOKAHEAD, type NodeKind, type PassivePlan, type TreeData } from './tree.ts'
+import { LOOKAHEAD, planPosition, type NodeKind, type PassivePlan, type TreeData } from './tree.ts'
 
 /** What a node is to you: taken by plan, your next point, one after, or not yours. */
 export type MapState = 'taken' | 'due' | 'next' | 'off'
@@ -55,13 +55,17 @@ export function passiveMap(
   start: number | undefined,
   aspect: number
 ): PassiveMap | null {
+  // the same place in the plan as the list (planPosition: a respec's points
+  // come back)
+  const { at: due } = planPosition(plan, points)
   const taken = new Set<number>(start != null ? [start] : [])
   const next: number[] = []
   let i = 0
   for (const stage of plan.stages) {
-    if (i <= points && next.length === 0) for (const id of stage.refund ?? []) taken.delete(id)
+    // a respec counts once you're past its stage's start (planPosition)
+    if (i < due) for (const id of stage.refund ?? []) taken.delete(id)
     for (const id of stage.take) {
-      if (i < points) taken.add(id)
+      if (i < due) taken.add(id)
       else if (next.length < LOOKAHEAD) next.push(id)
       i++
     }

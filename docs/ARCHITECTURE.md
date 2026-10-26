@@ -185,7 +185,11 @@ next points' bounding box with room around it, at least a few groups wide.
 **Which node is due** follows the points the character has: level − 1, plus
 every "You have received a Passive Skill Point." line (a Book of Skill used, not
 the quest finished) — counted per character, once each, the backscan's replays
-skipped by their timestamps (`CharacterRuns.addQuestPoint`). The next
+skipped by their timestamps (`CharacterRuns.addQuestPoint`). A respec gives its
+points back: from the stage that refunds nodes on, the plan is that many nodes
+further along than the points (`planPosition`), and the plan's total is its
+nodes less its refunds. With every point spent as a refunding stage begins,
+its first node is due, the respec shown in front of it. The next
 ascendancy points follow the Labyrinths the trials service saw beaten. Clicking
 a node copies its name for the in-game tree's search box; the renderer asks by
 node id, so it can't put arbitrary text on the clipboard.
