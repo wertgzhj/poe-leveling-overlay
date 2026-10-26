@@ -13,6 +13,8 @@
 // Which node is due follows the points you have: (level - 1) plus the Book of
 // Skill points the log says you used.
 
+import { SEARCH_BOX_LIMIT, quotedSearch, searchTerm } from './search.ts'
+
 /** What kind of passive a node is, for how it's shown. */
 export type NodeKind = 'small' | 'notable' | 'keystone' | 'mastery' | 'jewel' | 'start' | 'ascendancyStart'
 
@@ -108,8 +110,6 @@ const LOOKAHEAD = 6
 /** A respec is shown while the stage that needs it is this many points in. */
 const RESPEC_WINDOW = 3
 const KEY_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'jewel'])
-/** What the game's search boxes take; the rest is cut off (✓ owner). */
-const SEARCH_BOX_LIMIT = 250
 /** Stages before the current one the Tree button still searches. */
 const SEARCH_BACK = 2
 /** What the Tree button searches for: nodes with a name of their own. */
@@ -295,8 +295,8 @@ export function passivesView(
   const namesOf = (stage: number): string[] =>
     flat
       .filter((s) => s.stage === stage && !dropped.has(s.id) && SEARCH_KINDS.has(tree.node(s.id)?.kind as NodeKind))
-      .map((s) => tree.node(s.id)!.name.toLowerCase().replace(/[.*+?^${}()|[\]\\"]/g, '\\$&'))
-  const quoted = (names: string[]): string => `"${[...new Set(names)].join('|')}"`
+      .map((s) => searchTerm(tree.node(s.id)!.name))
+  const quoted = quotedSearch
   // Ahead, it reaches as far as the list shows: a notable named under "then"
   // belongs in the search even when it's the next stage's (owner).
   let targets: string[] = []

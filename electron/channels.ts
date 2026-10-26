@@ -79,6 +79,9 @@ export const Channels = {
   /** renderer -> main (invoke): copy the current tree stage's notables, keystones
    *  and masteries as a search regex (computed in main from the profile) */
   clipboardCopyTreeSearch: 'clipboard:copy-tree-search',
+  /** renderer -> main (invoke): copy the gems to buy as a vendor-search regex
+   *  (computed in main from the profile) */
+  clipboardCopyVendorSearch: 'clipboard:copy-vendor-search',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
   /** renderer -> main (invoke): current guide state */
@@ -247,6 +250,8 @@ export interface ProfileSnapshot {
   /** Index of the stage the tracked level maps to, -1 if none. When it differs
    *  from viewedIndex you're looking at a manually-paged stage, not the live one. */
   liveIndex: number
+  /** The gems to buy now as one vendor-search regex — null: nothing to buy. */
+  vendorSearch: string | null
   /** a bandit/pantheon reminder that is due and not yet acknowledged. */
   choiceDue: ChoiceDue | null
   /** The profile's passive tree: the next nodes for the points you have —

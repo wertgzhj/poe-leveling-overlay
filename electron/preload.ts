@@ -43,6 +43,7 @@ const api = {
   copySearchRegex: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopySearchRegex),
   copyPassive: (id: number): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyPassive, id),
   copyTreeSearch: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyTreeSearch),
+  copyVendorSearch: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyVendorSearch),
   onLogStatus: (cb: (status: WatcherStatus) => void): (() => void) =>
     subscribe(Channels.logStatus, cb),
   onLogSnapshot: (cb: (snap: LogSnapshot) => void): (() => void) =>

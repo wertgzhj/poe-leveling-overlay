@@ -19,6 +19,7 @@ import {
 } from '../../electron/profile/engine.ts'
 import type { ChoiceDue, GuideState, LogSnapshot, PantheonStatus, PassivesView, ProfileSnapshot } from '../../electron/channels.ts'
 import { TreeData, passivesView, planFromSpecs, type TreeFile } from '../../electron/profile/tree.ts'
+import { vendorSearch } from '../../electron/profile/search.ts'
 import type { TrialsSnapshot } from '../../electron/trials/engine.ts'
 
 const root = new URL('../../', import.meta.url).pathname
@@ -116,6 +117,7 @@ function profileSnapshot(
     prevStage: stageIndex > 0 ? resolveStage(profile.stages[stageIndex - 1], stageIndex - 1, gems) : null,
     nextStage: profile.stages[stageIndex + 1] ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, gems) : null,
     acquisitions: acquisitionsForStage(profile, stageIndex, gems, ctx),
+    vendorSearch: vendorSearch(acquisitionsForStage(profile, stageIndex, gems, ctx).plan),
     stageCount: profile.stages.length,
     viewedIndex: stageIndex,
     liveIndex: extra.liveIndex ?? stageIndex,

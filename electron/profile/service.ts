@@ -18,6 +18,7 @@ import { parseProfile, validateProfile, baseClassOf, type Profile } from './prof
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
 import { godsFallen, godsFor, isHere, whereIs } from './pantheon.ts'
 import { TreeData, passivesView, type TreeFile } from './tree.ts'
+import { vendorSearch } from './search.ts'
 import {
   activeStageIndex,
   actFromAreaId,
@@ -384,6 +385,7 @@ export class ProfileService {
     const muling =
       mismatch && profile ? mulingClass(profile, trackedClass, level, [...new Set(options.flatMap((o) => o.classes))]) : null
 
+    const acquisitions = profile ? this.acquisitions(profile, stageIndex) : null
     return {
       meta: profile?.meta ?? null,
       errors: this.errors,
@@ -398,7 +400,8 @@ export class ProfileService {
         profile && stageIndex >= 0 && stageIndex + 1 < profile.stages.length
           ? resolveStage(profile.stages[stageIndex + 1], stageIndex + 1, this.gems)
           : null,
-      acquisitions: profile ? this.acquisitions(profile, stageIndex) : null,
+      acquisitions,
+      vendorSearch: acquisitions ? vendorSearch(acquisitions.plan) : null,
       stageCount: profile ? profile.stages.length : 0,
       viewedIndex: stageIndex,
       liveIndex,
@@ -427,6 +430,11 @@ export class ProfileService {
   /** The current tree stage's targets as a search regex, for the Tree button. */
   treeSearch(): string | null {
     return this.passives()?.treeSearch ?? null
+  }
+
+  /** The gems to buy now, as a vendor-search regex (search.ts). */
+  vendorSearch(): string | null {
+    return this.snapshot().vendorSearch
   }
 
   /** Labyrinths the tracked character has beaten (the trials service records

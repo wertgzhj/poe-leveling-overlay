@@ -144,6 +144,13 @@ export function registerIpc(
     return true
   })
 
+  ipcMain.handle(Channels.clipboardCopyVendorSearch, (): boolean => {
+    const regex = profile.vendorSearch()
+    if (!regex) return false
+    clipboard.writeText(regex)
+    return true
+  })
+
   ipcMain.handle(Channels.clipboardCopyTreeSearch, (): boolean => {
     const regex = profile.treeSearch()
     if (!regex) return false
