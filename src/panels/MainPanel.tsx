@@ -70,8 +70,8 @@ function DetectCharButton(): React.JSX.Element {
   )
 }
 
-// Settings → Search & copy → "Copy without a click" just copied one:
-// say which, for a few seconds, so the clipboard's content is never a guess.
+// A search was just copied without a click (Settings → Search & copy) or by a
+// hotkey: say which, for a few seconds, so the clipboard is never a guess.
 function AutoCopyNote(): React.JSX.Element | null {
   const copied = useOverlayStore((s) => s.autoCopied)
   const [, tick] = useState(0)
@@ -99,7 +99,7 @@ function RegexButton(): React.JSX.Element | null {
   const [flash, setFlash] = useState<'copied' | 'failed' | null>(null)
   if (!regex) return null
   const onClick = (): void => {
-    void window.overlay?.copySearchRegex().then((ok) => {
+    void window.overlay?.copySearch('regex').then((ok) => {
       setFlash(ok ? 'copied' : 'failed')
       window.setTimeout(() => setFlash(null), 1500)
     })

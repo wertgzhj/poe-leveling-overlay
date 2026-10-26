@@ -41,11 +41,9 @@ const api = {
   getLogSnapshot: (): Promise<LogSnapshot> => ipcRenderer.invoke(Channels.logGetSnapshot),
   detectCharacter: (): Promise<DetectedCharacter | null> =>
     ipcRenderer.invoke(Channels.logDetectCharacter),
-  copySearchRegex: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopySearchRegex),
+  copySearch: (kind: SearchKind): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopySearch, kind),
   copyPassive: (id: number): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyPassive, id),
-  copyTreeSearch: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyTreeSearch),
-  copyVendorSearch: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyVendorSearch),
-  onSearchAutoCopied: (cb: (kind: SearchKind) => void): (() => void) => subscribe(Channels.searchAutoCopied, cb),
+  onSearchCopied: (cb: (kind: SearchKind) => void): (() => void) => subscribe(Channels.searchCopied, cb),
   onLogStatus: (cb: (status: WatcherStatus) => void): (() => void) =>
     subscribe(Channels.logStatus, cb),
   onLogSnapshot: (cb: (snap: LogSnapshot) => void): (() => void) =>

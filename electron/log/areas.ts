@@ -8,3 +8,8 @@
 export function isCampaignAreaId(areaId: string): boolean {
   return /^\d+_\d+_/.test(areaId)
 }
+
+/** A campaign town ("1_1_town", "2_6_town", Karui Shores' "2_11_endgame_town"). */
+export function isTownId(areaId: string): boolean {
+  return areaId.endsWith('_town')
+}

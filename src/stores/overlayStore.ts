@@ -20,8 +20,8 @@ interface OverlayStore {
   gemNames: Record<string, string>
   /** The run timer is on: it records runs and shows its window. */
   runTimer: boolean
-  autoCopyTown: 'off' | 'vendor' | 'regex'
-  autoCopyLevelUp: boolean
+  autoCopyTown: 'off' | 'vendor' | 'tree' | 'regex'
+  autoCopyLevelUp: 'off' | 'vendor' | 'tree' | 'regex'
   autoCopyProtect: boolean
   /** The last search copied without a click, and when — the header says so
    *  for a moment. */
@@ -76,7 +76,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   gemNames: {},
   runTimer: false,
   autoCopyTown: 'off',
-  autoCopyLevelUp: false,
+  autoCopyLevelUp: 'off',
   autoCopyProtect: true,
   autoCopied: null,
   logStatus: null,

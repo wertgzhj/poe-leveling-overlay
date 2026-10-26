@@ -1,8 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { AutoCopyTrigger, mayOverwrite } from '../electron/copy-rules.ts'
 import {
-  AutoCopyTrigger,
-  mayOverwrite,
   quotedSearch,
   searchTerm,
   vendorSearch,

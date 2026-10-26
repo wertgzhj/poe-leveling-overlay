@@ -26,7 +26,7 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
               label="Tree"
               regex={view.treeSearch}
               what="the passive tree's"
-              copy={() => window.overlay?.copyTreeSearch()}
+              kind="tree"
             />
           )}
         </span>

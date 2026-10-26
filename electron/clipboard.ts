@@ -1,9 +1,9 @@
 // Every clipboard write the overlay makes goes through here, so it knows what
-// it put there: copying on its own (autocopy.ts) may replace that, never
+// it put there: copying without a click (searches.ts) may replace that, never
 // something you copied yourself (see mayOverwrite).
 
 import { clipboard } from 'electron'
-import { mayOverwrite } from './profile/search.ts'
+import { mayOverwrite } from './copy-rules.ts'
 
 /** The overlay's recent writes; a handful is plenty. */
 const written: string[] = []

@@ -35,7 +35,7 @@ const answers = {
       gemNames: s.gemNames ?? {},
       runTimer: false,
       autoCopyTown: 'off',
-      autoCopyLevelUp: false,
+      autoCopyLevelUp: 'off',
       autoCopyProtect: true
     }),
   gemNameList: () => ok(['Cast when Damage Taken Support', 'Melee Physical Damage Support', 'Sunder']),

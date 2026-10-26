@@ -73,7 +73,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    *Copy without a click* → *Entering a town*: "gems to buy" — walk into a
    town and the header reads `✓ Vendor copied` for a moment; Ctrl+V at the
    vendor pastes the Gems tab's vendor search. "your regex above" (only with
-   one set): `✓ Regex copied`, your string. *A level-up* on: level up out in a
+   one set): `✓ Regex copied`, your string. *A level-up* set to "passives (Tree)": level up out in a
    zone, `✓ Tree copied`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it —
    unless *Keep what you copied yourself* is off, when they do. A restart
    in a town copies nothing until you level or walk into a town again.
