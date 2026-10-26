@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 import { OverlayController } from './overlay'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { registerIpc } from './ipc'
@@ -47,38 +47,58 @@ if (!app.requestSingleInstanceLock()) {
   // Before any window exists, so none slips through.
   hardenWebContents()
 
-  void app.whenReady().then(() => {
-    denyPermissions()
-    overlay.create()
-    registerIpc(
-      overlay,
-      logService,
-      guideService,
-      profileService,
-      trialsService,
-      editorWindow,
-      updateService,
-      timerService,
-      timerWindow,
-      searchService
-    )
-    logService.start()
-    guideService.start()
-    profileService.start()
-    trialsService.start()
-    updateService.start()
-    const failed = registerHotkeys(overlay, guideService, timerWindow, searchService)
-    if (failed.length) {
-      console.warn('[hotkeys] failed to register:', failed.join(', '))
-    }
-    tray = createTray(overlay, timerWindow, () => editorWindow.open())
+  app.whenReady().then(start).catch(startupFailed)
+}
 
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) overlay.create()
-    })
+/** Everything that needs the app ready: windows, IPC, services, hotkeys, tray. */
+function start(): void {
+  denyPermissions()
+  overlay.create()
+  registerIpc(
+    overlay,
+    logService,
+    guideService,
+    profileService,
+    trialsService,
+    editorWindow,
+    updateService,
+    timerService,
+    timerWindow,
+    searchService
+  )
+  logService.start()
+  guideService.start()
+  profileService.start()
+  trialsService.start()
+  updateService.start()
+  const failed = registerHotkeys(overlay, guideService, timerWindow, searchService)
+  if (failed.length) {
+    console.warn('[hotkeys] failed to register:', failed.join(', '))
+  }
+  tray = createTray(overlay, timerWindow, () => editorWindow.open())
 
-    if (SMOKE_MS) runSmoke(failed)
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) overlay.create()
   })
+
+  if (SMOKE_MS) runSmoke(failed)
+}
+
+// Startup threw: say so and quit. Before, the error went nowhere and the app
+// stayed running with no window — invisible, holding the single-instance lock,
+// so launching it again did nothing either.
+function startupFailed(e: unknown): void {
+  const message = e instanceof Error ? e.message : String(e)
+  console.error('[startup] failed:', e)
+  // A headless run has nobody to close a dialog; it reads the exit code.
+  if (!SMOKE_MS) {
+    dialog.showErrorBox(
+      'PoE Leveling Overlay could not start',
+      `${message}\n\nTry starting it again. If it keeps happening, please open an issue on GitHub with this message.`
+    )
+  }
+  // exit, not quit: will-quit would stop services that never started
+  app.exit(1)
 }
 
 app.on('window-all-closed', () => {
