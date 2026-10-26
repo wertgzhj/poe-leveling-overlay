@@ -130,6 +130,10 @@ export class TreeData {
     return this.nodes.get(id)
   }
 
+  ids(): IterableIterator<number> {
+    return this.nodes.keys()
+  }
+
   view(id: number, masteryEffect?: number): PassiveNodeView {
     const n = this.nodes.get(id)
     if (!n) return { id, name: `unknown node ${id}`, kind: 'small', stats: [] }
@@ -332,4 +336,83 @@ export function passivesView(
         ? null
         : `the build's tree is ${plan.tree.replace('_', '.')}, the overlay has ${tree.version} — nodes may have moved`
   }
+}
+
+// ---------- editing the order (the editor's Passive tree section) ----------
+
+/** Each class's starting node, by its index in the tree export's classes. */
+const CLASS_START_INDEX: Record<string, number> = {
+  Scion: 0,
+  Marauder: 1,
+  Ranger: 2,
+  Witch: 3,
+  Duelist: 4,
+  Templar: 5,
+  Shadow: 6
+}
+
+/** The class's starting node; undefined for a class the tree doesn't know. */
+export function classStartNode(tree: TreeData, charClass: string): number | undefined {
+  const index = CLASS_START_INDEX[charClass]
+  if (index == null) return undefined
+  for (const id of tree.ids()) if (tree.node(id)?.classStart === index) return id
+  return undefined
+}
+
+/** A node in the editor's list, and whether the game would let you take it there. */
+export interface PlanRow extends PassiveNodeView {
+  /** nothing taken before it touches it — the game won't allow it there */
+  unlinked: boolean
+}
+
+/** The editor's view of a plan: every stage's nodes, in order, checked. */
+export interface PlanCheck {
+  stages: Array<{ label?: string; take: PlanRow[]; refund: PassiveNodeView[] }>
+}
+
+/**
+ * Walk the plan from the class's start and flag every node nothing taken
+ * before it touches — an edited order the game won't allow. A mastery needs a
+ * notable of its group first. Nodes the tree doesn't know aren't flagged:
+ * there's nothing to check them against.
+ */
+export function checkPlan(plan: PassivePlan, tree: TreeData, start: number | undefined): PlanCheck {
+  const have = new Set<number>(start != null ? [start] : [])
+  const stages = plan.stages.map((s) => {
+    for (const id of s.refund ?? []) have.delete(id)
+    const take = s.take.map((id) => {
+      const row: PlanRow = { ...tree.view(id, s.masteries?.[String(id)]), unlinked: start != null && !linked(tree, have, id) }
+      have.add(id)
+      return row
+    })
+    return { ...(s.label ? { label: s.label } : {}), take, refund: (s.refund ?? []).map((id) => tree.view(id)) }
+  })
+  return { stages }
+}
+
+function linked(tree: TreeData, have: Set<number>, id: number): boolean {
+  const node = tree.node(id)
+  if (!node) return true
+  if (node.kind === 'mastery') {
+    for (const h of have) {
+      const n = tree.node(h)
+      if (n?.kind === 'notable' && n.group === node.group) return true
+    }
+    return false
+  }
+  return node.links.some((l) => have.has(l))
+}
+
+/** A stage's nodes back in the order the import works out (orderNodes), from
+ *  what the stages before it leave allocated. */
+export function resortStage(plan: PassivePlan, tree: TreeData, start: number | undefined, index: number): number[] {
+  const have = new Set<number>(start != null ? [start] : [])
+  plan.stages.slice(0, index).forEach((s) => {
+    for (const id of s.refund ?? []) have.delete(id)
+    for (const id of s.take) have.add(id)
+  })
+  const stage = plan.stages[index]
+  if (!stage) return []
+  for (const id of stage.refund ?? []) have.delete(id)
+  return orderNodes(tree, have, stage.take)
 }

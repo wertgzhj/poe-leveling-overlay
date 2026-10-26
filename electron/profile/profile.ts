@@ -315,7 +315,7 @@ function validateGemPlan(raw: unknown, errors: string[]): GemPlanEntry[] {
 
 /** Node ids are the tree's numbers; anything else is a typo that would quietly
  *  show "unknown node", so it's reported. */
-function validatePassives(raw: unknown, errors: string[]): PassivePlan | undefined {
+export function validatePassives(raw: unknown, errors: string[]): PassivePlan | undefined {
   if (raw === undefined) return undefined
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
     errors.push('"passives" must be an object with "tree" and "stages"')

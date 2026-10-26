@@ -16,6 +16,7 @@ import {
   type StageDraft
 } from './model'
 import { Btn, Select, TextInput, SaveResult } from './ui'
+import { PassivesEditor } from './PassivesEditor'
 
 function toDraft(p: ProfileFileBridge | null): ProfileDraft {
   if (!p) {
@@ -206,6 +207,17 @@ export function ProfileEditor({
       <div>
         <Btn onClick={addStage}>+ Add stage</Btn>
       </div>
+
+      {draft.passives && (
+        <div className="flex flex-col gap-2">
+          <h2 className="mt-2 text-sm font-semibold">Passive tree</h2>
+          <PassivesEditor
+            plan={draft.passives}
+            charClass={draft.meta.class}
+            onChange={(passives) => edit({ ...draft, passives })}
+          />
+        </div>
+      )}
 
       <p className="text-xs text-overlay-muted">
         Socket colours are computed from each gem's attribute (not set here). The gem plan

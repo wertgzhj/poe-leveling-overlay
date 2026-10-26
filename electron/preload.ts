@@ -10,6 +10,7 @@ import {
   type LibraryResult,
   type LogSnapshot,
   type OverlayState,
+  type PlanCheck,
   type PobImportResponse,
   type ProfileSnapshot,
   type RouteImportResult,
@@ -111,6 +112,10 @@ const api = {
     ipcRenderer.invoke(Channels.editorSaveRoute, { act, json }),
   editorSaveProfile: (id: string, json: unknown): Promise<EditorSaveResult> =>
     ipcRenderer.invoke(Channels.editorSaveProfile, { id, json }),
+  editorPassivesCheck: (plan: unknown, charClass: string): Promise<PlanCheck | null> =>
+    ipcRenderer.invoke(Channels.editorPassivesCheck, { plan, charClass }),
+  editorPassivesResort: (plan: unknown, charClass: string, stage: number): Promise<number[] | null> =>
+    ipcRenderer.invoke(Channels.editorPassivesResort, { plan, charClass, stage }),
   editorExportRoutes: (): Promise<string> => ipcRenderer.invoke(Channels.editorExportRoutes),
   editorImportRoutes: (text: string): Promise<RouteImportResult> =>
     ipcRenderer.invoke(Channels.editorImportRoutes, text),

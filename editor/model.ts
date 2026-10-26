@@ -8,6 +8,7 @@
 // is a drift waiting to happen.
 import { ASCENDANCIES, type CharClass } from '../electron/profile/profile.ts'
 import type { StepType } from '../electron/guide/route.ts'
+import type { PassivePlan } from '../electron/profile/tree.ts'
 export { STEP_TYPES, type StepType } from '../electron/guide/route.ts'
 export {
   ASCENDANCIES,
@@ -87,8 +88,24 @@ export interface ProfileDraft {
   meta: ProfileMetaDraft
   stages: StageDraft[]
   gemPlan: GemPlanDraft[]
-  /** The passive tree from a PoB import — not edited here, kept as it is. */
-  passives?: unknown
+  /** The passive tree from a PoB import. Its order can be changed here
+   *  (movePassive, setStageOrder); which nodes it takes can't. */
+  passives?: PassivePlan
+}
+
+/** A node moved within its stage of the passive plan. */
+export function movePassive(plan: PassivePlan, stage: number, from: number, to: number): PassivePlan {
+  const s = plan.stages[stage]
+  if (!s) return plan
+  return setStageOrder(plan, stage, moveItem(s.take, from, to))
+}
+
+/** A stage's nodes in a new order — the same nodes, or nothing changes. A
+ *  mastery's pick is keyed by node id, so it moves along by itself. */
+export function setStageOrder(plan: PassivePlan, stage: number, take: number[]): PassivePlan {
+  const s = plan.stages[stage]
+  if (!s || take.length !== s.take.length || [...take].sort().join() !== [...s.take].sort().join()) return plan
+  return { ...plan, stages: plan.stages.map((x, i) => (i === stage ? { ...x, take } : x)) }
 }
 
 /** Move an item within an array, returning a new array (clamped, no-op if out of range). */

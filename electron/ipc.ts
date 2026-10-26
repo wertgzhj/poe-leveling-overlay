@@ -220,6 +220,17 @@ export function registerIpc(
     return profile.importFile(picked.filePaths[0])
   })
 
+  // The editor's Passive tree section: the tree data lives here, so naming,
+  // checking and re-sorting happen here too. The plan is the editor's draft —
+  // validated like a file's before anything walks it.
+  ipcMain.handle(Channels.editorPassivesCheck, (_e, p: { plan?: unknown; charClass?: unknown }) =>
+    p && typeof p.charClass === 'string' ? profile.checkPassives(p.plan, p.charClass) : null
+  )
+  ipcMain.handle(Channels.editorPassivesResort, (_e, p: { plan?: unknown; charClass?: unknown; stage?: unknown }) =>
+    p && typeof p.charClass === 'string' && Number.isInteger(p.stage)
+      ? profile.resortPassives(p.plan, p.charClass, p.stage as number)
+      : null
+  )
   ipcMain.handle(Channels.editorExportRoutes, (): string => exportRoutes(routesForExport()))
   ipcMain.handle(Channels.editorImportRoutes, (_e, text: unknown): RouteImportResult => {
     if (typeof text !== 'string' || !text.trim()) {

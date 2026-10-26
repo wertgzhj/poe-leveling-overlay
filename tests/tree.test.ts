@@ -4,7 +4,10 @@ import { readFileSync } from 'node:fs'
 import { extractTree, treeVersionOf, type TreeExport } from '../scripts/tree-extract.ts'
 import {
   TreeData,
+  checkPlan,
+  classStartNode,
   orderNodes,
+  resortStage,
   passivesView,
   planFromSpecs,
   type PassivePlan,
@@ -246,4 +249,49 @@ test('the Tree search reaches ahead as far as the list shows', () => {
   // NEAR is due; KEY, two points on, is in the next stage — and shown under "then"
   const p: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6] }, { take: [8, 9] }] }
   assert.equal(passivesView(p, tree, 2, 0, 0).treeSearch, '"near|key"')
+})
+
+// ---------- editing the order ----------
+
+const unlinked = (tree: TreeData, plan: PassivePlan): string[][] =>
+  checkPlan(plan, tree, 1).stages.map((s) => s.take.filter((r) => r.unlinked).map((r) => r.name))
+
+test('an order the game allows has nothing flagged', () => {
+  const tree = tiny()
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6, 7] }, { take: [8, 9, 2, 3, 4] }] }
+  assert.deepEqual(unlinked(tree, plan), [[], []])
+})
+
+test('a node moved ahead of the way to it is flagged, and so is a mastery before its notable', () => {
+  const tree = tiny()
+  // KEY before d; the mastery before NEAR
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 7, 6] }, { take: [9, 8] }] }
+  assert.deepEqual(unlinked(tree, plan), [['Mastery'], ['KEY']])
+})
+
+test('a refunded node no longer carries what hangs off it', () => {
+  const tree = tiny()
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6] }, { refund: [6], take: [8] }] }
+  assert.deepEqual(unlinked(tree, plan), [[], ['d']])
+})
+
+test('without a start to walk from, nothing is flagged', () => {
+  const tree = tiny()
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [9] }] }
+  assert.equal(checkPlan(plan, tree, undefined).stages[0].take[0].unlinked, false)
+})
+
+test('re-sorting a stage puts it back in the import\'s order, from what came before', () => {
+  const tree = tiny()
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [5, 6] }, { take: [4, 3, 2, 9, 8] }] }
+  assert.deepEqual(names(tree, resortStage(plan, tree, 1, 1)), ['d', 'KEY', 'a', 'b', 'FAR'])
+})
+
+test('every class finds its start in the shipped tree', () => {
+  const tree = shipped()
+  assert.equal(classStartNode(tree, 'Marauder'), 47175)
+  for (const cls of ['Scion', 'Ranger', 'Witch', 'Duelist', 'Templar', 'Shadow']) {
+    assert.equal(tree.node(classStartNode(tree, cls)!)?.kind, 'start', cls)
+  }
+  assert.equal(classStartNode(tree, 'Nobody'), undefined)
 })

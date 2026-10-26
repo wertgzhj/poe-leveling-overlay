@@ -76,6 +76,7 @@ type GemPlanFileBridge = import('../electron/profile/profile.ts').GemPlanEntry
 type ProfileFileBridge = import('../electron/profile/profile.ts').Profile
 type EditorRouteEntryBridge = import('../electron/channels.ts').EditorRouteEntry
 type EditorLoadBridge = import('../electron/channels.ts').EditorLoad
+type PlanCheckBridge = import('../electron/channels.ts').PlanCheck
 type EditorProfileLoadBridge = import('../electron/channels.ts').EditorProfileLoad
 type RouteImportResultBridge = import('../electron/channels.ts').RouteImportResult
 type EditorSaveResultBridge = import('../electron/channels.ts').EditorSaveResult
