@@ -25,6 +25,8 @@ interface OverlayStore {
   autoCopyTown: 'off' | 'vendor' | 'tree' | 'regex'
   autoCopyLevelUp: 'off' | 'vendor' | 'tree' | 'regex'
   autoCopyProtect: boolean
+  /** Spoken announcements (Settings → Voice) */
+  announce: AnnounceSettingsBridge
   /** The last search copied without a click, and when — the header says so
    *  for a moment. */
   autoCopied: { kind: 'vendor' | 'tree' | 'regex'; at: number } | null
@@ -81,6 +83,12 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   autoCopyTown: 'off',
   autoCopyLevelUp: 'off',
   autoCopyProtect: true,
+  announce: {
+    lang: 'en',
+    voice: '',
+    volume: 0.8,
+    events: { trial: false, gems: false, zone: false, lab: false, choice: false, passive: false }
+  },
   autoCopied: null,
   logStatus: null,
   tracked: null,

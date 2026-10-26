@@ -24,7 +24,8 @@ import type {
   PantheonStatus,
   PassivesView,
   PlanCheck,
-  ProfileSnapshot
+  ProfileSnapshot,
+  AnnounceSettings
 } from '../../electron/channels.ts'
 import {
   TreeData,
@@ -232,7 +233,7 @@ export interface Scenario {
   /** shoot the editor window, not the overlay */
   editor?: EditorScenario
   /** a tab — or, in Settings, a section heading — to click first */
-  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy'
+  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy' | 'Voice'
   /** a button to press after the tab, by (part of) its text */
   click?: string
   /** short names from Settings (real name -> short) */
@@ -241,6 +242,8 @@ export interface Scenario {
   /** move mode on: draggable header, Done, the resize grip */
   moveMode?: boolean
   opacity?: number
+  /** Settings → Voice */
+  announce?: AnnounceSettings
   /** a search copied just now: its header button shows the tick */
   copied?: 'vendor' | 'tree' | 'regex'
   /** what main answers for the Passives block's map */
@@ -331,6 +334,23 @@ const scenarios: Scenario[] = [
       { from: 1, to: 3, regex: '"r-g-b|b-r-g|g-g-r"' },
       { from: 4, to: 10, regex: '"r-r-g-b|nne|rint"' }
     ],
+    profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
+    guide
+  },
+  // Settings → Voice: German, two moments on. The render check has no system
+  // voices, so it also shows the "none installed" hint.
+  {
+    name: 'settings-voice',
+    settings: true,
+    tab: 'Voice',
+    announce: {
+      lang: 'de',
+      voice: '',
+      volume: 0.6,
+      events: { trial: true, gems: true, zone: false, lab: false, choice: false, passive: false }
+    },
     profile: profileSnapshot(3, 22, 2),
     log: crypt,
     trials,

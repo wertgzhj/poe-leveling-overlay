@@ -486,6 +486,11 @@ export class ProfileService {
     return this.runs.act(this.character)
   }
 
+  /** What the overlay shows now (the snapshot last pushed). */
+  shown(): ProfileSnapshot {
+    return this.current()
+  }
+
   /** The snapshot last pushed — what the overlay shows, so a copy is exactly
    *  that — or a fresh one before the first push. Every change that moves a
    *  search pushes, so it's never behind what's on screen. */

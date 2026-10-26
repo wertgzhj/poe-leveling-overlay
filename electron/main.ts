@@ -13,6 +13,7 @@ import { TimerService } from './timer/service.ts'
 import { TimerWindow } from './timer-window.ts'
 import { denyPermissions, hardenWebContents } from './security.ts'
 import { SearchService } from './searches.ts'
+import { AnnounceService } from './announce.ts'
 
 // Set to a number of ms via SMOKE=<ms> to auto-quit after startup — used by the
 // headless launch check in CI/dev to prove the app boots without a display.
@@ -29,6 +30,7 @@ const updateService = new UpdateService(overlay)
 const timerWindow = new TimerWindow()
 const timerService = new TimerService(logService, timerWindow)
 const searchService = new SearchService(logService, profileService, overlay)
+const announceService = new AnnounceService(logService, profileService, trialsService, overlay)
 overlay.addStateListener((state) => timerWindow.follow(state))
 let tray: ReturnType<typeof createTray> = null
 
@@ -64,7 +66,8 @@ function start(): void {
     updateService,
     timerService,
     timerWindow,
-    searchService
+    searchService,
+    announceService
   )
   logService.start()
   guideService.start()

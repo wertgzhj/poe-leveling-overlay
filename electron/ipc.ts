@@ -4,6 +4,7 @@ import { Channels, type AppInfo, type SettingsSetResult } from './channels'
 import { COPY_CHOICES, SEARCH_KINDS, type CopyChoice, type SearchKind } from './copy-rules.ts'
 import type { SearchService } from './searches.ts'
 import {
+  getAnnounce,
   getHotkeys,
   getSettings,
   sanitizeVisibleTabs,
@@ -14,6 +15,8 @@ import {
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { normalizeSearchRegex, sanitizeActRegexes } from './search-regex.ts'
 import { sanitizeGemNames } from './gem-names.ts'
+import { ANNOUNCE_EVENTS, sanitizeAnnounce, type AnnounceEvent } from './announce-rules.ts'
+import type { AnnounceService } from './announce.ts'
 import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
 import type { GuideService } from './guide/service.ts'
@@ -46,9 +49,14 @@ export function registerIpc(
   update: UpdateService,
   timer: TimerService,
   timerWindow: TimerWindow,
-  searches: SearchService
+  searches: SearchService,
+  announcer: AnnounceService
 ): void {
   ipcMain.handle(Channels.overlayGetState, () => overlay.getState())
+  // Settings → Voice: say an example of one moment, whether it's on or not.
+  ipcMain.on(Channels.announceTest, (_e, event: unknown) => {
+    if (ANNOUNCE_EVENTS.includes(event as AnnounceEvent)) announcer.test(event as AnnounceEvent)
+  })
 
   ipcMain.handle(Channels.settingsGetAll, () => getSettings())
 
@@ -96,6 +104,7 @@ export function registerIpc(
     if (COPY_CHOICES.includes(patch.autoCopyTown as CopyChoice)) store.set('autoCopyTown', patch.autoCopyTown)
     if (COPY_CHOICES.includes(patch.autoCopyLevelUp as CopyChoice)) store.set('autoCopyLevelUp', patch.autoCopyLevelUp)
     if (typeof patch.autoCopyProtect === 'boolean') store.set('autoCopyProtect', patch.autoCopyProtect)
+    if ('announce' in patch) store.set('announce', sanitizeAnnounce(patch.announce, getAnnounce()))
     if (typeof patch.runTimer === 'boolean') {
       store.set('runTimer', patch.runTimer)
       timer.setEnabled(patch.runTimer)

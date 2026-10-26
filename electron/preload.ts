@@ -17,6 +17,8 @@ import {
   type RouteImportResult,
   type RunTimerSnapshot,
   type SearchKind,
+  type Spoken,
+  type AnnounceEvent,
   type ImportResult,
   type SettingsSetResult,
   type TrialsSnapshot,
@@ -46,6 +48,8 @@ const api = {
   copySearch: (kind: SearchKind): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopySearch, kind),
   copyPassive: (id: number): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyPassive, id),
   onSearchCopied: (cb: (kind: SearchKind) => void): (() => void) => subscribe(Channels.searchCopied, cb),
+  onAnnounce: (cb: (spoken: Spoken) => void): (() => void) => subscribe(Channels.announceSpeak, cb),
+  testAnnounce: (event: AnnounceEvent): void => ipcRenderer.send(Channels.announceTest, event),
   onLogStatus: (cb: (status: WatcherStatus) => void): (() => void) =>
     subscribe(Channels.logStatus, cb),
   onLogSnapshot: (cb: (snap: LogSnapshot) => void): (() => void) =>

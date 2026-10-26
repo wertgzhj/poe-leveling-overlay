@@ -37,7 +37,13 @@ const answers = {
       runTimer: false,
       autoCopyTown: 'off',
       autoCopyLevelUp: 'off',
-      autoCopyProtect: true
+      autoCopyProtect: true,
+      announce: s.announce ?? {
+        lang: 'en',
+        voice: '',
+        volume: 0.8,
+        events: { trial: false, gems: false, zone: false, lab: false, choice: false, passive: false }
+      }
     }),
   gemNameList: () => ok(['Cast when Damage Taken Support', 'Melee Physical Damage Support', 'Sunder']),
   getAppInfo: () => ok({ version: '0.0.0', electron: process.versions.electron, isDev: false }),
