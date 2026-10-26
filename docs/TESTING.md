@@ -255,7 +255,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      plus Books of Skill). Level up: the next node moves on. Use a Book of Skill:
      it moves one more, and a restart doesn't count it twice. Reach a tree that
      drops nodes: an orange *Respec first* box names them for its first few
-     points. Beat a Labyrinth: the *Lab* line moves to the next lab's
+     points — and from there the list is as many nodes further along as were
+     refunded (their points come back); the total top right is the plan's
+     nodes less its refunds. Beat a Labyrinth: the *Lab* line moves to the next lab's
      ascendancy notable — never a small node on the way. Click a name: *✓ copied*, and pasting it into the in-game tree's
      search highlights that node. *Tree* next to the heading copies the stage's
      notables, keystones and masteries — the two stages' before it, since

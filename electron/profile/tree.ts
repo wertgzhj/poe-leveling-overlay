@@ -265,6 +265,32 @@ export function orderNodes(tree: TreeData, from: Set<number>, wanted: number[]):
   return out
 }
 
+/**
+ * Where `points` passive points get you in the plan: `at` is the index, in all
+ * the stages' nodes one after another, of the node they're due on; `total` the
+ * points the whole plan needs. A respec gives its points back — the refunded
+ * nodes are bought again elsewhere — so from the stage that refunds them on,
+ * the plan is that many nodes further along than the points alone say.
+ */
+export function planPosition(plan: PassivePlan, points: number): { at: number; total: number } {
+  let allocated = 0
+  let i = 0
+  let at = -1
+  for (const stage of plan.stages) {
+    // Every point spent as the stage begins: its first node is due, with the
+    // respec in front of it. Only spending past that means you did the respec.
+    if (at < 0 && allocated >= points) at = i
+    if (at < 0) allocated -= stage.refund?.length ?? 0
+    for (let k = 0; k < stage.take.length; k++, i++) {
+      if (at >= 0) continue
+      if (allocated >= points) at = i
+      else allocated++
+    }
+  }
+  const refunds = plan.stages.reduce((n, s) => n + (s.refund?.length ?? 0), 0)
+  return { at: at < 0 ? i : at, total: i - refunds }
+}
+
 /** Where the plan stands for a character with `points` passive points. */
 export function passivesView(
   plan: PassivePlan,
@@ -276,7 +302,7 @@ export function passivesView(
   const flat: Array<{ id: number; stage: number }> = []
   plan.stages.forEach((s, stage) => s.take.forEach((id) => flat.push({ id, stage })))
   const points = level == null ? 0 : Math.max(0, level - 1) + questPoints
-  const at = Math.min(points, flat.length)
+  const { at, total } = planPosition(plan, points)
   const effect = (stage: number, id: number): number | undefined => plan.stages[stage].masteries?.[String(id)]
   const next = flat.slice(at, at + LOOKAHEAD).map((s) => tree.view(s.id, effect(s.stage, s.id)))
 
@@ -338,7 +364,7 @@ export function passivesView(
     treeSearch,
     points,
     questPoints,
-    total: flat.length,
+    total,
     stageLabel: due ? (plan.stages[due.stage].label ?? null) : null,
     next,
     refund,

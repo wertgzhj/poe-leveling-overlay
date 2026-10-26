@@ -8,6 +8,7 @@ import {
   checkPlan,
   classStartNode,
   orderNodes,
+  planPosition,
   resortStage,
   passivesView,
   planFromSpecs,
@@ -114,6 +115,30 @@ test('the due node follows level − 1 plus Books of Skill', () => {
   assert.equal(passivesView(plan, tree, null, 0, 0).points, 0, 'no character yet: from the start')
 })
 
+test('a respec gives its points back: the plan moves on by as many nodes', () => {
+  // Like a real build: 8, 5, then a stage that refunds 2 and takes 14, then
+  // one that refunds 8 and takes 33.
+  const ids = (from: number, n: number): number[] => Array.from({ length: n }, (_, i) => from + i)
+  const big: PassivePlan = {
+    tree: '3_29',
+    stages: [
+      { take: ids(100, 8) },
+      { take: ids(200, 5) },
+      { take: ids(300, 14), refund: [100, 101] },
+      { take: ids(400, 33), refund: ids(102, 6).concat([200, 201]) }
+    ]
+  }
+  assert.deepEqual(planPosition(big, 12), { at: 12, total: 50 }, 'before any respec: one node a point')
+  // 13 points: the third stage's first node is due, the respec in front of it
+  assert.equal(planPosition(big, 13).at, 13)
+  assert.equal(planPosition(big, 14).at, 16, 'two refunded: two further')
+  // 13 + 14 - 2 = 25 allocated after the third stage: the fourth's first is due
+  assert.equal(planPosition(big, 25).at, 27)
+  assert.equal(planPosition(big, 26).at, 36, 'ten refunded in all: ten further')
+  assert.equal(planPosition(big, 50).at, 60, 'the plan needs 60 - 10 = 50 points')
+  assert.equal(planPosition(big, 0).at, 0)
+})
+
 test('the respec shows as its stage begins, then gets out of the way', () => {
   const tree = tiny()
   assert.deepEqual(passivesView(plan, tree, 3, 0, 0).refund, [], 'still in the first stage')
@@ -127,7 +152,7 @@ test('the respec shows as its stage begins, then gets out of the way', () => {
 test('a finished plan has nothing next', () => {
   const view = passivesView(plan, tiny(), 90, 0, 0)
   assert.deepEqual(view.next, [])
-  assert.equal(view.total, 5)
+  assert.equal(view.total, 4, 'five nodes, one of them refunded: four points')
   assert.equal(view.stageLabel, null)
 })
 
@@ -366,10 +391,17 @@ test('the map marks what\'s taken, your next point and the ones after', () => {
 
 test('a respec shows from when its stage begins', () => {
   const tree = placed()
-  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2, 3] }, { refund: [3], take: [4] }] }
-  const b = (points: number) => passiveMap(plan, tree, points, 1, 1.5)!.nodes.find((n) => n.name === 'b')!.state
-  assert.equal(b(1), 'due') // its turn
-  assert.equal(b(2), 'off') // taken, but the stage that refunds it is up
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2, 3] }, { refund: [3], take: [4, 5, 6] }] }
+  const state = (points: number, name: string) =>
+    passiveMap(plan, tree, points, 1, 1.5)!.nodes.find((n) => n.name === name)!.state
+  assert.equal(state(1, 'b'), 'due') // its turn
+  // two points: the respec is up, not done — b still there, c next
+  assert.equal(state(2, 'b'), 'taken')
+  assert.equal(state(2, 'c'), 'due')
+  // three: b went, and its point with the new one bought c and NOTE
+  assert.equal(state(3, 'b'), 'off')
+  assert.equal(state(3, 'NOTE'), 'taken')
+  assert.equal(state(3, 'd'), 'due')
 })
 
 test('no map once the plan is done, or without positions', () => {
