@@ -80,6 +80,8 @@ function AutoCopyNote(): React.JSX.Element | null {
     const t = window.setTimeout(() => tick((n) => n + 1), NOTE_MS)
     return () => window.clearTimeout(t)
   }, [copied])
+  // Read at render on purpose: the timeout above re-renders it once the note is due to go.
+  // oxlint-disable-next-line react/purity
   if (!copied || Date.now() - copied.at >= NOTE_MS) return null
   return (
     <span className="truncate text-[10px] text-ok" title="Copied for you — paste it into the game's search box">

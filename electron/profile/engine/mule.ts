@@ -93,7 +93,7 @@ export function muleOptions(
     }
     if (offers.length === 0) continue
     offers.sort((a, b) => HOW_RANK[a.how] - HOW_RANK[b.how] || a.cls.localeCompare(b.cls))
-    options.push({ gem, classes: offers.map((o) => o.cls), how: offers[0]!.how, at })
+    options.push({ gem, classes: offers.map((o) => o.cls), how: offers[0].how, at })
   }
   options.sort((a, b) => a.at - b.at || a.gem.localeCompare(b.gem))
   return options.map(({ at: _at, ...o }) => o)

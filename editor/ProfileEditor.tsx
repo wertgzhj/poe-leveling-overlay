@@ -10,7 +10,6 @@ import {
   blankStage,
   moveItem,
   serializeProfile,
-  type CharClass,
   type ProfileDraft,
   type SocketGroupDraft,
   type StageDraft
@@ -25,7 +24,7 @@ function toDraft(p: ProfileFileBridge | null): ProfileDraft {
   return {
     meta: {
       name: p.meta.name,
-      class: p.meta.class as CharClass,
+      class: p.meta.class,
       ascendancy: p.meta.ascendancy,
       bandit: p.meta.bandit,
       pantheonMajor: p.meta.pantheon?.major,

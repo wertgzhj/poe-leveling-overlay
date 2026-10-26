@@ -13,6 +13,7 @@ npm test        # 316 tests: parser, tracker, watcher, guide, profile,
                 # the shopping list's act scenarios, gem short names, Pantheon gods,
                 # the run timer
 npm run typecheck
+npm run lint
 npm run build
 ```
 

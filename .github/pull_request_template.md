@@ -4,8 +4,8 @@
 
 ## How it was verified
 
-<!-- `npm run typecheck`, `npm test`, `npm run build` are required and run in CI.
+<!-- `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` are required and run in CI.
      Note anything that needs a real Windows machine + running game instead. -->
 
-- [ ] typecheck / tests / build green
+- [ ] typecheck / lint / tests / build green
 - [ ] needs an in-game check:

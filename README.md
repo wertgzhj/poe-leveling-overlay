@@ -108,7 +108,7 @@ an outside security audit. What it does to keep that honest:
   process — see [What it is & ToS compliance](#what-it-is--tos-compliance).
 - Every window runs sandboxed with no Node access; the packaged `.exe` can't be
   repurposed as a Node runtime or load code from outside its own archive.
-- Every change goes through CI (typecheck, ~300 tests, a dependency audit); release
+- Every change goes through CI (typecheck, lint, ~370 tests, a dependency audit); release
   builds come from GitHub Actions, never from a personal machine, and carry a
   signed provenance record you can check (see [Install](#install-windows)).
 - Its full network and file footprint is listed in [`SECURITY.md`](SECURITY.md).
@@ -432,6 +432,7 @@ npm run make-icon   # generate the tray/app icon (build/icon.png)
 npm run dev         # launch the overlay with hot reload
 npm run build       # bundle main + preload + renderer
 npm run typecheck   # tsc for the main and renderer projects
+npm run lint        # oxlint, type-aware (.oxlintrc.json)
 npm test            # unit tests: log parsing, tracking, gem engine, PoB import, …
 npm run sanitize -- capture.txt out.log   # sanitize a Client.txt capture for fixtures
 npm run import-pob -- "<pob code>" --out data/profiles/mine.json   # PoB -> profile

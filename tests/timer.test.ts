@@ -259,10 +259,10 @@ test('a mule rolled mid-run does not restart it, and its time is the run\'s, as 
   assert.equal(snap.history.length, 0)
   // the mule's three minutes, its loads, and the two switches (10 s each)
   const mule = 10_000 + 1000 + 2 * MIN + 1000 + 1 * MIN + 10_000
-  assert.equal(snap.live!.byCategory.mule, mule)
-  assert.equal(snap.live!.total, 5 * MIN + 2 * (MIN + 1000) + 1000 + 20 * MIN + 1000 + 1 * MIN + mule)
+  assert.equal(snap.live.byCategory.mule, mule)
+  assert.equal(snap.live.total, 5 * MIN + 2 * (MIN + 1000) + 1000 + 20 * MIN + 1000 + 1 * MIN + mule)
   // and the zones list is the run's own
-  assert.ok(!snap.live!.zones.some((z) => z.areaId === '1_1_town' && z.act === 3))
+  assert.ok(!snap.live.zones.some((z) => z.areaId === '1_1_town' && z.act === 3))
 })
 
 test('a mule made before the run starts is the start of the run', () => {
@@ -544,7 +544,7 @@ test('a Labyrinth beaten is a split of its own, from the Plaza to Izaro', () => 
   feed(t, log.lines)
   const live = t.snapshot().live!
   assert.equal(live.labSplits?.length, 1)
-  const lab = live.labSplits![0]
+  const lab = live.labSplits[0]
   assert.equal(lab.tier, 'normal')
   assert.equal(lab.act, 3)
   // three loads and eight minutes from the Plaza to Izaro's death

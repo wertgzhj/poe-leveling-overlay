@@ -72,7 +72,7 @@ test('a new profile is valid and starts with the class starting gems', () => {
   assert.equal(res.ok, true, res.errors.join('; '))
   assert.equal(res.entry?.charClass, 'Marauder')
   assert.equal(res.entry?.stages, 1)
-  const written = JSON.parse(readFileSync(res.entry!.path, 'utf8'))
+  const written = JSON.parse(readFileSync(res.entry.path, 'utf8'))
   assert.deepEqual(written.stages[0].socketGroups[0].gems, ['Heavy Strike', 'Ruthless Support'])
   assert.deepEqual(written.stages[0].range, [1, 100])
   // An empty name still produces something you can find in a list.

@@ -58,7 +58,7 @@ test('a paste link that redirects to another host is refused', async () => {
     const res = new Response('eNo-code')
     Object.defineProperty(res, 'url', { value: 'https://evil.example/elsewhere' })
     return res
-  }) as typeof fetch
+  })
   try {
     const r = await resolvePobInput('https://pobb.in/abc123')
     assert.match(r.error ?? '', /redirected somewhere else/)
@@ -73,7 +73,7 @@ test('pastebin answering on www. is still pastebin', async () => {
     const res = new Response('eNo-code')
     Object.defineProperty(res, 'url', { value: 'https://www.pastebin.com/raw/abc123' })
     return res
-  }) as typeof fetch
+  })
   try {
     assert.deepEqual(await resolvePobInput('https://pastebin.com/abc123'), { code: 'eNo-code' })
   } finally {

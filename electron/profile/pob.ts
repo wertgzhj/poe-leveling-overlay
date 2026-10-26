@@ -54,7 +54,7 @@ export function decodePobCode(code: string): string {
     return inflateSync(buf, { maxOutputLength: MAX_POB_XML_BYTES }).toString('utf8')
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ERR_BUFFER_TOO_LARGE') {
-      throw new Error('it unpacks to far more than any build — not a Path of Building code')
+      throw new Error('it unpacks to far more than any build — not a Path of Building code', { cause: e })
     }
     throw e
   }
