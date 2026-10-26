@@ -64,18 +64,20 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    and the ones you opened stay open next time. The three tabs split the window into equal thirds at any size — drag
    the resize grip and they should stay even, with no dead space after "Guide".
 
-   **Search & copy.** With the field empty there is **no** Regex button in the
-   header. Paste a string (a trailing line break from a web page must vanish on
-   save), and the button appears beside ⚙. In interactive mode, click it: it
-   reads `✓ copied` for a moment *without* nudging ⚙ sideways, and Ctrl+V in a
+   **Search & copy.** The header always has *Vendor · Tree · Regex* side by
+   side before ⚙, on every tab; one with nothing to copy is greyed out, never
+   gone. With the field empty *Regex* is greyed out. Paste a string (a trailing
+   line break from a web page must vanish on save), and it lights up. In
+   interactive mode, click it: it reads `✓ Regex` in green for a moment *without*
+   nudging its neighbours sideways, and Ctrl+V in a
    stash or vendor search box pastes exactly the string. The counter turns orange
    and gains a ⚠ past **250** characters — the game's search box limit, confirmed in game. (The
    community regex tools say 50; that is wrong by a factor of five.)
    *Copy without a click* → *Entering a town*: "gems to buy" — walk into a
-   town and the header reads `✓ Vendor copied` for a moment; Ctrl+V at the
+   town and *Vendor* in the header lights up as `✓ Vendor` for a moment; Ctrl+V at the
    vendor pastes the Gems tab's vendor search. "your regex" (only with
-   one set): `✓ Regex copied`, your string. *A level-up* set to "passives (Tree)": level up out in a
-   zone, `✓ Tree copied`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it —
+   one set): `✓ Regex`, your string. *A level-up* set to "passives (Tree)": level up out in a
+   zone, `✓ Tree`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it —
    unless *Keep what you copied yourself* is off, when they do. A restart
    in a town copies nothing until you level or walk into a town again.
    *Per act*: "+ Acts" adds a row starting after the last one; set Acts 1–3
@@ -86,7 +88,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    button still shows; in an act no row covers it reads `not set`.
    In Settings → Hotkeys the three *Copy* bindings read *not set*. Bind one
    (e.g. Ctrl+Alt+T for the Tree search): pressing it anywhere copies and the
-   header reads `✓ Tree copied`; recording it again and pressing Backspace
+   header's *Tree* lights up `✓ Tree`; recording it again and pressing Backspace
    sets it back to *not set*, and the combo is free again.
 4. **Tracking.** The tracker strip shows the current zone and level while
    playing. Restart the overlay mid-session — it resumes both. With no character
@@ -110,8 +112,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    trip to Settings. The tab shows the current stage's links with colours
    and flips stages on level-up, the moment the level enters the next range.
    Close and reopen mid-session: it must show the correct stage immediately, not
-   stage 1 until the next level-up. With gems to buy, *Vendor* sits next to
-   "Get these gems": paste it into the vendor's search and exactly those gems
+   stage 1 until the next level-up. With gems to buy, *Vendor* in the header
+   copies them: paste it into the vendor's search and exactly those gems
    light up in the stock (supports found without " Support").
 
    The tab reads in three columns — cost, gem, source — and they are one set of
@@ -260,7 +262,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      refunded (their points come back); the total top right is the plan's
      nodes less its refunds. Beat a Labyrinth: the *Lab* line moves to the next lab's
      ascendancy notable — never a small node on the way. Click a name: *✓ copied*, and pasting it into the in-game tree's
-     search highlights that node. *Tree* next to the heading copies the stage's
+     search highlights that node. *Tree* in the header copies the stage's
      notables, keystones and masteries — the two stages' before it, since
      levelling outruns placing points, and ahead every notable the list shows — as one regex — at most 250 characters, the search box's limit (✓ owner), the oldest stage left out first —
      (`"barbarism|resolute technique|life mastery"`): pasted into the tree
