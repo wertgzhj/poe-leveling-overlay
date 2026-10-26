@@ -97,6 +97,7 @@ function profileSnapshot(
     classMismatch?: string | null
     pantheon?: PantheonStatus[]
     passives?: PassivesView | null
+    treeMissing?: boolean
   } = {}
 ): ProfileSnapshot {
   const ctx: AcquisitionContext = {
@@ -126,7 +127,8 @@ function profileSnapshot(
     activeId: null,
     muleChoice: { options, chosen: mule?.gem ?? null },
     pantheon: extra.pantheon ?? [],
-    passives: extra.passives ?? null
+    passives: extra.passives ?? null,
+    treeMissing: extra.treeMissing ?? false
   }
 }
 
@@ -307,6 +309,16 @@ const scenarios: Scenario[] = [
     name: 'gems-passives',
     tab: 'Gems',
     profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
+    log: crypt,
+    trials,
+    guide
+  },
+  // A build imported before the overlay read trees: where the passives would
+  // be, how to get them.
+  {
+    name: 'gems-tree-missing',
+    tab: 'Gems',
+    profile: profileSnapshot(3, 22, 2, { treeMissing: true }),
     log: crypt,
     trials,
     guide

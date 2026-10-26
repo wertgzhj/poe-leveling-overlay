@@ -409,6 +409,7 @@ export class ProfileService {
       liveIndex,
       choiceDue: this.runs.choiceDue(this.character, this.profile?.meta),
       passives: this.passives(),
+      treeMissing: !!profile && !profile.passives && profile.meta.pobSource === 'pob-import',
       pantheon: this.pantheonStatus(),
       library: this.library,
       activeId: this.activeId(),
