@@ -102,6 +102,23 @@ export function movePassive(plan: PassivePlan, stage: number, from: number, to: 
 
 const byNumber = (a: number, b: number): number => a - b
 
+/**
+ * The passive point each stage's first node takes, counting from 0: the
+ * points before it, less the ones respecs gave back (a stage's refunds are
+ * spent again on its own nodes). The same count the overlay goes by
+ * (planPosition in electron/profile/tree.ts).
+ */
+export function stageFirstPoints(stages: ReadonlyArray<{ take: number; refund: number }>): number[] {
+  const firsts: number[] = []
+  let points = 0
+  for (const s of stages) {
+    points -= s.refund
+    firsts.push(points)
+    points += s.take
+  }
+  return firsts
+}
+
 /** An ascendancy node moved within the ascendancy list. */
 export function moveAscendancy(plan: PassivePlan, from: number, to: number): PassivePlan {
   return plan.ascendancy ? setAscendancyOrder(plan, moveItem(plan.ascendancy, from, to)) : plan

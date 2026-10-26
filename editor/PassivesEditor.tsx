@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { PassivePlan } from '../electron/profile/tree.ts'
-import { moveAscendancy, movePassive, setAscendancyOrder, setStageOrder } from './model'
+import { moveAscendancy, movePassive, setAscendancyOrder, setStageOrder, stageFirstPoints } from './model'
 import { Btn } from './ui'
 
 // The order of a build's passive points, stage by stage — the import works it
@@ -56,7 +56,7 @@ export function PassivesEditor({
     ids(check.ascendancy) !== (plan.ascendancy ?? []).join()
 
   // Point numbers run across the stages, the way the overlay counts them.
-  const firsts = check.stages.map((_, si) => check.stages.slice(0, si).reduce((n, s) => n + s.take.length, 0))
+  const firsts = stageFirstPoints(check.stages.map((s) => ({ take: s.take.length, refund: s.refund.length })))
   const ascBad = check.ascendancy.filter((r) => r.unlinked).length
   return (
     <div className="flex flex-col gap-2">
