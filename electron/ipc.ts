@@ -2,6 +2,8 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import { copyText } from './clipboard.ts'
 import { Channels, type AppInfo, type SettingsSetResult } from './channels'
 import {
+  AUTO_COPY_TOWN,
+  type AutoCopyTown,
   getHotkeys,
   getSettings,
   sanitizeVisibleTabs,
@@ -89,7 +91,8 @@ export function registerIpc(
     if ('gemNames' in patch) {
       store.set('gemNames', sanitizeGemNames(patch.gemNames, (gem) => profile.canonicalGemName(gem)))
     }
-    if (typeof patch.autoCopySearch === 'boolean') store.set('autoCopySearch', patch.autoCopySearch)
+    if (AUTO_COPY_TOWN.includes(patch.autoCopyTown as AutoCopyTown)) store.set('autoCopyTown', patch.autoCopyTown!)
+    if (typeof patch.autoCopyLevelUp === 'boolean') store.set('autoCopyLevelUp', patch.autoCopyLevelUp)
     if (typeof patch.runTimer === 'boolean') {
       store.set('runTimer', patch.runTimer)
       timer.setEnabled(patch.runTimer)

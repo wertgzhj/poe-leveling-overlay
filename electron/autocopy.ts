@@ -1,5 +1,6 @@
-// Copies the overlay's searches on its own, when Settings → Search regex says
-// so: the passive tree's on a level-up, the vendor's on walking into a town.
+// Copies the overlay's searches on its own, as Settings → Search regex says:
+// on walking into a town the vendor's search or your own regex, on a level-up
+// the passive tree's.
 // Never over something you copied (clipboard.ts), and the overlay says what it
 // copied. Writing the clipboard is all it does — the paste stays yours
 // (docs/ARCHITECTURE.md#tos-position).
@@ -22,15 +23,20 @@ export class AutoCopyService {
     // already reflect the new level or zone.
     log.addLevelListener((level) => {
       const character = log.getSnapshot().state.character
-      if (this.trigger.onLevel(character, level)) this.copy('tree', profile.treeSearch(), overlay)
+      if (this.trigger.onLevel(character, level) && store.get('autoCopyLevelUp')) {
+        this.copy('tree', profile.treeSearch(), overlay)
+      }
     })
     log.addAreaListener((area) => {
-      if (this.trigger.onArea(area.areaId)) this.copy('vendor', profile.vendorSearch(), overlay)
+      if (!this.trigger.onArea(area.areaId)) return
+      const town = store.get('autoCopyTown')
+      if (town === 'vendor') this.copy('vendor', profile.vendorSearch(), overlay)
+      else if (town === 'regex') this.copy('regex', store.get('searchRegex') || null, overlay)
     })
   }
 
   private copy(kind: SearchKind, text: string | null, overlay: OverlayController): void {
-    if (!store.get('autoCopySearch') || !text) return
+    if (!text) return
     // A clipboard another program holds open can refuse; the next level or
     // town tries again, and the buttons are always there.
     copyIfFree(text)

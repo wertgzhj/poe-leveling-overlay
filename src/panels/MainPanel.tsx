@@ -83,7 +83,7 @@ function AutoCopyNote(): React.JSX.Element | null {
   if (!copied || Date.now() - copied.at >= NOTE_MS) return null
   return (
     <span className="truncate text-[10px] text-ok" title="Copied for you — paste it into the game's search box">
-      ✓ {copied.kind === 'vendor' ? 'Vendor' : 'Tree'} copied
+      ✓ {copied.kind === 'vendor' ? 'Vendor' : copied.kind === 'tree' ? 'Tree' : 'Regex'} copied
     </span>
   )
 }

@@ -28,7 +28,8 @@ export function App(): React.JSX.Element {
         searchRegex: s.searchRegex,
         gemNames: s.gemNames,
         runTimer: s.runTimer,
-        autoCopySearch: s.autoCopySearch
+        autoCopyTown: s.autoCopyTown,
+        autoCopyLevelUp: s.autoCopyLevelUp
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()

@@ -176,9 +176,9 @@ ascendancy points follow the Labyrinths the trials service saw beaten. Clicking
 a node copies its name for the in-game tree's search box; the renderer asks by
 node id, so it can't put arbitrary text on the clipboard.
 
-**Copying on its own** (Settings → Search regex, off by default,
-`electron/autocopy.ts`): the vendor search on walking into a town, the tree
-search on a level-up — changes from what was last seen, never the state a
+**Copying on its own** (Settings → Search regex → *Copy without a click*, off
+by default, `electron/autocopy.ts`): on walking into a town the vendor search
+or your own regex — one, chosen — and on a level-up the tree search — changes from what was last seen, never the state a
 restart resumes at (`AutoCopyTrigger`). Every clipboard write goes through
 `electron/clipboard.ts`, which remembers the overlay's own; copying on its own
 replaces only those, an empty clipboard, or a lone quoted search line

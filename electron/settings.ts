@@ -6,6 +6,9 @@ import type { QuestPoints } from './profile/run.ts'
 // userData folder. No personal data beyond local file paths
 // and the optional in-game character name.
 
+export const AUTO_COPY_TOWN = ['off', 'vendor', 'regex'] as const
+export type AutoCopyTown = (typeof AUTO_COPY_TOWN)[number]
+
 export interface HotkeyBindings {
   toggleVisibility: string
   /** the run timer's window, on its own — the overlay's hotkey leaves it be */
@@ -57,9 +60,11 @@ export interface AppSettings {
   /** Record runs and show the run timer window. Off unless switched on —
    *  nothing is recorded until then. */
   runTimer: boolean
-  /** Copy the vendor search on walking into a town and the tree search on a
-   *  level-up, without a click (autocopy.ts). Off unless switched on. */
-  autoCopySearch: boolean
+  /** What walking into a town copies without a click (autocopy.ts): the
+   *  Gems tab's vendor search, your own search regex above, or nothing. */
+  autoCopyTown: AutoCopyTown
+  /** Whether a level-up copies the passive tree search without a click. */
+  autoCopyLevelUp: boolean
 }
 
 /** What the renderer may change through the settings channel (see ipc.ts:
@@ -75,7 +80,8 @@ export type SettingsPatch = Partial<
     | 'searchRegex'
     | 'gemNames'
     | 'runTimer'
-    | 'autoCopySearch'
+    | 'autoCopyTown'
+    | 'autoCopyLevelUp'
   >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
@@ -137,7 +143,8 @@ const defaults: StoreSchema = {
   searchRegex: '',
   gemNames: {},
   runTimer: false,
-  autoCopySearch: false,
+  autoCopyTown: 'off',
+  autoCopyLevelUp: false,
   progress: null,
   timerBounds: { width: 260, height: 360 },
   timerShown: true,
@@ -194,6 +201,7 @@ export function getSettings(): AppSettings {
     searchRegex: store.get('searchRegex'),
     gemNames: store.get('gemNames'),
     runTimer: store.get('runTimer'),
-    autoCopySearch: store.get('autoCopySearch')
+    autoCopyTown: store.get('autoCopyTown'),
+    autoCopyLevelUp: store.get('autoCopyLevelUp')
   }
 }

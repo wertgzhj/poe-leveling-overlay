@@ -62,7 +62,8 @@ export function SettingsPanel(): React.JSX.Element {
     searchRegex,
     runTimer,
     moveMode,
-    autoCopySearch,
+    autoCopyTown,
+    autoCopyLevelUp,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -77,7 +78,8 @@ export function SettingsPanel(): React.JSX.Element {
       visibleTabs: s.visibleTabs,
       searchRegex: s.searchRegex,
       runTimer: s.runTimer,
-      autoCopySearch: s.autoCopySearch,
+      autoCopyTown: s.autoCopyTown,
+      autoCopyLevelUp: s.autoCopyLevelUp,
       moveMode: s.moveMode,
       patch: s.patch
     }))
@@ -142,9 +144,13 @@ export function SettingsPanel(): React.JSX.Element {
     void window.overlay?.setSettings({ clickThrough: value })
   }
 
-  const setAutoCopy = (value: boolean): void => {
-    patch({ autoCopySearch: value })
-    void window.overlay?.setSettings({ autoCopySearch: value })
+  const setAutoCopyTown = (value: 'off' | 'vendor' | 'regex'): void => {
+    patch({ autoCopyTown: value })
+    void window.overlay?.setSettings({ autoCopyTown: value })
+  }
+  const setAutoCopyLevelUp = (value: boolean): void => {
+    patch({ autoCopyLevelUp: value })
+    void window.overlay?.setSettings({ autoCopyLevelUp: value })
   }
 
   const setRunTimer = (value: boolean): void => {
@@ -385,15 +391,28 @@ export function SettingsPanel(): React.JSX.Element {
                 {regexDraft.length}/{SEARCH_BOX_LIMIT}
               </span>
             </div>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-overlay-text">Copy searches automatically</span>
-              <Toggle on={autoCopySearch} onChange={setAutoCopy} />
+            <div className={'mt-3 ' + HEADING + 'text-overlay-muted'}>Copy without a click</div>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <span className="text-xs text-overlay-text">Entering a town</span>
+              <select
+                value={autoCopyTown}
+                onChange={(e) => setAutoCopyTown(e.target.value as 'off' | 'vendor' | 'regex')}
+                className="rounded border border-overlay-border bg-black/30 px-2 py-1 text-[11px] text-overlay-text outline-none focus:border-overlay-accent"
+              >
+                <option value="off">nothing</option>
+                <option value="vendor">gems to buy (Vendor)</option>
+                <option value="regex" disabled={!regexDraft.trim()}>
+                  your regex above
+                </option>
+              </select>
+            </div>
+            <div className="mt-1.5 flex items-center justify-between gap-2">
+              <span className="text-xs text-overlay-text">A level-up: the Tree search</span>
+              <Toggle on={autoCopyLevelUp} onChange={setAutoCopyLevelUp} />
             </div>
             <p className="mt-1 text-[10px] text-overlay-muted">
-              Walking into a town copies the Gems tab&apos;s <b className="text-overlay-text">Vendor</b>{' '}
-              search; a level-up copies the <b className="text-overlay-text">Tree</b> search — the
-              header says when. It never replaces something you copied yourself (a whisper, an
-              item, a link), only an empty clipboard or a search. Pasting stays yours.
+              The header says what was copied. It never replaces something you copied yourself (a
+              whisper, an item, a link) — only an empty clipboard or a search. Pasting stays yours.
             </p>
           </Section>
 
