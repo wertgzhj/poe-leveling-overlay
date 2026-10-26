@@ -44,6 +44,11 @@ const answers = {
   getLogSnapshot: () => ok(s.log),
   getProfile: () => ok(s.profile),
   passiveMap: () => ok(s.passiveMap ?? null),
+  // the editor window (scenario.editor)
+  editorLoad: () => ok({ routes: [] }),
+  editorLoadProfile: (id) =>
+    ok(s.editor && { id, path: 'C:/…/profiles/' + id + '.json', bundled: false, profile: s.editor.profile, errors: [] }),
+  editorPassivesCheck: () => ok(s.editor?.passivesCheck ?? null),
   getGuide: () => ok(s.guide),
   getTrials: () => ok(s.trials),
   getUpdateStatus: () => ok({ state: 'current', version: '0.0.0' })

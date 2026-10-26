@@ -492,8 +492,9 @@ that once: a table everyone believed, wrong in two tiers.
 
 - **The passive order within a tree is a rule, not a guide.** PoB only says
   which nodes a tree has; the import takes the nearest notable first. Where a
-  build means another order — a notable rushed past a closer one — the stored
-  `passives` node ids are the place to change it, until the editor can.
+  build means another order — a notable rushed past a closer one — change it
+  in the editor's *Passive tree* section (within a stage; which nodes a stage
+  takes comes from the PoB build).
 - **Passive points are counted, not read.** The game logs Books of Skill, not
   your tree, so a point you refunded with a regret orb or placed elsewhere
   isn't seen; the list assumes the plan was followed.

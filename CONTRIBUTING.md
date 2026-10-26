@@ -65,9 +65,10 @@ download the installer and ran it on quit.)
 
 ### See what a change looks like (render check)
 
-Every CI run takes screenshots of the overlay in a dozen fixed scenarios — the
-Gems tab in Act 2, the mule stage, a paged-back stage, Trials, Guide,
-Settings (also in move mode), and 40 % opacity — and attaches them to the run as the
+Every CI run takes screenshots of the overlay in over a dozen fixed scenarios —
+the Gems tab in Act 2, the mule stage, a paged-back stage, the passives and
+their map, Trials, Guide, Settings (also in move mode), and 40 % opacity — and
+of the editor's Passive tree section, and attaches them to the run as the
 **`render-check`** artifact. A PR's look can be checked there without running
 anything. The scenarios are computed by the real engine from the real gem
 data (`scripts/render-check/scenarios.ts`); only the main process is a
