@@ -20,7 +20,7 @@ npm run build
 CI runs all three on every push and pull request, plus `npm audit --omit=dev`.
 
 The logic lives in pure modules with no Electron imports, which is what makes
-that suite meaningful — the log parser, the tracker state machine, the guide and
+that suite meaningful: the log parser, the tracker state machine, the guide and
 profile engines, the trials engine and the PoB decoder are all tested directly,
 several of them against sanitized captures of a real `Client.txt`.
 
@@ -39,48 +39,48 @@ npm run dev`.
 Run Path of Exile in **Windowed Fullscreen** with an **English client**.
 
 1. **First run.** The overlay opens on the **Gems** tab. The Guide tab shows a
-   "runs on the placeholder route" notice with a button into the editor — that is
+   "runs on the placeholder route" notice with a button into the editor: that is
    expected until a route is written, and it disappears per act as `"skeleton":
    true` is removed from that act's file. Check the gem pips have **colours**
    rather than all reading `?`: gem data ships as a resource instead of inside
    the bundle, so a packaging mistake surfaces here and nowhere in CI. It would
    also say so in a red box at the top of the tab.
 2. **Overlay.** Stays on top of the game; `Ctrl+Shift+O/C/M` toggle visibility,
-   click-through and move mode; drag to reposition in move mode —
+   click-through and move mode; drag to reposition in move mode,
    with Settings open too: its header drags the window and its grip resizes it. Check non-100%
    DPI and a second monitor. In interactive mode, clicks on the transparent area
-   around the panel must reach the game — only the visible panel captures the
+   around the panel must reach the game: only the visible panel captures the
    mouse.
 3. **Settings.** ⚙ → set the `Client.txt` path, rebind a hotkey, adjust opacity.
    **First launch:** with no path stored (delete `clientTxtPath` from the settings
    file, or clear the field and restart), the overlay must find `Client.txt` by
-   itself and start tracking — Steam, a Steam library on another drive, standalone
+   itself and start tracking, Steam, a Steam library on another drive, standalone
    or Epic. **Find** does the same on demand and says *Found* or *Not found*; on a
    machine with both a Steam and a standalone install it must pick the one you
    played last.
    All take effect immediately. The sections run in the order the work does:
    Updates, the editor button, Build profile, Search & copy, Game log, Overlay, Run timer,
-   Gems tab, Hotkeys — each a heading that folds: all closed on a first open,
-   and the ones you opened stay open next time. The three tabs split the window into equal thirds at any size — drag
+   Gems tab, Hotkeys, each a heading that folds: all closed on a first open,
+   and the ones you opened stay open next time. The three tabs split the window into equal thirds at any size: drag
    the resize grip and they should stay even, with no dead space after "Guide".
 
-   **Search & copy.** The header always has *Vendor · Tree · Regex* side by
+   **Search & copy.** The header always has *Vendor, Tree, Regex* side by
    side before ⚙, on every tab; one with nothing to copy is greyed out, never
    gone. With the field empty *Regex* is greyed out. Paste a string (a trailing
    line break from a web page must vanish on save), and it lights up. In
    interactive mode, click it: its copy icon turns into a tick, green, for a moment *without*
    nudging its neighbours sideways, and Ctrl+V in a
    stash or vendor search box pastes exactly the string. The counter turns orange
-   and gains a ⚠ past **250** characters — the game's search box limit, confirmed in game. (The
+   and gains a ⚠ past **250** characters: the game's search box limit, confirmed in game. (The
    community regex tools say 50; that is wrong by a factor of five.)
-   *Copy without a click* → *Entering a town*: "gems to buy" — walk into a
+   *Copy without a click* → *Entering a town*: "gems to buy", walk into a
    town and *Vendor* in the header lights up as `✓ Vendor` for a moment; Ctrl+V at the
    vendor pastes the Gems tab's vendor search. "your regex" (only with
    one set): `✓ Regex`, your string. *A level-up* set to "passives (Tree)": level up out in a
-   zone, `✓ Tree`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it —
+   zone, `✓ Tree`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it,
    unless *Keep what you copied yourself* is off, when they do. A restart
    in a town copies nothing until you level or walk into a town again.
-   *Per act*: "+ Acts" adds a row starting after the last one; set Acts 1–3
+   *Per act*: "+ Acts" adds a row starting after the last one; set Acts 1-3
    with one regex, then click Regex in Act 1 and in Act
    4: the first pastes the row's, the second the general one. Moving "from"
    past "to" drags "to" along. A row left without a regex is gone after
@@ -91,18 +91,18 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    header's *Tree* lights up `✓ Tree`; recording it again and pressing Backspace
    sets it back to *not set*, and the combo is free again.
 4. **Tracking.** The tracker strip shows the current zone and level while
-   playing. Restart the overlay mid-session — it resumes both. With no character
+   playing. Restart the overlay mid-session: it resumes both. With no character
    pinned, rolling a fresh character (entering the Twilight Strand) switches
    tracking to it on its first level-up. Pin a name in Settings → Game log only
-   when playing in a party — and while one is pinned, `⟳ character` must go
+   when playing in a party, and while one is pinned, `⟳ character` must go
    **orange** and name the pin rather than ticking, because tracking does not
-   move. A zone whose monster level is far from yours adds a tag — `zone 32 ▲`
+   move. A zone whose monster level is far from yours adds a tag: `zone 32 ▲`
    in red when it outpaces your safe range, `▼` when you have outgrown it. It
    must **not** appear in towns.
    Swap characters and check both per-character stores follow **on the level-up**,
    not a zone later: the Guide's ticks and the Trials list must both be the new
    character's. Then save a route in the editor and confirm the first
-   character's progress is still intact — that pairing used to file one
+   character's progress is still intact: that pairing used to file one
    character's steps under the other's name.
 5. **Guide.** Advances as zones are entered; a portal to town and back must not
    skip steps; `Ctrl+Shift+N/P` correct the cursor; it crosses act boundaries.
@@ -116,23 +116,23 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    copies them: paste it into the vendor's search and exactly those gems
    light up in the stock (supports found without " Support").
 
-   The tab reads in three columns — cost, gem, source — and they are one set of
+   The tab reads in three columns (cost, gem, source) and they are one set of
    columns for the whole tab, so check them against each other rather than each
    on its own:
-   - Prices end on one line, gem names start on one line, and the `A3 ·`
-     prefixes start on one line — across plain rows, the `PICK ONE, BUY REST`
+   - Prices end on one line, gem names start on one line, and the `A3,`
+     prefixes start on one line, across plain rows, the `PICK ONE, BUY REST`
      box **and** the link boxes below.
    - `2× Wisdom` is the widest price and must fit its column without wrapping.
    - A long gem name (`Melee Physical Damage Support`) and a long quest name
      (`The Siren's Cadence`) truncate with `…` and keep their row one line high;
      hovering shows the full text.
-   - **One mule per character, your choice — in Settings → Build profile →
+   - **One mule per character, your choice: in Settings → Build profile →
      Mule**, whenever the build has a gem another class gets by clearing the
-     Twilight Strand — its starting gems, Hillock's reward, or Nessa's first
-     stock — that yours doesn't. On a fresh character it defaults to
+     Twilight Strand (its starting gems, Hillock's reward, or Nessa's first
+     stock) that yours doesn't. On a fresh character it defaults to
      **Momentum** (else the gem the build needs first). The Gems tab has **no**
      mule row and no dropdown; the chosen gem's line in the links reads
-     `Mule · Ranger` — and it's never *also* a quest pick: on a Marauder
+     `Mule (Ranger)`, and it's never *also* a quest pick: on a Marauder
      muling Momentum, Mercy Mission must hand over Chance to Bleed, with no
      "pick one". Pick Chance to Bleed instead and they swap. **No mule** turns
      it off for that character: Mercy Mission is a pick between both again, and
@@ -141,55 +141,55 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      character, Settings says so instead of a dropdown. The open dropdown is
      dark with readable text.
    - A quest reward reads `Reward`, and one your build needs twice `Reward +1`.
-   - **The Caged Brute gives two rewards** — a support and a skill, each its own
+   - **The Caged Brute gives two rewards**: a support and a skill, each its own
      pick. A Marauder build with Faster Attacks, Leap Slam and Intimidating Cry
      must show Faster Attacks as a plain `Reward` and a separate *pick one* box
-     for Leap Slam / Intimidating Cry — never one box for all three. Same with
+     for Leap Slam / Intimidating Cry, never one box for all three. Same with
      a Path of Building import, which spells it `Faster Attacks` (no
      "Support"), and no later stage lists Faster Attacks as `(if not picked)`. Every other
      quest is one reward; a quest seen in game to give two goes in
      `TWO_REWARD_QUESTS` (`electron/profile/engine.ts`).
    - On a **fresh character in Act 1** the list holds Act 1 only. Act 2's quest
-     choices must appear when you reach Act 2 and not before — and portalling
+     choices must appear when you reach Act 2 and not before, and portalling
      back to Act 1's town must not make them disappear again. Rolling a new
      character with a name you used last league starts **the whole run** over
      on its first level-up (to 2): the act, the Trials tab, the
-     guide's ticks and dismissed bandit/pantheon reminders — none inherited
+     guide's ticks and dismissed bandit/pantheon reminders, none inherited
      from last league's namesake. Steps ticked on the Strand before that
      level-up stay. The profile the name uses and its mule choice stay too.
      Try it both with the overlay running when you roll the character **and**
      started only after you entered the Strand: either way the new character
      is the one tracked, not last week's. Entering any **Act 2** zone (e.g.
      The Crypt) must bring in Act 2's rewards and Yeena's stock (Herald of Ash,
-     Blood Rage) — the act is the *second* number of the area id (`1_2_…`), and
+     Blood Rage): the act is the *second* number of the area id (`1_2_…`), and
      reading the first made every zone of Acts 1-5 count as Act 1.
    - **The list holds the acts a stage stands for** (the scenarios agreed with
      the owner, `tests/plan-window.test.ts`):
      1. New character in Lioneye's Watch: Act 1's gems for now **and** Act 1's
-        picks for later (Caged Brute box, Sunder) — no box from Act 2 on.
+        picks for later (Caged Brute box, Sunder), no box from Act 2 on.
      2. First time in the Forest Encampment: Act 2's picks come in; an Act 1
         pick that's only for a later stage is **gone** from the list (it stays
         grey in the links).
      3. Level 38 in Act 4, ◀ back to the opening stage: Act 1 only.
-     4. In Act 1, ▶ forward to an Act 2–3 stage: a preview of its Act 2 and 3
+     4. In Act 1, ▶ forward to an Act 2-3 stage: a preview of its Act 2 and 3
         gems.
      5. A gem the live stage wants from an act you haven't reached: not on the
         list, grey in the links, listed the moment you enter that act.
      6. Portal back to an earlier town: nothing changes.
-     7. Siosa: from **Act 3** on, like Clarissa — the heading says
-        `A3 · Library`, in violet.
+     7. Siosa: from **Act 3** on, like Clarissa, the heading says
+        `A3, Library`, in violet.
      8. Before any zone is known, the live stage uses its own acts.
    - **The links at the bottom read against your act.** In Act 2: the lines
      of Act 2 gems (Herald of Ash, Cruelty) are **tinted gold with a gold bar
-     on the left** — the whole line, the name stays white and the source keeps
+     on the left**, the whole line, the name stays white and the source keeps
      its colour. A mule gem's line is **turquoise** and a starting gem's
-     **green** only on a stage where it's `NEW` — never on the first stage:
+     **green** only on a stage where it's `NEW`, never on the first stage:
      Momentum and Ruthless on the opening stage are plain lines that say
-     `Mule · Ranger` and `✓ start`; earlier-act gems are plain; an Act 3 gem
-     (Cyclone) is grey (still readable), tooltip "Not yet — from Act 3".
-     Portalling back to Act 1's town changes nothing — it's the furthest act
+     `Mule (Ranger)` and `✓ start`; earlier-act gems are plain; an Act 3 gem
+     (Cyclone) is grey (still readable), tooltip "Not yet: from Act 3".
+     Portalling back to Act 1's town changes nothing: it's the furthest act
      reached.
-   - **`NEW` marks what changed since the previous stage** — every gem that
+   - **`NEW` marks what changed since the previous stage**: every gem that
      wasn't in the previous stage's links, whatever its act or line colour
      (Herald of Ash in After Fidelitas: gold line *and* `NEW`). On every stage,
      also one you page to with ◀/▶; never on the first stage. A gem that only
@@ -200,7 +200,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - **`RELINKED`** sits on a link's top edge when the link was rearranged
      since the previous stage: a gem moved in from another link, or one left
      it (e.g. Sunder replacing Ground Slam). A link that only gained new gems,
-     or a wholly new link, has none — `NEW` already says it. Never on the
+     or a wholly new link, has none: `NEW` already says it. Never on the
      first stage.
    - The ▶ of the stage switch says where the next stage starts (`lvl 56 ▶`),
      its tooltip names it; on the last stage it's greyed out with no level.
@@ -210,8 +210,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      `Alt`, not `2× Alt`, even if a later stage slots it twice.
    - **Settings → Gems tab → Short names:** type a gem (suggestions come from
      the gem data; `Cast when Damage Taken` finds the support), a short name
-     (`CwDT`, up to 24 characters), Add. The Gems tab — list, pick boxes and
-     links — shows `CwDT`, hovering shows the full name. A name that isn't a
+     (`CwDT`, up to 24 characters), Add. The Gems tab (list, pick boxes and
+     links) shows `CwDT`, hovering shows the full name. A name that isn't a
      gem says so and can't be added; ✕ removes one. The editor and every
      profile file keep the real names; NEW, RELINKED and the list work exactly
      as before.
@@ -222,11 +222,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      or collapsed.
    - The list is headed by act (`A1`, `A2`), rewards and buys alike, one
      heading per town even where the vendor's stock grows per quest; only the
-     Library is named (`A3 · Library`, violet). An Act 2 reward sits under
+     Library is named (`A3, Library`, violet). An Act 2 reward sits under
      `A2`, never under the `A1` above it. The list's title is just
-     *Get these gems* — framed in gold while the guide's step is a reward.
+     *Get these gems*: framed in gold while the guide's step is a reward.
    - A `PICK ONE, BUY REST` box has no line under its gems when the quest's
-     town sells the rest — e.g. Act 2's *Intruders in Black* (Yeena stocks all
+     town sells the rest: e.g. Act 2's *Intruders in Black* (Yeena stocks all
      three); `↳ buy the rest in the Library` (violet) when only Siosa does,
      `↳ buy the rest in Act N` when it's a later town. Act 3's *Lost in Love*
      on a Marauder (Vulnerability / Infernal Cry) must have **no** line:
@@ -235,14 +235,14 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      now as **one** buy row for the pick: the gems stacked, `↳ whichever you
      didn't pick` (or `the 2 you didn't pick`) under them. The quest gave you
      one of them; the overlay can't see which, so it can't quietly assume
-     they're all handled. That row is on the **next stage only** — the stage
+     they're all handled. That row is on the **next stage only**: the stage
      after that doesn't repeat it.
      A gem from a quest that offered only *one* of your gems must NOT come back
-     that way — you took it, it's done.
-   - `A3 · Library` is violet and `A3 · Gravicius` rose, in the shopping rows,
-     the stop headings **and** the link rows below — a rename that only colours
+     that way: you took it, it's done.
+   - `A3, Library` is violet and `A3, Gravicius` rose, in the shopping rows,
+     the stop headings **and** the link rows below: a rename that only colours
      in one of the three is the failure mode here. Siosa's quest, *A Fixture of
-     Fate*, reads `A3 · Library` too.
+     Fate*, reads `A3, Library` too.
    - Ascend a character: the "wrong profile loaded?" banner must **not** appear
      for an Elementalist on a Witch build. It should still appear for a genuinely
      different base class.
@@ -250,7 +250,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      Marauder build): while you're on the mule, the orange ⚠ banner is replaced by a
      turquoise "Muling on a Ranger?" note. Then go back to your main: the moment
      it **levels up**, the strip, the stage and the Gems tab must be your main's
-     again — not the mule's level 2. That used to stick until a restart. A
+     again, not the mule's level 2. That used to stick until a restart. A
      partymate's level-up must still never move tracking.
    - **Passives.** Import a PoB build with several trees (one per milestone):
      under the gems, *Passives* names the node for your next point (its stats in
@@ -258,18 +258,18 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      plus Books of Skill). Level up: the next node moves on. Use a Book of Skill:
      it moves one more, and a restart doesn't count it twice. Reach a tree that
      drops nodes: an orange *Respec first* box names them for its first few
-     points — and from there the list is as many nodes further along as were
+     points, and from there the list is as many nodes further along as were
      refunded (their points come back); the total top right is the plan's
      nodes less its refunds. Beat a Labyrinth: the *Lab* line moves to the next lab's
-     ascendancy notable — never a small node on the way. Click a name: *✓ copied*, and pasting it into the in-game tree's
+     ascendancy notable, never a small node on the way. Click a name: *✓ copied*, and pasting it into the in-game tree's
      search highlights that node. *Tree* in the header copies the stage's
-     notables, keystones and masteries — the two stages' before it, since
-     levelling outruns placing points, and ahead every notable the list shows — as one regex — at most 250 characters, the search box's limit (✓ owner), the oldest stage left out first —
+     notables, keystones and masteries: the two stages' before it, since
+     levelling outruns placing points, and ahead every notable the list shows: as one regex (at most 250 characters, the search box's limit (✓ owner), the oldest stage left out first) 
      (`"barbarism|resolute technique|life mastery"`): pasted into the tree
-     search, it lights those and nothing else — no small nodes (✓ owner:
+     search, it lights those and nothing else, no small nodes (✓ owner:
      quoted, the search reads a regex; unquoted, it splits at spaces).
      *▸ Map* opens a piece of the tree under the list: gold is taken by plan,
-     **1** (ringed) your next point, 2–6 the ones after, a dashed line the way
+     **1** (ringed) your next point, 2-6 the ones after, a dashed line the way
      they go, names only on the numbered notables, every name on hover; a
      numbered node copies its name on click. Level up: it moves on with the
      list. Closed or open, it stays that way after a restart.
@@ -278,30 +278,30 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      without a tree shows nothing.
 7. **Build decisions.** With `meta.bandit` set, reaching **Act 2** shows a gold
    bar naming your choice; with `meta.pantheon` set, **Act 6** does the same
-   (not Act 5: the Pantheon's gods are fought in Acts 6–10). The
-   bar outranks the Labyrinth and trial notices — those come round again, the
+   (not Act 5: the Pantheon's gods are fought in Acts 6-10). The
+   bar outranks the Labyrinth and trial notices: those come round again, the
    bandits do not. ✕ dismisses it for that character, including after a restart.
    A profile that names neither must show nothing at all. Importing a PoB build
    should fill the bandit in by itself (PoB's `None` means "kill all three").
    **Pantheon gods:** with e.g. Lunaris + Shakari in the profile, the Trials tab
-   has a *Pantheon* section listing both, with act and place ("Act 9 · The Sand
+   has a *Pantheon* section listing both, with act and place ("Act 9, The Sand
    Pit, a side area of The Oasis"). Entering **The Oasis** (Act 9) shows a gold
-   bar "Pantheon: Shakari — The Sand Pit" with *Done ✓*; a god in the zone itself
+   bar "Pantheon: Shakari in The Sand Pit" with *Done ✓*; a god in the zone itself
    reads "… is here". Done ✓ or a click in the list ticks it for that character
    (and unticks on a second click); a new character starts with none. Killing
-   the god ticks it by itself — Sin's farewell line says it fell. Act 6's
+   the god ticks it by itself: Sin's farewell line says it fell. Act 6's
    Prisoner's Gate and Wetlands show their gods, Act 1's never do. The bar ranks
    below a trial in the same zone.
 8. **Trials.** Entering a trial zone shows an orange △ "Trial of Ascendancy in this
-   zone" hint on every tab. Finishing the trial auto-checks it — Izaro voices a
+   zone" hint on every tab. Finishing the trial auto-checks it: Izaro voices a
    plaque line only on completion, and the zone identifies which trial it was.
    Confirm the **right** one is ticked, especially in **Act 7's Chamber of Sins
    Level 2**, which must tick the *Cruel* entry rather than the Act 2 one, and
    **Act 6's Lower Prison**, which must tick the Cruel entry, not Act 1's. An
    endgame trial in a map says the same lines and must tick nothing.
    When the last trial of a Labyrinth is checked, the same bar switches to
-   "**Normal Labyrinth unlocked**". Dismiss it with ✕ and it must stay gone —
-   including after a restart — while a later Labyrinth still announces itself.
+   "**Normal Labyrinth unlocked**". Dismiss it with ✕ and it must stay gone,
+   including after a restart, while a later Labyrinth still announces itself.
    **Beat the Labyrinth:** the moment Izaro dies in the final arena, its heading
    on the Trials tab gets a grey "✓ done", the unlock bar goes away without a ✕,
    and any of its trials you hadn't ticked are ticked. Dying to him must change
@@ -311,7 +311,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    profile and the Gems tab.
 
    **Profiles.** Settings → Build profile → *Manage…* must open the editor **on
-   the Profiles tab** — and bring it forward on that tab if it's already open.
+   the Profiles tab**, and bring it forward on that tab if it's already open.
    The things that used to go wrong, each worth one check:
    - **Import two different PoB builds.** Both must be in the list afterwards. The
      first import used to be overwritten by the second, and with it the build of
@@ -338,9 +338,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - **Upgrading from v0.15.0** with a profile picked via the old *Browse…* from
      some other folder: after the update it is in the list as a copy, still
      active, and still remembered by its character. The original file is untouched. **Ascendancy** is a dropdown that offers only the
-   chosen class's three — switch the class and a pick that no longer fits must
+   chosen class's three: switch the class and a pick that no longer fits must
    clear itself rather than leave a Witch Slayer. **Bandits** and the two
-   **Pantheon** fields are dropdowns too; leaving them at "— none —" must write
+   **Pantheon** fields are dropdowns too; leaving them at "(none)" must write
    no key at all rather than an empty object. **Share routes…** exports all
    ten acts into the box (and onto the clipboard); pasting one back and pressing
    Import should write the acts in the file, reload the overlay, and leave your
@@ -356,46 +356,46 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    Run an older **portable** exe: Settings → Updates says *vX is out*, with
    *Open download page* (opens the Releases page in the browser), and the
    version badge reads *vOld → vX ↗*. Nothing downloads, and quitting it
-   installs nothing — no new Start Menu entry, no installed copy updated.
+   installs nothing: no new Start Menu entry, no installed copy updated.
 
    Check for updates in the few minutes **after publishing a release, before
    its build finishes**: Settings must say *vX is still being published* in
-   ordinary text — not red, no `!` on the version badge. And whatever goes
+   ordinary text, not red, no `!` on the version badge. And whatever goes
    wrong, the line is one short sentence: no HTTP headers, no stack trace, no
    `C:\Users\…` path. Those all used to be shown in full.
 
 11. **Colours and accessibility.** One colour, one meaning, across the
    overlay, Settings and the editor (`src/styles/tokens.css`):
-   - **Gold** — now / you / active: the active tab, the current guide step, the
+   - **Gold**, now / you / active: the active tab, the current guide step, the
      trial you stand in ("you are here" is a gold row, like the guide step),
      the list framed while the guide's step is a reward, a *Pick one* box, the
      bandit/pantheon bar.
-   - **Orange + ⚠ or △** — careful: the trial-zone bar, a wrong-class or
+   - **Orange + ⚠ or △**: careful: the trial-zone bar, a wrong-class or
      not-English log, a regex past 250, a hotkey without a modifier. Never
      orange without its glyph.
-   - **Green** — free or done right: `Reward` in the Gems tab *and* the Guide's
+   - **Green**: free or done right: `Reward` in the Gems tab *and* the Guide's
      `reward` tag, `✓ start`, saved/copied messages.
-   - **Red** — broken. **Turquoise** — the mule, nowhere else. **Violet** — the
-     Library, nowhere else. **Rose** — Gravicius.
+   - **Red**: broken. **Turquoise**: the mule, nowhere else. **Violet**: the
+     Library, nowhere else. **Rose**: Gravicius.
    - Done is **grey**, not gold: a checked trial's ✓ and a done guide step.
    - Prices run grey → white (Wisdom → Alch), not gold.
    - **"Not now" is grey, never faded:** a done guide step or trial (✓, struck
-     through), a `· lvl 32+` row or *Pick one* box, a not-yet link — all stay
+     through), a `lvl 32+` row or *Pick one* box, a not-yet link, all stay
      readable. Only disabled buttons fade.
    - The Guide's quest steps show a plain `!`, not a red ❗. Nothing at the
      bottom of a tab (the Guide's `reset`) sits under the version number.
    - **One tag, one heading, one button** (`src/lib/ui.ts`): `NEW`,
      `REWARD`, `YOU ARE HERE` and the `zone 32` tag share one look (10px,
      upper case, filled), only the colour differs. Section headings are all
-     the same size and unfilled — *Get these gems* and *Pick one, buy rest*
+     the same size and unfilled: *Get these gems* and *Pick one, buy rest*
      alike; buttons in the header, Settings and the
      editor differ only in size.
    - **Nothing below 10px** except the letter inside a socket dot (9px bold).
-     The `B` in a blue dot is white, the `R` and `G` black — all readable.
+     The `B` in a blue dot is white, the `R` and `G` black: all readable.
    - **Opacity fades the background, not the text.** Drag Settings → Opacity
      down to 40 % in a dark zone: the panel goes see-through but the text
      stays crisp. Below 70 % Settings shows "⚠ Below 70 %, text can be hard to
-     read in bright areas" — check that claim in a bright spot (snow, a white
+     read in bright areas": check that claim in a bright spot (snow, a white
      effect): readable at 70 % and up, getting hard below.
    - Tab through Settings and the editor with the keyboard: the focused control
      shows a thin gold outline. The update arrow on the version badge doesn't
@@ -406,15 +406,15 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    picked under *Voice* (*Automatic* = the first installed one for the
    language; none installed: an orange hint where to add one). The slider sets
    the volume. Switch on *Entering a trial zone*: walk into one you haven't
-   done — it says so once; out and back in — nothing. *New gems to buy*: level
-   into a stage with new purchases — their names. A restart in a trial zone
+   done, it says so once; out and back in, nothing. *New gems to buy*: level
+   into a stage with new purchases, their names. A restart in a trial zone
    says nothing. Two at once follow each other.
 13. **Run timer.** Settings → *Run timer* on: a second window
    opens in the top-right corner. `Ctrl+Shift+T` (or the tray) hides and
    shows it, and `Ctrl+Shift+O` leaves it be: hide the overlay and the timer
    stays; hide the timer, restart, and it stays hidden. In move mode (`Ctrl+Shift+M`) it drags and its width
    resizes on its own, and it comes back where you left it after a restart.
-   Its height follows what it shows — no scrollbar as acts and Labyrinth rows
+   Its height follows what it shows: no scrollbar as acts and Labyrinth rows
    come in, or a run opens under *Runs*, until it reaches the bottom of the
    screen. Roll a
    character: the clock starts on the Twilight Strand, the current zone below
@@ -427,7 +427,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    run's character is back out in a zone. Make a mule first, then the main:
    the run starts with the mule, its minutes under *Mule*. Roll a mule
    mid-run: the *mule or a new run?* note appears, and goes once you are back
-   on your main — with no second run in *Runs*, and the mule's time added
+   on your main, with no second run in *Runs*, and the mule's time added
    under *Mule*. Finish a run: the clock stops as Kitava falls in
    Act 10, and the run shows under *Runs* as *PB*; the next run's act splits
    compare against it. Beat a Labyrinth: a *Normal Lab* row appears under the
@@ -442,71 +442,71 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    again and nothing is doubled. *Runs* marks the best solo and the best
    party run *PB* (hover: which one); the class sits in the name's tooltip; a run's act splits compare with the best of its own kind only, and
    the run in progress counts as solo until a partymate has shared three of
-   its zones — then the heading turns to *vs best party*. A run played with friends says *Party* and
-   their names, one played alone *Solo* — also when you only ever swirled to
+   its zones, then the heading turns to *vs best party*. A run played with friends says *Party* and
+   their names, one played alone *Solo*: also when you only ever swirled to
    them. Click an act's number: its zones open under it, in the order you
-   entered them, with their time, *· party* where a partymate was there, and ± the
-   same zone's time in the best run of the run's kind (— where it never went);
+   entered them, with their time, *party* where a partymate was there, and ± the
+   same zone's time in the best run of the run's kind (`-` where it never went);
    the act you're in shows its zones by itself, and folds them away when the
    next act starts.
 
 ## What the code takes as given
 
 Every value below looks like a fact in the code. This is where each one stands,
-so a wrong one can be found before it ships — the vendor prices were exactly
+so a wrong one can be found before it ships: the vendor prices were exactly
 that once: a table everyone believed, wrong in two tiers.
 
-- **✓ game** — checked in the game client.
-- **✓ log** — checked against a real `Client.txt` (Acts 1–10, all three labs,
+- **✓ game**: checked in the game client.
+- **✓ log**: checked against a real `Client.txt` (Acts 1-10, all three labs,
   ~55 new characters, captured 2026-10-22; never committed).
-- **✓ data** — checked against the wiki gem data.
-- **○** — not confirmed yet. Believable, but nobody has looked.
+- **✓ data**: checked against the wiki gem data.
+- **○**, not confirmed yet. Believable, but nobody has looked.
 
 | What | Where | Status |
 |---|---|---|
 | The four log line patterns | `data/log-patterns/en.json` | ✓ log |
-| Every campaign area id and its name, Acts 1–10 | `data/areas/en.json` | ✓ log |
+| Every campaign area id and its name, Acts 1-10 | `data/areas/en.json` | ✓ log |
 | The act is the *second* number of an area id | `actFromAreaId` | ✓ log |
 | The twelve trial zones and Izaro's plaque lines; Cruel and Merciless repeat the Normal lines | `CAMPAIGN_TRIALS` | ✓ log |
-| Izaro's six death lines in `<1\|2\|3>_Labyrinth_boss_2_end` mean the lab is beaten; dying to him says something else | `IZARO_DEFEATED` | ✓ log — every finished run |
-| A new character's first level-up is to level 2, on the Strand | `FRESH_CHARACTER_MAX_LEVEL` | ✓ log — all 46 |
-| A partymate's level-up can't take the new-character reset | tracker, `onFreshCharacter` | ○ — the Strand is solo, but a group can meet from Lioneye's Watch and the Coast on. It holds because you reach level 2 on the Strand, before anyone can join; a partymate levelling first, after you leave the Strand at level 1, would take it. Not seen in the capture (8 partymates, none before level 3) — which shows it's rare, not that it can't happen |
-| A mule is deleted by level 3 | `MULE_MAX_LEVEL` | ✓ log — every mule stopped at level 2 |
-| Within an act, the vendor whose quest comes first sells it first (Clarissa after *Lost in Love* before Siosa after *A Fixture of Fate*) | `GemData.questRank` | ✓ data — quest order reproduced for every act |
-| Vendor price tiers: Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+ | `COST_TIERS` | ✓ game — every tier |
+| Izaro's six death lines in `<1\|2\|3>_Labyrinth_boss_2_end` mean the lab is beaten; dying to him says something else | `IZARO_DEFEATED` | ✓ log: every finished run |
+| A new character's first level-up is to level 2, on the Strand | `FRESH_CHARACTER_MAX_LEVEL` | ✓ log: all 46 |
+| A partymate's level-up can't take the new-character reset | tracker, `onFreshCharacter` | ○: the Strand is solo, but a group can meet from Lioneye's Watch and the Coast on. It holds because you reach level 2 on the Strand, before anyone can join; a partymate levelling first, after you leave the Strand at level 1, would take it. Not seen in the capture (8 partymates, none before level 3) (which shows it's rare, not that it can't happen |
+| A mule is deleted by level 3 | `MULE_MAX_LEVEL` | ✓ log: every mule stopped at level 2 |
+| Within an act, the vendor whose quest comes first sells it first (Clarissa after *Lost in Love* before Siosa after *A Fixture of Fate*) | `GemData.questRank` | ✓ data: quest order reproduced for every act |
+| Vendor price tiers: Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+ | `COST_TIERS` | ✓ game, every tier |
 | The stash/vendor search box takes 250 characters | `SEARCH_BOX_LIMIT` | ✓ game |
-| The Caged Brute gives two rewards (a skill and a support) | `TWO_REWARD_QUESTS` | ✓ game. Other quests: ○ — by the data, no other quest mixes skills and supports for every class |
+| The Caged Brute gives two rewards (a skill and a support) | `TWO_REWARD_QUESTS` | ✓ game. Other quests: ○, by the data, no other quest mixes skills and supports for every class |
 | The starting skill and support per class | `data/starting-gems.json` | ✓ game (owner-confirmed) |
-| Quest order within an act, derived from the levels its rewards need | `GemData` | ✓ data — reproduces the real order for every act |
-| `Client.txt` in Steam's default folder | `locate.ts` | ✓ game. Other Steam libraries, standalone, Epic: ○ — from the launchers' documented layouts |
+| Quest order within an act, derived from the levels its rewards need | `GemData` | ✓ data: reproduces the real order for every act |
+| `Client.txt` in Steam's default folder | `locate.ts` | ✓ game. Other Steam libraries, standalone, Epic: ○, from the launchers' documented layouts |
 | The experience safe range is `3 + level/16`, applied in both directions | `safeLevelRange`, `zoneFit` | ✓ poewiki (*Experience*: SafeZone = ⌊3 + PlayerLevel/16⌋, EffectiveDifference = max(\|player − monster\| − SafeZone, 0)) |
 | The bandits are due from Act 2; the Pantheon from Act 6, where its gods start | `BANDIT_ACT`, `PANTHEON_ACT` | Bandits ○. Pantheon ✓ poewiki (*The Pantheon*: "defeat certain gods in Acts 6 through 10") |
-| Where each Pantheon god is fought | `PANTHEON_GODS` (`pantheon.ts`) | Zones: owner, from poewiki's god pages; their area ids ✓ log. The side areas (Sand Pit, Spawning Ground, Valley of the Fire Drinker, Den of Despair, Garukhan's) aren't zones in the log — ✓ log, two years with those zones visited and none ever loaded — so the hint shows in the parent zone and names them in words |
-| The level you reach each act at: for PoB stages named "Act N", and for which acts a stage's shopping list covers | `ACT_START_LEVEL` (`acts.ts`) | ✓ log — the median level on first entering each act's town across ten full runs; Acts 7–10 were lowered to it (49/53/59/61, from 52/58/64/67) |
-| Run timer: the number after the clock in every line is a millisecond tick, and the number in `[… Client N]` is the game's process id, new at every launch | `parseStamp`, `LogClock` | ✓ log — the tick moves with the clock, and every `LOG FILE OPENING` brings a new id |
-| Run timer: Act 10's Kitava falls when Sin says "May a new dawn arise!" in The Feeding Trough (`2_10_6`); the merciless resistance penalty follows within seconds. Sin says the line again for every map Kitava, so only that zone counts | `KITAVA_ARENA_ID`, `KITAVA_FALLS` | ✓ log — all ten finished campaigns; 14 s apart, once 150 s |
-| Run timer: every trip to the login server — logout, character select, a disconnect, the launch — logs `Async connecting to <region>.login.pathofexile.com` | `loginServer` pattern | ✓ log |
-| Run timer: after every load the game logs `[LOADING SCREEN] (<zone>) Duration = <s> seconds`, the whole loading screen — longer than Generating → "You have entered" (median 1.44 s against 0.98 s), which starts after the click and ends before the screen does. The run's loading time takes that; the zone gives up the difference, so the total stays the same | `loadingScreen` pattern, `summarize` | ✓ log — every load since July 2026 (3597); older logs keep the line-based measure |
-| Run timer: closing the game the normal way logs `Closing game gracefully`, and the server dropping you `Abnormal disconnect: …`; Alt+F4 and crashes log nothing, so the live clock runs on until the next launch (or 15 minutes) and the run is corrected then — it ends at the last line before | `leftGame` pattern, `TICK_STALE_MS` | ✓ log — 61 of 336 launches closed gracefully, the rest silently; owner's test (2026-10-24) |
-| Run timer: you log back in where you logged out, so the first area after a login says who logged in — a zone of an act the run has reached is its character, an act beyond it isn't, a town, hideout or league area doesn't say. A map is never a campaign character | `RunTimer.onGenerated`, `isForeignArea` | ✓ log — checked against `/played` typed throughout ten campaigns: the run time stays 1–4 % above it, every run, and a parked alt in the same town was the case that made towns not count as proof |
-| Run timer: what's left above `/played` grows evenly, a minute or two an hour | — | ○ — loading screens, by the size of it; `/played` isn't documented |
-| Run timer: "You have received a Passive Skill Point." is a Book of Skill being used — a quest's reward claimed, not the quest done | `passivePoint` pattern | ✓ log (owner: the quest gives the book, using it gives the point). A book used after Kitava isn't in the run |
+| Where each Pantheon god is fought | `PANTHEON_GODS` (`pantheon.ts`) | Zones: owner, from poewiki's god pages; their area ids ✓ log. The side areas (Sand Pit, Spawning Ground, Valley of the Fire Drinker, Den of Despair, Garukhan's) aren't zones in the log (✓ log, two years with those zones visited and none ever loaded) so the hint shows in the parent zone and names them in words |
+| The level you reach each act at: for PoB stages named "Act N", and for which acts a stage's shopping list covers | `ACT_START_LEVEL` (`acts.ts`) | ✓ log, the median level on first entering each act's town across ten full runs; Acts 7-10 were lowered to it (49/53/59/61, from 52/58/64/67) |
+| Run timer: the number after the clock in every line is a millisecond tick, and the number in `[… Client N]` is the game's process id, new at every launch | `parseStamp`, `LogClock` | ✓ log, the tick moves with the clock, and every `LOG FILE OPENING` brings a new id |
+| Run timer: Act 10's Kitava falls when Sin says "May a new dawn arise!" in The Feeding Trough (`2_10_6`); the merciless resistance penalty follows within seconds. Sin says the line again for every map Kitava, so only that zone counts | `KITAVA_ARENA_ID`, `KITAVA_FALLS` | ✓ log: all ten finished campaigns; 14 s apart, once 150 s |
+| Run timer: every trip to the login server (logout, character select, a disconnect, the launch) logs `Async connecting to <region>.login.pathofexile.com` | `loginServer` pattern | ✓ log |
+| Run timer: after every load the game logs `[LOADING SCREEN] (<zone>) Duration = <s> seconds`, the whole loading screen, longer than Generating → "You have entered" (median 1.44 s against 0.98 s), which starts after the click and ends before the screen does. The run's loading time takes that; the zone gives up the difference, so the total stays the same | `loadingScreen` pattern, `summarize` | ✓ log: every load since July 2026 (3597); older logs keep the line-based measure |
+| Run timer: closing the game the normal way logs `Closing game gracefully`, and the server dropping you `Abnormal disconnect: …`; Alt+F4 and crashes log nothing, so the live clock runs on until the next launch (or 15 minutes) and the run is corrected then (it ends at the last line before | `leftGame` pattern, `TICK_STALE_MS` | ✓ log) 61 of 336 launches closed gracefully, the rest silently; owner's test (2026-10-24) |
+| Run timer: you log back in where you logged out, so the first area after a login says who logged in, a zone of an act the run has reached is its character, an act beyond it isn't, a town, hideout or league area doesn't say. A map is never a campaign character | `RunTimer.onGenerated`, `isForeignArea` | ✓ log: checked against `/played` typed throughout ten campaigns: the run time stays 1-4 % above it, every run, and a parked alt in the same town was the case that made towns not count as proof |
+| Run timer: what's left above `/played` grows evenly, a minute or two an hour | - | ○, loading screens, by the size of it; `/played` isn't documented |
+| Run timer: "You have received a Passive Skill Point." is a Book of Skill being used, a quest's reward claimed, not the quest done | `passivePoint` pattern | ✓ log (owner: the quest gives the book, using it gives the point). A book used after Kitava isn't in the run |
 | Run timer: the game's AFK toggle is logged, ON and OFF | `afk` pattern | ✓ log |
-| Run timer: a mule never leaves the Strand and Lioneye's Watch, nor levels past 3 — so either says a new character is a real run, and the old character's level-up or an Act 2+ zone says it was a mule | `RunTimer.onGenerated`, `onLevelUp` | ✓ log — ten finished campaigns, none split or merged by a mule |
+| Run timer: a mule never leaves the Strand and Lioneye's Watch, nor levels past 3, so either says a new character is a real run, and the old character's level-up or an Act 2+ zone says it was a mule | `RunTimer.onGenerated`, `onLevelUp` | ✓ log: ten finished campaigns, none split or merged by a mule |
 | Passives: "You have received a Passive Skill Point." is logged when a Book of Skill is used, once per point; the quest finishing logs nothing of it | `passivePoint` pattern, `addQuestPoint` | ✓ owner, ✓ log |
 | Passives: a PoB tree spec lists node ids the way GGG's export numbers them, and masteryEffects as `{mastery,effect}` pairs | `readTree` (pob.ts) | ✓ every node of a real 11-spec Berserker build found in the 3.29 export |
-| Run timer: a Labyrinth's split runs from the first lab area of the stretch (the Aspirants' Plaza, `Labyrinth_Airlock`) to Izaro's death line, and its row sits after the act it was beaten in | `labSplit` | ✓ log — every lab in the ten finished campaigns: 4–8 minutes each, Normal mostly in Act 4 |
-| Run timer: another player coming into your instance logs `<name> has joined the area.`, leaving it `<name> has left the area.` — and one who leaves without having come in was there before you: you went to them. In a campaign zone only a party member can be; towns have passers-by, hideouts trade visitors, so neither counts. A partymate's level-up or death is logged only when they're in your instance too (✓ log: none of 59 level-ups and 69 deaths in a town or hideout), which covers a zone you went to them in and left first — that logs neither joined nor left; a short stay where nothing of the kind happens leaves no trace. Three zones or more shared in a run (`PARTY_MIN_ZONES`) is someone you played it with | `areaPresence` pattern, `metHere`, `partyOf` | ✓ log — the four party campaigns: 52–89 zones shared per partymate; the solo ones: none, or one |
-| Run timer: importing a whole log finds the same runs the live timer would have, and only finished ones are kept | `LogImporter`, `RunTimer.mergeRuns` | ✓ log — the two-year capture yields exactly its ten finished campaigns, in 1.4 s for 99 MB |
-| Run timer: mule time is the run's (owner) — a mule made first, then the run's character, is the run's start; one made mid-run joins it when the main is back. Either way it's booked as *Mule*, with the character switches around it when they're under 5 minutes (`MULE_SWITCH_MS`); a mule made over 30 minutes before the run (`MULE_POOL_MS`) stays out | `isMuleLike`, `takePool`, `mergeMule` | ✓ log — a mule-first start on most runs since October 2025, 2–3 minutes each. A game restart on a brand-new character's Strand reads as a mule of under a minute: booked as *Mule*, counted all the same |
-| Pantheon: when a god falls, Sin bids it farewell — one line per god, the same every time; Lunaris and Solaris share one | `PANTHEON_GODS[].farewell`, `godsFallen` | ✓ log — every god, two years. An optional god left alone has none |
-| Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○ — contrast arithmetic only; wants a look over snow in game |
+| Run timer: a Labyrinth's split runs from the first lab area of the stretch (the Aspirants' Plaza, `Labyrinth_Airlock`) to Izaro's death line, and its row sits after the act it was beaten in | `labSplit` | ✓ log: every lab in the ten finished campaigns: 4-8 minutes each, Normal mostly in Act 4 |
+| Run timer: another player coming into your instance logs `<name> has joined the area.`, leaving it `<name> has left the area.`, and one who leaves without having come in was there before you: you went to them. In a campaign zone only a party member can be; towns have passers-by, hideouts trade visitors, so neither counts. A partymate's level-up or death is logged only when they're in your instance too (✓ log: none of 59 level-ups and 69 deaths in a town or hideout), which covers a zone you went to them in and left first, that logs neither joined nor left; a short stay where nothing of the kind happens leaves no trace. Three zones or more shared in a run (`PARTY_MIN_ZONES`) is someone you played it with | `areaPresence` pattern, `metHere`, `partyOf` | ✓ log: the four party campaigns: 52-89 zones shared per partymate; the solo ones: none, or one |
+| Run timer: importing a whole log finds the same runs the live timer would have, and only finished ones are kept | `LogImporter`, `RunTimer.mergeRuns` | ✓ log, the two-year capture yields exactly its ten finished campaigns, in 1.4 s for 99 MB |
+| Run timer: mule time is the run's (owner), a mule made first, then the run's character, is the run's start; one made mid-run joins it when the main is back. Either way it's booked as *Mule*, with the character switches around it when they're under 5 minutes (`MULE_SWITCH_MS`); a mule made over 30 minutes before the run (`MULE_POOL_MS`) stays out | `isMuleLike`, `takePool`, `mergeMule` | ✓ log: a mule-first start on most runs since October 2025, 2-3 minutes each. A game restart on a brand-new character's Strand reads as a mule of under a minute: booked as *Mule*, counted all the same |
+| Pantheon: when a god falls, Sin bids it farewell, one line per god, the same every time; Lunaris and Solaris share one | `PANTHEON_GODS[].farewell`, `godsFallen` | ✓ log, every god, two years. An optional god left alone has none |
+| Below 70 % opacity, text over a bright scene gets hard to read | `OPACITY_READABLE` | ○: contrast arithmetic only; wants a look over snow in game |
 
 ## Known limitations
 
 - **The passive order within a tree is a rule, not a guide.** PoB only says
   which nodes a tree has; the import takes the nearest notable first. Where a
-  build means another order — a notable rushed past a closer one — change it
+  build means another order (a notable rushed past a closer one) change it
   in the editor's *Passive tree* section (within a stage; which nodes a stage
   takes comes from the PoB build).
 - **Passive points are counted, not read.** The game logs Books of Skill, not
@@ -528,8 +528,8 @@ that once: a table everyone believed, wrong in two tiers.
   Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+.
   Every tier was checked against a vendor in game; if GGG reprices gems, that
   table is the one place to change.
-- **Routes ship as placeholders.** Acts 1–10 contain thin skeletons meant to be
-  replaced — in `data/campaign/actN.json`, as per-act overrides in the userData
+- **Routes ship as placeholders.** Acts 1-10 contain thin skeletons meant to be
+  replaced: in `data/campaign/actN.json`, as per-act overrides in the userData
   `routes/` folder, or in the visual editor.
 - **The Windows build is unsigned**, so SmartScreen warns on first run. Code
   signing needs a paid certificate.
@@ -542,8 +542,8 @@ workflow**, which pulls the wiki's Cargo export, runs the test suite as a guard,
 and pushes the result to a branch to open a PR from. Locally: `npm run fetch-gems` (`-- --dry-run` to
 preview).
 
-A gem with no source is one no vendor sells — Vaal, Awakened and Transfigured
-gems, and drop-only supports like Empower — and reads "drop/trade" rather than
+A gem with no source is one no vendor sells (Vaal, Awakened and Transfigured
+gems, and drop-only supports like Empower) and reads "drop/trade" rather than
 naming a vendor. If a gem you *can* buy shows that way, refresh the data first.
 
 `fetchedAt` in `data/gems.json` says when the data was last pulled; it ages with
@@ -554,7 +554,7 @@ all**, before and after. That number is the canary for a wiki schema drift: the
 query returns HTTP 200 with rows that no longer carry the columns we read, the
 merge quietly leaves gems sourceless, and nothing else would say so. It is **61**
 today, 48 of them Vaal gems, which are corruption-only and belong there. Expect
-it to move by a handful between leagues — a jump of hundreds means the query
+it to move by a handful between leagues: a jump of hundreds means the query
 broke, and anything that *lost* a source in a run is named outright. Don't
 commit a refresh that reports one without checking why.
 

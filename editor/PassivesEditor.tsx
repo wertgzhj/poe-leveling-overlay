@@ -62,7 +62,7 @@ export function PassivesEditor({
     <div className="flex flex-col gap-2">
       <p className="text-xs text-overlay-muted">
         The order the overlay names your next points in. ↑ ↓ move a node within its stage.{' '}
-        <span className="text-warn">⚠</span> marks a node nothing before it connects to — the game won’t let you
+        <span className="text-warn">⚠</span> marks a node nothing before it connects to: the game won’t let you
         take it there. <i>Re-sort</i> puts a stage back in the worked-out order: the nearest notable first.
       </p>
       {check.stages.map((stage, si) => {
@@ -70,9 +70,9 @@ export function PassivesEditor({
         const last = first + stage.take.length
         const bad = stage.take.filter((r) => r.unlinked).length
         return (
-          <Fold key={si} title={stage.label ?? `Stage ${si + 1}`} detail={`points ${first + 1}–${last}`} bad={bad}>
+          <Fold key={si} title={stage.label ?? `Stage ${si + 1}`} detail={`points ${first + 1}-${last}`} bad={bad}>
             {stage.refund.length > 0 && (
-              <p className="mb-1 text-xs text-warn">Respec first: {stage.refund.map((n) => n.name).join(' · ')}</p>
+              <p className="mb-1 text-xs text-warn">Respec first: {stage.refund.map((n) => n.name).join(' / ')}</p>
             )}
             <NodeRows
               rows={stage.take}
@@ -110,8 +110,8 @@ function Fold(props: { title: string; detail: string; bad: number; children: Rea
     <details open={props.bad > 0} className="rounded-md border border-overlay-border bg-overlay-panel/60 p-2">
       <summary className="cursor-pointer text-sm">
         <span className="font-semibold">{props.title}</span>
-        <span className="text-xs text-overlay-muted"> · {props.detail}</span>
-        {props.bad > 0 && <span className="text-xs text-warn"> · ⚠ {props.bad} not connected</span>}
+        <span className="text-xs text-overlay-muted">, {props.detail}</span>
+        {props.bad > 0 && <span className="text-xs text-warn">, ⚠ {props.bad} not connected</span>}
       </summary>
       <div className="mt-2 flex flex-col gap-0.5">{props.children}</div>
     </details>

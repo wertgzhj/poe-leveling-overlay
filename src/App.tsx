@@ -84,7 +84,7 @@ export function App(): React.JSX.Element {
         pushEvent({
           kind: 'levelup',
           ts: ev.ts,
-          text: `${ev.name} (${ev.charClass}) → level ${ev.level}${ev.isBound ? '' : ' — other player'}`
+          text: `${ev.name} (${ev.charClass}) → level ${ev.level}${ev.isBound ? '' : ' (other player)'}`
         })
       })
     ]

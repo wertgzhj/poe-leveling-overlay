@@ -57,7 +57,7 @@ function CostCell({
         className={cls + now('text-ok')}
         title={
           extra > 0
-            ? `The quest gives one — the other ${extra === 1 ? 'copy' : `${extra} copies`} you buy or find`
+            ? `The quest gives one, the other ${extra === 1 ? 'copy' : `${extra} copies`} you buy or find`
             : 'Free quest reward'
         }
       >
@@ -70,7 +70,7 @@ function CostCell({
   // empty column would silently turn a purchase into an unlabelled row.
   const short = cost ? (COST_SHORT[cost] ?? cost) : 'buy'
   const tone = (cost && COST_TONE[cost]) || 'text-overlay-muted'
-  const copies = n > 1 ? ` — and you need ${n} of them` : ''
+  const copies = n > 1 ? `, and you need ${n} of them` : ''
   return (
     <span
       className={cls + now(tone)}
@@ -130,13 +130,13 @@ function SourceCell({
   later?: boolean
 }): React.JSX.Element {
   const named = sourceName(what)
-  const text = [act ? `A${act}` : null, named].filter(Boolean).join(' · ')
+  const text = [act ? `A${act}` : null, named].filter(Boolean).join(', ')
   return (
     <span
       title={
         title ??
         (named === what ? text : `${text} (${what})`) +
-          (approx ? ' — general vendor, may show up earlier as a quest reward' : '')
+          (approx ? ' (general vendor, may show up earlier as a quest reward)' : '')
       }
       className={
         'truncate text-[10px] ' + (later ? 'text-overlay-muted' : (tone ?? sourceTone(named)))
@@ -165,7 +165,7 @@ export function RewardGroupRow({
   later?: boolean
 }): React.JSX.Element {
   const context = (e: AcquisitionEntryBridge): string =>
-    e.fromLevel ? ` · lvl ${e.fromLevel}+` : ''
+    e.fromLevel ? `, lvl ${e.fromLevel}+` : ''
 
   if (!group.pickOne) {
     const e = group.gems[0]
@@ -204,7 +204,7 @@ export function RewardGroupRow({
       {rest && (
         <span
           style={{ gridRow: `span ${group.gems.length}` }}
-          title={`The quest gives one — the other ${rest.count === 1 ? 'copy costs' : `${rest.count} copies cost`}${rest.cost ? ` ${rest.cost} each` : ' vendor money'}`}
+          title={`The quest gives one, the other ${rest.count === 1 ? 'copy costs' : `${rest.count} copies cost`}${rest.cost ? ` ${rest.cost} each` : ' vendor money'}`}
           className={
             'self-center text-right text-[10px] ' +
             ((!later && rest.cost && COST_TONE[rest.cost]) || 'text-overlay-muted')
@@ -218,7 +218,7 @@ export function RewardGroupRow({
       {group.gems.map((e) => (
         <div
           key={e.gem}
-          title={e.fromLevel ? `${e.gem} — for a later stage, from level ${e.fromLevel}` : e.gem}
+          title={e.fromLevel ? `${e.gem}: for a later stage, from level ${e.fromLevel}` : e.gem}
           className={
             'col-span-2 col-start-2 flex items-baseline gap-1.5 text-xs ' +
             (e.fromLevel || later ? 'text-overlay-muted' : 'text-overlay-text')
@@ -247,13 +247,13 @@ export function RewardGroupRow({
           ) : (
             <>
               ↳ the rest:{' '}
-              <span title="No vendor we know of stocks them — a drop or a trade">nobody sells them</span>
+              <span title="No vendor we know of stocks them: a drop or a trade">nobody sells them</span>
             </>
           )}
           {rest.npc && rest.partial && (
             <span title="At least one of these isn't sold by any vendor in the gem data">
               {' '}
-              · not all of them
+              , not all of them
             </span>
           )}
         </div>
@@ -283,7 +283,7 @@ function GemCell({
     const n = e.count ?? 1
     return (
       <div
-        title={`Only the ${n > 1 ? `${n} you didn't pick` : "one you didn't pick"} — the quest gave you one of these, and the overlay can't see your inventory.`}
+        title={`Only the ${n > 1 ? `${n} you didn't pick` : "one you didn't pick"}. The quest gave you one of these, and the overlay can't see your inventory.`}
         className={'flex min-w-0 flex-col text-xs ' + (later ? 'text-overlay-muted' : 'text-overlay-text')}
       >
         {e.anyOf.map((g) => (
@@ -303,7 +303,7 @@ function GemCell({
   }
   return (
     <div
-      title={later ? 'Coming up — you’re a bit underlevelled for this yet' : undefined}
+      title={later ? 'Coming up: you’re a bit underlevelled for this yet' : undefined}
       className={
         'flex min-w-0 items-baseline gap-1.5 text-xs ' +
         (e.fromLevel || later ? 'text-overlay-muted' : 'text-overlay-text')
@@ -322,14 +322,14 @@ function GemCell({
         {e.fromPickOne && (
           <span
             className="ml-1 text-[10px] text-overlay-muted"
-            title="Only if you didn't pick it — it was one of the choices at that quest, and the overlay can't see your inventory."
+            title="Only if you didn't pick it. It was one of the choices at that quest, and the overlay can't see your inventory."
           >
             (if not picked)
           </span>
         )}
         {children}
         {comingUpAt != null && !e.fromLevel && (
-          <span className="text-overlay-muted"> · lvl {comingUpAt}</span>
+          <span className="text-overlay-muted">, lvl {comingUpAt}</span>
         )}
       </span>
     </div>

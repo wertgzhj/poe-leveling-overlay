@@ -22,7 +22,7 @@ export class EditorWindow {
       height: 760,
       minWidth: 640,
       minHeight: 480,
-      title: 'PoE Leveling Overlay — Editor',
+      title: 'PoE Leveling Overlay: Editor',
       backgroundColor: '#0e1118',
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),

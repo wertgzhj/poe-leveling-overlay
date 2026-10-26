@@ -47,9 +47,9 @@ const NO_PROFILES: LibraryEntryBridge[] = []
 
 /** How a profile reads in the dropdown: its name, then what it's for. */
 function profileLabel(e: LibraryEntryBridge): string {
-  if (e.errors.length > 0) return `${e.name} — won't load`
+  if (e.errors.length > 0) return `${e.name} (won't load)`
   const what = e.bundled ? 'example' : (e.ascendancy ?? e.charClass)
-  return what ? `${e.name} — ${what}` : e.name
+  return what ? `${e.name} (${what})` : e.name
 }
 
 function hasModifier(accelerator: string): boolean {
@@ -313,7 +313,7 @@ export function SettingsPanel(): React.JSX.Element {
               >
                 {/* Only after a profile file went missing — say so instead of
                     showing some other profile as if it were active. */}
-                {activeId == null && <option value="">— not in your profiles —</option>}
+                {activeId == null && <option value="">(not in your profiles)</option>}
                 {library.map((e) => (
                   <option key={e.id} value={e.id} disabled={e.errors.length > 0}>
                     {profileLabel(e)}
@@ -323,7 +323,7 @@ export function SettingsPanel(): React.JSX.Element {
               <button
                 onClick={() => window.overlay?.openEditor('profiles')}
                 className={'shrink-0 ' + button('ghost', 'md')}
-                title="New, duplicate, rename, delete — in the editor window"
+                title="New, duplicate, rename, delete: in the editor window"
               >
                 Manage…
               </button>
@@ -342,7 +342,7 @@ export function SettingsPanel(): React.JSX.Element {
             )}
             <p className="mt-1 text-[10px] text-overlay-muted">
               Per character, like the profile: a level-1 alt of another class hands over a gem
-              your build needs. In the Gems tab its line says <span className="text-mule">Mule · Ranger</span>.
+              your build needs. In the Gems tab its line says <span className="text-mule">Mule (Ranger)</span>.
             </p>
             <label className="mt-2 block text-[11px] text-overlay-muted">
               Import from Path of Building
@@ -375,9 +375,9 @@ export function SettingsPanel(): React.JSX.Element {
                 }
               >
                 {pobResult.ok ? (
-                  <div>Imported as a new profile — now active. See the Gems tab.</div>
+                  <div>Imported as a new profile, now active. See the Gems tab.</div>
                 ) : (
-                  pobResult.errors.map((e, i) => <div key={i}>· {e}</div>)
+                  pobResult.errors.map((e, i) => <div key={i}>- {e}</div>)
                 )}
                 {pobResult.warnings.map((w, i) => (
                   <div key={i} className="text-warn">
@@ -402,7 +402,7 @@ export function SettingsPanel(): React.JSX.Element {
             <div className="mt-1 flex items-start justify-between gap-2">
               <p className="text-[10px] text-overlay-muted">
                 Adds a <b className="text-overlay-text">Regex</b> button to the overlay&apos;s header.
-                Click it, then paste into a stash or vendor search box. The overlay only copies — the
+                Click it, then paste into a stash or vendor search box. The overlay only copies; the
                 paste is yours.
               </p>
               {/* The game cuts the search box off; past the limit the end of the
@@ -442,7 +442,7 @@ export function SettingsPanel(): React.JSX.Element {
             <p className="mt-1 text-[10px] text-overlay-muted">
               The header says what was copied.{' '}
               {autoCopyProtect
-                ? 'It only replaces an empty clipboard or a search — never a whisper, an item or a link you copied.'
+                ? 'It only replaces an empty clipboard or a search, never a whisper, an item or a link you copied.'
                 : 'Off: it replaces whatever is on the clipboard, a whisper or an item you copied included.'}{' '}
               Pasting stays yours.
             </p>
@@ -482,9 +482,9 @@ export function SettingsPanel(): React.JSX.Element {
               role="status"
             >
               {findResult === 'found'
-                ? '✓ Found — tracking from this file.'
+                ? '✓ Found. Tracking from this file.'
                 : findResult === 'none'
-                  ? 'Not found in the usual places — use Browse… (it’s in the game folder, under logs).'
+                  ? 'Not found in the usual places. Use Browse… (it’s in the game folder, under logs).'
                   : 'Used for zone/level tracking. Found by itself on first launch.'}
             </p>
 
@@ -501,7 +501,7 @@ export function SettingsPanel(): React.JSX.Element {
               className="mt-1 w-full rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
             />
             <p className="mt-1 text-[10px] text-overlay-muted">
-              Binds level tracking to this character — set it if you play in a party, so a
+              Binds level tracking to this character. Set it if you play in a party, so a
               partymate's level-up can't advance your progress.
             </p>
           </Section>
@@ -644,11 +644,11 @@ function UpdateRow(): React.JSX.Element {
       case 'downloading':
         return `Downloading v${update.version}… ${update.percent}%`
       case 'ready':
-        return `v${update.version} downloaded — restart to finish.`
+        return `v${update.version} downloaded. Restart to finish.`
       case 'available':
-        return `v${update.version} is out. This portable copy doesn't update itself — download the new one.`
+        return `v${update.version} is out. This portable copy doesn't update itself. Download the new one.`
       case 'publishing':
-        return `${update.version ? `v${update.version}` : 'A new version'} is still being published — check again in a few minutes.`
+        return `${update.version ? `v${update.version}` : 'A new version'} is still being published. Check again in a few minutes.`
       case 'error':
         return `Couldn't check: ${update.message}`
       default:
@@ -824,7 +824,7 @@ function ActRegexRows({
               </option>
             ))}
           </select>
-          <span className="text-[10px] text-overlay-muted">–</span>
+          <span className="text-[10px] text-overlay-muted">to</span>
           <select
             aria-label="To act"
             value={r.to}
@@ -844,7 +844,7 @@ function ActRegexRows({
             placeholder='e.g. "r-g-b|b-r-g"'
             title={
               r.regex.length > SEARCH_BOX_LIMIT
-                ? `${r.regex.length} characters — the game's search box cuts it off after ${SEARCH_BOX_LIMIT}.`
+                ? `${r.regex.length} characters. The game's search box cuts it off after ${SEARCH_BOX_LIMIT}.`
                 : undefined
             }
             onChange={(e) => set(i, { regex: e.target.value }, false)}
@@ -868,7 +868,7 @@ function ActRegexRows({
       <div className="mt-1 flex items-start justify-between gap-2">
         <p className="text-[10px] text-overlay-muted">
           {rows.length
-            ? 'In these acts, “your regex” — the button, its hotkey, copying without a click — is the one for the act you’ve reached; elsewhere, the one above. The first range that fits wins.'
+            ? 'In these acts, “your regex” (the button, its hotkey, copying without a click) is the one for the act you’ve reached; elsewhere, the one above. The first range that fits wins.'
             : 'Optional: a different regex for some acts, used there instead of the one above.'}
         </p>
         <button onClick={add} className={'shrink-0 ' + button('ghost', 'sm')}>

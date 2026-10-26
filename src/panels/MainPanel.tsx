@@ -80,19 +80,19 @@ function trackerLine(
   languageMismatch: boolean
 ): string {
   if (logStatus?.state !== 'watching') {
-    if (logStatus?.state === 'missing') return 'Client.txt not found — check Settings'
-    if (logStatus?.state === 'error') return 'Log read error — see Settings'
-    return 'Client.txt not found — set its path in Settings to enable tracking'
+    if (logStatus?.state === 'missing') return 'Client.txt not found. Check Settings'
+    if (logStatus?.state === 'error') return 'Log read error. See Settings'
+    return 'Client.txt not found. Set its path in Settings to enable tracking'
   }
   // Zone lines parse (they're locale-independent) but the localized ones don't:
   // levels never arrive, so the Gems tab would sit on stage 1 forever. Say why.
-  if (languageMismatch) return 'Log is not in English — set the game to English for level tracking'
+  if (languageMismatch) return 'Log is not in English. Set the game to English for level tracking'
   const zone = tracked?.area?.name ?? 'zone unknown'
   const char =
     tracked?.character != null
-      ? `${tracked.character}${tracked.level != null ? ` · lvl ${tracked.level}` : ''}`
+      ? `${tracked.character}${tracked.level != null ? `, lvl ${tracked.level}` : ''}`
       : 'waiting for a level-up'
-  return `${zone} — ${char}`
+  return `${zone} | ${char}`
 }
 
 // Path of Exile cuts experience once your level and the zone's monster level
@@ -106,8 +106,8 @@ function ZoneFitTag({ fit }: { fit: ZoneFitBridge }): React.JSX.Element {
     <span
       title={
         under
-          ? `The zone is level ${fit.areaLevel}, ${fit.by} past your safe range — tougher, and reduced experience.`
-          : `The zone is level ${fit.areaLevel}, ${fit.by} below your safe range — reduced experience, move on.`
+          ? `The zone is level ${fit.areaLevel}, ${fit.by} past your safe range: tougher, and reduced experience.`
+          : `The zone is level ${fit.areaLevel}, ${fit.by} below your safe range: reduced experience, move on.`
       }
       className={'shrink-0 ' + TAG + TAG_TONE[under ? 'danger' : 'muted']}
     >

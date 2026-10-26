@@ -39,8 +39,8 @@ function lineTone(entry: AcquisitionEntryBridge | undefined, link: LinkMark | un
 }
 
 function linkMarkTitle(mark: LinkMark | undefined, act: number | undefined): string | undefined {
-  if (mark === 'thisAct') return `From Act ${act} — the act you're in.`
-  if (mark === 'notYet') return `Not yet — from Act ${act}.`
+  if (mark === 'thisAct') return `From Act ${act}, the act you're in.`
+  if (mark === 'notYet') return `Not yet: from Act ${act}.`
   return undefined
 }
 
@@ -73,7 +73,7 @@ export function SocketGroup({
         <Tag
           tone="neutral"
           className="absolute -top-2 right-2"
-          title="Rearranged since the previous stage — a gem moved into this link from another, or left it"
+          title="Rearranged since the previous stage: a gem moved into this link from another, or left it"
         >
           relinked
         </Tag>
@@ -100,7 +100,7 @@ export function SocketGroup({
               <span className={'min-w-0 truncate text-xs ' + (notYet ? 'text-overlay-muted' : 'text-overlay-text')}>
                 <GemName name={gem.name} />
                 {fresh[i] && (
-                  <Tag tone="neutral" className="ml-1" title="A copy the previous stage's links don't have — new with this stage">
+                  <Tag tone="neutral" className="ml-1" title="A copy the previous stage's links don't have, new with this stage">
                     new
                   </Tag>
                 )}
@@ -108,7 +108,7 @@ export function SocketGroup({
                     attribute requirement is fully known — marking it "?" made
                     the overlay look broken on Portal, Convocation and friends. */}
                 {gem.unknown && (
-                  <span className="ml-1 text-[10px] text-warn" title="not in the gem data — colour guessed">
+                  <span className="ml-1 text-[10px] text-warn" title="not in the gem data, colour guessed">
                     ?
                   </span>
                 )}

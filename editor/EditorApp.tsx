@@ -58,7 +58,7 @@ export function EditorApp(): React.JSX.Element {
   }
 
   const label = (t: Tab): string =>
-    t === 'routes' ? 'Routes' : t === 'profiles' ? 'Profiles' : editing ? `Profile · ${editing.name}` : 'Profile'
+    t === 'routes' ? 'Routes' : t === 'profiles' ? 'Profiles' : editing ? `Profile: ${editing.name}` : 'Profile'
 
   return (
     <div className="flex h-screen flex-col">

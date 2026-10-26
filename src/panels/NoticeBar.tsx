@@ -28,8 +28,8 @@ export function TrialHint(): React.JSX.Element | null {
           className="min-w-0 flex-1 truncate text-[11px] text-overlay-text"
           title={
             choice.id === 'bandit'
-              ? `Act 2, "Deal with the Bandits" — your profile says ${choice.wants}. The alternatives: ${choice.options.join(', ')}. It cannot be changed afterwards.`
-              : `From Act 6 your Pantheon powers come from the gods you defeat — your profile wants ${choice.wants}. You can change them at any time in town.`
+              ? `Act 2, "Deal with the Bandits": your profile says ${choice.wants}. The alternatives: ${choice.options.join(', ')}. It cannot be changed afterwards.`
+              : `From Act 6 your Pantheon powers come from the gods you defeat. Your profile wants ${choice.wants}. You can change them at any time in town.`
           }
         >
           {choice.id === 'bandit' ? 'Bandits: ' : 'Pantheon: '}
@@ -37,7 +37,7 @@ export function TrialHint(): React.JSX.Element | null {
         </span>
         <button
           className="shrink-0 text-overlay-muted hover:text-overlay-text"
-          title="Done — don't remind me again on this character"
+          title="Done, don't remind me again on this character"
           aria-label="Dismiss reminder"
           onClick={() => window.overlay?.dismissChoice(choice.id)}
         >
@@ -53,11 +53,11 @@ export function TrialHint(): React.JSX.Element | null {
       <div className="flex items-center gap-2 border-b border-overlay-accent/50 bg-overlay-accent/15 px-3 py-1.5">
         <span className="text-overlay-accent">⌂</span>
         <span className="min-w-0 flex-1 truncate text-[11px] text-overlay-accent">
-          {LAB_LABEL[unlocked]} unlocked — Aspirants&apos; Plaza.
+          {LAB_LABEL[unlocked]} unlocked: Aspirants&apos; Plaza.
         </span>
         <button
           className="shrink-0 text-overlay-muted hover:text-overlay-text"
-          title="Got it — don't show this again for this Labyrinth"
+          title="Got it, don't show this again for this Labyrinth"
           aria-label="Dismiss"
           onClick={() => window.overlay?.trialsDismissLab(unlocked)}
         >
@@ -81,10 +81,10 @@ export function TrialHint(): React.JSX.Element | null {
         <span className="text-overlay-accent" aria-hidden>◆</span>
         <span
           className="min-w-0 flex-1 truncate text-[11px] text-overlay-text"
-          title={`${god.god} — ${god.where}. Defeating it unlocks ${god.soul}, which your profile wants.`}
+          title={`${god.god}: ${god.where}. Defeating it unlocks ${god.soul}, which your profile wants.`}
         >
           Pantheon: {god.soul.replace(/^Soul of (the )?/, '')}
-          {god.side ? ` — ${god.side}` : ' is here'}
+          {god.side ? ` in ${god.side}` : ' is here'}
         </span>
         <button
           className="shrink-0 rounded bg-overlay-accent/20 px-2 py-0.5 text-[10px] font-medium text-overlay-accent hover:bg-overlay-accent/30"
@@ -100,7 +100,7 @@ export function TrialHint(): React.JSX.Element | null {
     <div className="flex items-center gap-2 border-b border-warn/40 bg-warn/10 px-3 py-1.5">
       <span className="text-warn" aria-hidden>△</span>
       <span className="min-w-0 flex-1 truncate text-[11px] text-warn">
-        Trial of Ascendancy in this zone — don&apos;t leave without it.
+        Trial of Ascendancy in this zone. Don&apos;t leave without it.
       </span>
       <button
         className="shrink-0 rounded bg-warn/20 px-2 py-0.5 text-[10px] font-medium text-warn hover:bg-warn/30"

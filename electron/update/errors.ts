@@ -31,10 +31,10 @@ export function classifyUpdateError(raw: unknown): UpdateProblem {
     return { kind: 'publishing', version }
   }
   if (/ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ECONNRESET|ETIMEDOUT|ENETUNREACH|net::ERR_/i.test(text)) {
-    return { kind: 'error', message: 'No connection to GitHub — it will try again later.' }
+    return { kind: 'error', message: 'No connection to GitHub. It will try again later.' }
   }
   if (/\b(403|429)\b|rate limit/i.test(text)) {
-    return { kind: 'error', message: 'GitHub is limiting update checks right now — it will try again later.' }
+    return { kind: 'error', message: 'GitHub is limiting update checks right now. It will try again later.' }
   }
   return { kind: 'error', message: summarize(text) }
 }
@@ -52,6 +52,6 @@ export function summarize(text: string): string {
     .replace(/(?:\/Users|\/home|\/root)\/[^\s"')]*/g, '…') // macOS / Linux homes
     .replace(/^Error:\s*/, '')
     .trim()
-  if (!line) return 'Something went wrong — it will try again later.'
+  if (!line) return 'Something went wrong. It will try again later.'
   return line.length > MAX_MESSAGE ? `${line.slice(0, MAX_MESSAGE - 1).trimEnd()}…` : line
 }

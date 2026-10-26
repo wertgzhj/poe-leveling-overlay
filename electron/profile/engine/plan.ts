@@ -84,7 +84,7 @@ export function buildPlan(
  */
 function shoppingStop(entry: AcquisitionEntry): ShoppingStop | undefined {
   if (entry.bucket !== 'purchase' || !entry.npc) return undefined
-  const where = entry.act ? `A${entry.act} · ${entry.npc}` : entry.npc
+  const where = entry.act ? `A${entry.act}, ${entry.npc}` : entry.npc
   return {
     // The unlock quest is part of the key, not the label: it splits the visits
     // apart without spending a line on a quest name nobody needs to read here.

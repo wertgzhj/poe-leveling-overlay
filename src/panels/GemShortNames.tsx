@@ -100,7 +100,7 @@ export function GemShortNames(): React.JSX.Element {
       </datalist>
       <p className={'mt-1 text-[10px] ' + (gemDraft.trim() && !gem ? 'text-warn' : 'text-overlay-muted')}>
         {gemDraft.trim() && !gem
-          ? 'Not a gem we know — pick one from the suggestions.'
+          ? 'Not a gem we know. Pick one from the suggestions.'
           : 'Shown in the Gems tab instead of the full name, which stays in the tooltip. Only here, never in your profiles.'}
       </p>
     </div>

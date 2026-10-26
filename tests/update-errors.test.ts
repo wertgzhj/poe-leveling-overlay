@@ -38,7 +38,7 @@ test('one line, and a short one', () => {
   const long = summarize('x'.repeat(500))
   assert.ok(long.length <= 140, `${long.length} chars`)
   assert.ok(long.endsWith('…'))
-  assert.equal(summarize(''), 'Something went wrong — it will try again later.')
+  assert.equal(summarize(''), 'Something went wrong. It will try again later.')
 })
 
 test('the common failures read as what they are', () => {

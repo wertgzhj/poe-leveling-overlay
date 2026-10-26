@@ -111,7 +111,7 @@ test('overlapping labelled stages are clamped WITH a warning naming the stage', 
   assert.deepEqual(r.profile.stages[0].range, [1, 8])
   assert.deepEqual(r.profile.stages[1].range, [9, 24])
   assert.ok(
-    r.warnings.some((w) => w.includes('"1-11"') && w.includes('1–8')),
+    r.warnings.some((w) => w.includes('"1-11"') && w.includes('1-8')),
     `expected an overlap warning, got: ${r.warnings.join(' | ')}`
   )
   assert.deepEqual(validateProfile(r.profile).errors, [])
@@ -125,7 +125,7 @@ test('unlabelled multi-stage builds get guessed ranges + a loud warning', () => 
   const r = importPobXml(xml)
   assert.ok(r.profile)
   assert.equal(r.profile.stages.length, 2)
-  assert.ok(r.warnings.some((w) => w.includes('split them evenly')))
+  assert.ok(r.warnings.some((w) => w.includes('split evenly')))
   // Guessed ranges are still non-overlapping / valid.
   assert.deepEqual(validateProfile(r.profile).errors, [])
 })

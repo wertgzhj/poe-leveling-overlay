@@ -270,7 +270,7 @@ function validateStages(raw: unknown, errors: string[]): Stage[] | null {
   for (let i = 1; i < ordered.length; i++) {
     if (ordered[i].range[0] <= ordered[i - 1].range[1]) {
       errors.push(
-        `stages overlap: [${ordered[i - 1].range.join('–')}] and [${ordered[i].range.join('–')}]`
+        `stages overlap: [${ordered[i - 1].range.join('-')}] and [${ordered[i].range.join('-')}]`
       )
     }
   }

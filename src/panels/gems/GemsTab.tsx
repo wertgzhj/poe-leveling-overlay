@@ -19,7 +19,7 @@ export function GemBody(): React.JSX.Element {
     return <ErrorBox title="Profile file problems:" errors={profile.errors} />
   }
   if (!profile || !profile.meta) {
-    return <p className="px-1 text-xs text-overlay-muted">No build profile — point Settings → Build profile at your file.</p>
+    return <p className="px-1 text-xs text-overlay-muted">No build profile. Point Settings → Build profile at your file.</p>
   }
 
   const stage = profile.activeStage
@@ -55,7 +55,7 @@ export function GemBody(): React.JSX.Element {
           like missing curation rather than a broken install, so name it. */}
       {profile.gemDataError && (
         <ErrorBox
-          title="Gem data failed to load — colours and sources are unavailable:"
+          title="Gem data failed to load, colours and sources are unavailable:"
           errors={[profile.gemDataError, 'Reinstalling the overlay should fix this.']}
         />
       )}
@@ -78,7 +78,7 @@ export function GemBody(): React.JSX.Element {
       {profile.muling && (
         <div className="mb-2 rounded-md border border-mule/30 bg-mule/10 p-1.5 text-[10px] text-mule">
           Muling on {article(profile.muling)} {profile.muling}? Stash its starting gems, then go back to your{' '}
-          {profile.meta.class} — the overlay follows on its next level-up.
+          {profile.meta.class}. The overlay follows on its next level-up.
         </div>
       )}
 
@@ -223,7 +223,7 @@ export function GemBody(): React.JSX.Element {
         <p className="mt-1 rounded-md border border-overlay-border/60 bg-black/20 px-2 py-1.5 text-[10px] text-overlay-muted">
           <span className="font-semibold text-overlay-text">No passive tree in this build.</span> It was
           imported before the overlay read trees (v0.32.0). Import the PoB again (Settings → Build profile)
-          to get it — it comes in as a new profile.
+          to get it. It comes in as a new profile.
         </p>
       )}
     </>
@@ -242,5 +242,5 @@ function itemHeading(item: AcquisitionItemBridge): { text: string; library: bool
   if (item.kind === 'buy' && !item.stop) return undefined
   const library = from != null && sourceName(from) === 'Library'
   if (act == null) return item.kind === 'buy' && item.stop ? { text: item.stop.label, library } : undefined
-  return { text: library ? `A${act} · Library` : `A${act}`, library }
+  return { text: library ? `A${act}, Library` : `A${act}`, library }
 }

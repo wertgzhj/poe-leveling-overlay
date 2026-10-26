@@ -1,4 +1,4 @@
-PoE Leveling Overlay — third-party attribution
+PoE Leveling Overlay: third-party attribution
 ==============================================
 
 The overlay itself is MIT licensed (see LICENSE). This file records where the
@@ -8,21 +8,21 @@ data it ships comes from.
 Path of Exile Wiki (poewiki.net)
 --------------------------------
 
-`data/gems.json` — gem attributes, level requirements and per-class quest/vendor
-availability — is derived from the Path of Exile Wiki via its public Cargo query
+`data/gems.json` (gem attributes, level requirements and per-class quest/vendor
+availability) is derived from the Path of Exile Wiki via its public Cargo query
 API (see `scripts/fetch-gem-data.ts`, and the "Fetch gem data" GitHub Action that
 refreshes it). No wiki prose is copied; only the structured game facts the tables
 expose.
 
 Wiki content is community-contributed and published under the licence stated at
-https://www.poewiki.net/wiki/Path_of_Exile_Wiki:Copyrights — consult that page
+https://www.poewiki.net/wiki/Path_of_Exile_Wiki:Copyrights, consult that page
 before redistributing this data outside the overlay.
 
 
 Grinding Gear Games' passive tree export
 ----------------------------------------
 
-`data/tree.json` — the passive tree's node names, stats and links — is cut down
+`data/tree.json` (the passive tree's node names, stats and links) is cut down
 from the export Grinding Gear Games publishes for tool authors at
 https://github.com/grindinggear/skilltree-export (see `scripts/fetch-tree.ts`).
 The export carries no licence file; it is their data, used here the way other

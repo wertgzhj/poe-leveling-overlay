@@ -145,7 +145,7 @@ function LiveView({ snap, now }: { snap: RunTimerSnapshotBridge; now: number }):
           </span>
           {currentAct && (
             <span className="text-xs text-overlay-muted">
-              Act {currentAct.act} · <span className="font-mono tabular-nums">{fmt(currentAct.duration)}</span>
+              Act {currentAct.act} <span className="font-mono tabular-nums">{fmt(currentAct.duration)}</span>
             </span>
           )}
         </div>
@@ -153,14 +153,14 @@ function LiveView({ snap, now }: { snap: RunTimerSnapshotBridge; now: number }):
           <span className="truncate">
             {live.character ?? 'New character'}
             {live.charClass && ` (${live.charClass})`}
-            {live.level != null && ` · level ${live.level}`}
+            {live.level != null && `, level ${live.level}`}
           </span>
           {snap.away ? (
-            <span title="Another character is playing — the run waits until its own logs back in.">
+            <span title="Another character is playing. The run waits until its own logs back in.">
               ⏸ other character
             </span>
           ) : (
-            stale && <span title="No log line for a while — the game may be closed.">⏸ paused</span>
+            stale && <span title="No log line for a while. The game may be closed.">⏸ paused</span>
           )}
         </div>
       </div>
@@ -176,7 +176,7 @@ function LiveView({ snap, now }: { snap: RunTimerSnapshotBridge; now: number }):
 
       {snap.pending && (
         <p className="rounded border border-warn/40 bg-warn/10 px-2 py-1 text-[11px] text-warn">
-          △ {snap.pending.character ?? 'A new character'} entered the Twilight Strand — a mule, or a new
+          △ {snap.pending.character ?? 'A new character'} entered the Twilight Strand: a mule, or a new
           run? Levelling past 3 or reaching the Coast makes it a new run; coming back here makes it
           a mule, and its time joins this run as mule time.
         </p>
@@ -382,12 +382,12 @@ function bestFor(snap: RunTimerSnapshotBridge, run: RunSummaryBridge): RunSummar
 function RunFacts({ run }: { run: RunSummaryBridge }): React.JSX.Element {
   // Short labels, the window is narrow: each says it in full on hover.
   const facts: Array<[string, string, string]> = [
-    ['†', String(run.deaths), 'Deaths — your character dying, suicides included'],
-    ['SP', String(run.questPoints), 'Quest skill points claimed — a Book of Skill used, not just a quest done'],
+    ['†', String(run.deaths), 'Deaths: your character dying, suicides included'],
+    ['SP', String(run.questPoints), 'Quest skill points claimed: a Book of Skill used, not just a quest done'],
     ['Lab', `${run.labs.length}/3`, run.labs.length ? `Labyrinths beaten: ${run.labs.join(', ')}` : 'No Labyrinth beaten yet'],
     ['Gods', String(run.gods.length), run.gods.length ? `Pantheon: ${run.gods.join(', ')}` : 'No Pantheon god defeated yet']
   ]
-  if (run.afk > 0) facts.push(['AFK', fmt(run.afk), 'Time the game marked you AFK — not part of the run time'])
+  if (run.afk > 0) facts.push(['AFK', fmt(run.afk), 'Time the game marked you AFK, not part of the run time'])
   return (
     <div className="space-y-0.5 text-[11px]">
       <div className="flex flex-wrap gap-x-2.5 gap-y-0.5">
@@ -413,7 +413,7 @@ function Company({ run }: { run: RunSummaryBridge }): React.JSX.Element | null {
     .map(([name, n]) => `${name}: ${n} zone${n === 1 ? '' : 's'}`)
     .join(', ')
   return (
-    <span className="min-w-0 truncate" title={shared ? `Zones shared — ${shared}` : 'Nobody in your zones'}>
+    <span className="min-w-0 truncate" title={shared ? `Zones shared: ${shared}` : 'Nobody in your zones'}>
       {party.length > 0 ? (
         <>
           <span className="text-overlay-muted">Party</span> {party.join(', ')}
@@ -421,7 +421,7 @@ function Company({ run }: { run: RunSummaryBridge }): React.JSX.Element | null {
       ) : (
         <>
           <span className="text-overlay-muted">Solo</span>
-          {visitors > 0 && <span className="text-overlay-muted"> ·{visitors}</span>}
+          {visitors > 0 && <span className="text-overlay-muted"> +{visitors}</span>}
         </>
       )}
     </span>
@@ -487,7 +487,7 @@ function Splits({
   const columns = best ? 5 : 4
   return (
     <div>
-      <h2 className={'mb-1 ' + HEADING + 'text-overlay-muted'}>Acts{best ? ` · vs best${kind ? ` ${kind}` : ''}` : ''}</h2>
+      <h2 className={'mb-1 ' + HEADING + 'text-overlay-muted'}>Acts{best ? ` vs best${kind ? ` ${kind}` : ''}` : ''}</h2>
       <table className="w-full text-[11px]">
         <thead className="text-overlay-muted">
           <tr>
@@ -521,10 +521,10 @@ function Splits({
                   <td className="whitespace-nowrap pl-2 text-right font-mono tabular-nums">{fmt(end)}</td>
                   {best && (
                     <td className="whitespace-nowrap pl-2 text-right font-mono tabular-nums">
-                      {theirEnd == null ? '—' : done ? <Delta ms={end - theirEnd} /> : <span className="text-overlay-muted">{fmt(theirEnd)}</span>}
+                      {theirEnd == null ? '-' : done ? <Delta ms={end - theirEnd} /> : <span className="text-overlay-muted">{fmt(theirEnd)}</span>}
                     </td>
                   )}
-                  <td className="pl-2 text-right text-overlay-muted">{a.level ?? '—'}</td>
+                  <td className="pl-2 text-right text-overlay-muted">{a.level ?? '-'}</td>
                 </tr>
                 {isOpen(a.act) &&
                   zones
@@ -543,18 +543,18 @@ function Splits({
                               className="flex w-0 min-w-full justify-between gap-2 pl-3"
                               title={
                                 'Time in the zone, loading screens apart' +
-                                (best ? (theirs ? ` — best run: ${fmt(theirs.ms)}` : ' — the best run never went there') : '')
+                                (best ? (theirs ? `, best run: ${fmt(theirs.ms)}` : ', the best run never went there') : '')
                               }
                             >
                               <span className="min-w-0 truncate">
                                 {z.name}
                                 {z.visits > 1 && <span> ×{z.visits}</span>}
-                                {z.withParty && <span title="Shared with your party"> · party</span>}
+                                {z.withParty && <span title="Shared with your party">, party</span>}
                               </span>
                               <span className="flex shrink-0 gap-2 font-mono tabular-nums">
                                 {fmt(z.ms)}
                                 {best && (
-                                  <span className="w-14 text-right">{theirs ? <Delta ms={z.ms - theirs.ms} /> : '—'}</span>
+                                  <span className="w-14 text-right">{theirs ? <Delta ms={z.ms - theirs.ms} /> : '-'}</span>
                                 )}
                               </span>
                             </div>
@@ -573,10 +573,10 @@ function Splits({
                         <td className="whitespace-nowrap pl-2 text-right font-mono tabular-nums">{fmt(l.at)}</td>
                         {best && (
                           <td className="whitespace-nowrap pl-2 text-right font-mono tabular-nums">
-                            {theirLab ? <Delta ms={l.at - theirLab.at} /> : '—'}
+                            {theirLab ? <Delta ms={l.at - theirLab.at} /> : '-'}
                           </td>
                         )}
-                        <td className="pl-2 text-right text-overlay-muted">{l.level ?? '—'}</td>
+                        <td className="pl-2 text-right text-overlay-muted">{l.level ?? '-'}</td>
                       </tr>
                     )
                   })}

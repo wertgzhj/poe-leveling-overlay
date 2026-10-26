@@ -4,7 +4,7 @@ contact_links:
     url: https://github.com/wertgzhj/poe-leveling-overlay/actions/workflows/fetch-gems.yml
     about: >
       Gem attributes, level requirements and quest/vendor sources come from the
-      Path of Exile Wiki. After a league or patch, run "Fetch gem data" first —
+      Path of Exile Wiki. After a league or patch, run "Fetch gem data" first:
       that fixes most of it. Open an issue if it persists.
   - name: My route is empty / says "placeholder"
     url: https://github.com/wertgzhj/poe-leveling-overlay#author-your-route

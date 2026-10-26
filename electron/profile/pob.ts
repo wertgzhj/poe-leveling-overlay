@@ -54,7 +54,7 @@ export function decodePobCode(code: string): string {
     return inflateSync(buf, { maxOutputLength: MAX_POB_XML_BYTES }).toString('utf8')
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ERR_BUFFER_TOO_LARGE') {
-      throw new Error('it unpacks to far more than any build — not a Path of Building code', { cause: e })
+      throw new Error('it unpacks to far more than any build, so it is not a Path of Building code', { cause: e })
     }
     throw e
   }
@@ -222,8 +222,8 @@ function buildStages(sets: RawSet[], warnings: string[]): Stage[] {
         const prev = ordered[i - 1]
         const clampedEnd = Math.max(prev.range[0], ordered[i].range[0] - 1)
         warnings.push(
-          `stage "${prev.set.title ?? '?'}" overlaps the next stage — using levels ` +
-            `${prev.range[0]}–${clampedEnd} (the next stage starts at ${ordered[i].range[0]}).`
+          `stage "${prev.set.title ?? '?'}" overlaps the next stage, using levels ` +
+            `${prev.range[0]}-${clampedEnd} (the next stage starts at ${ordered[i].range[0]}).`
         )
         prev.range[1] = clampedEnd
       }
@@ -234,7 +234,7 @@ function buildStages(sets: RawSet[], warnings: string[]): Stage[] {
   // Some/all titles unparseable: keep PoB's order, split the level span evenly,
   // and flag it loudly — the ranges are guesses to edit.
   warnings.push(
-    'could not read stage level ranges from the PoB — split them evenly across 1–' +
+    'could not read stage level ranges from the PoB, so they are split evenly across 1-' +
       `${CAMPAIGN_END}; edit "range" on each stage.`
   )
   const n = sets.length

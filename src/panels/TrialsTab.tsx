@@ -28,7 +28,7 @@ export function TrialsBody(): React.JSX.Element {
     <>
       <div className="mb-2 flex items-center justify-between px-1">
         <span className="text-[11px] text-overlay-muted">
-          Campaign trials · {trials.seenCount}/{trials.total}
+          Campaign trials {trials.seenCount}/{trials.total}
         </span>
         <button
           className="text-[10px] text-overlay-muted hover:text-overlay-text"
@@ -51,7 +51,7 @@ export function TrialsBody(): React.JSX.Element {
               <span className="flex items-center gap-1.5">
                 <span className={HEADING + 'text-overlay-muted'}>{LAB_LABEL[t.lab]}</span>
                 {beaten && (
-                  <Tag tone="muted" title="Izaro is dead — this Labyrinth is done">
+                  <Tag tone="muted" title="Izaro is dead, this Labyrinth is done">
                     ✓ done
                   </Tag>
                 )}
@@ -93,7 +93,7 @@ export function TrialsBody(): React.JSX.Element {
       <p className="mt-1 px-1 text-[10px] text-overlay-muted">
         Finishing a trial auto-checks it (Izaro&apos;s plaque line names the trial);
         the hint and a manual click are fallbacks. Each Labyrinth needs all of its
-        own trials — six for Normal, three each for Cruel and Merciless. Beating
+        own trials: six for Normal, three each for Cruel and Merciless. Beating
         Izaro marks the Labyrinth done, and ticks its trials with it.
       </p>
     </>
@@ -133,7 +133,7 @@ function PantheonList({ gods }: { gods: PantheonStatusBridge[] }): React.JSX.Ele
                 {here && <Tag tone="gold" className="ml-1.5">you are here</Tag>}
               </div>
               <div className="truncate text-[10px] text-overlay-muted">
-                Act {g.act} · {g.where}
+                Act {g.act}, {g.where}
               </div>
             </div>
           </button>

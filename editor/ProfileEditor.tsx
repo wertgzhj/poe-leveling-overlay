@@ -135,7 +135,7 @@ export function ProfileEditor({
           <Select
             value={draft.meta.ascendancy ?? ''}
             options={ascendancyOptions(draft.meta.class, draft.meta.ascendancy)}
-            labelFor={(v) => v || '— none —'}
+            labelFor={(v) => v || '(none)'}
             onChange={(v) => edit({ ...draft, meta: { ...draft.meta, ascendancy: v || undefined } })}
             className="w-40"
           />
@@ -144,7 +144,7 @@ export function ProfileEditor({
           <Select
             value={draft.meta.bandit ?? ''}
             options={optional(BANDITS)}
-            labelFor={(v) => (v === '' ? '— none —' : v === 'Kill all' ? 'Kill all three' : `Help ${v}`)}
+            labelFor={(v) => (v === '' ? '(none)' : v === 'Kill all' ? 'Kill all three' : `Help ${v}`)}
             onChange={(v) => edit({ ...draft, meta: { ...draft.meta, bandit: v || undefined } })}
           />
         </Labeled>
@@ -152,7 +152,7 @@ export function ProfileEditor({
           <Select
             value={draft.meta.pantheonMajor ?? ''}
             options={optional(PANTHEON_MAJOR)}
-            labelFor={(v) => v || '— none —'}
+            labelFor={(v) => v || '(none)'}
             onChange={(v) => edit({ ...draft, meta: { ...draft.meta, pantheonMajor: v || undefined } })}
             className="w-52"
           />
@@ -161,7 +161,7 @@ export function ProfileEditor({
           <Select
             value={draft.meta.pantheonMinor ?? ''}
             options={optional(PANTHEON_MINOR)}
-            labelFor={(v) => v || '— none —'}
+            labelFor={(v) => v || '(none)'}
             onChange={(v) => edit({ ...draft, meta: { ...draft.meta, pantheonMinor: v || undefined } })}
             className="w-52"
           />
@@ -171,9 +171,9 @@ export function ProfileEditor({
             result={result}
             okText={
               loaded?.bundled
-                ? 'Saved as a profile of your own — now active.'
+                ? 'Saved as a profile of your own, now active.'
                 : isActive
-                  ? 'Saved — the overlay reloaded.'
+                  ? 'Saved. The overlay reloaded.'
                   : 'Saved.'
             }
           />
@@ -184,7 +184,7 @@ export function ProfileEditor({
       </div>
       <div className="text-xs text-overlay-muted">
         {loaded ? `Editing: ${loaded.path}` : 'Loading…'}
-        {loaded && !loaded.bundled && (isActive ? ' · the active profile' : ' · not active — saving won’t change the overlay')}{' '}
+        {loaded && !loaded.bundled && (isActive ? ', the active profile' : ', not active: saving won’t change the overlay')}{' '}
         {dirty && <span className="text-overlay-accent">● unsaved</span>}
       </div>
 
@@ -220,7 +220,7 @@ export function ProfileEditor({
 
       <p className="text-xs text-overlay-muted">
         Socket colours are computed from each gem's attribute (not set here). The gem plan
-        ({draft.gemPlan.length} {draft.gemPlan.length === 1 ? 'entry' : 'entries'}) is preserved as-is —
+        ({draft.gemPlan.length} {draft.gemPlan.length === 1 ? 'entry' : 'entries'}) is preserved as-is:
         use PoB import or edit the JSON to change gem sources.
       </p>
     </div>

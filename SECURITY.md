@@ -5,7 +5,7 @@
 Report a vulnerability privately through GitHub's
 [**Report a vulnerability**](https://github.com/wertgzhj/poe-leveling-overlay/security/advisories/new)
 form rather than a public issue. This is a hobby project maintained by one
-person — expect a reply in days, not hours.
+person: expect a reply in days, not hours.
 
 ## What this app actually does
 
@@ -15,7 +15,7 @@ Worth knowing before assessing anything, because it bounds the attack surface:
   regexes against each line. Every other line is discarded immediately. To
   *find* that file on first launch it also looks, read-only, at Steam's library
   list (`libraryfolders.vdf`), Epic's install manifests and one registry value
-  (`HKCU\Software\Valve\Steam` → `SteamPath`) — nothing else, and nothing of
+  (`HKCU\Software\Valve\Steam` → `SteamPath`): nothing else, and nothing of
   it leaves the machine.
 - It **never writes to, injects into, or sends anything to** the Path of Exile
   process. No memory access, no simulated input, no automation.
@@ -27,7 +27,7 @@ Worth knowing before assessing anything, because it bounds the attack surface:
   an explicitly allow-listed IPC surface (`electron/channels.ts`, exposed via
   `electron/preload.ts`).
 - No window may navigate away from its own page, open another window, embed a
-  webview, or get a permission (camera, microphone, notifications, …) —
+  webview, or get a permission (camera, microphone, notifications, …):
   `electron/security.ts` refuses all of it for every window the app creates.
 - The packaged app has its Electron fuses set: it can't be run as a plain
   Node.js runtime, ignores `NODE_OPTIONS` and `--inspect`, and only loads its
@@ -54,7 +54,7 @@ superseded by a higher one rather than withdrawn).
 ## Where a release comes from
 
 Releases are built by the *Build Windows* workflow on GitHub's runners from the
-tagged commit — never on a personal machine. Each one carries `SHA256SUMS.txt`
+tagged commit, never on a personal machine. Each one carries `SHA256SUMS.txt`
 and a signed build-provenance attestation:
 `gh attestation verify <file>.exe -R wertgzhj/poe-leveling-overlay` shows the
 workflow and commit it came from. The workflows' actions are pinned to commit
@@ -68,6 +68,6 @@ person; it has had no outside audit. Pull requests from others aren't accepted.
 - **The Windows build is unsigned.** SmartScreen warns on first run. Code
   signing needs a paid certificate; until then, only download releases from
   this repository and take the warning seriously anywhere else.
-- **Dependency advisories.** `npm audit --omit=dev` — the code that actually
-  ships — must be clean for CI to pass. Build-time tools are audited too, but an
+- **Dependency advisories.** `npm audit --omit=dev` (the code that actually
+  ships) must be clean for CI to pass. Build-time tools are audited too, but an
   advisory there doesn't block: it runs on the build machine, not in any release.

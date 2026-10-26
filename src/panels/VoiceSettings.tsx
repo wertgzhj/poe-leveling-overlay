@@ -64,7 +64,7 @@ export function VoiceSettings(): React.JSX.Element {
       </div>
       {voices.length === 0 && (
         <p className="mt-1 text-[10px] text-warn">
-          ⚠ No {announce.lang === 'de' ? 'German' : 'English'} voice installed — Windows: Settings → Time & language →
+          ⚠ No {announce.lang === 'de' ? 'German' : 'English'} voice installed. Windows: Settings → Time & language →
           Speech → Add voices.
         </p>
       )}
@@ -101,7 +101,7 @@ export function VoiceSettings(): React.JSX.Element {
         ))}
       </div>
       <p className="mt-1.5 text-[10px] text-overlay-muted">
-        Said once, when it happens — not on a restart, not again when you walk back into a zone. Spoken by
+        Said once, when it happens: not on a restart, not again when you walk back into a zone. Spoken by
         Windows’ own voices on this PC; the game hears nothing of it.
       </p>
     </>
