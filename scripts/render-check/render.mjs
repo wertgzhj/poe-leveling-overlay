@@ -55,6 +55,7 @@ function within(ms, what, promise) {
 app.commandLine.appendSwitch('force-device-scale-factor', '1')
 
 async function shoot(index, scenario) {
+  if (scenario.editor) return shootEditor(index, scenario)
   const win = new BrowserWindow({
     show: false,
     width: 380,
@@ -100,6 +101,43 @@ async function shoot(index, scenario) {
           }
           setTimeout(press, then ? 100 : 0)
         } else setTimeout(tick, 50)
+      }
+      tick()
+    })
+  `)
+  const image = await win.webContents.capturePage()
+  win.destroy()
+  return image.toPNG()
+}
+
+// The editor window, on its Profile tab: wait for the text the scenario names,
+// scroll it to the top, shoot.
+async function shootEditor(index, scenario) {
+  const win = new BrowserWindow({
+    show: false,
+    width: 900,
+    height: 1100,
+    backgroundColor: '#0e1118',
+    useContentSize: true,
+    webPreferences: {
+      preload: join(here, 'bridge.cjs'),
+      contextIsolation: false,
+      sandbox: false,
+      additionalArguments: [`--render-scenario=${scenariosFile}#${index}`]
+    }
+  })
+  await win.webContents.session.clearStorageData({ storages: ['localstorage'] })
+  await win.loadFile(join(root, 'out/renderer/editor/index.html'), { query: { tab: 'profile' } })
+  await win.webContents.executeJavaScript(`
+    new Promise((resolve, reject) => {
+      const text = ${JSON.stringify(scenario.editor.scrollTo)}
+      const start = Date.now()
+      const tick = () => {
+        if (Date.now() - start > 20000) return reject(new Error('the editor never showed ' + text + ': ' + document.body.innerText.slice(0, 200)))
+        const el = [...document.querySelectorAll('h1, h2, h3, summary, button, p')].find((e) => e.textContent.trim() === text)
+        if (!el) return setTimeout(tick, 50)
+        el.scrollIntoView({ block: 'start' })
+        document.fonts.ready.then(() => setTimeout(resolve, 300))
       }
       tick()
     })

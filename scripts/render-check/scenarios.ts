@@ -17,8 +17,24 @@ import {
   resolveStage,
   type AcquisitionContext
 } from '../../electron/profile/engine.ts'
-import type { ChoiceDue, GuideState, LogSnapshot, PantheonStatus, PassivesView, ProfileSnapshot } from '../../electron/channels.ts'
-import { TreeData, classStartNode, passivesView, planFromSpecs, type TreeFile } from '../../electron/profile/tree.ts'
+import type {
+  ChoiceDue,
+  GuideState,
+  LogSnapshot,
+  PantheonStatus,
+  PassivesView,
+  PlanCheck,
+  ProfileSnapshot
+} from '../../electron/channels.ts'
+import {
+  TreeData,
+  checkPlan,
+  classStartNode,
+  passivesView,
+  planFromSpecs,
+  type PassivePlan,
+  type TreeFile
+} from '../../electron/profile/tree.ts'
 import { passiveMap, type PassiveMap } from '../../electron/profile/tree-map.ts'
 import { vendorSearch } from '../../electron/profile/search.ts'
 import type { TrialsSnapshot } from '../../electron/trials/engine.ts'
@@ -200,9 +216,21 @@ const guide: GuideState = {
 const bandit: ChoiceDue = { id: 'bandit', wants: 'help Alira', options: ['help Alira', 'help Kraityn', 'help Oak', 'kill all three'] }
 const crypt = log('The Chamber of Sins Level 2', '1_2_9_2', 15, 22)
 
+/** The editor window instead of the overlay: its Profile tab on one profile. */
+export interface EditorScenario {
+  /** the file the editor opens */
+  profile: Profile
+  /** what main answers for its passive tree (checkPlan) */
+  passivesCheck: PlanCheck | null
+  /** text of the element to scroll to before the shot */
+  scrollTo: string
+}
+
 /** One screenshot each. `tab` is clicked after load; `settings` opens Settings. */
 export interface Scenario {
   name: string
+  /** shoot the editor window, not the overlay */
+  editor?: EditorScenario
   /** a tab — or, in Settings, a section heading — to click first */
   tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy'
   /** a button to press after the tab, by (part of) its text */
@@ -351,7 +379,27 @@ const scenarios: Scenario[] = [
     guide
   },
   // The panel at 40 % opacity over the dark stand-in for the game.
-  { name: 'gems-opacity40', tab: 'Gems', opacity: 0.4, profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide }
+  { name: 'gems-opacity40', tab: 'Gems', opacity: 0.4, profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
+  // The editor's Passive tree section: a node moved ahead of the way to it
+  // gets its ⚠, and its stage's fold opens by itself.
+  {
+    name: 'editor-passives',
+    editor: (() => {
+      const plan: PassivePlan = structuredClone(marauderPlan)
+      // the first stage's last node, to its front
+      const take = plan.stages[0].take
+      take.unshift(take.pop()!)
+      return {
+        profile: { ...profile, passives: plan },
+        passivesCheck: checkPlan(plan, tree, classStartNode(tree, 'Marauder')),
+        scrollTo: 'Passive tree'
+      }
+    })(),
+    profile: { ...profileSnapshot(3, 22, 2), library: [{ id: 'berserker', path: 'berserker.json', name: 'Berserker', stages: 4, errors: [] }], activeId: 'berserker' },
+    log: crypt,
+    trials,
+    guide
+  }
 ]
 
 const outDir = process.argv[2] ?? join(root, 'out/render-check')
