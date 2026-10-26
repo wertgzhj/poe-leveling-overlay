@@ -23,6 +23,7 @@ This is the constraint everything else is designed around.
 | A separate overlay window on top of the game | Reading game memory, injection, process hooks |
 | Reading `Client.txt`, the game's own log file | Sending simulated input to the game |
 | Showing data, and hotkeys that control the overlay | Automating any part of gameplay |
+| Saying it out loud (system voices, Settings → Voice) | |
 
 The app **only reads** and **sends nothing** to the Path of Exile process.
 Hotkeys act on the overlay alone — note that a global hotkey is consumed
@@ -214,6 +215,18 @@ replaces only those, an empty clipboard, or a lone quoted search line
 (`mayOverwrite`) — never a whisper, item or link you copied. That guard is a
 setting too (*Keep what you copied yourself*, on by default).
 
+### Spoken announcements — `electron/announce.ts`
+
+Main watches what the overlay already knows — the zone, the trials, the
+profile snapshot, the zone's level against yours — after each zone, level-up
+and finished trial, and `Announcer` (`announce-rules.ts`, pure) turns it into
+news: only changes, never the state it starts from (a restart, a character
+switch or another profile is a baseline), a trial or costly zone once per
+character. Moments switched on in Settings → *Voice* are worded there
+(`phrase`, English or German) and sent to the overlay window, which speaks
+them with the chosen system voice (`src/lib/speak.ts`), queued, never over
+each other.
+
 ### Build profiles — JSON, one per build
 
 **Where they live.** Every profile is its own file in `userData/profiles/`,
@@ -313,6 +326,7 @@ No server, no account, no telemetry, no analytics, no crash reporting.
 | Debug panel | Parsed events only, in memory, dev builds only, never written to disk. |
 | Log fixtures | Raw `Client.txt` excerpts are never committed. `scripts/sanitize-fixtures.ts` replaces character names and strips account names, chat, whispers and instance-server IP addresses first. |
 | Settings & profiles | Local only. No personal data beyond file paths and the optional in-game character name. |
+| Spoken announcements | The overlay window speaks through the system's installed voices (`speechSynthesis`); the text is built in main from what the overlay already shows. Nothing is sent anywhere, and nothing is spoken until a moment is switched on. |
 | Recorded runs | Local only (`runs.json`), and only while the run timer is switched on: area ids and names, load times, your character's name and levels, deaths, claimed skill points, Labyrinths and Pantheon gods. |
 | Electron hardening | `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, a CSP, allow-listed IPC, no remote content in windows. Every window is held to its own page: navigation elsewhere, `window.open`, webviews and permission requests are refused (`electron/security.ts`, rules in `navigation.ts`). |
 | Imports | PoB links: 4 MB download cap, read as a stream; redirects must stay on the paste host. PoB codes: 16 MB cap on what they unpack to. |

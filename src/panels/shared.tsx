@@ -101,3 +101,25 @@ export function GemName({ name }: { name: string }): React.JSX.Element {
   const shown = useGemName()(name)
   return shown === name ? <>{name}</> : <span title={name}>{shown}</span>
 }
+
+/** An on/off switch. */
+export function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }): React.JSX.Element {
+  return (
+    <button
+      onClick={() => onChange(!on)}
+      className={
+        'relative h-4 w-7 rounded-full transition-colors ' +
+        (on ? 'bg-overlay-accent/60' : 'bg-white/15')
+      }
+      role="switch"
+      aria-checked={on}
+    >
+      <span
+        className={
+          'absolute top-0.5 h-3 w-3 rounded-full bg-overlay-text transition-all ' +
+          (on ? 'left-3.5' : 'left-0.5')
+        }
+      />
+    </button>
+  )
+}

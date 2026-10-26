@@ -78,6 +78,10 @@ export const Channels = {
   clipboardCopyPassive: 'clipboard:copy-passive',
   /** main -> renderer: a search was copied — by a click, a hotkey or on its own */
   searchCopied: 'search:copied',
+  /** main -> renderer: say this (text, language, voice, volume) — announce.ts */
+  announceSpeak: 'announce:speak',
+  /** renderer -> main: say an example of one moment (Settings → Voice) */
+  announceTest: 'announce:test',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
   /** renderer -> main (invoke): current guide state */
@@ -294,6 +298,16 @@ export interface PantheonStatus {
 
 export type { PassivesView, PassiveNodeView, PlanCheck, PlanRow } from './profile/tree.ts'
 export type { PassiveMap, MapNode, MapLink } from './profile/tree-map.ts'
+export type { AnnounceEvent, AnnounceLang, AnnounceSettings } from './announce-rules.ts'
+
+/** One announcement, worded, for the overlay window to speak. */
+export interface Spoken {
+  text: string
+  lang: 'en' | 'de'
+  /** a system voice by name; '' = the first one for the language */
+  voice: string
+  volume: number
+}
 
 /** A one-shot build decision you've reached the point for (profile/run.ts). */
 export type { ChoiceDue } from './profile/run.ts'

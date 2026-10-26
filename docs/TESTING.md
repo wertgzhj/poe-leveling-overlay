@@ -401,7 +401,15 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      shows a thin gold outline. The update arrow on the version badge doesn't
      pulse when Windows has animations turned off.
 
-12. **Run timer.** Settings → *Run timer* on: a second window
+12. **Voice.** Settings → *Voice*: every moment is off. ▶ next to each says
+   an example in the chosen language (English / Deutsch) with the voice
+   picked under *Voice* (*Automatic* = the first installed one for the
+   language; none installed: an orange hint where to add one). The slider sets
+   the volume. Switch on *Entering a trial zone*: walk into one you haven't
+   done — it says so once; out and back in — nothing. *New gems to buy*: level
+   into a stage with new purchases — their names. A restart in a trial zone
+   says nothing. Two at once follow each other.
+13. **Run timer.** Settings → *Run timer* on: a second window
    opens in the top-right corner. `Ctrl+Shift+T` (or the tray) hides and
    shows it, and `Ctrl+Shift+O` leaves it be: hide the overlay and the timer
    stays; hide the timer, restart, and it stays hidden. In move mode (`Ctrl+Shift+M`) it drags and its width

@@ -7,6 +7,8 @@ import { Legend } from './gems/Legend'
 import { GemShortNames } from './GemShortNames'
 import { MulePicker } from './MulePicker'
 import { ResizeGrip } from './MainPanel'
+import { Toggle } from './shared'
+import { VoiceSettings } from './VoiceSettings'
 
 type HotkeyField = keyof HotkeyBindingsBridge
 
@@ -557,6 +559,10 @@ export function SettingsPanel(): React.JSX.Element {
             </div>
           </Section>
 
+          <Section id="voice" title="Voice">
+            <VoiceSettings />
+          </Section>
+
           <Section id="timer" title="Run timer">
             <div className="flex items-center justify-between">
               <span className="text-xs text-overlay-text">Record runs and show the timer</span>
@@ -873,23 +879,3 @@ function ActRegexRows({
   )
 }
 
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }): React.JSX.Element {
-  return (
-    <button
-      onClick={() => onChange(!on)}
-      className={
-        'relative h-4 w-7 rounded-full transition-colors ' +
-        (on ? 'bg-overlay-accent/60' : 'bg-white/15')
-      }
-      role="switch"
-      aria-checked={on}
-    >
-      <span
-        className={
-          'absolute top-0.5 h-3 w-3 rounded-full bg-overlay-text transition-all ' +
-          (on ? 'left-3.5' : 'left-0.5')
-        }
-      />
-    </button>
-  )
-}

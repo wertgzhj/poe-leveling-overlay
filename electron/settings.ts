@@ -3,6 +3,7 @@ import type { TrackerSnapshot } from './log/tracker.ts'
 import type { QuestPoints } from './profile/run.ts'
 import type { CopyChoice } from './copy-rules.ts'
 import type { ActRegex } from './search-regex.ts'
+import { DEFAULT_ANNOUNCE, sanitizeAnnounce, type AnnounceSettings } from './announce-rules.ts'
 
 // Persistent, user-editable settings. electron-store writes JSON into the OS
 // userData folder. No personal data beyond local file paths
@@ -80,6 +81,8 @@ export interface AppSettings {
    *  never something you copied (mayOverwrite, copy-rules.ts). On by default; off, it
    *  replaces anything. */
   autoCopyProtect: boolean
+  /** Spoken announcements (announce-rules.ts): every moment off by default. */
+  announce: AnnounceSettings
 }
 
 /** What the renderer may change through the settings channel (see ipc.ts:
@@ -99,6 +102,7 @@ export type SettingsPatch = Partial<
     | 'autoCopyTown'
     | 'autoCopyLevelUp'
     | 'autoCopyProtect'
+    | 'announce'
   >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
@@ -167,6 +171,7 @@ const defaults: StoreSchema = {
   autoCopyTown: 'off',
   autoCopyLevelUp: 'off',
   autoCopyProtect: true,
+  announce: DEFAULT_ANNOUNCE,
   progress: null,
   timerBounds: { width: 260, height: 360 },
   timerShown: true,
@@ -189,6 +194,12 @@ export const store = new Store<StoreSchema>({ name: 'settings', defaults })
  *  inside nested objects. */
 export function getHotkeys(): HotkeyBindings {
   return { ...defaults.hotkeys, ...store.get('hotkeys') }
+}
+
+/** Stored announcement settings made whole — a settings.json from an older
+ *  version lacks newer moments, and a hand-edited one can hold anything. */
+export function getAnnounce(): AnnounceSettings {
+  return sanitizeAnnounce(store.get('announce'))
 }
 
 /** Stored tab visibility merged over defaults (same nested-merge gap as hotkeys),
@@ -229,6 +240,7 @@ export function getSettings(): AppSettings {
     runTimer: store.get('runTimer'),
     autoCopyTown: store.get('autoCopyTown'),
     autoCopyLevelUp: store.get('autoCopyLevelUp'),
-    autoCopyProtect: store.get('autoCopyProtect')
+    autoCopyProtect: store.get('autoCopyProtect'),
+    announce: getAnnounce()
   }
 }

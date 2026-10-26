@@ -4,6 +4,7 @@ import { useDebugStore } from './stores/debugStore'
 import { MainPanel } from './panels/MainPanel'
 import { SettingsPanel } from './panels/SettingsPanel'
 import { DebugPanel } from './panels/DebugPanel'
+import { speak } from './lib/speak'
 
 export function App(): React.JSX.Element {
   const patch = useOverlayStore((s) => s.patch)
@@ -31,7 +32,8 @@ export function App(): React.JSX.Element {
         runTimer: s.runTimer,
         autoCopyTown: s.autoCopyTown,
         autoCopyLevelUp: s.autoCopyLevelUp,
-        autoCopyProtect: s.autoCopyProtect
+        autoCopyProtect: s.autoCopyProtect,
+        announce: s.announce
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()
@@ -57,6 +59,7 @@ export function App(): React.JSX.Element {
       api.onTrialsState((trials) => patch({ trials })),
       api.onUpdateStatus((update) => patch({ update })),
       api.onSearchCopied((kind) => patch({ autoCopied: { kind, at: Date.now() } })),
+      api.onAnnounce(speak),
       api.onAreaEntered((area) => {
         const tracked = store().tracked
         patch({ tracked: { ...(tracked ?? emptyTracked), area } })

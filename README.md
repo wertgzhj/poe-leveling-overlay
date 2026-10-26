@@ -44,6 +44,10 @@ semi-automatically from a Path of Building import.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
   you finish it, telling you when a Labyrinth is ready to run, and noticing when
   you've beaten it.
+- **Says what matters, if you want it to.** Settings → *Voice*: a trial in this
+  zone, new gems to buy, a zone that costs experience, a Labyrinth ready, the
+  bandits or Pantheon due, your next passive — each switched on on its own,
+  in English or German, spoken by Windows' own voices on your PC.
 - **Times your runs, if you want it to.** Switch on Settings → *Run timer* and
   a small window of its own times each campaign from the Twilight Strand to
   Kitava in Act 10: zones, towns, hideout, Labyrinth and loading screens, act
