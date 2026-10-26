@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { BUTTON, button, BUTTON_SIZE, panelSurface, TAG, TAG_TONE } from '../lib/ui'
 import { useOverlayStore } from '../stores/overlayStore'
@@ -69,6 +69,26 @@ function DetectCharButton(): React.JSX.Element {
     </button>
   )
 }
+
+// "Copy searches automatically" (Settings → Search regex) just copied one:
+// say which, for a few seconds, so the clipboard's content is never a guess.
+function AutoCopyNote(): React.JSX.Element | null {
+  const copied = useOverlayStore((s) => s.autoCopied)
+  const [, tick] = useState(0)
+  useEffect(() => {
+    if (!copied) return
+    const t = window.setTimeout(() => tick((n) => n + 1), NOTE_MS)
+    return () => window.clearTimeout(t)
+  }, [copied])
+  if (!copied || Date.now() - copied.at >= NOTE_MS) return null
+  return (
+    <span className="truncate text-[10px] text-ok" title="Copied for you — paste it into the game's search box">
+      ✓ {copied.kind === 'vendor' ? 'Vendor' : copied.kind === 'tree' ? 'Tree' : 'Regex'} copied
+    </span>
+  )
+}
+
+const NOTE_MS = 3000
 
 // One click puts the search regex from Settings on the clipboard; paste it into
 // a stash or vendor search box yourself. Copying is all the overlay does — it
@@ -249,6 +269,7 @@ export function MainPanel(): React.JSX.Element {
                 🐞
               </button>
             )}
+            <AutoCopyNote />
             <RegexButton />
             <button
               className={'no-drag ' + button('quiet', 'sm')}

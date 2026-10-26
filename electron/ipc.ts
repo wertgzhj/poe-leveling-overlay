@@ -1,6 +1,9 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain } from 'electron'
+import { copyText } from './clipboard.ts'
 import { Channels, type AppInfo, type SettingsSetResult } from './channels'
 import {
+  AUTO_COPY_TOWN,
+  type AutoCopyTown,
   getHotkeys,
   getSettings,
   sanitizeVisibleTabs,
@@ -88,6 +91,8 @@ export function registerIpc(
     if ('gemNames' in patch) {
       store.set('gemNames', sanitizeGemNames(patch.gemNames, (gem) => profile.canonicalGemName(gem)))
     }
+    if (AUTO_COPY_TOWN.includes(patch.autoCopyTown as AutoCopyTown)) store.set('autoCopyTown', patch.autoCopyTown!)
+    if (typeof patch.autoCopyLevelUp === 'boolean') store.set('autoCopyLevelUp', patch.autoCopyLevelUp)
     if (typeof patch.runTimer === 'boolean') {
       store.set('runTimer', patch.runTimer)
       timer.setEnabled(patch.runTimer)
@@ -130,31 +135,31 @@ export function registerIpc(
 
   // Clipboard only. Pasting into the game is the player's own keystroke — the
   // overlay never types into it (docs/ARCHITECTURE.md#tos-position).
-  ipcMain.handle(Channels.clipboardCopySearchRegex, (): boolean => {
+  ipcMain.handle(Channels.clipboardCopySearchRegex, async (): Promise<boolean> => {
     const regex = store.get('searchRegex')
     if (!regex) return false
-    clipboard.writeText(regex)
+    await copyText(regex)
     return true
   })
 
-  ipcMain.handle(Channels.clipboardCopyPassive, (_e, id: unknown): boolean => {
+  ipcMain.handle(Channels.clipboardCopyPassive, async (_e, id: unknown): Promise<boolean> => {
     const name = typeof id === 'number' ? profile.tree?.node(id)?.name : undefined
     if (!name) return false
-    clipboard.writeText(name)
+    await copyText(name)
     return true
   })
 
-  ipcMain.handle(Channels.clipboardCopyVendorSearch, (): boolean => {
+  ipcMain.handle(Channels.clipboardCopyVendorSearch, async (): Promise<boolean> => {
     const regex = profile.vendorSearch()
     if (!regex) return false
-    clipboard.writeText(regex)
+    await copyText(regex)
     return true
   })
 
-  ipcMain.handle(Channels.clipboardCopyTreeSearch, (): boolean => {
+  ipcMain.handle(Channels.clipboardCopyTreeSearch, async (): Promise<boolean> => {
     const regex = profile.treeSearch()
     if (!regex) return false
-    clipboard.writeText(regex)
+    await copyText(regex)
     return true
   })
 

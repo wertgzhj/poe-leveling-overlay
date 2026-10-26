@@ -30,7 +30,9 @@ const answers = {
       visibleTabs: { guide: true, gems: true, trials: true },
       searchRegex: s.regex ?? '',
       gemNames: s.gemNames ?? {},
-      runTimer: false
+      runTimer: false,
+      autoCopyTown: 'off',
+      autoCopyLevelUp: false
     }),
   gemNameList: () => ok(['Cast when Damage Taken Support', 'Melee Physical Damage Support', 'Sunder']),
   getAppInfo: () => ok({ version: '0.0.0', electron: process.versions.electron, isDev: false }),

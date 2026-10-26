@@ -12,6 +12,7 @@ import { UpdateService } from './update/service.ts'
 import { TimerService } from './timer/service.ts'
 import { TimerWindow } from './timer-window.ts'
 import { denyPermissions, hardenWebContents } from './security.ts'
+import { AutoCopyService } from './autocopy.ts'
 
 // Set to a number of ms via SMOKE=<ms> to auto-quit after startup — used by the
 // headless launch check in CI/dev to prove the app boots without a display.
@@ -27,6 +28,7 @@ profileService.attachEditor(editorWindow)
 const updateService = new UpdateService(overlay)
 const timerWindow = new TimerWindow()
 const timerService = new TimerService(logService, timerWindow)
+new AutoCopyService(logService, profileService, overlay)
 overlay.addStateListener((state) => timerWindow.follow(state))
 let tray: ReturnType<typeof createTray> = null
 

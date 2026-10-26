@@ -20,6 +20,11 @@ interface OverlayStore {
   gemNames: Record<string, string>
   /** The run timer is on: it records runs and shows its window. */
   runTimer: boolean
+  autoCopyTown: 'off' | 'vendor' | 'regex'
+  autoCopyLevelUp: boolean
+  /** The last search copied without a click, and when — the header says so
+   *  for a moment. */
+  autoCopied: { kind: 'vendor' | 'tree' | 'regex'; at: number } | null
   // log tracking
   logStatus: WatcherStatusBridge | null
   tracked: TrackerStateBridge | null
@@ -66,6 +71,9 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   searchRegex: '',
   gemNames: {},
   runTimer: false,
+  autoCopyTown: 'off',
+  autoCopyLevelUp: false,
+  autoCopied: null,
   logStatus: null,
   tracked: null,
   languageMismatch: false,

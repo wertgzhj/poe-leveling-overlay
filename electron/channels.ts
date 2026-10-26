@@ -82,6 +82,8 @@ export const Channels = {
   /** renderer -> main (invoke): copy the gems to buy as a vendor-search regex
    *  (computed in main from the profile) */
   clipboardCopyVendorSearch: 'clipboard:copy-vendor-search',
+  /** main -> renderer: a search was copied without a click ("vendor" | "tree" | "regex") */
+  searchAutoCopied: 'search:auto-copied',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
   /** renderer -> main (invoke): current guide state */
@@ -349,3 +351,6 @@ export type UpdateStatus =
    *  still running). Retried on the next check; not a failure. */
   | { state: 'publishing'; version: string | null }
   | { state: 'error'; message: string }
+
+/** The searches the overlay copies for the game's search boxes. */
+export type SearchKind = 'vendor' | 'tree' | 'regex'
