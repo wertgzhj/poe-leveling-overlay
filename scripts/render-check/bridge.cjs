@@ -32,6 +32,7 @@ const answers = {
       logLanguage: 'en',
       visibleTabs: { guide: true, gems: true, trials: true },
       searchRegex: s.regex ?? '',
+      actRegexes: s.actRegexes ?? [],
       gemNames: s.gemNames ?? {},
       runTimer: false,
       autoCopyTown: 'off',

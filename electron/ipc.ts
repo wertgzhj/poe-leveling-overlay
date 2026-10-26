@@ -12,7 +12,7 @@ import {
   type HotkeyBindings
 } from './settings'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
-import { normalizeSearchRegex } from './search-regex.ts'
+import { normalizeSearchRegex, sanitizeActRegexes } from './search-regex.ts'
 import { sanitizeGemNames } from './gem-names.ts'
 import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
@@ -89,6 +89,7 @@ export function registerIpc(
     if ('searchRegex' in patch) {
       store.set('searchRegex', normalizeSearchRegex(patch.searchRegex))
     }
+    if ('actRegexes' in patch) store.set('actRegexes', sanitizeActRegexes(patch.actRegexes))
     if ('gemNames' in patch) {
       store.set('gemNames', sanitizeGemNames(patch.gemNames, (gem) => profile.canonicalGemName(gem)))
     }

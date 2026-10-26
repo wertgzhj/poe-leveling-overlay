@@ -90,14 +90,16 @@ function AutoCopyNote(): React.JSX.Element | null {
 
 const NOTE_MS = 3000
 
-// One click puts the search regex from Settings on the clipboard; paste it into
-// a stash or vendor search box yourself. Copying is all the overlay does — it
-// never types into the game (docs/ARCHITECTURE.md#tos-position). Absent until a
-// regex is set, rather than a button that explains it has nothing to do.
+// One click puts the search regex from Settings on the clipboard — the one for
+// the act you've reached, if you keep one for it; paste it into a stash or
+// vendor search box yourself. Copying is all the overlay does — it never types
+// into the game (docs/ARCHITECTURE.md#tos-position). Absent until a regex is
+// set, rather than a button that explains it has nothing to do.
 function RegexButton(): React.JSX.Element | null {
   const regex = useOverlayStore((s) => s.searchRegex)
+  const perAct = useOverlayStore((s) => s.actRegexes.length > 0)
   const [flash, setFlash] = useState<'copied' | 'failed' | null>(null)
-  if (!regex) return null
+  if (!regex && !perAct) return null
   const onClick = (): void => {
     void window.overlay?.copySearch('regex').then((ok) => {
       setFlash(ok ? 'copied' : 'failed')
@@ -107,7 +109,11 @@ function RegexButton(): React.JSX.Element | null {
   return (
     <button
       onClick={onClick}
-      title={`Copy to clipboard, then paste into a stash or vendor search:\n${regex}`}
+      title={
+        'Copy to clipboard, then paste into a stash or vendor search' +
+        // which act's it is, only the main process knows (the act you've reached)
+        (perAct ? ' — your regex for the act you are in.' : `:\n${regex}`)
+      }
       className={
         // Fixed width: "✓ copied" is wider than "Regex", and the flash must not
         // shove the ⚙ next to it sideways.

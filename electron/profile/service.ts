@@ -438,6 +438,11 @@ export class ProfileService {
     return this.current().vendorSearch
   }
 
+  /** The act the tracked character has reached (null before the log says). */
+  act(): number | null {
+    return this.runs.act(this.character)
+  }
+
   /** The snapshot last pushed — what the overlay shows, so a copy is exactly
    *  that — or a fresh one before the first push. Every change that moves a
    *  search pushes, so it's never behind what's on screen. */

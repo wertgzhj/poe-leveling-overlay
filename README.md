@@ -55,7 +55,9 @@ semi-automatically from a Path of Building import.
 - **Ticks your Pantheon gods by itself** as they fall.
 - **Keeps your search regex one click away.** Store a stash or vendor search
   string in Settings, and a **Regex** button in the header copies it — paste it
-  into the game yourself. The overlay never types into the game.
+  into the game yourself. The overlay never types into the game. Keep a
+  different one for some acts (*Per act*) — 2-3 links stop mattering a few acts
+  in — and the button copies the one for the act you've reached.
 - **Updates itself.** One click when a new version is ready.
 - **A route guide you write yourself** — the app ships the engine and an in-app
   editor; the campaign route is yours (see [Author your route](#author-your-route)).
