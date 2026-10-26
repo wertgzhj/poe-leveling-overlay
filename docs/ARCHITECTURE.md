@@ -219,7 +219,10 @@ routinely socket the same support twice, so the name alone is not an identity.
 
 The active stage follows the tracked character's level, with the next one shown
 as a preview. From this the app derives the shopping list and the reward
-recommendation per quest.
+recommendation per quest — and, for the game's search boxes, the gems to buy
+now as one quoted regex (`electron/profile/search.ts`, shared with the tree's:
+quoted so the box doesn't split it at spaces, at most 250 characters, whole
+names only).
 
 ## Things that shaped the design
 

@@ -27,7 +27,8 @@ semi-automatically from a Path of Building import.
   optional mule (a throwaway level-1 alt) is planned in. Settings → *Gems tab*
   explains every colour in words, and takes your own **short names** for gems —
   `CwDT` instead of Cast when Damage Taken — shown in the Gems tab with the full
-  name in the tooltip.
+  name in the tooltip. *Vendor* copies the gems to buy now as one search, to
+  paste into the vendor's search box: they light up in its stock.
 - **Imports your Path of Building build** — paste an export code or a `pobb.in`
   link and it writes the stages for you.
 - **Says which passive to take next.** A build's PoB trees (one per levelling

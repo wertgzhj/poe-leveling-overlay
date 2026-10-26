@@ -91,7 +91,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    trip to Settings. The tab shows the current stage's links with colours
    and flips stages on level-up, the moment the level enters the next range.
    Close and reopen mid-session: it must show the correct stage immediately, not
-   stage 1 until the next level-up.
+   stage 1 until the next level-up. With gems to buy, *Vendor* sits next to
+   "Get these gems": paste it into the vendor's search and exactly those gems
+   light up in the stock (supports found without " Support").
 
    The tab reads in three columns — cost, gem, source — and they are one set of
    columns for the whole tab, so check them against each other rather than each

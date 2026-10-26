@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { button, HEADING } from '../../lib/ui'
+import { HEADING } from '../../lib/ui'
+import { SearchButton } from './SearchButton'
 
 // The passive tree under the gems: the node for your next point (its stats in
 // the tooltip — under it they were more than anyone reads mid-run), the few after
@@ -18,7 +19,16 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
       <div className="mb-1 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2">
           <span className={HEADING + 'text-overlay-muted'}>Passives</span>
-          {view.treeSearch && <TreeButton regex={view.treeSearch} />}
+          {/* the notables and masteries around your next points, for the tree's
+              search box; small nodes' names repeat all over the tree */}
+          {view.treeSearch && (
+            <SearchButton
+              label="Tree"
+              regex={view.treeSearch}
+              what="the passive tree's"
+              copy={() => window.overlay?.copyTreeSearch()}
+            />
+          )}
         </span>
         <span className="truncate text-[10px] text-overlay-muted" title={pointsTitle}>
           {/* the PoB tree the next points build towards */}
@@ -71,31 +81,6 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
 }
 
 const LAB_NAMES = ['Normal', 'Cruel', 'Merciless', 'Eternal']
-
-/** Copies this stage's notables, keystones and masteries as one regex for the
- *  tree's search box — it lights the stage's targets at once instead of a copy
- *  per node. Small nodes aren't in it: their names repeat all over the tree. */
-function TreeButton({ regex }: { regex: string }): React.JSX.Element {
-  const [flash, setFlash] = useState(false)
-  const copy = (): void => {
-    void window.overlay?.copyTreeSearch().then((ok) => {
-      if (!ok) return
-      setFlash(true)
-      window.setTimeout(() => setFlash(false), 1200)
-    })
-  }
-  return (
-    <button
-      onClick={copy}
-      title={`Copy, then paste into the passive tree's search — it lights the notables and masteries around your next points:\n${regex}`}
-      // The block's one action, so it looks like one; fixed width so the
-      // "✓ copied" flash doesn't shift the heading.
-      className={'min-w-[4.5rem] text-center ' + button('primary', 'md') + (flash ? '!text-ok' : '')}
-    >
-      {flash ? '✓ copied' : 'Tree'}
-    </button>
-  )
-}
 
 function NodeList({ nodes, arrows }: { nodes: PassiveNodeViewBridge[]; arrows?: boolean }): React.JSX.Element {
   return (

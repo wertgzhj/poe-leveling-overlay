@@ -6,6 +6,7 @@ import { useOverlayStore } from '../../stores/overlayStore'
 import { article, ErrorBox } from '../shared'
 import { SocketGroup } from './LinkGroup'
 import { Passives } from './Passives'
+import { SearchButton } from './SearchButton'
 import { BuyRow, RewardGroupRow } from './PlanRows'
 
 // The Gems tab: what to socket at your level, and where each gem comes from.
@@ -144,13 +145,19 @@ export function GemBody(): React.JSX.Element {
               (atReward ? 'border-overlay-accent/50 bg-overlay-accent/10' : 'border-overlay-border/60 bg-black/20')
             }
           >
-            <div
-              className={
-                'col-span-3 ' + HEADING +
-                (atReward ? 'text-overlay-accent' : 'text-overlay-muted')
-              }
-            >
-              Get these gems
+            <div className="col-span-3 flex items-center justify-between gap-2">
+              <span className={HEADING + (atReward ? 'text-overlay-accent' : 'text-overlay-muted')}>
+                Get these gems
+              </span>
+              {/* the gems to buy now, for the vendor's search box */}
+              {profile.vendorSearch && (
+                <SearchButton
+                  label="Vendor"
+                  regex={profile.vendorSearch}
+                  what="the vendor's"
+                  copy={() => window.overlay?.copyVendorSearch()}
+                />
+              )}
             </div>
             {/* Rows render bare cells into this grid, so the columns line up
                 across every row. Dimming a "later" row happens per cell: a
