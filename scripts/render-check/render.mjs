@@ -134,7 +134,7 @@ async function shootEditor(index, scenario) {
       const start = Date.now()
       const tick = () => {
         if (Date.now() - start > 20000) return reject(new Error('the editor never showed ' + text + ': ' + document.body.innerText.slice(0, 200)))
-        const el = [...document.querySelectorAll('h1, h2, h3, summary, button, p')].find((e) => e.textContent.trim() === text)
+        const el = [...document.querySelectorAll('h1, h2, h3, summary, button, p')].find((e) => e.textContent.trim().startsWith(text))
         if (!el) return setTimeout(tick, 50)
         el.scrollIntoView({ block: 'start' })
         document.fonts.ready.then(() => setTimeout(resolve, 300))

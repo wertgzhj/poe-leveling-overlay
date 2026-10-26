@@ -9,6 +9,7 @@ import {
   classStartNode,
   orderNodes,
   planPosition,
+  resortAscendancy,
   resortStage,
   passivesView,
   planFromSpecs,
@@ -408,4 +409,20 @@ test('no map once the plan is done, or without positions', () => {
   const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2] }] }
   assert.equal(passiveMap(plan, placed(), 5, 1, 1.5), null)
   assert.equal(passiveMap({ tree: '3_29', stages: [{ take: [5, 6] }] }, tiny(), 0, 1, 1.5), null)
+})
+
+test('the ascendancy is checked from its own start, and re-sorts to walking order', () => {
+  const tree = tiny()
+  // Asc two (22) hangs off Asc one (21), which hangs off the start (20)
+  const backwards: PassivePlan = { tree: '3_29', stages: [], ascendancy: [22, 21] }
+  const check = checkPlan(backwards, tree, 1)
+  assert.deepEqual(
+    check.ascendancy.map((r) => [r.name, r.unlinked]),
+    [
+      ['Asc two', true],
+      ['Asc one', false]
+    ]
+  )
+  assert.deepEqual(names(tree, resortAscendancy(backwards, tree)), ['Asc one', 'Asc two'])
+  assert.deepEqual(checkPlan({ tree: '3_29', stages: [] }, tree, 1).ascendancy, [])
 })

@@ -102,6 +102,18 @@ export function movePassive(plan: PassivePlan, stage: number, from: number, to: 
 
 const byNumber = (a: number, b: number): number => a - b
 
+/** An ascendancy node moved within the ascendancy list. */
+export function moveAscendancy(plan: PassivePlan, from: number, to: number): PassivePlan {
+  return plan.ascendancy ? setAscendancyOrder(plan, moveItem(plan.ascendancy, from, to)) : plan
+}
+
+/** The ascendancy nodes in a new order — the same nodes, or nothing changes. */
+export function setAscendancyOrder(plan: PassivePlan, order: number[]): PassivePlan {
+  const now = plan.ascendancy ?? []
+  if (order.length !== now.length || [...order].sort(byNumber).join() !== [...now].sort(byNumber).join()) return plan
+  return { ...plan, ascendancy: order }
+}
+
 /** A stage's nodes in a new order — the same nodes, or nothing changes. A
  *  mastery's pick is keyed by node id, so it moves along by itself. */
 export function setStageOrder(plan: PassivePlan, stage: number, take: number[]): PassivePlan {

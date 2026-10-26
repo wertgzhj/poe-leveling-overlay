@@ -410,6 +410,8 @@ export interface PlanRow extends PassiveNodeView {
 /** The editor's view of a plan: every stage's nodes, in order, checked. */
 export interface PlanCheck {
   stages: Array<{ label?: string; take: PlanRow[]; refund: PassiveNodeView[] }>
+  /** the ascendancy nodes, two per Labyrinth, checked from the ascendancy's own start */
+  ascendancy: PlanRow[]
 }
 
 /**
@@ -429,7 +431,34 @@ export function checkPlan(plan: PassivePlan, tree: TreeData, start: number | und
     })
     return { ...(s.label ? { label: s.label } : {}), take, refund: (s.refund ?? []).map((id) => tree.view(id)) }
   })
-  return { stages }
+  const asc = plan.ascendancy ?? []
+  const ascStart = ascendancyStart(tree, asc)
+  const ascHave = new Set<number>(ascStart != null ? [ascStart] : [])
+  const ascendancy = asc.map((id) => {
+    const row: PlanRow = { ...tree.view(id), unlinked: ascStart != null && !linked(tree, ascHave, id) }
+    ascHave.add(id)
+    return row
+  })
+  return { stages, ascendancy }
+}
+
+/** The start of the ascendancy the plan's ascendancy nodes belong to. */
+function ascendancyStart(tree: TreeData, ids: number[]): number | undefined {
+  const name = ids.map((id) => tree.node(id)?.ascendancy).find((a) => a != null)
+  if (name == null) return undefined
+  for (const id of tree.ids()) {
+    const n = tree.node(id)
+    if (n?.kind === 'ascendancyStart' && n.ascendancy === name) return id
+  }
+  return undefined
+}
+
+/** The ascendancy nodes back in the worked-out order: from the ascendancy's
+ *  start, the nearest notable first, every node on the way. */
+export function resortAscendancy(plan: PassivePlan, tree: TreeData): number[] {
+  const asc = plan.ascendancy ?? []
+  const start = ascendancyStart(tree, asc)
+  return orderNodes(tree, new Set(start != null ? [start] : []), asc)
 }
 
 function linked(tree: TreeData, have: Set<number>, id: number): boolean {

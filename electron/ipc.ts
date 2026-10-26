@@ -231,8 +231,8 @@ export function registerIpc(
     p && typeof p.charClass === 'string' ? profile.checkPassives(p.plan, p.charClass) : null
   )
   ipcMain.handle(Channels.editorPassivesResort, (_e, p: { plan?: unknown; charClass?: unknown; stage?: unknown }) =>
-    p && typeof p.charClass === 'string' && Number.isInteger(p.stage)
-      ? profile.resortPassives(p.plan, p.charClass, p.stage as number)
+    p && typeof p.charClass === 'string' && (Number.isInteger(p.stage) || p.stage === 'ascendancy')
+      ? profile.resortPassives(p.plan, p.charClass, p.stage as number | 'ascendancy')
       : null
   )
   ipcMain.handle(Channels.editorExportRoutes, (): string => exportRoutes(routesForExport()))

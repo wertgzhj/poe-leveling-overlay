@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import type { PassivePlan } from '../electron/profile/tree.ts'
-import { movePassive, setStageOrder } from './model'
+import { moveAscendancy, movePassive, setAscendancyOrder, setStageOrder } from './model'
 import { Btn } from './ui'
 
 // The order of a build's passive points, stage by stage — the import works it
 // out (nearest notable first), and here it can be changed. Which nodes a
 // stage takes comes from the PoB build and isn't edited here: re-import for
-// that. The main process has the tree, so it names the nodes, checks the order
-// against the tree and re-sorts a stage (ipc.ts → tree.ts checkPlan/resortStage).
+// that. The ascendancy's nodes are one list of their own, two per Labyrinth.
+// The main process has the tree, so it names the nodes, checks the order
+// against the tree and re-sorts (ipc.ts → tree.ts checkPlan, resortStage,
+// resortAscendancy).
 
 export function PassivesEditor({
   plan,
@@ -30,9 +32,10 @@ export function PassivesEditor({
     }
   }, [plan, charClass])
 
-  const resort = (stage: number): void => {
-    void window.overlay?.editorPassivesResort(plan, charClass, stage).then((take) => {
-      if (take) onChange(setStageOrder(plan, stage, take))
+  const resort = (stage: number | 'ascendancy'): void => {
+    void window.overlay?.editorPassivesResort(plan, charClass, stage).then((order) => {
+      if (!order) return
+      onChange(stage === 'ascendancy' ? setAscendancyOrder(plan, order) : setStageOrder(plan, stage, order))
     })
   }
 
@@ -47,10 +50,14 @@ export function PassivesEditor({
 
   // A move shows once main has checked the new order; until then the list is
   // the old one, and a second click on it would move the wrong node.
-  const pending = check.stages.some((s, i) => s.take.map((r) => r.id).join() !== plan.stages[i]?.take.join())
+  const ids = (rows: PlanRowBridge[]): string => rows.map((r) => r.id).join()
+  const pending =
+    check.stages.some((s, i) => ids(s.take) !== plan.stages[i]?.take.join()) ||
+    ids(check.ascendancy) !== (plan.ascendancy ?? []).join()
 
   // Point numbers run across the stages, the way the overlay counts them.
   const firsts = check.stages.map((_, si) => check.stages.slice(0, si).reduce((n, s) => n + s.take.length, 0))
+  const ascBad = check.ascendancy.filter((r) => r.unlinked).length
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-overlay-muted">
@@ -63,64 +70,104 @@ export function PassivesEditor({
         const last = first + stage.take.length
         const bad = stage.take.filter((r) => r.unlinked).length
         return (
-          <details
-            key={si}
-            open={bad > 0}
-            className="rounded-md border border-overlay-border bg-overlay-panel/60 p-2"
-          >
-            <summary className="cursor-pointer text-sm">
-              <span className="font-semibold">{stage.label ?? `Stage ${si + 1}`}</span>
-              <span className="text-xs text-overlay-muted">
-                {' '}
-                · points {first + 1}–{last}
-              </span>
-              {bad > 0 && <span className="text-xs text-warn"> · ⚠ {bad} not connected</span>}
-            </summary>
-            <div className="mt-2 flex flex-col gap-0.5">
-              {stage.refund.length > 0 && (
-                <p className="mb-1 text-xs text-warn">
-                  Respec first: {stage.refund.map((n) => n.name).join(' · ')}
-                </p>
-              )}
-              {stage.take.map((row, i) => (
-                <div key={`${row.id}-${i}`} className="flex items-center gap-2 text-sm">
-                  <span className="w-8 text-right font-mono text-xs text-overlay-muted">{first + i + 1}</span>
-                  <span
-                    title={row.stats.join('\n')}
-                    className={
-                      'flex-1 truncate ' +
-                      (row.kind === 'notable' || row.kind === 'keystone' || row.kind === 'jewel'
-                        ? 'font-medium text-overlay-text'
-                        : 'text-overlay-muted') +
-                      (row.kind === 'mastery' ? ' italic' : '')
-                    }
-                  >
-                    {row.name}
-                    {row.unlinked && <span className="ml-2 text-xs not-italic text-warn">⚠ not connected here</span>}
-                  </span>
-                  <MoveButton
-                    label="↑"
-                    title="Earlier"
-                    disabled={pending || i === 0}
-                    onClick={() => onChange(movePassive(plan, si, i, i - 1))}
-                  />
-                  <MoveButton
-                    label="↓"
-                    title="Later"
-                    disabled={pending || i === stage.take.length - 1}
-                    onClick={() => onChange(movePassive(plan, si, i, i + 1))}
-                  />
-                </div>
-              ))}
-              <div className="mt-1">
-                <Btn onClick={() => resort(si)} title="Back to the nearest-notable-first order">
-                  Re-sort
-                </Btn>
-              </div>
-            </div>
-          </details>
+          <Fold key={si} title={stage.label ?? `Stage ${si + 1}`} detail={`points ${first + 1}–${last}`} bad={bad}>
+            {stage.refund.length > 0 && (
+              <p className="mb-1 text-xs text-warn">Respec first: {stage.refund.map((n) => n.name).join(' · ')}</p>
+            )}
+            <NodeRows
+              rows={stage.take}
+              label={(i) => String(first + i + 1)}
+              disabled={pending}
+              onMove={(from, to) => onChange(movePassive(plan, si, from, to))}
+            />
+            <ResortButton onClick={() => resort(si)} />
+          </Fold>
         )
       })}
+      {check.ascendancy.length > 0 && (
+        // Two points per Labyrinth: the rows say which Lab they're for, the
+        // way the overlay's Lab line counts them.
+        <Fold title="Ascendancy" detail="two points per Labyrinth" bad={ascBad}>
+          <NodeRows
+            rows={check.ascendancy}
+            label={(i) => LABS[Math.floor(i / 2)] ?? `Lab ${Math.floor(i / 2) + 1}`}
+            disabled={pending}
+            onMove={(from, to) => onChange(moveAscendancy(plan, from, to))}
+          />
+          <ResortButton onClick={() => resort('ascendancy')} />
+        </Fold>
+      )}
+    </div>
+  )
+}
+
+const LABS = ['Normal', 'Cruel', 'Merciless', 'Eternal']
+
+/** A stage (or the ascendancy) as a fold: open by itself when something in it
+ *  isn't connected. */
+function Fold(props: { title: string; detail: string; bad: number; children: React.ReactNode }): React.JSX.Element {
+  return (
+    <details open={props.bad > 0} className="rounded-md border border-overlay-border bg-overlay-panel/60 p-2">
+      <summary className="cursor-pointer text-sm">
+        <span className="font-semibold">{props.title}</span>
+        <span className="text-xs text-overlay-muted"> · {props.detail}</span>
+        {props.bad > 0 && <span className="text-xs text-warn"> · ⚠ {props.bad} not connected</span>}
+      </summary>
+      <div className="mt-2 flex flex-col gap-0.5">{props.children}</div>
+    </details>
+  )
+}
+
+/** The nodes in order, each with what it is, whether it's connected there,
+ *  and ↑ ↓. */
+function NodeRows(props: {
+  rows: PlanRowBridge[]
+  label: (i: number) => string
+  disabled: boolean
+  onMove: (from: number, to: number) => void
+}): React.JSX.Element {
+  return (
+    <>
+      {props.rows.map((row, i) => (
+        <div key={`${row.id}-${i}`} className="flex items-center gap-2 text-sm">
+          <span className="w-16 text-right font-mono text-xs text-overlay-muted">{props.label(i)}</span>
+          <span
+            title={row.stats.join('\n')}
+            className={
+              'flex-1 truncate ' +
+              (row.kind === 'notable' || row.kind === 'keystone' || row.kind === 'jewel'
+                ? 'font-medium text-overlay-text'
+                : 'text-overlay-muted') +
+              (row.kind === 'mastery' ? ' italic' : '')
+            }
+          >
+            {row.name}
+            {row.unlinked && <span className="ml-2 text-xs not-italic text-warn">⚠ not connected here</span>}
+          </span>
+          <MoveButton
+            label="↑"
+            title="Earlier"
+            disabled={props.disabled || i === 0}
+            onClick={() => props.onMove(i, i - 1)}
+          />
+          <MoveButton
+            label="↓"
+            title="Later"
+            disabled={props.disabled || i === props.rows.length - 1}
+            onClick={() => props.onMove(i, i + 1)}
+          />
+        </div>
+      ))}
+    </>
+  )
+}
+
+function ResortButton({ onClick }: { onClick: () => void }): React.JSX.Element {
+  return (
+    <div className="mt-1">
+      <Btn onClick={onClick} title="Back to the nearest-notable-first order">
+        Re-sort
+      </Btn>
     </div>
   )
 }

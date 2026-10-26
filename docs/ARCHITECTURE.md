@@ -169,7 +169,8 @@ the way, then the next nearest; a mastery right after its group's first
 notable — plus the nodes the spec drops, as a respec. Ascendancy nodes are a
 separate list, two per Labyrinth. It's stored as node ids, so a guide's order
 can replace the computed one — in the editor's *Passive tree* section, node by
-node within a stage. The editor has no tree data: main names the nodes, flags
+node within a stage, and the ascendancy's list (two points per Labyrinth) the
+same way, checked from the ascendancy's own start (`resortAscendancy`). The editor has no tree data: main names the nodes, flags
 each one nothing before it connects to (`checkPlan`, from the class's start,
 refunds taken out, a mastery after a notable of its group) and re-sorts a
 stage (`resortStage`) over two invoke channels, the plan validated like a
