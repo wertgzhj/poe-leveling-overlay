@@ -166,7 +166,12 @@ nearest notable, keystone or jewel socket the spec adds, taking every node on
 the way, then the next nearest; a mastery right after its group's first
 notable — plus the nodes the spec drops, as a respec. Ascendancy nodes are a
 separate list, two per Labyrinth. It's stored as node ids, so a guide's order
-can replace the computed one.
+can replace the computed one — in the editor's *Passive tree* section, node by
+node within a stage. The editor has no tree data: main names the nodes, flags
+each one nothing before it connects to (`checkPlan`, from the class's start,
+refunds taken out, a mastery after a notable of its group) and re-sorts a
+stage (`resortStage`) over two invoke channels, the plan validated like a
+file's first.
 
 **Which node is due** follows the points the character has: level − 1, plus
 every "You have received a Passive Skill Point." line (a Book of Skill used, not

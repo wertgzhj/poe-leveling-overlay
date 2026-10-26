@@ -14,10 +14,19 @@
 import { app, shell } from 'electron'
 import { existsSync, readFileSync, writeFileSync, watchFile, unwatchFile } from 'node:fs'
 import { join } from 'node:path'
-import { parseProfile, validateProfile, baseClassOf, type Profile } from './profile.ts'
+import { parseProfile, validateProfile, validatePassives, baseClassOf, type Profile } from './profile.ts'
 import { GemData, normalizeGemName, type GemInfo } from './gems.ts'
 import { godsFallen, godsFor, isHere, whereIs } from './pantheon.ts'
-import { TreeData, passivesView, type TreeFile } from './tree.ts'
+import {
+  TreeData,
+  checkPlan,
+  classStartNode,
+  passivesView,
+  resortStage,
+  type PassivePlan,
+  type PlanCheck,
+  type TreeFile
+} from './tree.ts'
 import { vendorSearch } from './search.ts'
 import {
   activeStageIndex,
@@ -296,6 +305,26 @@ export class ProfileService {
     }
     const { profile, errors } = parseProfile(text)
     return { id, path: entry.path, bundled: entry.bundled === true, profile, errors }
+  }
+
+  /** The editor's passive plan, every node named and checked against the
+   *  tree; null without tree data or with a plan that doesn't validate. */
+  checkPassives(raw: unknown, charClass: string): PlanCheck | null {
+    const plan = this.editorPlan(raw)
+    return plan && this.tree ? checkPlan(plan, this.tree, classStartNode(this.tree, charClass)) : null
+  }
+
+  /** One stage of the editor's plan back in the import's order. */
+  resortPassives(raw: unknown, charClass: string, stage: number): number[] | null {
+    const plan = this.editorPlan(raw)
+    if (!plan || !this.tree || stage < 0 || stage >= plan.stages.length) return null
+    return resortStage(plan, this.tree, classStartNode(this.tree, charClass), stage)
+  }
+
+  private editorPlan(raw: unknown): PassivePlan | null {
+    const errors: string[] = []
+    const plan = validatePassives(raw, errors)
+    return plan && !errors.length ? plan : null
   }
 
   /**

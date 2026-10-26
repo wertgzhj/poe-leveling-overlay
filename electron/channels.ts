@@ -113,6 +113,10 @@ export const Channels = {
   editorLoadProfile: 'editor:load-profile',
   /** editor -> main (invoke): validate + save a profile back to its own file */
   editorSaveProfile: 'editor:save-profile',
+  /** editor -> main (invoke): a passive plan, its nodes named and checked */
+  editorPassivesCheck: 'editor:passives-check',
+  /** editor -> main (invoke): one stage of a passive plan in the import's order */
+  editorPassivesResort: 'editor:passives-resort',
   /** main -> editor: bring a tab to the front ("Manage profiles…") */
   editorFocusTab: 'editor:focus-tab',
   /** editor -> main (invoke): the routes in effect, serialized for sharing */
@@ -285,7 +289,7 @@ export interface PantheonStatus {
   here: boolean
 }
 
-export type { PassivesView, PassiveNodeView } from './profile/tree.ts'
+export type { PassivesView, PassiveNodeView, PlanCheck, PlanRow } from './profile/tree.ts'
 
 /** A one-shot build decision you've reached the point for (profile/run.ts). */
 export type { ChoiceDue } from './profile/run.ts'

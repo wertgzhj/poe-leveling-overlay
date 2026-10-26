@@ -12,6 +12,8 @@ import {
   ascendancyFor,
   ascendancyOptions,
   serializeProfile,
+  movePassive,
+  setStageOrder,
   type RouteDraft
 } from '../editor/model.ts'
 import { validateRoute } from '../electron/guide/route.ts'
@@ -143,4 +145,28 @@ test('saving a profile in the editor keeps its imported passive tree', () => {
   assert.deepEqual(out.passives, passives)
   const none = serializeProfile({ meta: { name: 'B', class: 'Marauder' }, stages: [], gemPlan: [] }) as object
   assert.equal('passives' in none, false)
+})
+
+test('a passive moves within its stage; the plan around it stays', () => {
+  const plan = {
+    tree: '3_29',
+    stages: [
+      { take: [1, 2, 3], masteries: { '3': 77 } },
+      { label: 'Lab', take: [4, 5], refund: [1] }
+    ]
+  }
+  const moved = movePassive(plan, 0, 2, 0)
+  assert.deepEqual(moved.stages[0].take, [3, 1, 2])
+  assert.deepEqual(moved.stages[0].masteries, { '3': 77 }) // the pick goes with its node
+  assert.equal(moved.stages[1], plan.stages[1])
+  assert.deepEqual(plan.stages[0].take, [1, 2, 3]) // not mutated
+  assert.equal(movePassive(plan, 5, 0, 1), plan)
+})
+
+test('a new order for a stage must be the same nodes', () => {
+  const plan = { tree: '3_29', stages: [{ take: [10, 2, 3] }] }
+  assert.deepEqual(setStageOrder(plan, 0, [3, 10, 2]).stages[0].take, [3, 10, 2])
+  // a node lost or swapped for another: nothing changes
+  assert.equal(setStageOrder(plan, 0, [3, 10]), plan)
+  assert.equal(setStageOrder(plan, 0, [3, 10, 4]), plan)
 })

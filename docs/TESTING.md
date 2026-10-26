@@ -311,6 +311,12 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      didn't switch. Saves used to land in one shared file whatever you opened.
    - **Save the bundled example** in the editor: it becomes a new profile of
      yours and becomes active; the example itself stays as it was.
+   - **Passive tree** (a PoB import with trees): below the stages, one fold
+     per tree stage, with the point numbers it covers. ↑/↓ move a node; move a
+     notable above the way to it and it gets *⚠ not connected here*, the
+     stage's fold says how many, and *Re-sort* puts the stage back. Save, and
+     the overlay's next node follows the new order. A mastery's pick moves
+     with it.
    - **Delete** asks once inline (no dialog), the file is in the **recycle bin**,
      and deleting the active profile switches the overlay to the example rather
      than to nothing.
