@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { HEADING } from '../../lib/ui'
-import { SearchButton } from './SearchButton'
 import { PassiveMap } from './PassiveMap'
 
 // The passive tree under the gems: the node for your next point (its stats in
@@ -35,16 +34,6 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
       <div className="mb-1 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2">
           <span className={HEADING + 'text-overlay-muted'}>Passives</span>
-          {/* the notables and masteries around your next points, for the tree's
-              search box; small nodes' names repeat all over the tree */}
-          {view.treeSearch && (
-            <SearchButton
-              label="Tree"
-              regex={view.treeSearch}
-              what="the passive tree's"
-              kind="tree"
-            />
-          )}
           {due && (
             <button
               onClick={toggleMap}

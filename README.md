@@ -27,7 +27,7 @@ semi-automatically from a Path of Building import.
   optional mule (a throwaway level-1 alt) is planned in. Settings → *Gems tab*
   explains every colour in words, and takes your own **short names** for gems —
   `CwDT` instead of Cast when Damage Taken — shown in the Gems tab with the full
-  name in the tooltip. *Vendor* copies the gems to buy now as one search, to
+  name in the tooltip. *Vendor* in the header copies the gems to buy now as one search, to
   paste into the vendor's search box: they light up in its stock. Optionally
   (Settings → *Copy without a click*) a town copies the vendor search or your own
   regex, and a level-up the tree search — never over something you copied
@@ -56,7 +56,7 @@ semi-automatically from a Path of Building import.
   from before out of `Client.txt`, on your PC.
 - **Ticks your Pantheon gods by itself** as they fall.
 - **Keeps your search regex one click away.** Store a stash or vendor search
-  string in Settings, and a **Regex** button in the header copies it — paste it
+  string in Settings, and **Regex** in the header — next to *Vendor* and *Tree* — copies it; paste it
   into the game yourself. The overlay never types into the game. Keep a
   different one for some acts (*Per act*) — 2-3 links stop mattering a few acts
   in — and the button copies the one for the act you've reached.

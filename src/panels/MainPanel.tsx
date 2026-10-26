@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { BUTTON, button, BUTTON_SIZE, panelSurface, TAG, TAG_TONE } from '../lib/ui'
+import { SearchButtons } from './SearchButtons'
 import { useOverlayStore } from '../stores/overlayStore'
 import { GuideBody } from './GuideTab'
 import { TrialHint } from './NoticeBar'
@@ -66,68 +67,6 @@ function DetectCharButton(): React.JSX.Element {
       }
     >
       {flash?.text ?? '⟳ character'}
-    </button>
-  )
-}
-
-// A search was just copied without a click (Settings → Search & copy) or by a
-// hotkey: say which, for a few seconds, so the clipboard is never a guess.
-function AutoCopyNote(): React.JSX.Element | null {
-  const copied = useOverlayStore((s) => s.autoCopied)
-  const [, tick] = useState(0)
-  useEffect(() => {
-    if (!copied) return
-    const t = window.setTimeout(() => tick((n) => n + 1), NOTE_MS)
-    return () => window.clearTimeout(t)
-  }, [copied])
-  // Read at render on purpose: the timeout above re-renders it once the note is due to go.
-  // oxlint-disable-next-line react/purity
-  if (!copied || Date.now() - copied.at >= NOTE_MS) return null
-  return (
-    <span className="truncate text-[10px] text-ok" title="Copied for you — paste it into the game's search box">
-      ✓ {copied.kind === 'vendor' ? 'Vendor' : copied.kind === 'tree' ? 'Tree' : 'Regex'} copied
-    </span>
-  )
-}
-
-const NOTE_MS = 3000
-
-// One click puts the search regex from Settings on the clipboard — the one for
-// the act you've reached, if you keep one for it; paste it into a stash or
-// vendor search box yourself. Copying is all the overlay does — it never types
-// into the game (docs/ARCHITECTURE.md#tos-position). Absent until a regex is
-// set, rather than a button that explains it has nothing to do.
-function RegexButton(): React.JSX.Element | null {
-  const regex = useOverlayStore((s) => s.searchRegex)
-  const perAct = useOverlayStore((s) => s.actRegexes.length > 0)
-  const [flash, setFlash] = useState<'copied' | 'failed' | null>(null)
-  if (!regex && !perAct) return null
-  const onClick = (): void => {
-    void window.overlay?.copySearch('regex').then((ok) => {
-      setFlash(ok ? 'copied' : 'failed')
-      window.setTimeout(() => setFlash(null), 1500)
-    })
-  }
-  return (
-    <button
-      onClick={onClick}
-      title={
-        'Copy to clipboard, then paste into a stash or vendor search' +
-        // which act's it is, only the main process knows (the act you've reached)
-        (perAct ? ' — your regex for the act you are in.' : `:\n${regex}`)
-      }
-      className={
-        // Fixed width: "✓ copied" is wider than "Regex", and the flash must not
-        // shove the ⚙ next to it sideways.
-        'no-drag min-w-[3.75rem] text-center bg-white/10 enabled:hover:text-overlay-text ' + BUTTON + BUTTON_SIZE.sm + ' ' +
-        (flash === 'copied'
-          ? 'text-ok'
-          : flash === 'failed'
-            ? 'text-warn'
-            : 'text-overlay-muted')
-      }
-    >
-      {flash === 'copied' ? '✓ copied' : flash === 'failed' ? 'not set' : 'Regex'}
     </button>
   )
 }
@@ -277,8 +216,7 @@ export function MainPanel(): React.JSX.Element {
                 🐞
               </button>
             )}
-            <AutoCopyNote />
-            <RegexButton />
+            <SearchButtons />
             <button
               className={'no-drag ' + button('quiet', 'sm')}
               title="Settings"
