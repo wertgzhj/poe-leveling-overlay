@@ -324,7 +324,10 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      notable above the way to it and it gets *⚠ not connected here*, the
      stage's fold says how many, and *Re-sort* puts the stage back. Save, and
      the overlay's next node follows the new order. A mastery's pick moves
-     with it.
+     with it. Below the stages, *Ascendancy* lists the ascendancy nodes with
+     the Lab each goes to (Normal, Normal, Cruel, …); moving one changes the
+     overlay's *Lab* line the same way, and *Re-sort* walks them from the
+     ascendancy's start again.
    - **Delete** asks once inline (no dialog), the file is in the **recycle bin**,
      and deleting the active profile switches the overlay to the example rather
      than to nothing.

@@ -13,6 +13,8 @@ import {
   ascendancyOptions,
   serializeProfile,
   movePassive,
+  moveAscendancy,
+  setAscendancyOrder,
   setStageOrder,
   type RouteDraft
 } from '../editor/model.ts'
@@ -169,4 +171,14 @@ test('a new order for a stage must be the same nodes', () => {
   // a node lost or swapped for another: nothing changes
   assert.equal(setStageOrder(plan, 0, [3, 10]), plan)
   assert.equal(setStageOrder(plan, 0, [3, 10, 4]), plan)
+})
+
+test('an ascendancy node moves within the ascendancy; the stages stay', () => {
+  const plan = { tree: '3_29', stages: [{ take: [1, 2] }], ascendancy: [30, 31, 32, 33] }
+  const moved = moveAscendancy(plan, 3, 1)
+  assert.deepEqual(moved.ascendancy, [30, 33, 31, 32])
+  assert.equal(moved.stages, plan.stages)
+  assert.deepEqual(plan.ascendancy, [30, 31, 32, 33]) // not mutated
+  assert.equal(setAscendancyOrder(plan, [30, 31, 32]), plan, 'a node lost: nothing changes')
+  assert.equal(moveAscendancy({ tree: '3_29', stages: [] }, 0, 1).ascendancy, undefined)
 })

@@ -117,7 +117,8 @@ export const Channels = {
   editorSaveProfile: 'editor:save-profile',
   /** editor -> main (invoke): a passive plan, its nodes named and checked */
   editorPassivesCheck: 'editor:passives-check',
-  /** editor -> main (invoke): one stage of a passive plan in the import's order */
+  /** editor -> main (invoke): one stage of a passive plan, or its ascendancy,
+   *  in the import's order */
   editorPassivesResort: 'editor:passives-resort',
   /** main -> editor: bring a tab to the front ("Manage profiles…") */
   editorFocusTab: 'editor:focus-tab',

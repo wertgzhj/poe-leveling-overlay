@@ -222,7 +222,7 @@ export interface EditorScenario {
   profile: Profile
   /** what main answers for its passive tree (checkPlan) */
   passivesCheck: PlanCheck | null
-  /** text of the element to scroll to before the shot */
+  /** text the element to scroll to before the shot starts with */
   scrollTo: string
 }
 
@@ -251,6 +251,13 @@ export interface Scenario {
   log: LogSnapshot
   trials: TrialsSnapshot
   guide: GuideState
+}
+
+// The editor lists the library from the profile snapshot: one profile, active.
+const editorSnapshot: ProfileSnapshot = {
+  ...profileSnapshot(3, 22, 2),
+  library: [{ id: 'berserker', path: 'berserker.json', name: 'Berserker', stages: 4, errors: [] }],
+  activeId: 'berserker'
 }
 
 const scenarios: Scenario[] = [
@@ -395,7 +402,28 @@ const scenarios: Scenario[] = [
         scrollTo: 'Passive tree'
       }
     })(),
-    profile: { ...profileSnapshot(3, 22, 2), library: [{ id: 'berserker', path: 'berserker.json', name: 'Berserker', stages: 4, errors: [] }], activeId: 'berserker' },
+    profile: editorSnapshot,
+    log: crypt,
+    trials,
+    guide
+  },
+  // ...and its Ascendancy fold: the Labs the points go to, one taken out of
+  // turn flagged.
+  {
+    name: 'editor-ascendancy',
+    editor: (() => {
+      // eight Berserker nodes, the walking order turned round
+      const plan: PassivePlan = {
+        ...structuredClone(marauderPlan),
+        ascendancy: nearest(29294, 8).filter((id) => tree.node(id)?.kind !== 'ascendancyStart').reverse()
+      }
+      return {
+        profile: { ...profile, passives: plan },
+        passivesCheck: checkPlan(plan, tree, classStartNode(tree, 'Marauder')),
+        scrollTo: 'Ascendancy'
+      }
+    })(),
+    profile: editorSnapshot,
     log: crypt,
     trials,
     guide

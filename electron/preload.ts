@@ -116,7 +116,7 @@ const api = {
     ipcRenderer.invoke(Channels.editorSaveProfile, { id, json }),
   editorPassivesCheck: (plan: unknown, charClass: string): Promise<PlanCheck | null> =>
     ipcRenderer.invoke(Channels.editorPassivesCheck, { plan, charClass }),
-  editorPassivesResort: (plan: unknown, charClass: string, stage: number): Promise<number[] | null> =>
+  editorPassivesResort: (plan: unknown, charClass: string, stage: number | 'ascendancy'): Promise<number[] | null> =>
     ipcRenderer.invoke(Channels.editorPassivesResort, { plan, charClass, stage }),
   editorExportRoutes: (): Promise<string> => ipcRenderer.invoke(Channels.editorExportRoutes),
   editorImportRoutes: (text: string): Promise<RouteImportResult> =>

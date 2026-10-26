@@ -22,6 +22,7 @@ import {
   checkPlan,
   classStartNode,
   passivesView,
+  resortAscendancy,
   resortStage,
   type PassivePlan,
   type PlanCheck,
@@ -316,9 +317,11 @@ export class ProfileService {
   }
 
   /** One stage of the editor's plan back in the import's order. */
-  resortPassives(raw: unknown, charClass: string, stage: number): number[] | null {
+  resortPassives(raw: unknown, charClass: string, stage: number | 'ascendancy'): number[] | null {
     const plan = this.editorPlan(raw)
-    if (!plan || !this.tree || stage < 0 || stage >= plan.stages.length) return null
+    if (!plan || !this.tree) return null
+    if (stage === 'ascendancy') return resortAscendancy(plan, this.tree)
+    if (stage < 0 || stage >= plan.stages.length) return null
     return resortStage(plan, this.tree, classStartNode(this.tree, charClass), stage)
   }
 
