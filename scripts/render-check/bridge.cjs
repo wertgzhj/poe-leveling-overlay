@@ -35,7 +35,8 @@ const answers = {
       gemNames: s.gemNames ?? {},
       runTimer: false,
       autoCopyTown: 'off',
-      autoCopyLevelUp: false
+      autoCopyLevelUp: false,
+      autoCopyProtect: true
     }),
   gemNameList: () => ok(['Cast when Damage Taken Support', 'Melee Physical Damage Support', 'Sunder']),
   getAppInfo: () => ok({ version: '0.0.0', electron: process.versions.electron, isDev: false }),

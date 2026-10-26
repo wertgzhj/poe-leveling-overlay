@@ -70,6 +70,7 @@ export function SettingsPanel(): React.JSX.Element {
     moveMode,
     autoCopyTown,
     autoCopyLevelUp,
+    autoCopyProtect,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -86,6 +87,7 @@ export function SettingsPanel(): React.JSX.Element {
       runTimer: s.runTimer,
       autoCopyTown: s.autoCopyTown,
       autoCopyLevelUp: s.autoCopyLevelUp,
+      autoCopyProtect: s.autoCopyProtect,
       moveMode: s.moveMode,
       patch: s.patch
     }))
@@ -159,6 +161,10 @@ export function SettingsPanel(): React.JSX.Element {
   const setAutoCopyLevelUp = (value: boolean): void => {
     patch({ autoCopyLevelUp: value })
     void window.overlay?.setSettings({ autoCopyLevelUp: value })
+  }
+  const setAutoCopyProtect = (value: boolean): void => {
+    patch({ autoCopyProtect: value })
+    void window.overlay?.setSettings({ autoCopyProtect: value })
   }
 
   const setRunTimer = (value: boolean): void => {
@@ -270,7 +276,7 @@ export function SettingsPanel(): React.JSX.Element {
           </div>
         </header>
 
-        <div className="space-y-4 overflow-y-auto px-3 py-3">
+        <div className="space-y-1.5 overflow-y-auto px-3 py-3">
           <Section title="Updates">
             <UpdateRow />
           </Section>
@@ -367,7 +373,7 @@ export function SettingsPanel(): React.JSX.Element {
             )}
           </Section>
 
-          <Section title="Search regex">
+          <Section title="Search & copy">
             <input
               type="text"
               spellCheck={false}
@@ -418,9 +424,16 @@ export function SettingsPanel(): React.JSX.Element {
               <span className="text-xs text-overlay-text">A level-up: the Tree search</span>
               <Toggle on={autoCopyLevelUp} onChange={setAutoCopyLevelUp} />
             </div>
+            <div className="mt-1.5 flex items-center justify-between gap-2">
+              <span className="text-xs text-overlay-text">Keep what you copied yourself</span>
+              <Toggle on={autoCopyProtect} onChange={setAutoCopyProtect} />
+            </div>
             <p className="mt-1 text-[10px] text-overlay-muted">
-              The header says what was copied. It never replaces something you copied yourself (a
-              whisper, an item, a link) — only an empty clipboard or a search. Pasting stays yours.
+              The header says what was copied.{' '}
+              {autoCopyProtect
+                ? 'It only replaces an empty clipboard or a search — never a whisper, an item or a link you copied.'
+                : 'Off: it replaces whatever is on the clipboard, a whisper or an item you copied included.'}{' '}
+              Pasting stays yours.
             </p>
           </Section>
 
@@ -663,13 +676,43 @@ function UpdateRow(): React.JSX.Element {
   )
 }
 
+/**
+ * A Settings heading that folds: closed by default, so the panel opens on a
+ * short list of headings, and each remembers whether you left it open (in this
+ * window's local storage — a convenience; without it, everything starts closed).
+ */
 function Section({ title, children }: { title: string; children: React.ReactNode }): React.JSX.Element {
+  const key = `settings.open.${title}`
+  const [open, setOpen] = useState(() => {
+    try {
+      return localStorage.getItem(key) === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggle = (): void => {
+    setOpen(!open)
+    try {
+      localStorage.setItem(key, open ? '0' : '1')
+    } catch {
+      // storage unavailable: it just won't be remembered
+    }
+  }
   return (
     <section>
-      <h2 className={'mb-1.5 ' + HEADING + 'text-overlay-muted'}>
+      <button
+        onClick={toggle}
+        aria-expanded={open}
+        className={
+          'flex w-full items-center gap-1.5 rounded px-1 py-1 text-left hover:bg-white/5 ' + HEADING + 'text-overlay-muted'
+        }
+      >
+        <span aria-hidden className="w-2.5 text-[10px]">
+          {open ? '▾' : '▸'}
+        </span>
         {title}
-      </h2>
-      <div className="rounded-md bg-black/25 p-2">{children}</div>
+      </button>
+      {open && <div className="mt-1 rounded-md bg-black/25 p-2">{children}</div>}
     </section>
   )
 }

@@ -58,11 +58,12 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    machine with both a Steam and a standalone install it must pick the one you
    played last.
    All take effect immediately. The sections run in the order the work does:
-   Updates, the editor button, Build profile, Search regex, Game log, Overlay, Run timer,
-   Gems tab, Hotkeys. The three tabs split the window into equal thirds at any size — drag
+   Updates, the editor button, Build profile, Search & copy, Game log, Overlay, Run timer,
+   Gems tab, Hotkeys — each a heading that folds: all closed on a first open,
+   and the ones you opened stay open next time. The three tabs split the window into equal thirds at any size — drag
    the resize grip and they should stay even, with no dead space after "Guide".
 
-   **Search regex.** With the field empty there is **no** Regex button in the
+   **Search & copy.** With the field empty there is **no** Regex button in the
    header. Paste a string (a trailing line break from a web page must vanish on
    save), and the button appears beside ⚙. In interactive mode, click it: it
    reads `✓ copied` for a moment *without* nudging ⚙ sideways, and Ctrl+V in a
@@ -73,7 +74,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    town and the header reads `✓ Vendor copied` for a moment; Ctrl+V at the
    vendor pastes the Gems tab's vendor search. "your regex above" (only with
    one set): `✓ Regex copied`, your string. *A level-up* on: level up out in a
-   zone, `✓ Tree copied`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it. A restart
+   zone, `✓ Tree copied`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it —
+   unless *Keep what you copied yourself* is off, when they do. A restart
    in a town copies nothing until you level or walk into a town again.
    In Settings → Hotkeys the three *Copy* bindings read *not set*. Bind one
    (e.g. Ctrl+Alt+T for the Tree search): pressing it anywhere copies and the

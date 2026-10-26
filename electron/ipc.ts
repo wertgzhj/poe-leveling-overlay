@@ -94,6 +94,7 @@ export function registerIpc(
     }
     if (AUTO_COPY_TOWN.includes(patch.autoCopyTown as AutoCopyTown)) store.set('autoCopyTown', patch.autoCopyTown!)
     if (typeof patch.autoCopyLevelUp === 'boolean') store.set('autoCopyLevelUp', patch.autoCopyLevelUp)
+    if (typeof patch.autoCopyProtect === 'boolean') store.set('autoCopyProtect', patch.autoCopyProtect)
     if (typeof patch.runTimer === 'boolean') {
       store.set('runTimer', patch.runTimer)
       timer.setEnabled(patch.runTimer)
