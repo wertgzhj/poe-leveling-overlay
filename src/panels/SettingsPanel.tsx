@@ -401,7 +401,7 @@ export function SettingsPanel(): React.JSX.Element {
             />
             <div className="mt-1 flex items-start justify-between gap-2">
               <p className="text-[10px] text-overlay-muted">
-                Adds a <b className="text-overlay-text">Regex</b> button to the overlay&apos;s header.
+                Copied by <b className="text-overlay-text">Regex</b> in the overlay&apos;s header.
                 Click it, then paste into a stash or vendor search box. The overlay only copies; the
                 paste is yours.
               </p>
@@ -440,7 +440,7 @@ export function SettingsPanel(): React.JSX.Element {
               <Toggle on={autoCopyProtect} onChange={setAutoCopyProtect} />
             </div>
             <p className="mt-1 text-[10px] text-overlay-muted">
-              The header says what was copied.{' '}
+              The button in the header lights up for what was copied.{' '}
               {autoCopyProtect
                 ? 'It only replaces an empty clipboard or a search, never a whisper, an item or a link you copied.'
                 : 'Off: it replaces whatever is on the clipboard, a whisper or an item you copied included.'}{' '}

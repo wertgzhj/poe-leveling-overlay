@@ -170,7 +170,7 @@ export function MainPanel(): React.JSX.Element {
     activeTab === 'gems'
       ? (profile?.meta?.name ?? 'Build')
       : activeTab === 'trials'
-        ? 'Trials of Ascendancy'
+        ? 'Trials'
         : guideTitle
   const guideHasErrors = (guide?.errors?.length ?? 0) > 0
   const profileHasErrors = (profile?.errors?.length ?? 0) > 0

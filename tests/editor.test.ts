@@ -16,6 +16,7 @@ import {
   moveAscendancy,
   setAscendancyOrder,
   setStageOrder,
+  stageFirstPoints,
   type RouteDraft
 } from '../editor/model.ts'
 import { validateRoute } from '../electron/guide/route.ts'
@@ -181,4 +182,15 @@ test('an ascendancy node moves within the ascendancy; the stages stay', () => {
   assert.deepEqual(plan.ascendancy, [30, 31, 32, 33]) // not mutated
   assert.equal(setAscendancyOrder(plan, [30, 31, 32]), plan, 'a node lost: nothing changes')
   assert.equal(moveAscendancy({ tree: '3_29', stages: [] }, 0, 1).ascendancy, undefined)
+})
+
+test('point numbers in the editor take the respecs back, like the overlay', () => {
+  // a real build: 8, 5, 10, 7, 8, 4, 12, then four stages that refund 2, 8, 5 and 12
+  const stages = [8, 5, 10, 7, 8, 4, 12].map((take) => ({ take, refund: 0 }))
+  stages.push({ take: 14, refund: 2 }, { take: 33, refund: 8 }, { take: 21, refund: 5 }, { take: 22, refund: 12 })
+  const firsts = stageFirstPoints(stages)
+  assert.deepEqual(firsts.slice(0, 3), [0, 8, 13])
+  assert.equal(firsts[7], 54 - 2, 'the first respec gives two points back')
+  // the last stage ends on the plan's 117 points, not 144
+  assert.equal(firsts[10] + 22, 117)
 })
