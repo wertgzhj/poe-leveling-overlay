@@ -187,6 +187,14 @@ Two things to know:
 | Move / resize mode | `Ctrl+Shift+M` | Drag the title bar; drag the corner to resize |
 | Guide: next step | `Ctrl+Shift+N` | Marks the current step done |
 | Guide: previous step | `Ctrl+Shift+P` | Reopens the last completed step |
+| Copy the Vendor search | *not set* | The Gems tab's gems to buy, for the vendor's search box |
+| Copy the Tree search | *not set* | The passives' notables and masteries, for the tree search |
+| Copy your regex | *not set* | Settings → *Search regex* |
+
+The three Copy hotkeys start unset — any free Ctrl+Shift combo is a shortcut in some
+other program, and a global hotkey takes it everywhere — so pick your own in Settings
+(Backspace while recording clears one again). They copy over whatever is on the
+clipboard: it's your keypress, like a click.
 
 The overlay has **Gems**, **Trials** and **Guide** tabs, in that order — it opens on Gems,
 which works out of the box, while the Guide runs on placeholder routes until you write

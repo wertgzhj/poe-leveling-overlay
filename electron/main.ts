@@ -28,7 +28,8 @@ profileService.attachEditor(editorWindow)
 const updateService = new UpdateService(overlay)
 const timerWindow = new TimerWindow()
 const timerService = new TimerService(logService, timerWindow)
-new AutoCopyService(logService, profileService, overlay)
+const autoCopy = new AutoCopyService(logService, profileService, overlay)
+const copySearch = (kind: Parameters<AutoCopyService['copyNow']>[0]): void => autoCopy.copyNow(kind)
 overlay.addStateListener((state) => timerWindow.follow(state))
 let tray: ReturnType<typeof createTray> = null
 
@@ -59,14 +60,15 @@ if (!app.requestSingleInstanceLock()) {
       editorWindow,
       updateService,
       timerService,
-      timerWindow
+      timerWindow,
+      copySearch
     )
     logService.start()
     guideService.start()
     profileService.start()
     trialsService.start()
     updateService.start()
-    const failed = registerHotkeys(overlay, guideService, timerWindow)
+    const failed = registerHotkeys(overlay, guideService, timerWindow, copySearch)
     if (failed.length) {
       console.warn('[hotkeys] failed to register:', failed.join(', '))
     }

@@ -16,8 +16,14 @@ const HOTKEY_FIELDS: ReadonlyArray<readonly [HotkeyField, string]> = [
   ['toggleClickThrough', 'Toggle click-through'],
   ['toggleMoveMode', 'Move / resize mode'],
   ['stepForward', 'Guide: next step'],
-  ['stepBack', 'Guide: previous step']
+  ['stepBack', 'Guide: previous step'],
+  ['copyVendor', 'Copy the Vendor search'],
+  ['copyTree', 'Copy the Tree search'],
+  ['copyRegex', 'Copy your regex']
 ]
+
+/** These may be left unset — and are, until you pick a combo. */
+const OPTIONAL_FIELDS: ReadonlySet<HotkeyField> = new Set(['copyVendor', 'copyTree', 'copyRegex'])
 
 // In the tab bar's order (see TAB_ORDER).
 const TAB_FIELDS: ReadonlyArray<readonly [keyof VisibleTabsBridge, string]> = [
@@ -114,8 +120,10 @@ export function SettingsPanel(): React.JSX.Element {
         setRecording(null)
         return
       }
-      const { accelerator } = acceleratorFromEvent(e)
-      if (!accelerator) return // only modifiers held so far — keep waiting
+      // Backspace/Delete clears an optional binding back to "not set".
+      const clear = OPTIONAL_FIELDS.has(recording) && (e.code === 'Backspace' || e.code === 'Delete')
+      const { accelerator } = clear ? { accelerator: '' } : acceleratorFromEvent(e)
+      if (accelerator == null) return // only modifiers held so far — keep waiting
 
       const next = { ...hotkeys, [recording]: accelerator }
       setRecording(null)
@@ -547,15 +555,16 @@ export function SettingsPanel(): React.JSX.Element {
           <Section title="Hotkeys">
             <div className="space-y-1.5">
               {HOTKEY_FIELDS.map(([field, label]) => {
-                const accel = hotkeys[field]
+                const accel = hotkeys[field] ?? ''
                 const recordingThis = recording === field
-                const conflict = failed.has(accel)
+                const unset = accel === ''
+                const conflict = !unset && failed.has(accel)
                 return (
                   <div key={field} className="flex items-center justify-between gap-2">
                     <span className="text-xs text-overlay-text">{label}</span>
                     <div className="flex items-center gap-2">
                       {conflict && <span className="text-[10px] text-danger">⚠ conflict</span>}
-                      {!conflict && !hasModifier(accel) && (
+                      {!conflict && !unset && !hasModifier(accel) && (
                         <span className="text-[10px] text-warn">⚠ no modifier</span>
                       )}
                       <button
@@ -567,7 +576,7 @@ export function SettingsPanel(): React.JSX.Element {
                             : 'bg-white/10 text-overlay-text hover:bg-white/15')
                         }
                       >
-                        {recordingThis ? 'Press keys…' : formatAccelerator(accel)}
+                        {recordingThis ? 'Press keys…' : unset ? 'not set' : formatAccelerator(accel)}
                       </button>
                     </div>
                   </div>
@@ -576,8 +585,8 @@ export function SettingsPanel(): React.JSX.Element {
             </div>
             <p className="mt-1.5 text-[10px] text-overlay-muted">
               {recording
-                ? 'Press a combo (Esc to cancel). A modifier is recommended so it does not clash with the game.'
-                : 'Click a binding to change it. Conflicts are shown if the combo is already taken.'}
+                ? 'Press a combo (Esc to cancel; Backspace clears a Copy binding). A modifier is recommended so it does not clash with the game.'
+                : 'Click a binding to change it. Conflicts are shown if the combo is already taken. The Copy ones start unset: any free combo is a shortcut somewhere else, so pick your own.'}
             </p>
           </Section>
         </div>

@@ -21,7 +21,10 @@ const answers = {
         toggleClickThrough: 'CommandOrControl+Shift+C',
         toggleMoveMode: 'CommandOrControl+Shift+M',
         stepForward: 'F3',
-        stepBack: 'CommandOrControl+Shift+P'
+        stepBack: 'CommandOrControl+Shift+P',
+        copyVendor: '',
+        copyTree: 'CommandOrControl+Alt+T',
+        copyRegex: ''
       },
       clientTxtPath: 'C:/PoE/logs/Client.txt',
       profilePath: null,

@@ -6,7 +6,7 @@
 // (docs/ARCHITECTURE.md#tos-position).
 
 import { Channels, type SearchKind } from './channels.ts'
-import { copyIfFree } from './clipboard.ts'
+import { copyIfFree, copyText } from './clipboard.ts'
 import { AutoCopyTrigger } from './profile/search.ts'
 import { store } from './settings.ts'
 import type { LogService } from './log/service.ts'
@@ -18,7 +18,12 @@ export class AutoCopyService {
   // current level or zone for news.
   private readonly trigger = new AutoCopyTrigger()
 
+  private readonly profile: ProfileService
+  private readonly overlay: OverlayController
+
   constructor(log: LogService, profile: ProfileService, overlay: OverlayController) {
+    this.profile = profile
+    this.overlay = overlay
     // Registered after the profile service's own listeners, so the searches
     // already reflect the new level or zone.
     log.addLevelListener((level) => {
@@ -33,6 +38,22 @@ export class AutoCopyService {
       if (town === 'vendor') this.copy('vendor', profile.vendorSearch(), overlay)
       else if (town === 'regex') this.copy('regex', store.get('searchRegex') || null, overlay)
     })
+  }
+
+  /** A hotkey asked for it: copy now, whatever's on the clipboard — it's
+   *  your keypress, like a click. */
+  copyNow(kind: SearchKind): void {
+    const text = this.textFor(kind)
+    if (!text) return
+    copyText(text)
+      .then(() => this.overlay.window?.webContents.send(Channels.searchAutoCopied, kind))
+      .catch(() => {})
+  }
+
+  private textFor(kind: SearchKind): string | null {
+    if (kind === 'vendor') return this.profile.vendorSearch()
+    if (kind === 'tree') return this.profile.treeSearch()
+    return store.get('searchRegex') || null
   }
 
   private copy(kind: SearchKind, text: string | null, overlay: OverlayController): void {

@@ -75,6 +75,10 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    one set): `✓ Regex copied`, your string. *A level-up* on: level up out in a
    zone, `✓ Tree copied`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it. A restart
    in a town copies nothing until you level or walk into a town again.
+   In Settings → Hotkeys the three *Copy* bindings read *not set*. Bind one
+   (e.g. Ctrl+Alt+T for the Tree search): pressing it anywhere copies and the
+   header reads `✓ Tree copied`; recording it again and pressing Backspace
+   sets it back to *not set*, and the combo is free again.
 4. **Tracking.** The tracker strip shows the current zone and level while
    playing. Restart the overlay mid-session — it resumes both. With no character
    pinned, rolling a fresh character (entering the Twilight Strand) switches
