@@ -1,8 +1,8 @@
-// Copies the overlay's searches on its own, as Settings → Search regex says:
+// Copies the overlay's searches on its own, as Settings → Search & copy says:
 // on walking into a town the vendor's search or your own regex, on a level-up
 // the passive tree's.
-// Never over something you copied (clipboard.ts), and the overlay says what it
-// copied. Writing the clipboard is all it does — the paste stays yours
+// Never over something you copied (clipboard.ts) — unless you switch that
+// off — and the overlay says what it copied. Writing the clipboard is all it does — the paste stays yours
 // (docs/ARCHITECTURE.md#tos-position).
 
 import { Channels, type SearchKind } from './channels.ts'
@@ -60,7 +60,8 @@ export class AutoCopyService {
     if (!text) return
     // A clipboard another program holds open can refuse; the next level or
     // town tries again, and the buttons are always there.
-    copyIfFree(text)
+    const copy = store.get('autoCopyProtect') ? copyIfFree(text) : copyText(text).then(() => true)
+    copy
       .then((copied) => {
         if (copied) overlay.window?.webContents.send(Channels.searchAutoCopied, kind)
       })

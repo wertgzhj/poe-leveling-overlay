@@ -74,6 +74,10 @@ export interface AppSettings {
   autoCopyTown: AutoCopyTown
   /** Whether a level-up copies the passive tree search without a click. */
   autoCopyLevelUp: boolean
+  /** Copying without a click only replaces an empty clipboard or a search,
+   *  never something you copied (mayOverwrite). On by default; off, it
+   *  replaces anything. */
+  autoCopyProtect: boolean
 }
 
 /** What the renderer may change through the settings channel (see ipc.ts:
@@ -91,6 +95,7 @@ export type SettingsPatch = Partial<
     | 'runTimer'
     | 'autoCopyTown'
     | 'autoCopyLevelUp'
+    | 'autoCopyProtect'
   >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
@@ -157,6 +162,7 @@ const defaults: StoreSchema = {
   runTimer: false,
   autoCopyTown: 'off',
   autoCopyLevelUp: false,
+  autoCopyProtect: true,
   progress: null,
   timerBounds: { width: 260, height: 360 },
   timerShown: true,
@@ -214,6 +220,7 @@ export function getSettings(): AppSettings {
     gemNames: store.get('gemNames'),
     runTimer: store.get('runTimer'),
     autoCopyTown: store.get('autoCopyTown'),
-    autoCopyLevelUp: store.get('autoCopyLevelUp')
+    autoCopyLevelUp: store.get('autoCopyLevelUp'),
+    autoCopyProtect: store.get('autoCopyProtect')
   }
 }

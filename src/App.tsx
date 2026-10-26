@@ -29,7 +29,8 @@ export function App(): React.JSX.Element {
         gemNames: s.gemNames,
         runTimer: s.runTimer,
         autoCopyTown: s.autoCopyTown,
-        autoCopyLevelUp: s.autoCopyLevelUp
+        autoCopyLevelUp: s.autoCopyLevelUp,
+        autoCopyProtect: s.autoCopyProtect
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()

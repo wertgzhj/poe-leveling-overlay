@@ -22,6 +22,7 @@ interface OverlayStore {
   runTimer: boolean
   autoCopyTown: 'off' | 'vendor' | 'regex'
   autoCopyLevelUp: boolean
+  autoCopyProtect: boolean
   /** The last search copied without a click, and when — the header says so
    *  for a moment. */
   autoCopied: { kind: 'vendor' | 'tree' | 'regex'; at: number } | null
@@ -76,6 +77,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   runTimer: false,
   autoCopyTown: 'off',
   autoCopyLevelUp: false,
+  autoCopyProtect: true,
   autoCopied: null,
   logStatus: null,
   tracked: null,

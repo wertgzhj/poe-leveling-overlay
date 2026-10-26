@@ -197,7 +197,8 @@ const crypt = log('The Chamber of Sins Level 2', '1_2_9_2', 15, 22)
 /** One screenshot each. `tab` is clicked after load; `settings` opens Settings. */
 export interface Scenario {
   name: string
-  tab?: 'Guide' | 'Gems' | 'Trials'
+  /** a tab — or, in Settings, a section heading — to click first */
+  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy'
   /** a button to press after the tab, by (part of) its text */
   click?: string
   /** short names from Settings (real name -> short) */
@@ -221,6 +222,8 @@ const scenarios: Scenario[] = [
   {
     name: 'settings-legend',
     settings: true,
+    // Settings' sections fold: open "Gems tab", then its legend.
+    tab: 'Gems tab',
     click: 'What the colours mean',
     gemNames: { 'Cast when Damage Taken Support': 'CwDT', 'Melee Physical Damage Support': 'MPD' },
     profile: profileSnapshot(3, 22, 2),
@@ -274,6 +277,7 @@ const scenarios: Scenario[] = [
   {
     name: 'settings',
     settings: true,
+    tab: 'Search & copy',
     opacity: 0.4,
     regex: '"' + 'a|'.repeat(130) + '"',
     profile: profileSnapshot(3, 22, 2),

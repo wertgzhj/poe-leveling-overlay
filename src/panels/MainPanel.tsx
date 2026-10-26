@@ -70,7 +70,7 @@ function DetectCharButton(): React.JSX.Element {
   )
 }
 
-// "Copy searches automatically" (Settings → Search regex) just copied one:
+// Settings → Search & copy → "Copy without a click" just copied one:
 // say which, for a few seconds, so the clipboard's content is never a guess.
 function AutoCopyNote(): React.JSX.Element | null {
   const copied = useOverlayStore((s) => s.autoCopied)

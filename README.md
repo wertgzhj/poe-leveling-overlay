@@ -189,7 +189,7 @@ Two things to know:
 | Guide: previous step | `Ctrl+Shift+P` | Reopens the last completed step |
 | Copy the Vendor search | *not set* | The Gems tab's gems to buy, for the vendor's search box |
 | Copy the Tree search | *not set* | The passives' notables and masteries, for the tree search |
-| Copy your regex | *not set* | Settings → *Search regex* |
+| Copy your regex | *not set* | Settings → *Search & copy* |
 
 The three Copy hotkeys start unset — any free Ctrl+Shift combo is a shortcut in some
 other program, and a global hotkey takes it everywhere — so pick your own in Settings

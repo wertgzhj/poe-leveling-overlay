@@ -70,6 +70,9 @@ async function shoot(index, scenario) {
       additionalArguments: [`--render-scenario=${scenariosFile}#${index}`]
     }
   })
+  // Folded Settings sections remember their state in local storage; every
+  // shot starts from none, or one scenario's opened section leaks into the next.
+  await win.webContents.session.clearStorageData({ storages: ['localstorage'] })
   await win.loadFile(join(root, 'out/renderer/index.html'))
   // Wait for the panel, open the tab, let React and the fonts settle.
   await win.webContents.executeJavaScript(`
@@ -80,7 +83,8 @@ async function shoot(index, scenario) {
       const tick = () => {
         if (Date.now() - start > 20000) return reject(new Error('the overlay never rendered: ' + document.body.innerText.slice(0, 200)))
         const panel = document.querySelector('[data-interactive]')
-        const button = tab && [...document.querySelectorAll('button')].find((b) => b.textContent.trim().startsWith(tab))
+        // a tab, or a folded Settings heading (its ▸/▾ first)
+        const button = tab && [...document.querySelectorAll('button')].find((b) => b.textContent.replace(/^[\\s▸▾]+/, '').startsWith(tab))
         if (panel && (!tab || button || Date.now() - start > 3000)) {
           if (button) button.click()
           // A second button to press once the tab is up (a legend, a toggle).
