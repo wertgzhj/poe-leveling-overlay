@@ -28,6 +28,7 @@ import {
   type TreeFile
 } from './tree.ts'
 import { vendorSearch } from './search.ts'
+import { passiveMap, type PassiveMap } from './tree-map.ts'
 import {
   activeStageIndex,
   actFromAreaId,
@@ -456,6 +457,15 @@ export class ProfileService {
     const plan = this.profile?.passives
     if (!plan || !this.tree) return null
     return passivesView(plan, this.tree, this.level, this.runs.questPoints(this.character), this.labsDone())
+  }
+
+  /** The passive map around the next points (opened with a click in the
+   *  Passives block); null without a plan, positions or anything left to take. */
+  passiveMap(aspect: number): PassiveMap | null {
+    const plan = this.profile?.passives
+    if (!plan || !this.tree) return null
+    const points = this.level == null ? 0 : Math.max(0, this.level - 1) + this.runs.questPoints(this.character)
+    return passiveMap(plan, this.tree, points, classStartNode(this.tree, this.profile!.meta.class), aspect)
   }
 
   /** The Tree button's search, as the overlay shows it now. */

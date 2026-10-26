@@ -149,11 +149,13 @@ error if it can't be read.
 ### Passive tree — `data/tree.json`
 
 Per node: name, stats, kind (small, notable, keystone, mastery, jewel socket,
-class/ascendancy start), mastery effects, group, and links. Cut down by
+class/ascendancy start), mastery effects, group, links, and its place (x, y —
+its group's centre out along its orbit, PoB's angle tables for the 16- and
+40-node orbits); plus each group's centre, for the map's arcs. Cut down by
 `scripts/fetch-tree.ts` (transform in `scripts/tree-extract.ts`, tested) from
 Grinding Gear Games' own export for tool authors,
 [grindinggear/skilltree-export](https://github.com/grindinggear/skilltree-export)
-— ~630 KB of its 6.5 MB. Re-run (`npm run fetch-tree`, or the *Fetch tree data* workflow) when a league changes
+— ~700 KB of its 6.5 MB. Re-run (`npm run fetch-tree`, or the *Fetch tree data* workflow) when a league changes
 the tree; a build made for another tree version gets a warning. Read at runtime,
 like the gem data.
 
@@ -172,6 +174,13 @@ each one nothing before it connects to (`checkPlan`, from the class's start,
 refunds taken out, a mastery after a notable of its group) and re-sorts a
 stage (`resortStage`) over two invoke channels, the plan validated like a
 file's first.
+
+**The map** (Passives → *Map*, `electron/profile/tree-map.ts`): main lays out
+the piece of the tree around your next points — what's in view, taken by plan
+(a stage's respec counted from its start), your next point and the five
+after, the links between, arcs along an orbit — and the renderer only draws it
+(`profile:passive-map`, asked again when the next point moves). The view is the
+next points' bounding box with room around it, at least a few groups wide.
 
 **Which node is due** follows the points the character has: level − 1, plus
 every "You have received a Passive Skill Point." line (a Book of Skill used, not

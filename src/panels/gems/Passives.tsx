@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { HEADING } from '../../lib/ui'
 import { SearchButton } from './SearchButton'
+import { PassiveMap } from './PassiveMap'
 
 // The passive tree under the gems: the node for your next point (its stats in
 // the tooltip — under it they were more than anyone reads mid-run), the few after
@@ -11,6 +12,21 @@ import { SearchButton } from './SearchButton'
 
 export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Element {
   const [due, ...after] = view.next
+  const [mapOpen, setMapOpen] = useState(() => {
+    try {
+      return localStorage.getItem(MAP_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggleMap = (): void => {
+    setMapOpen(!mapOpen)
+    try {
+      localStorage.setItem(MAP_KEY, mapOpen ? '0' : '1')
+    } catch {
+      // storage unavailable: it just won't be remembered
+    }
+  }
   const pointsTitle =
     `${view.points} passive points: level − 1` +
     (view.questPoints ? ` + ${view.questPoints} from Books of Skill` : ' (no Book of Skill used yet)')
@@ -28,6 +44,16 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
               what="the passive tree's"
               kind="tree"
             />
+          )}
+          {due && (
+            <button
+              onClick={toggleMap}
+              aria-expanded={mapOpen}
+              title="A piece of the tree around your next points"
+              className="text-[10px] text-overlay-muted hover:text-overlay-text"
+            >
+              {mapOpen ? '▾' : '▸'} Map
+            </button>
           )}
         </span>
         <span className="truncate text-[10px] text-overlay-muted" title={pointsTitle}>
@@ -68,6 +94,8 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
         <p className="text-[10px] text-ok">✓ All {view.total} points placed — the tree is done.</p>
       )}
 
+      {due && mapOpen && <PassiveMap points={view.points} due={due.id} />}
+
       {view.ascendancy && view.ascendancy.next.length > 0 && (
         <p className="mt-1.5 text-[10px] leading-snug text-overlay-muted">
           <span className={HEADING + 'mr-1 text-overlay-muted'}>
@@ -81,6 +109,9 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
 }
 
 const LAB_NAMES = ['Normal', 'Cruel', 'Merciless', 'Eternal']
+
+/** whether you left the map open (this window's local storage; closed without it) */
+const MAP_KEY = 'passives.map.open'
 
 function NodeList({ nodes, arrows }: { nodes: PassiveNodeViewBridge[]; arrows?: boolean }): React.JSX.Element {
   return (

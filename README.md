@@ -38,8 +38,9 @@ semi-automatically from a Path of Building import.
   milestone) become an ordered list: under the gems, the node for your next
   point — by level and the Books of Skill you used — with the few after it, a
   respec when the build drops nodes, and the next ascendancy points after each
-  Labyrinth. Click a name to copy it for the in-game tree's search box. The
-  order is worked out at import, and you can change it in the editor.
+  Labyrinth. Click a name to copy it for the in-game tree's search box, or
+  open *Map* for that piece of the tree, your next points numbered. The order
+  is worked out at import, and you can change it in the editor.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
   you finish it, telling you when a Labyrinth is ready to run, and noticing when
   you've beaten it.

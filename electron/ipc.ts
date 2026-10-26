@@ -156,6 +156,10 @@ export function registerIpc(
   ipcMain.on(Channels.guideReset, () => guide.reset())
 
   ipcMain.handle(Channels.profileGet, () => profile.snapshot())
+  ipcMain.handle(Channels.profilePassiveMap, (_e, aspect: unknown) =>
+    // width / height of where it's drawn; anything odd gets the block's own
+    typeof aspect === 'number' && aspect > 0.5 && aspect < 4 ? profile.passiveMap(aspect) : profile.passiveMap(1.5)
+  )
   ipcMain.handle(Channels.profileGemNames, (): string[] => profile.gemNameList())
   ipcMain.on(Channels.profileStageStep, (_e, delta: unknown) => {
     if (typeof delta === 'number') profile.stageStep(delta)

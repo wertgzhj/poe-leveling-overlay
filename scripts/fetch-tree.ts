@@ -1,5 +1,6 @@
 // Fetch Grinding Gear Games' passive skill tree export and write the part the
-// overlay uses to data/tree.json: each node's name, stats, kind and links.
+// overlay uses to data/tree.json: each node's name, stats, kind, links and
+// place on the tree (for the map).
 // The export (github.com/grindinggear/skilltree-export) is what GGG publishes
 // for tool authors; it's ~6.5 MB with sprites and art paths, of which the
 // overlay needs a few hundred KB. The transform lives in ./tree-extract.ts
