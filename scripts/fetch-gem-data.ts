@@ -170,7 +170,7 @@ async function fetchLevels(): Promise<Map<string, number>> {
       const data = JSON.parse(body) as { error?: unknown; cargoquery?: unknown }
       if (data.error) throw new Error(JSON.stringify(data.error).slice(0, 300))
       if (!Array.isArray(data.cargoquery)) throw new Error('no cargoquery array')
-      const page = data.cargoquery.map((r) => ((r as { title?: CargoRow }).title ?? {}) as CargoRow)
+      const page = data.cargoquery.map((r) => ((r as { title?: CargoRow }).title ?? {}))
       for (const row of page) {
         const gem = gemName(row)
         const n = Number(row['required_level'])
@@ -180,7 +180,7 @@ async function fetchLevels(): Promise<Map<string, number>> {
     }
   } catch (e) {
     console.warn(
-      `  (gem level join failed — continuing without vendor cost tiers: ${e instanceof Error ? e.message : e})`
+      `  (gem level join failed — continuing without vendor cost tiers: ${e instanceof Error ? e.message : String(e)})`
     )
   }
   return levels
@@ -213,7 +213,7 @@ async function fetchTable(table: string, fields: string[]): Promise<CargoRow[]> 
       throw new Error(`${table} query: no cargoquery array\n  server says: ${bodySnippet(body)}`)
     }
     // Each result is wrapped as { title: { field: value } }.
-    const page = obj.cargoquery.map((r) => ((r as { title?: CargoRow }).title ?? {}) as CargoRow)
+    const page = obj.cargoquery.map((r) => ((r as { title?: CargoRow }).title ?? {}))
     rows.push(...page)
     if (page.length < PAGE) break
   }
@@ -242,7 +242,7 @@ async function main(): Promise<void> {
   const allSources = buildSources(questRows, vendorRows)
   const basics = buildGemBasics(skillRows)
   for (const [gem, lvl] of levels) {
-    basics[gem] = { ...(basics[gem] ?? {}), requiredLevel: lvl }
+    basics[gem] = { ...basics[gem], requiredLevel: lvl }
   }
 
   const existing = JSON.parse(await readFile(args.out, 'utf8')) as GemsFile

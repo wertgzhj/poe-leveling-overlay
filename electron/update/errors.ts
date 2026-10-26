@@ -19,6 +19,9 @@ const MAX_MESSAGE = 140
 
 /** Sort a raw updater error into what it means. Never throws. */
 export function classifyUpdateError(raw: unknown): UpdateProblem {
+  // anything else stringifies however it does — "[object Object]" included;
+  // it only has to not throw
+  // oxlint-disable-next-line typescript/no-base-to-string
   const text = raw instanceof Error ? raw.message : typeof raw === 'string' ? raw : String(raw ?? '')
 
   // The release page is up but the build hasn't attached its channel file yet:

@@ -26,7 +26,7 @@ to publish a broken **Release**, and that step is entirely in your hands.
 
 1. **Branch** off `main`.
 2. **Make your change.** Keep these green (CI runs all three on every PR):
-   - `npm run typecheck` · `npm test` · `npm run build`
+   - `npm run typecheck` · `npm run lint` · `npm test` · `npm run build`
 3. **Open a PR** to `main`. Wait for the ✓ check.
 4. **Test it for real** — see [Test a change safely](#test-a-change-safely-before-releasing).
 5. **Squash-merge** to `main`.

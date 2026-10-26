@@ -50,7 +50,7 @@ export function PassivesEditor({
   const pending = check.stages.some((s, i) => s.take.map((r) => r.id).join() !== plan.stages[i]?.take.join())
 
   // Point numbers run across the stages, the way the overlay counts them.
-  let point = 0
+  const firsts = check.stages.map((_, si) => check.stages.slice(0, si).reduce((n, s) => n + s.take.length, 0))
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-overlay-muted">
@@ -59,8 +59,8 @@ export function PassivesEditor({
         take it there. <i>Re-sort</i> puts a stage back in the worked-out order: the nearest notable first.
       </p>
       {check.stages.map((stage, si) => {
-        const first = point
-        point += stage.take.length
+        const first = firsts[si]
+        const last = first + stage.take.length
         const bad = stage.take.filter((r) => r.unlinked).length
         return (
           <details
@@ -72,7 +72,7 @@ export function PassivesEditor({
               <span className="font-semibold">{stage.label ?? `Stage ${si + 1}`}</span>
               <span className="text-xs text-overlay-muted">
                 {' '}
-                · points {first + 1}–{point}
+                · points {first + 1}–{last}
               </span>
               {bad > 0 && <span className="text-xs text-warn"> · ⚠ {bad} not connected</span>}
             </summary>

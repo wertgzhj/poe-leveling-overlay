@@ -47,7 +47,7 @@ if (!app.requestSingleInstanceLock()) {
   // Before any window exists, so none slips through.
   hardenWebContents()
 
-  app.whenReady().then(() => {
+  void app.whenReady().then(() => {
     denyPermissions()
     overlay.create()
     registerIpc(

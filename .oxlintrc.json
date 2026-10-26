@@ -1,0 +1,44 @@
+// Oxlint (npm run lint). Not ESLint: typescript-eslint needs TypeScript's
+// JavaScript API, which TypeScript 7 doesn't have; oxlint's type-aware rules run
+// on TypeScript 7 itself (oxlint-tsgolint). What's off, and why, is below.
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "unicorn", "import"],
+  "categories": { "correctness": "error", "suspicious": "warn" },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    // a promise nobody awaits loses its error
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/await-thenable": "error",
+
+    // the JSX transform needs no React in scope
+    "react/react-in-jsx-scope": "off",
+    // Settings and the editor keep a draft of a stored value and reset it when
+    // the store changes (useEffect -> setDraft): one extra render, on purpose
+    "react/set-state-in-effect": "off",
+    // an effect returns its cleanup on one path and nothing on another
+    "typescript/consistent-return": "off",
+    // IPC payloads are checked, then asserted; the check is what counts
+    "typescript/no-unsafe-type-assertion": "off",
+    "typescript/no-unnecessary-type-parameters": "off",
+    // taste, not bugs
+    "unicorn/no-array-sort": "off",
+    "unicorn/no-array-reverse": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "eslint/no-shadow": "off",
+    "eslint/no-underscore-dangle": "off",
+    // the stylesheet imports
+    "import/no-unassigned-import": "off"
+  },
+  "overrides": [
+    {
+      // node:test's test() returns a promise the runner already awaits; sorting
+      // in tests only has to be the same both sides
+      "files": ["tests/**"],
+      "rules": { "typescript/no-floating-promises": "off", "typescript/require-array-sort-compare": "off" }
+    }
+  ],
+  "ignorePatterns": ["out/**", "dist/**", "node_modules/**"]
+}

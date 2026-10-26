@@ -209,7 +209,7 @@ export function mergeGemData(
   const gems: GemsFile['gems'] = {}
   for (const [name, info] of Object.entries(existing.gems)) {
     const to = canonical(name)
-    gems[to] = { ...(gems[to] ?? {}), ...info }
+    gems[to] = { ...gems[to], ...info }
   }
   for (const [name, b] of Object.entries(basics ?? {})) {
     const prev = gems[name] ?? {}
@@ -230,7 +230,7 @@ export function mergeGemData(
   }
   for (const [name, srcs] of fetched) {
     gems[name] = {
-      ...(gems[name] ?? {}),
+      ...gems[name],
       sources: [...srcs.values()].sort(
         (a, b) => a.act - b.act || (a.kind === b.kind ? 0 : a.kind === 'quest' ? -1 : 1)
       )
@@ -254,7 +254,7 @@ export function sourcelessCampaignGems(file: GemsFile, maxLevel = 45): string[] 
   return Object.entries(file.gems)
     .filter(([name, info]) => {
       if (info.sources?.length) return false
-      if (/ of /.test(name) || /^Awakened /.test(name)) return false
+      if (/ of /.test(name) || name.startsWith('Awakened ')) return false
       return (info.requiredLevel ?? 100) <= maxLevel
     })
     .map(([name]) => name)

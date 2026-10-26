@@ -1218,7 +1218,7 @@ test('a gem you lost a quest choice on stays on the list as a buy', () => {
   const later = acquisitionsForStage(profile, 1, gems, { playerLevel: 32, actReached: 3 })
   const buys = later.plan.flatMap((it) => (it.kind === 'buy' ? [it.entry] : []))
   assert.equal(buys.length, 1)
-  const row = buys[0]!
+  const row = buys[0]
   assert.deepEqual(row.anyOf?.map((e) => e.gem).sort(), ['Cold Snap', 'Herald of Ice', 'Herald of Thunder'])
   assert.equal(row.count, 2, 'the quest gave you one of the three')
   assert.equal(row.bucket, 'purchase')

@@ -711,7 +711,7 @@ function useHoverReporting(): void {
 }
 
 function useNow(everyMs: number): number {
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), everyMs)
     return () => clearInterval(id)

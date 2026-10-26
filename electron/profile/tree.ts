@@ -220,6 +220,8 @@ export function orderNodes(tree: TreeData, from: Set<number>, wanted: number[]):
     pending.delete(id)
     const node = tree.node(id)
     if (node?.kind !== 'notable' || node.group == null) return
+    // a copy: the loop takes from `masteries` as it goes
+    // oxlint-disable-next-line unicorn/no-useless-spread
     for (const m of [...masteries]) {
       if (tree.node(m)?.group === node.group) {
         out.push(m)
@@ -254,6 +256,8 @@ export function orderNodes(tree: TreeData, from: Set<number>, wanted: number[]):
     target ??= firstReached
     if (target == null) {
       // Nothing left connects (unknown nodes, another tree): as they come.
+      // a copy: take() deletes from `pending`
+      // oxlint-disable-next-line unicorn/no-useless-spread
       for (const id of [...pending]) take(id)
       break
     }

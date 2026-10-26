@@ -27,6 +27,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Oxlint, type-aware (.oxlintrc.json): bugs the type checker lets
+      # through — a promise nobody awaits, a number sorted as text, a hook
+      # called conditionally. Warnings fail it too.
+      - name: Lint
+        run: npm run lint
+
       - name: Tests
         run: npm test
 

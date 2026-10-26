@@ -93,8 +93,8 @@ export function registerIpc(
     if ('gemNames' in patch) {
       store.set('gemNames', sanitizeGemNames(patch.gemNames, (gem) => profile.canonicalGemName(gem)))
     }
-    if (COPY_CHOICES.includes(patch.autoCopyTown as CopyChoice)) store.set('autoCopyTown', patch.autoCopyTown!)
-    if (COPY_CHOICES.includes(patch.autoCopyLevelUp as CopyChoice)) store.set('autoCopyLevelUp', patch.autoCopyLevelUp!)
+    if (COPY_CHOICES.includes(patch.autoCopyTown as CopyChoice)) store.set('autoCopyTown', patch.autoCopyTown)
+    if (COPY_CHOICES.includes(patch.autoCopyLevelUp as CopyChoice)) store.set('autoCopyLevelUp', patch.autoCopyLevelUp)
     if (typeof patch.autoCopyProtect === 'boolean') store.set('autoCopyProtect', patch.autoCopyProtect)
     if (typeof patch.runTimer === 'boolean') {
       store.set('runTimer', patch.runTimer)

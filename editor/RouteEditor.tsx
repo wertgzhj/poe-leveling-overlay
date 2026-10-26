@@ -7,8 +7,7 @@ import {
   serializeRoute,
   updateStep,
   type RouteDraft,
-  type StepDraft,
-  type StepType
+  type StepDraft
 } from './model'
 import { Btn, Select, TextInput, SaveResult } from './ui'
 import { ShareRoutes } from './ShareRoutes'
@@ -23,7 +22,7 @@ function draftForAct(routes: EditorRouteEntryBridge[], act: number): RouteDraft 
       name: entry.route.name,
       steps: entry.route.steps.map((s) => ({
         id: s.id,
-        type: s.type as StepType,
+        type: s.type,
         areaId: s.areaId,
         zone: s.zone,
         text: s.text,

@@ -291,7 +291,7 @@ export function categoryOf(areaId: string | null): Exclude<TimeCategory, 'loadin
  * character and say nothing either way.
  */
 export function isForeignArea(areaId: string, maxAct: number): boolean {
-  if (/^MapWorlds/.test(areaId)) return true
+  if (areaId.startsWith('MapWorlds')) return true
   if (areaId.startsWith('2_11_')) return maxAct < FINAL_ACT
   const act = actFromAreaId(areaId)
   return act != null && act > maxAct + 1

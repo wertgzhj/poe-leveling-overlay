@@ -27,6 +27,8 @@ export function PassiveMap({ points, due }: { points: number; due: number | unde
     return () => {
       stale = true
     }
+    // not read inside: they're what says the map needs asking for again
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
   }, [points, due])
 
   if (map === 'loading') return <div className="mt-1.5 aspect-[1.7] rounded bg-black/30" />

@@ -186,7 +186,7 @@ function readObject(path: string): { json: Record<string, unknown> | null; error
 export function duplicateProfile(dir: string, sourcePath: string, dropNote = false): LibraryResult {
   const { json, error } = readObject(sourcePath)
   if (!json) return { ok: false, errors: [`can't read the profile: ${error}`] }
-  const meta = { ...((json['meta'] as Record<string, unknown> | undefined) ?? {}) }
+  const meta = { ...(json['meta'] as Record<string, unknown> | undefined) }
   const name = typeof meta['name'] === 'string' && meta['name'].trim() ? meta['name'].trim() : 'Profile'
   meta['name'] = `${name} (copy)`
   delete meta['character']

@@ -193,7 +193,7 @@ export class ProfileService {
     if (outside.length === 0) return
     const moved = adoptExternal(dir, outside)
     if (moved.size === 0) return
-    if (active && moved.has(active)) store.set('profilePath', moved.get(active)!)
+    if (active && moved.has(active)) store.set('profilePath', moved.get(active))
     store.set('profileByCharacter', remapReferences(byCharacter, moved))
   }
 
@@ -522,7 +522,7 @@ export class ProfileService {
   /** The gems this build could mule, recomputed only when the profile changes. */
   private muleOptionsFor(profile: Profile): MuleOption[] {
     if (this.muleCache?.revision === this.profileRevision) return this.muleCache.options
-    const options = muleOptions(profile, this.gems, startingGemsJson.classes as Record<string, string[]>)
+    const options = muleOptions(profile, this.gems, startingGemsJson.classes)
     this.muleCache = { revision: this.profileRevision, options }
     return options
   }

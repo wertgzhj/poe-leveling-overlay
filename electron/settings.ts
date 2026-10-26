@@ -201,11 +201,14 @@ export function getVisibleTabs(): VisibleTabs {
  *  other than the tray, so fall back to Guide. */
 export function sanitizeVisibleTabs(next: Partial<VisibleTabs> | undefined): VisibleTabs {
   const merged = { ...defaults.visibleTabs, ...next }
+  // Read from disk, so not necessarily booleans: anything but false is shown.
+  /* oxlint-disable typescript/no-unnecessary-boolean-literal-compare */
   const tabs: VisibleTabs = {
     guide: merged.guide !== false,
     gems: merged.gems !== false,
     trials: merged.trials !== false
   }
+  /* oxlint-enable typescript/no-unnecessary-boolean-literal-compare */
   return tabs.guide || tabs.gems || tabs.trials ? tabs : { ...tabs, guide: true }
 }
 
