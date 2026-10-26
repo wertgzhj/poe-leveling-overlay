@@ -54,6 +54,24 @@ textarea {
   color-scheme: dark;
 }
 
+/* ...and in the overlay's see-through window, Windows still drew the open
+   list light grey with its blue highlight (owner, v0.33.2). Colours set on
+   the options themselves are what Chromium's Windows list honours. */
+option,
+optgroup {
+  background-color: var(--color-overlay-panel);
+  color: var(--color-overlay-text);
+}
+
+option:checked {
+  background-color: var(--color-overlay-accent);
+  color: var(--color-overlay-bg);
+}
+
+option:disabled {
+  color: var(--color-overlay-muted);
+}
+
 /* Scrollbars: a thin dark thumb on no track, in the panel's own border
    colour, lighter under the mouse — the system's wide light bars with arrows
    looked bolted on to a dark, see-through panel. One look for the overlay,
