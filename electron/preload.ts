@@ -14,6 +14,7 @@ import {
   type ProfileSnapshot,
   type RouteImportResult,
   type RunTimerSnapshot,
+  type SearchKind,
   type ImportResult,
   type SettingsSetResult,
   type TrialsSnapshot,
@@ -44,6 +45,7 @@ const api = {
   copyPassive: (id: number): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyPassive, id),
   copyTreeSearch: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyTreeSearch),
   copyVendorSearch: (): Promise<boolean> => ipcRenderer.invoke(Channels.clipboardCopyVendorSearch),
+  onSearchAutoCopied: (cb: (kind: SearchKind) => void): (() => void) => subscribe(Channels.searchAutoCopied, cb),
   onLogStatus: (cb: (status: WatcherStatus) => void): (() => void) =>
     subscribe(Channels.logStatus, cb),
   onLogSnapshot: (cb: (snap: LogSnapshot) => void): (() => void) =>

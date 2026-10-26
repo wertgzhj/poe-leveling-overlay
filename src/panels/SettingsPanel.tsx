@@ -62,6 +62,7 @@ export function SettingsPanel(): React.JSX.Element {
     searchRegex,
     runTimer,
     moveMode,
+    autoCopySearch,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -76,6 +77,7 @@ export function SettingsPanel(): React.JSX.Element {
       visibleTabs: s.visibleTabs,
       searchRegex: s.searchRegex,
       runTimer: s.runTimer,
+      autoCopySearch: s.autoCopySearch,
       moveMode: s.moveMode,
       patch: s.patch
     }))
@@ -138,6 +140,11 @@ export function SettingsPanel(): React.JSX.Element {
   const setClickThrough = (value: boolean): void => {
     patch({ clickThrough: value })
     void window.overlay?.setSettings({ clickThrough: value })
+  }
+
+  const setAutoCopy = (value: boolean): void => {
+    patch({ autoCopySearch: value })
+    void window.overlay?.setSettings({ autoCopySearch: value })
   }
 
   const setRunTimer = (value: boolean): void => {
@@ -378,6 +385,16 @@ export function SettingsPanel(): React.JSX.Element {
                 {regexDraft.length}/{SEARCH_BOX_LIMIT}
               </span>
             </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-overlay-text">Copy searches automatically</span>
+              <Toggle on={autoCopySearch} onChange={setAutoCopy} />
+            </div>
+            <p className="mt-1 text-[10px] text-overlay-muted">
+              Walking into a town copies the Gems tab&apos;s <b className="text-overlay-text">Vendor</b>{' '}
+              search; a level-up copies the <b className="text-overlay-text">Tree</b> search — the
+              header says when. It never replaces something you copied yourself (a whisper, an
+              item, a link), only an empty clipboard or a search. Pasting stays yours.
+            </p>
           </Section>
 
           <Section title="Game log">

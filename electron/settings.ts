@@ -57,6 +57,9 @@ export interface AppSettings {
   /** Record runs and show the run timer window. Off unless switched on —
    *  nothing is recorded until then. */
   runTimer: boolean
+  /** Copy the vendor search on walking into a town and the tree search on a
+   *  level-up, without a click (autocopy.ts). Off unless switched on. */
+  autoCopySearch: boolean
 }
 
 /** What the renderer may change through the settings channel (see ipc.ts:
@@ -72,6 +75,7 @@ export type SettingsPatch = Partial<
     | 'searchRegex'
     | 'gemNames'
     | 'runTimer'
+    | 'autoCopySearch'
   >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
@@ -133,6 +137,7 @@ const defaults: StoreSchema = {
   searchRegex: '',
   gemNames: {},
   runTimer: false,
+  autoCopySearch: false,
   progress: null,
   timerBounds: { width: 260, height: 360 },
   timerShown: true,
@@ -188,6 +193,7 @@ export function getSettings(): AppSettings {
     visibleTabs: getVisibleTabs(),
     searchRegex: store.get('searchRegex'),
     gemNames: store.get('gemNames'),
-    runTimer: store.get('runTimer')
+    runTimer: store.get('runTimer'),
+    autoCopySearch: store.get('autoCopySearch')
   }
 }

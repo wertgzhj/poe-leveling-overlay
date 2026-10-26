@@ -27,7 +27,8 @@ export function App(): React.JSX.Element {
         visibleTabs: s.visibleTabs,
         searchRegex: s.searchRegex,
         gemNames: s.gemNames,
-        runTimer: s.runTimer
+        runTimer: s.runTimer,
+        autoCopySearch: s.autoCopySearch
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()
@@ -52,6 +53,7 @@ export function App(): React.JSX.Element {
       api.onProfileState((profile) => patch({ profile })),
       api.onTrialsState((trials) => patch({ trials })),
       api.onUpdateStatus((update) => patch({ update })),
+      api.onSearchAutoCopied((kind) => patch({ autoCopied: { kind, at: Date.now() } })),
       api.onAreaEntered((area) => {
         const tracked = store().tracked
         patch({ tracked: { ...(tracked ?? emptyTracked), area } })
