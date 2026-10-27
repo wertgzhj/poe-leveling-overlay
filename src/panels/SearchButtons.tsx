@@ -42,7 +42,7 @@ export function SearchButtons({ compact = false }: { compact?: boolean }): React
 
   const key = (accelerator: string): string => (accelerator ? `\nHotkey: ${formatAccelerator(accelerator)}` : '')
   return (
-    <div className="no-drag flex items-center gap-0.5" role="group" aria-label="Copy a search">
+    <div className={'no-drag flex items-center ' + (compact ? 'gap-[0.3em]' : 'gap-0.5')} role="group" aria-label="Copy a search">
       <SearchButton
         kind="vendor"
         label="Vendor"
@@ -104,7 +104,7 @@ function SearchButton(props: {
         // Fixed width, and the icon swaps in place: lit, the row mustn't shift.
         'inline-flex items-center justify-center disabled:opacity-35 ' +
         BUTTON +
-        (props.compact ? 'gap-[0.2em] px-[0.4em] py-[0.1em] text-[0.7em]' : 'min-w-[4.1rem] gap-1 ' + BUTTON_SIZE.sm) +
+        (props.compact ? 'gap-[0.25em] px-[0.5em] py-[0.2em] text-[0.85em]' : 'min-w-[4.1rem] gap-1 ' + BUTTON_SIZE.sm) +
         ' ' +
         (props.lit
           ? 'bg-ok/15 text-ok'
@@ -112,15 +112,14 @@ function SearchButton(props: {
       }
     >
       {/* a copy icon says what clicking does; it turns into a tick once copied */}
-      {props.lit ? <TickIcon /> : <CopyIcon />}
+      {/* in the strip the icon grows with its text, fixed it was a speck at −2 */}
+      {props.lit ? <TickIcon size={props.compact ? '1em' : 10} /> : <CopyIcon size={props.compact ? '1em' : 10} />}
       {props.compact ? props.label[0] : props.label}
     </button>
   )
 }
 
 const ICON = {
-  width: 10,
-  height: 10,
   viewBox: '0 0 16 16',
   fill: 'none',
   stroke: 'currentColor',
@@ -131,18 +130,18 @@ const ICON = {
 } as const
 
 /** Two sheets, one over the other: copy. */
-function CopyIcon(): React.JSX.Element {
+function CopyIcon({ size }: { size: number | string }): React.JSX.Element {
   return (
-    <svg {...ICON}>
+    <svg {...ICON} width={size} height={size}>
       <rect x="5" y="5" width="9" height="9" rx="1.5" />
       <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" />
     </svg>
   )
 }
 
-function TickIcon(): React.JSX.Element {
+function TickIcon({ size }: { size: number | string }): React.JSX.Element {
   return (
-    <svg {...ICON} strokeWidth={2.2}>
+    <svg {...ICON} width={size} height={size} strokeWidth={2.2}>
       <path d="M3 8.5l3.2 3.2L13 4.5" />
     </svg>
   )

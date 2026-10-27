@@ -121,7 +121,7 @@ export function StripPanel(): React.JSX.Element {
             <>
               {s.show.copyButtons && <SearchButtons compact />}
               <button
-                className="no-drag shrink-0 rounded bg-white/10 px-[0.35em] text-[0.7em] text-overlay-muted hover:text-overlay-text"
+                className="no-drag shrink-0 rounded bg-white/10 px-[0.5em] py-[0.2em] text-[0.85em] leading-none text-overlay-muted hover:text-overlay-text"
                 title={`The full panel${s.fullPanelKey ? ` (${formatAccelerator(s.fullPanelKey)})` : ''}`}
                 aria-label="Open the full panel"
                 onClick={() => window.overlay?.toggleFullPanel()}
