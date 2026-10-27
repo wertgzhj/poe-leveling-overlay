@@ -284,6 +284,9 @@ yourself (or import it from Path of Building, below).
 - **New profile** starts from your class's two starting gems; **Import file…** copies
   a profile JSON from anywhere into your profiles (the original is left alone). The
   bundled example is read-only: saving it in the editor makes a copy of your own.
+- **Share…** sends a profile to someone as text: your stages, passive order and notes,
+  everything a PoB code doesn't carry, but not the character it belongs to. Pasting
+  one in adds it as a new profile; it never replaces one you have.
 - The active profile **hot-reloads on save** with validation shown in the panel.
 - `meta` sets `name` + `class` (one of the seven classes). It can also record the
   two **one-shot decisions** the campaign asks for: `bandit` (`Alira` / `Kraityn` /

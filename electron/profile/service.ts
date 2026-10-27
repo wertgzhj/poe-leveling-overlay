@@ -42,6 +42,7 @@ import {
   type MuleOption,
   type Acquisitions
 } from './engine.ts'
+import { exportProfile, parseSharedProfile } from './share.ts'
 import {
   BUNDLED_ID,
   addProfile,
@@ -293,6 +294,26 @@ export class ProfileService {
   /** Copy an outside file into the library (the original is left alone). */
   importFile(path: string): LibraryResult {
     return this.changed(importProfileFile(libraryDir(), path))
+  }
+
+  /** One profile as text to send someone (share.ts); null if it can't be read. */
+  exportText(id: string): string | null {
+    const entry = this.entry(id)
+    if (!entry) return null
+    try {
+      const json = JSON.parse(readFileSync(entry.path, 'utf8')) as unknown
+      return json && typeof json === 'object' && !Array.isArray(json) ? exportProfile(json as Record<string, unknown>) : null
+    } catch {
+      return null
+    }
+  }
+
+  /** A shared profile, pasted: a new profile in the library, never an
+   *  overwrite (addProfile names it after itself, "-2" if taken). */
+  importText(text: string): LibraryResult {
+    const { json, errors } = parseSharedProfile(text)
+    if (!json) return { ok: false, errors }
+    return this.changed(addProfile(libraryDir(), json))
   }
 
   /** One profile, parsed, for the editor. */

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CLASSES, type CharClass } from './model'
+import { ShareProfile } from './ShareProfile'
 import { Btn, Select, TextInput } from './ui'
 
 // The profile library: every build you have, and what you can do with each.
@@ -217,6 +218,10 @@ export function ProfileLibrary({
           </>
         )}
       </div>
+
+      {pending.kind === 'idle' && (
+        <ShareProfile selected={selected} onImported={(res) => report(res, 'Added. A copy is now in the library.')} />
+      )}
 
       {message && (
         <p className={'text-xs ' + (message.ok ? 'text-ok' : 'text-danger')}>{message.text}</p>

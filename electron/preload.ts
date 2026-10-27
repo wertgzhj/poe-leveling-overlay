@@ -84,6 +84,8 @@ const api = {
     ipcRenderer.invoke(Channels.profilesRename, { id, name }),
   deleteProfile: (id: string): Promise<LibraryResult> => ipcRenderer.invoke(Channels.profilesDelete, id),
   importProfileFile: (): Promise<LibraryResult | null> => ipcRenderer.invoke(Channels.profilesImportFile),
+  exportProfileText: (id: string): Promise<string | null> => ipcRenderer.invoke(Channels.profilesExportText, id),
+  importProfileText: (text: string): Promise<LibraryResult> => ipcRenderer.invoke(Channels.profilesImportText, text),
   importPob: (input: string): Promise<PobImportResponse> =>
     ipcRenderer.invoke(Channels.pobImport, input),
 

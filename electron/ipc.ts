@@ -249,6 +249,15 @@ export function registerIpc(
     return profile.importFile(picked.filePaths[0])
   })
 
+  ipcMain.handle(Channels.profilesExportText, (_e, id: unknown): string | null =>
+    typeof id === 'string' ? profile.exportText(id) : null
+  )
+  ipcMain.handle(Channels.profilesImportText, (_e, text: unknown): LibraryResult =>
+    typeof text === 'string' && text.trim()
+      ? profile.importText(text)
+      : { ok: false, errors: ['paste an exported profile or a profile file'] }
+  )
+
   // The editor's Passive tree section: the tree data lives here, so naming,
   // checking and re-sorting happen here too. The plan is the editor's draft —
   // validated like a file's before anything walks it.
