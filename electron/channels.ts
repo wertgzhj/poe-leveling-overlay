@@ -58,6 +58,10 @@ export const Channels = {
   profilesDelete: 'profiles:delete',
   /** editor -> main (invoke): pick an outside JSON file and copy it in */
   profilesImportFile: 'profiles:import-file',
+  /** editor -> main (invoke): a profile as text to share (share.ts) */
+  profilesExportText: 'profiles:export-text',
+  /** editor -> main (invoke): a shared profile, pasted, added as a new one */
+  profilesImportText: 'profiles:import-text',
   /** renderer -> main (invoke): app/runtime info for the panel */
   appGetInfo: 'app:get-info',
   /** main -> renderer: log watcher status changed */
