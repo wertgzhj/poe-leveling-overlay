@@ -238,7 +238,7 @@ export interface Scenario {
   /** shoot the editor window, not the overlay */
   editor?: EditorScenario
   /** a tab — or, in Settings, a section heading — to click first */
-  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy' | 'Overlay' | 'What the overlay shows'
+  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy' | 'Overlay' | 'What the overlay shows' | 'Backup'
   /** a button to press after the tab, by (part of) its text */
   click?: string
   /** short names from Settings (real name -> short) */
@@ -321,6 +321,8 @@ const scenarios: Scenario[] = [
     trials,
     guide
   },
+  // Settings → Backup: save and load.
+  { name: 'settings-backup', settings: true, tab: 'Backup', profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
   // The full panel at 130 % text: the same window, everything bigger.
   { name: 'gems-text130', tab: 'Gems', panelText: 1.3, profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
   // Switched off in Settings → What the overlay shows: the copy buttons, the

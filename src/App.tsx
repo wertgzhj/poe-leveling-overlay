@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useOverlayStore } from './stores/overlayStore'
+import { fromSettings, useOverlayStore } from './stores/overlayStore'
 import { useDebugStore } from './stores/debugStore'
 import { MainPanel } from './panels/MainPanel'
 import { SettingsPanel } from './panels/SettingsPanel'
@@ -21,29 +21,7 @@ export function App(): React.JSX.Element {
 
     void api.getState().then(patch)
     void api.getAppInfo().then((info) => patch({ appVersion: info.version, isDev: info.isDev }))
-    void api.getSettings().then((s) =>
-      patch({
-        opacity: s.opacity,
-        clickThrough: s.clickThrough,
-        hotkeys: s.hotkeys,
-        clientTxtPath: s.clientTxtPath,
-        characterName: s.characterName,
-        visibleTabs: s.visibleTabs,
-        searchRegex: s.searchRegex,
-        actRegexes: s.actRegexes,
-        gemNames: s.gemNames,
-        runTimer: s.runTimer,
-        autoCopyTown: s.autoCopyTown,
-        autoCopyLevelUp: s.autoCopyLevelUp,
-        autoCopyProtect: s.autoCopyProtect,
-        announce: s.announce,
-        showFull: s.showFull,
-        stripEnabled: s.stripEnabled,
-        showStrip: s.showStrip,
-        stripText: s.stripText,
-        panelText: s.panelText
-      })
-    )
+    void api.getSettings().then((s) => patch(fromSettings(s)))
     const { setEvents, pushEvent } = useDebugStore.getState()
     void api.getLogSnapshot().then((snap) => {
       applyLogSnapshot(snap)

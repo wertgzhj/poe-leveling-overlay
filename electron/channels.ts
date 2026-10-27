@@ -36,6 +36,11 @@ export const Channels = {
   settingsGetAll: 'settings:get-all',
   /** renderer -> main (invoke): patch settings; returns hotkeys that failed to bind */
   settingsSet: 'settings:set',
+  /** renderer -> main (invoke): save the settings to a file the user picks */
+  settingsBackupSave: 'settings:backup-save',
+  /** renderer -> main (invoke): read a backup the user picks; what it would
+   *  change, applied only through settings:set once confirmed */
+  settingsBackupOpen: 'settings:backup-open',
   /** renderer -> main: suspend global hotkeys while capturing a new combo */
   hotkeysPause: 'hotkeys:pause',
   /** renderer -> main: re-register global hotkeys from stored settings */
@@ -384,3 +389,12 @@ export type UpdateStatus =
   | { state: 'error'; message: string }
 
 export type { SearchKind } from './copy-rules.ts'
+
+/** A settings backup, read and checked against what's set now. */
+export interface SettingsBackupLoad {
+  /** what it sets; null when the file isn't a backup */
+  patch: import('./settings-backup.ts').BackupPatch | null
+  /** what that would change, by name; empty: nothing */
+  changes: string[]
+  errors: string[]
+}

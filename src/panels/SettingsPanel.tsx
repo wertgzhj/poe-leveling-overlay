@@ -8,6 +8,7 @@ import { GemShortNames } from './GemShortNames'
 import { MulePicker } from './MulePicker'
 import { ResizeGrip } from './MainPanel'
 import { Toggle } from './shared'
+import { SettingsBackup } from './SettingsBackup'
 import { ShowSettings } from './ShowSettings'
 
 type HotkeyField = keyof HotkeyBindingsBridge
@@ -623,6 +624,10 @@ export function SettingsPanel(): React.JSX.Element {
                 ? 'Press a combo (Esc to cancel; Backspace clears a Copy binding). A modifier is recommended so it does not clash with the game.'
                 : 'Click a binding to change it. Conflicts are shown if the combo is already taken. The Copy ones start unset: any free combo is a shortcut somewhere else, so pick your own.'}
             </p>
+          </Section>
+
+          <Section id="backup" title="Backup">
+            <SettingsBackup />
           </Section>
         </div>
         {moveMode && <ResizeGrip />}

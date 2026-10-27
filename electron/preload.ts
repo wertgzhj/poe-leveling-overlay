@@ -20,6 +20,7 @@ import {
   type Spoken,
   type AnnounceEvent,
   type ImportResult,
+  type SettingsBackupLoad,
   type SettingsSetResult,
   type TrialsSnapshot,
   type UpdateStatus
@@ -144,6 +145,8 @@ const api = {
 
   setSettings: (patch: SettingsPatch): Promise<SettingsSetResult> =>
     ipcRenderer.invoke(Channels.settingsSet, patch),
+  saveSettingsBackup: (): Promise<boolean> => ipcRenderer.invoke(Channels.settingsBackupSave),
+  openSettingsBackup: (): Promise<SettingsBackupLoad | null> => ipcRenderer.invoke(Channels.settingsBackupOpen),
 
   pauseHotkeys: (): void => ipcRenderer.send(Channels.hotkeysPause),
   resumeHotkeys: (): void => ipcRenderer.send(Channels.hotkeysResume),
