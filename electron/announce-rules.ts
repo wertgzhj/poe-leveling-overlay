@@ -6,8 +6,10 @@
 
 import type { LabTier } from './trials/engine.ts'
 
-/** The moments the overlay can announce, each switched on or off on its own. */
-export const ANNOUNCE_EVENTS = ['trial', 'gems', 'zone', 'lab', 'choice', 'passive'] as const
+/** The moments the overlay can announce, each switched on or off on its own.
+ *  The bandits and the Pantheon are one kind of announcement ('choice') but two
+ *  switches, like their two rows in Settings → What the overlay shows. */
+export const ANNOUNCE_EVENTS = ['trial', 'gems', 'zone', 'lab', 'bandit', 'pantheon', 'passive'] as const
 export type AnnounceEvent = (typeof ANNOUNCE_EVENTS)[number]
 
 export const ANNOUNCE_LANGS = ['en', 'de'] as const
@@ -27,7 +29,7 @@ export const DEFAULT_ANNOUNCE: AnnounceSettings = {
   lang: 'en',
   voice: '',
   volume: 0.8,
-  events: { trial: false, gems: false, zone: false, lab: false, choice: false, passive: false }
+  events: { trial: false, gems: false, zone: false, lab: false, bandit: false, pantheon: false, passive: false }
 }
 
 /** Stored or sent settings, made whole: anything missing or wrong is the default. */
@@ -35,8 +37,11 @@ export function sanitizeAnnounce(raw: unknown, base: AnnounceSettings = DEFAULT_
   const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof AnnounceSettings, unknown>>
   const events = { ...base.events }
   if (r.events && typeof r.events === 'object') {
+    const raw = r.events as Record<string, unknown>
+    // v0.34 had one switch for both choices; it carries over to each
+    if (typeof raw.choice === 'boolean') events.bandit = events.pantheon = raw.choice
     for (const e of ANNOUNCE_EVENTS) {
-      const v = (r.events as Record<string, unknown>)[e]
+      const v = raw[e]
       if (typeof v === 'boolean') events[e] = v
     }
   }
@@ -154,6 +159,11 @@ export function phrase(a: Announcement, lang: AnnounceLang): string {
   }
 }
 
+/** The switch an announcement answers to. */
+export function eventOf(a: Announcement): AnnounceEvent {
+  return a.event === 'choice' ? a.id : a.event
+}
+
 /** An example of each, for the Settings test buttons. */
 export function sample(event: AnnounceEvent): Announcement {
   switch (event) {
@@ -165,8 +175,10 @@ export function sample(event: AnnounceEvent): Announcement {
       return { event, verdict: 'under', by: 5 }
     case 'lab':
       return { event, lab: 'normal' }
-    case 'choice':
-      return { event, id: 'bandit', wants: 'help Alira' }
+    case 'bandit':
+      return { event: 'choice', id: 'bandit', wants: 'help Alira' }
+    case 'pantheon':
+      return { event: 'choice', id: 'pantheon', wants: 'Soul of Lunaris' }
     case 'passive':
       return { event, name: 'Born to Fight' }
   }

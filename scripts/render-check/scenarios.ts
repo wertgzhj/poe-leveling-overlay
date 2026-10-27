@@ -39,6 +39,7 @@ import {
 import { passiveMap, type PassiveMap } from '../../electron/profile/tree-map.ts'
 import { vendorSearch } from '../../electron/profile/search.ts'
 import type { TrialsSnapshot } from '../../electron/trials/engine.ts'
+import type { ShowSet } from '../../electron/show-rules.ts'
 
 const root = new URL('../../', import.meta.url).pathname
 const gems = new GemData(JSON.parse(readFileSync(join(root, 'data/gems.json'), 'utf8')).gems)
@@ -233,7 +234,7 @@ export interface Scenario {
   /** shoot the editor window, not the overlay */
   editor?: EditorScenario
   /** a tab — or, in Settings, a section heading — to click first */
-  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy' | 'Voice'
+  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy' | 'What the overlay shows'
   /** a button to press after the tab, by (part of) its text */
   click?: string
   /** short names from Settings (real name -> short) */
@@ -242,8 +243,10 @@ export interface Scenario {
   /** move mode on: draggable header, Done, the resize grip */
   moveMode?: boolean
   opacity?: number
-  /** Settings → Voice */
+  /** Settings → What the overlay shows: the voice column and options */
   announce?: AnnounceSettings
+  /** the panel's switches turned off (the rest stay on) */
+  showFull?: Partial<ShowSet>
   /** a search copied just now: its header button shows the tick */
   copied?: 'vendor' | 'tree' | 'regex'
   /** what main answers for the Passives block's map */
@@ -268,6 +271,18 @@ const editorSnapshot: ProfileSnapshot = {
 const scenarios: Scenario[] = [
   // Act 2, the live stage: line colours, NEW, a pick, the bandit reminder.
   { name: 'gems-act2', tab: 'Gems', profile: profileSnapshot(3, 22, 2, { choiceDue: bandit }), log: crypt, trials, guide },
+  // Switched off in Settings → What the overlay shows: the copy buttons, the
+  // zone line, the bandit reminder and the links. The trial notice, next in
+  // line behind the bandits, takes the bar.
+  {
+    name: 'gems-pared-down',
+    tab: 'Gems',
+    showFull: { copyButtons: false, zoneLine: false, bandit: false, links: false },
+    profile: profileSnapshot(3, 22, 2, { choiceDue: bandit }),
+    log: crypt,
+    trials,
+    guide
+  },
   // The Gems tab's colour legend, unfolded in Settings.
   {
     name: 'settings-legend',
@@ -339,17 +354,19 @@ const scenarios: Scenario[] = [
     trials,
     guide
   },
-  // Settings → Voice: German, two moments on. The render check has no system
+  // Settings → What the overlay shows: German voice, three moments on, the
+  // Pantheon and the Map button off in the panel. The render check has no system
   // voices, so it also shows the "none installed" hint.
   {
-    name: 'settings-voice',
+    name: 'settings-show',
     settings: true,
-    tab: 'Voice',
+    tab: 'What the overlay shows',
+    showFull: { pantheon: false, passiveMap: false },
     announce: {
       lang: 'de',
       voice: '',
       volume: 0.6,
-      events: { trial: true, gems: true, zone: false, lab: false, choice: false, passive: false }
+      events: { trial: true, gems: true, zone: false, lab: false, bandit: true, pantheon: false, passive: false }
     },
     profile: profileSnapshot(3, 22, 2),
     log: crypt,

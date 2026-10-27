@@ -80,7 +80,7 @@ export const Channels = {
   searchCopied: 'search:copied',
   /** main -> renderer: say this (text, language, voice, volume) — announce.ts */
   announceSpeak: 'announce:speak',
-  /** renderer -> main: say an example of one moment (Settings → Voice) */
+  /** renderer -> main: say an example of one moment (Settings → What the overlay shows, ▶) */
   announceTest: 'announce:test',
   /** main -> renderer: route/progress changed (hot reload, auto-advance, toggle) */
   guideState: 'guide:state',
@@ -299,6 +299,7 @@ export interface PantheonStatus {
 export type { PassivesView, PassiveNodeView, PlanCheck, PlanRow } from './profile/tree.ts'
 export type { PassiveMap, MapNode, MapLink } from './profile/tree-map.ts'
 export type { AnnounceEvent, AnnounceLang, AnnounceSettings } from './announce-rules.ts'
+export type { ShowItem, ShowSet } from './show-rules.ts'
 
 /** One announcement, worded, for the overlay window to speak. */
 export interface Spoken {

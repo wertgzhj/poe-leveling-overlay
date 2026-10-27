@@ -13,9 +13,17 @@ const NO_GODS: PantheonStatusBridge[] = []
 // round again), then a Pantheon god your profile wants (you can come back for
 // it). Only one bar, so it never stacks.
 export function TrialHint(): React.JSX.Element | null {
-  const { trials, choice, pantheon } = useOverlayStore(
-    useShallow((s) => ({ trials: s.trials, choice: s.profile?.choiceDue ?? null, pantheon: s.profile?.pantheon ?? NO_GODS }))
+  const { trials, due, pantheon, show } = useOverlayStore(
+    useShallow((s) => ({
+      trials: s.trials,
+      due: s.profile?.choiceDue ?? null,
+      pantheon: s.profile?.pantheon ?? NO_GODS,
+      show: s.showFull
+    }))
   )
+  // Each kind of notice has its own switch (Settings → What the overlay
+  // shows); one switched off steps aside for the next in line.
+  const choice = due && show[due.id] ? due : null
 
   // A bandit or pantheon choice outranks both. It is one-shot and permanent for
   // the character — miss the bandits and that's it — whereas a Labyrinth waits
@@ -47,7 +55,7 @@ export function TrialHint(): React.JSX.Element | null {
     )
   }
 
-  const unlocked = trials?.unlockedLabs?.[0]
+  const unlocked = show.lab ? trials?.unlockedLabs?.[0] : undefined
   if (unlocked) {
     return (
       <div className="flex items-center gap-2 border-b border-overlay-accent/50 bg-overlay-accent/15 px-3 py-1.5">
@@ -71,10 +79,10 @@ export function TrialHint(): React.JSX.Element | null {
   // zone never checks a trial off (you can walk it without doing the trial), so
   // this is a reminder plus a one-click correction.
   const trial = trials?.trials.find((t) => t.id === trials.currentZoneTrialId)
-  if (!trial || trial.seen) {
+  if (!trial || trial.seen || !show.trialHere) {
     // Last: a Pantheon god your profile wants is fought here. Optional bosses
     // are easy to walk past, so it says where — a side area by name.
-    const god = pantheon.find((g) => g.here && !g.unlocked)
+    const god = show.pantheon ? pantheon.find((g) => g.here && !g.unlocked) : undefined
     if (!god) return null
     return (
       <div className="flex items-center gap-2 border-b border-overlay-accent/50 bg-overlay-accent/15 px-3 py-1.5">

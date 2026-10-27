@@ -8,6 +8,10 @@ const [file, index] = arg.slice('--render-scenario='.length).split('#')
 const s = JSON.parse(readFileSync(file, 'utf8'))[Number(index)]
 
 const ok = (v) => Promise.resolve(v)
+// electron/show-rules.ts SHOW_ALL; a scenario's showFull switches some off
+const ALL_SHOWN = Object.fromEntries(
+  ['zoneLine', 'zoneFit', 'copyButtons', 'trialHere', 'lab', 'bandit', 'pantheon', 'gemsToGet', 'links', 'passive', 'passiveMap'].map((k) => [k, true])
+)
 const answers = {
   getState: () => ok({ visible: true, clickThrough: false, moveMode: !!s.moveMode, settingsOpen: !!s.settings }),
   getSettings: () =>
@@ -42,8 +46,9 @@ const answers = {
         lang: 'en',
         voice: '',
         volume: 0.8,
-        events: { trial: false, gems: false, zone: false, lab: false, choice: false, passive: false }
-      }
+        events: { trial: false, gems: false, zone: false, lab: false, bandit: false, pantheon: false, passive: false }
+      },
+      showFull: { ...ALL_SHOWN, ...s.showFull }
     }),
   gemNameList: () => ok(['Cast when Damage Taken Support', 'Melee Physical Damage Support', 'Sunder']),
   getAppInfo: () => ok({ version: '0.0.0', electron: process.versions.electron, isDev: false }),

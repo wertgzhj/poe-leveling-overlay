@@ -131,6 +131,7 @@ export function MainPanel(): React.JSX.Element {
     visibleTabs,
     languageMismatch,
     zoneFit,
+    show,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -147,6 +148,7 @@ export function MainPanel(): React.JSX.Element {
       visibleTabs: s.visibleTabs,
       languageMismatch: s.languageMismatch,
       zoneFit: s.zoneFit,
+      show: s.showFull,
       patch: s.patch
     }))
   )
@@ -216,7 +218,7 @@ export function MainPanel(): React.JSX.Element {
                 🐞
               </button>
             )}
-            <SearchButtons />
+            {show.copyButtons && <SearchButtons />}
             <button
               className={'no-drag ' + button('quiet', 'sm')}
               title="Settings"
@@ -245,23 +247,27 @@ export function MainPanel(): React.JSX.Element {
           </div>
         )}
 
-        <div className="mt-1 flex items-center gap-1.5 border-y border-overlay-border/60 bg-black/20 px-3 py-1 text-[11px] text-overlay-muted">
-          <span
-            className={
-              'inline-block h-1.5 w-1.5 shrink-0 rounded-full ' +
-              (logStatus?.state !== 'watching'
-                ? 'bg-white/25'
-                : languageMismatch
-                  ? 'bg-warn'
-                  : 'bg-ok')
-            }
-          />
-          <span className={'min-w-0 flex-1 truncate' + (languageMismatch ? ' text-warn' : '')}>
-            {trackerLine(logStatus, tracked, languageMismatch)}
-          </span>
-          {zoneFit && !languageMismatch && <ZoneFitTag fit={zoneFit} />}
-          <DetectCharButton />
-        </div>
+        {/* Switched off, the line still shows when something's wrong: the log
+            is missing or not in English. */}
+        {(show.zoneLine || logStatus?.state !== 'watching' || languageMismatch) && (
+          <div className="mt-1 flex items-center gap-1.5 border-y border-overlay-border/60 bg-black/20 px-3 py-1 text-[11px] text-overlay-muted">
+            <span
+              className={
+                'inline-block h-1.5 w-1.5 shrink-0 rounded-full ' +
+                (logStatus?.state !== 'watching'
+                  ? 'bg-white/25'
+                  : languageMismatch
+                    ? 'bg-warn'
+                    : 'bg-ok')
+              }
+            />
+            <span className={'min-w-0 flex-1 truncate' + (languageMismatch ? ' text-warn' : '')}>
+              {trackerLine(logStatus, tracked, languageMismatch)}
+            </span>
+            {show.zoneFit && zoneFit && !languageMismatch && <ZoneFitTag fit={zoneFit} />}
+            <DetectCharButton />
+          </div>
+        )}
 
         <TrialHint />
 

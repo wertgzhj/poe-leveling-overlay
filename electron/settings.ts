@@ -4,6 +4,7 @@ import type { QuestPoints } from './profile/run.ts'
 import type { CopyChoice } from './copy-rules.ts'
 import type { ActRegex } from './search-regex.ts'
 import { DEFAULT_ANNOUNCE, sanitizeAnnounce, type AnnounceSettings } from './announce-rules.ts'
+import { SHOW_ALL, sanitizeShow, type ShowSet } from './show-rules.ts'
 
 // Persistent, user-editable settings. electron-store writes JSON into the OS
 // userData folder. No personal data beyond local file paths
@@ -83,6 +84,8 @@ export interface AppSettings {
   autoCopyProtect: boolean
   /** Spoken announcements (announce-rules.ts): every moment off by default. */
   announce: AnnounceSettings
+  /** What the overlay panel shows (show-rules.ts): everything, by default. */
+  showFull: ShowSet
 }
 
 /** What the renderer may change through the settings channel (see ipc.ts:
@@ -103,6 +106,7 @@ export type SettingsPatch = Partial<
     | 'autoCopyLevelUp'
     | 'autoCopyProtect'
     | 'announce'
+    | 'showFull'
   >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
@@ -172,6 +176,7 @@ const defaults: StoreSchema = {
   autoCopyLevelUp: 'off',
   autoCopyProtect: true,
   announce: DEFAULT_ANNOUNCE,
+  showFull: SHOW_ALL,
   progress: null,
   timerBounds: { width: 260, height: 360 },
   timerShown: true,
@@ -200,6 +205,11 @@ export function getHotkeys(): HotkeyBindings {
  *  version lacks newer moments, and a hand-edited one can hold anything. */
 export function getAnnounce(): AnnounceSettings {
   return sanitizeAnnounce(store.get('announce'))
+}
+
+/** Stored show switches made whole: an older settings.json lacks newer ones. */
+export function getShowFull(): ShowSet {
+  return sanitizeShow(store.get('showFull'))
 }
 
 /** Stored tab visibility merged over defaults (same nested-merge gap as hotkeys),
@@ -241,6 +251,7 @@ export function getSettings(): AppSettings {
     autoCopyTown: store.get('autoCopyTown'),
     autoCopyLevelUp: store.get('autoCopyLevelUp'),
     autoCopyProtect: store.get('autoCopyProtect'),
-    announce: getAnnounce()
+    announce: getAnnounce(),
+    showFull: getShowFull()
   }
 }

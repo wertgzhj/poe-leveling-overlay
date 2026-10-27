@@ -123,3 +123,35 @@ export function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) =
     </button>
   )
 }
+
+/** A tick box for a table of switches (Settings → What the overlay shows),
+ *  where a row of Toggles would be too wide. */
+export function Check({
+  on,
+  onChange,
+  label,
+  disabled = false
+}: {
+  on: boolean
+  onChange: (v: boolean) => void
+  /** what it switches, for screen readers and the tooltip */
+  label: string
+  disabled?: boolean
+}): React.JSX.Element {
+  return (
+    <button
+      onClick={() => onChange(!on)}
+      disabled={disabled}
+      role="checkbox"
+      aria-checked={on}
+      aria-label={label}
+      title={label}
+      className={
+        'flex h-3.5 w-3.5 items-center justify-center rounded-sm border text-[10px] font-bold leading-none disabled:opacity-40 ' +
+        (on ? 'border-overlay-accent bg-overlay-accent text-overlay-bg' : 'border-white/30 bg-transparent text-transparent')
+      }
+    >
+      ✓
+    </button>
+  )
+}
