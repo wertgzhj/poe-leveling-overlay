@@ -17,6 +17,10 @@
 //   npm run fetch-gems -- --dry-run   # fetch + print a summary, write nothing
 //   npm run fetch-gems -- --all       # also add gems we don't yet curate (no attr)
 //   npm run fetch-gems -- --out other.json
+//   npm run fetch-gems -- --game-tables <dir>  # also who hands each quest
+//       reward over: <dir> holds pathofexile-dat's export of the game's
+//       Quest, QuestRewardOffers, QuestRewards, NPCTalk, NPCs and
+//       BaseItemTypes tables (the Fetch gem data workflow makes it)
 //
 // Note: the sandbox used to develop this blocks poewiki.net, so this script is
 // meant to be run from a normal network. Everything it depends on for logic is
@@ -31,7 +35,10 @@ import {
   gemName,
   mergeGemData,
   sourcelessCampaignGems,
+  rewardNpcs,
+  withRewardNpcs,
   type CargoRow,
+  type GameTables,
   type GemSourceInfo,
   type GemsFile
 } from './gem-cargo.ts'
@@ -73,6 +80,8 @@ interface Args {
   dryRun: boolean
   all: boolean
   out: string
+  /** pathofexile-dat's export of the game tables, for the reward NPCs */
+  gameTables?: string
 }
 
 function parseArgs(argv: string[]): Args {
@@ -83,6 +92,7 @@ function parseArgs(argv: string[]): Args {
     if (a === '--dry-run') args.dryRun = true
     else if (a === '--all') args.all = true
     else if (a === '--out') args.out = argv[++i]
+    else if (a === '--game-tables') args.gameTables = argv[++i]
     else {
       console.error(`Unknown argument: ${a}`)
       process.exit(2)
@@ -224,6 +234,37 @@ function normalize(name: string): string {
   return name.trim().toLowerCase().replace(/\s+support$/, '')
 }
 
+/** The quest rewards' NPCs from the game files. Best-effort, like the levels:
+ *  without the export, the sources are as the wiki has them. */
+async function addRewardNpcs(
+  sources: Record<string, GemSourceInfo[]>,
+  dir: string
+): Promise<Record<string, GemSourceInfo[]>> {
+  try {
+    const read = async (name: keyof GameTables): Promise<unknown> =>
+      JSON.parse(await readFile(join(dir, `${name}.json`), 'utf8'))
+    const tables = {
+      Quest: await read('Quest'),
+      QuestRewardOffers: await read('QuestRewardOffers'),
+      QuestRewards: await read('QuestRewards'),
+      NPCTalk: await read('NPCTalk'),
+      NPCs: await read('NPCs'),
+      BaseItemTypes: await read('BaseItemTypes')
+    } as GameTables
+    const npcs = rewardNpcs(tables)
+    const out = withRewardNpcs(sources, npcs)
+    const quest = Object.values(out).flat().filter((s) => s.kind === 'quest')
+    const named = quest.filter((s) => s.npc).length
+    console.log(`  reward NPCs from the game files: ${npcs.size} quest/gem pairs; ${named} of ${quest.length} quest sources named`)
+    const missing = [...new Set(quest.filter((s) => !s.npc).map((s) => `A${s.act} ${s.quest}`))].sort()
+    if (missing.length) console.log(`  quests without an NPC: ${missing.join(', ')}`)
+    return out
+  } catch (e) {
+    console.warn(`  (reward NPCs skipped: ${e instanceof Error ? e.message : String(e)})`)
+    return sources
+  }
+}
+
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2))
 
@@ -239,7 +280,8 @@ async function main(): Promise<void> {
       `${skillRows.length} skill-gem rows, ${levels.size} gem levels`
   )
 
-  const allSources = buildSources(questRows, vendorRows)
+  let allSources = buildSources(questRows, vendorRows)
+  if (args.gameTables) allSources = await addRewardNpcs(allSources, args.gameTables)
   const basics = buildGemBasics(skillRows)
   for (const [gem, lvl] of levels) {
     basics[gem] = { ...basics[gem], requiredLevel: lvl }

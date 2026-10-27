@@ -121,7 +121,11 @@ export function sourceMark(e: SourceInput | undefined): SourceMark | null {
   if (e.bucket === 'reward') {
     const quest = e.quest ?? 'quest'
     const named = sourceName(quest)
-    return { label: at(named), title: `Free quest reward${inAct}: ${quest}`, tone: sourceTone(named) }
+    return {
+      label: at(named),
+      title: `Free quest reward${inAct}: ${quest}${e.npc ? `, from ${e.npc}` : ''}`,
+      tone: sourceTone(named)
+    }
   }
   if (e.bucket === 'purchase') {
     const npc = e.npc ?? 'vendor'

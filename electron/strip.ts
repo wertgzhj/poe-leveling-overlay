@@ -30,7 +30,7 @@ export interface StripGem {
   /** a quest reward to take, one of several to pick, or a gem to buy */
   how: 'take' | 'pick' | 'buy'
   gems: Array<{ name: string; colored?: ColoredGem }>
-  /** who hands it over: the vendor's name, else the quest's */
+  /** who hands it over: the vendor or the quest's NPC, else the quest */
   from?: string
 }
 
@@ -87,7 +87,8 @@ export function townGems(plan: readonly AcquisitionItem[], act: number): StripGe
       out.push({
         how: g.pickOne ? 'pick' : 'take',
         gems: g.gems.map((e) => ({ name: e.gem, colored: e.colored })),
-        from: g.quest
+        // the NPC who hands it over (gems.json, from the game files), else the quest
+        from: g.gems.find((e) => e.npc)?.npc ?? g.quest
       })
     } else {
       const e = item.entry

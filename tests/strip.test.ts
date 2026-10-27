@@ -62,6 +62,21 @@ test("the town's list: this act's rewards and buys that are due now", () => {
   assert.equal(townGems(plan, 3).length, 0)
 })
 
+test('a reward names the NPC who hands it over, when the data has one', () => {
+  const withNpc: AcquisitionItem = {
+    kind: 'reward',
+    group: {
+      quest: 'Intruders in Black',
+      act: 2,
+      pickOne: false,
+      gems: [entry('Herald of Ash', 2, { bucket: 'reward', quest: 'Intruders in Black', npc: 'Greust' })]
+    },
+    later: false
+  }
+  assert.equal(townGems([withNpc], 2)[0].from, 'Greust')
+  assert.equal(townGems([reward(['Herald of Ash'], 2, 'Intruders in Black')], 2)[0].from, 'Intruders in Black')
+})
+
 test('in a zone: the reminder and the passive, no gems', () => {
   const m = stripModel({ ...base, areaId: '1_2_7', trial: 'chamber', plan: [buy('Cleave', 2)] })
   assert.deepEqual(m.notice, { kind: 'trial', id: 'chamber' })

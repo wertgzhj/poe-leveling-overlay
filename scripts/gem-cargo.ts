@@ -260,3 +260,71 @@ export function sourcelessCampaignGems(file: GemsFile, maxLevel = 45): string[] 
     .map(([name]) => name)
     .sort()
 }
+
+/** The game's own tables, as `pathofexile-dat` exports them: one array per
+ *  table, foreign keys as row indices (null when unset). Only the columns the
+ *  reward NPCs need. */
+export interface GameTables {
+  Quest: Array<{ Name: string; Act: number }>
+  QuestRewardOffers: Array<{ Id: string; QuestKey: number | null }>
+  QuestRewards: Array<{ RewardOffer: number | null; Reward: number | null }>
+  NPCTalk: Array<{ NPCKey: number | null; QuestRewardOffersKey: number | null }>
+  NPCs: Array<{ Name: string }>
+  BaseItemTypes: Array<{ Id: string; Name: string }>
+}
+
+const rewardKey = (quest: string, gem: string): string => `${quest.toLowerCase()}|${gem.toLowerCase()}`
+
+/**
+ * Who hands each quest's gem rewards over, from the game files: a reward row
+ * names its offer, and the NPC whose dialogue opens that offer is the one
+ * (NPCTalk.QuestRewardOffersKey). The wiki's quest_rewards table has no NPC
+ * column (October 2026), the game does. Keyed by quest and gem, since one
+ * quest can have two offers from two NPCs (The Caged Brute: Tarkleigh's skill
+ * gems, Nessa's supports). A gem two NPCs offer in one quest gets none rather
+ * than a guess. Offers only the Chinese client has (`_tencent`) are skipped.
+ */
+export function rewardNpcs(t: GameTables): Map<string, string> {
+  const npcByOffer = new Map<number, Set<string>>()
+  for (const row of t.NPCTalk) {
+    if (row.QuestRewardOffersKey == null || row.NPCKey == null) continue
+    const name = t.NPCs[row.NPCKey]?.Name
+    if (!name) continue
+    const set = npcByOffer.get(row.QuestRewardOffersKey) ?? new Set<string>()
+    set.add(name)
+    npcByOffer.set(row.QuestRewardOffersKey, set)
+  }
+  const found = new Map<string, Set<string>>()
+  for (const row of t.QuestRewards) {
+    if (row.RewardOffer == null || row.Reward == null) continue
+    const base = t.BaseItemTypes[row.Reward]
+    const offer = t.QuestRewardOffers[row.RewardOffer]
+    if (!base?.Id.startsWith('Metadata/Items/Gems/') || !offer || offer.Id.includes('_tencent')) continue
+    const quest = offer.QuestKey == null ? undefined : t.Quest[offer.QuestKey]?.Name
+    const npcs = npcByOffer.get(row.RewardOffer)
+    if (!quest || !npcs || npcs.size !== 1) continue
+    const key = rewardKey(quest, base.Name)
+    const set = found.get(key) ?? new Set<string>()
+    set.add([...npcs][0])
+    found.set(key, set)
+  }
+  const out = new Map<string, string>()
+  for (const [key, npcs] of found) if (npcs.size === 1) out.set(key, [...npcs][0])
+  return out
+}
+
+/** The quest sources with the NPC who hands each reward over, where the game
+ *  files name one. Vendor sources are left as they are. */
+export function withRewardNpcs(
+  sources: Record<string, GemSourceInfo[]>,
+  npcs: ReadonlyMap<string, string>
+): Record<string, GemSourceInfo[]> {
+  const out: Record<string, GemSourceInfo[]> = {}
+  for (const [gem, srcs] of Object.entries(sources)) {
+    out[gem] = srcs.map((s) => {
+      const npc = s.kind === 'quest' && s.quest ? npcs.get(rewardKey(s.quest, gem)) : undefined
+      return npc ? { ...s, npc } : s
+    })
+  }
+  return out
+}
