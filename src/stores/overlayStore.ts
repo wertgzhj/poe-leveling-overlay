@@ -156,3 +156,29 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
       zoneFit: snap.zoneFit
     })
 }))
+
+/** The stored settings, as the store holds them (on start, and after a
+ *  settings backup is loaded). */
+export function fromSettings(s: AppSettingsBridge): Partial<OverlayStore> {
+  return {
+    opacity: s.opacity,
+    clickThrough: s.clickThrough,
+    hotkeys: s.hotkeys,
+    clientTxtPath: s.clientTxtPath,
+    characterName: s.characterName,
+    visibleTabs: s.visibleTabs,
+    searchRegex: s.searchRegex,
+    actRegexes: s.actRegexes,
+    gemNames: s.gemNames,
+    runTimer: s.runTimer,
+    autoCopyTown: s.autoCopyTown,
+    autoCopyLevelUp: s.autoCopyLevelUp,
+    autoCopyProtect: s.autoCopyProtect,
+    announce: s.announce,
+    showFull: s.showFull,
+    stripEnabled: s.stripEnabled,
+    showStrip: s.showStrip,
+    stripText: s.stripText,
+    panelText: s.panelText
+  }
+}

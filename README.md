@@ -48,6 +48,10 @@ semi-automatically from a Path of Building import.
   per piece of information (the zone line, the copy buttons, the trial, Labyrinth,
   bandit and Pantheon reminders, the gems to get, your links, the passives) with a
   tick for the panel and one for the voice. Off only hides it: tracking carries on.
+- **Your setup, backed up.** Settings → *Backup* saves how you set the overlay up
+  (hotkeys, what it shows and says, regexes, short names, sizes) to a file, and
+  loads it again on another PC, saying first what it will change. Your Client.txt
+  path, your character and the window positions stay out of it.
 - **A compact strip, if the panel is too much** (preview: Settings → *Overlay*).
   A few lines instead of the panel, at the game's own text size: a reminder, the
   gems to get in the town you're in, your next passive point. It starts above the

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import { copyText } from './clipboard.ts'
-import { Channels, type AppInfo, type SettingsSetResult } from './channels'
+import { Channels, type AppInfo, type SettingsBackupLoad, type SettingsSetResult } from './channels'
 import { COPY_CHOICES, SEARCH_KINDS, type CopyChoice, type SearchKind } from './copy-rules.ts'
 import type { SearchService } from './searches.ts'
 import {
@@ -22,6 +22,8 @@ import { sanitizeGemNames } from './gem-names.ts'
 import { ANNOUNCE_EVENTS, sanitizeAnnounce, type AnnounceEvent } from './announce-rules.ts'
 import type { AnnounceService } from './announce.ts'
 import { sanitizeShow } from './show-rules.ts'
+import { backupChanges, exportSettings, parseSettingsBackup } from './settings-backup.ts'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { isDev, type OverlayController } from './overlay'
 import type { LogService } from './log/service.ts'
 import type { GuideService } from './guide/service.ts'
@@ -322,6 +324,20 @@ export function registerIpc(
     return pickFile(overlay, 'Select Client.txt', [{ name: 'Client log', extensions: ['txt'] }])
   })
 
+  ipcMain.handle(Channels.settingsBackupSave, (): Promise<boolean> => saveSettingsBackup(overlay))
+  ipcMain.handle(Channels.settingsBackupOpen, async (): Promise<SettingsBackupLoad | null> => {
+    const path = await pickFile(overlay, 'Load overlay settings', [{ name: 'Settings backup', extensions: ['json'] }])
+    if (!path) return null
+    let text: string
+    try {
+      text = readFileSync(path, 'utf8')
+    } catch (e) {
+      return { patch: null, changes: [], errors: [(e as Error).message] }
+    }
+    const { patch, errors } = parseSettingsBackup(text)
+    return { patch, changes: patch ? backupChanges(getSettings(), patch) : [], errors }
+  })
+
   ipcMain.handle(Channels.logLocateClientTxt, (): string | null => {
     const found = log.locateClientTxt()
     if (found && found !== store.get('clientTxtPath')) {
@@ -331,6 +347,20 @@ export function registerIpc(
     return found
   })
 
+}
+
+/** Where a settings backup is saved: a file the user picks. */
+async function saveSettingsBackup(overlay: OverlayController): Promise<boolean> {
+  const win = overlay.window
+  const opts: Electron.SaveDialogOptions = {
+    title: 'Save the overlay settings',
+    defaultPath: 'poe-leveling-overlay-settings.json',
+    filters: [{ name: 'Settings backup', extensions: ['json'] }]
+  }
+  const result = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+  if (result.canceled || !result.filePath) return false
+  writeFileSync(result.filePath, exportSettings(getSettings()))
+  return true
 }
 
 async function pickFile(
