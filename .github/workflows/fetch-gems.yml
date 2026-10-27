@@ -35,13 +35,36 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      # Who hands each quest reward over isn't on the wiki; the game files
+      # have it. pathofexile-dat (pinned) reads the tables it needs from GGG's
+      # patch server for the current patch. Best-effort: if it fails, the
+      # fetch below runs without NPCs, as before.
+      - name: Export quest rewards from the game files
+        continue-on-error: true
+        run: |
+          mkdir -p game && cd game
+          patch="$(curl -fsS https://raw.githubusercontent.com/poe-tool-dev/latest-patch-version/main/latest.txt)"
+          cat > config.json <<JSON
+          {
+            "patch": "$patch",
+            "translations": ["English"],
+            "tables": [
+              { "name": "Quest", "columns": ["Name", "Act"] },
+              { "name": "QuestRewardOffers", "columns": ["Id", "QuestKey"] },
+              { "name": "QuestRewards", "columns": ["RewardOffer", "Reward"] },
+              { "name": "NPCTalk", "columns": ["NPCKey", "QuestRewardOffersKey"] },
+              { "name": "NPCs", "columns": ["Name"] },
+              { "name": "BaseItemTypes", "columns": ["Id", "Name"] }
+            ]
+          }
+          JSON
+          npx -y pathofexile-dat@16.0.1
+
       - name: Fetch gem sources from the wiki
         run: |
-          if [[ "${{ inputs.include_uncurated }}" == "true" ]]; then
-            npm run fetch-gems -- --all
-          else
-            npm run fetch-gems
-          fi
+          args=(--game-tables game/tables/English)
+          if [[ "${{ inputs.include_uncurated }}" == "true" ]]; then args+=(--all); fi
+          npm run fetch-gems -- "${args[@]}"
 
       # Guard: the merged gems.json must still satisfy the test suite before it
       # may land on main.

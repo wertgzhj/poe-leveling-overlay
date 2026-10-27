@@ -12,7 +12,10 @@ import {
   buildSources,
   mergeGemData,
   sourcelessCampaignGems,
+  rewardNpcs,
+  withRewardNpcs,
   type CargoRow,
+  type GameTables,
   type GemsFile
 } from '../scripts/gem-cargo.ts'
 
@@ -279,4 +282,71 @@ test('an old gems.json key in another case folds into the wiki spelling', () => 
   assert.deepEqual(Object.keys(merged.gems), ["Pact of K'Tash"])
   assert.equal(merged.gems["Pact of K'Tash"]?.requiredLevel, 12)
   assert.equal(merged.gems["Pact of K'Tash"]?.attr, 'int', 'curated values the wiki lacks are kept')
+})
+
+// The shape pathofexile-dat exports: foreign keys are row indices. Two offers
+// in The Caged Brute (as in the game: Tarkleigh's skills, Nessa's supports),
+// a Chinese-client-only offer, and a non-gem reward.
+const game: GameTables = {
+  Quest: [{ Name: 'The Caged Brute', Act: 1 }, { Name: 'Intruders in Black', Act: 2 }],
+  QuestRewardOffers: [
+    { Id: 'a1q2', QuestKey: 0 },
+    { Id: 'a1q2b', QuestKey: 0 },
+    { Id: 'a2q6', QuestKey: 1 },
+    { Id: 'a2q6_tencent', QuestKey: 1 }
+  ],
+  QuestRewards: [
+    { RewardOffer: 0, Reward: 0 },
+    { RewardOffer: 1, Reward: 1 },
+    { RewardOffer: 2, Reward: 2 },
+    { RewardOffer: 3, Reward: 2 },
+    { RewardOffer: 2, Reward: 3 }
+  ],
+  NPCTalk: [
+    { NPCKey: 0, QuestRewardOffersKey: 0 },
+    { NPCKey: 1, QuestRewardOffersKey: 1 },
+    { NPCKey: 2, QuestRewardOffersKey: 2 },
+    { NPCKey: 3, QuestRewardOffersKey: 3 },
+    { NPCKey: 0, QuestRewardOffersKey: null }
+  ],
+  NPCs: [{ Name: 'Tarkleigh' }, { Name: 'Nessa' }, { Name: 'Greust' }, { Name: 'Tutorial NPC' }],
+  BaseItemTypes: [
+    { Id: 'Metadata/Items/Gems/SkillGemLeapSlam', Name: 'Leap Slam' },
+    { Id: 'Metadata/Items/Gems/SupportGemRuthless', Name: 'Ruthless Support' },
+    { Id: 'Metadata/Items/Gems/SkillGemHeraldOfAsh', Name: 'Herald of Ash' },
+    { Id: 'Metadata/Items/Rings/Ring1', Name: 'Iron Ring' }
+  ]
+}
+
+test('the game files say who hands each quest reward over', () => {
+  const npcs = rewardNpcs(game)
+  assert.equal(npcs.get('the caged brute|leap slam'), 'Tarkleigh')
+  assert.equal(npcs.get('the caged brute|ruthless support'), 'Nessa')
+  // the Chinese client's own offer of the same gem doesn't make it ambiguous
+  assert.equal(npcs.get('intruders in black|herald of ash'), 'Greust')
+  assert.equal(npcs.has('intruders in black|iron ring'), false, 'only gems')
+  assert.equal(npcs.size, 3)
+})
+
+test('a gem two NPCs offer in one quest gets none rather than a guess', () => {
+  const both: GameTables = { ...game, QuestRewards: [...game.QuestRewards, { RewardOffer: 1, Reward: 0 }] }
+  assert.equal(rewardNpcs(both).has('the caged brute|leap slam'), false)
+})
+
+test('quest sources get their NPC; vendor sources and unknown quests stay as they are', () => {
+  const out = withRewardNpcs(
+    {
+      'Herald of Ash': [
+        { kind: 'quest', act: 2, quest: 'Intruders in Black' },
+        { kind: 'vendor', act: 2, npc: 'Yeena', quest: 'Intruders in Black' }
+      ],
+      Cleave: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate' }]
+    },
+    rewardNpcs(game)
+  )
+  assert.deepEqual(out['Herald of Ash'], [
+    { kind: 'quest', act: 2, quest: 'Intruders in Black', npc: 'Greust' },
+    { kind: 'vendor', act: 2, npc: 'Yeena', quest: 'Intruders in Black' }
+  ])
+  assert.deepEqual(out.Cleave, [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate' }])
 })
