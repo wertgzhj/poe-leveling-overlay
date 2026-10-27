@@ -189,6 +189,9 @@ const labDone: TrialsSnapshot = {
   completedLabs: ['normal']
 }
 
+// In town: no trial here.
+const inTown: TrialsSnapshot = { ...trials, currentZoneTrialId: null }
+
 const guide: GuideState = {
   route: {
     act: 2,
@@ -217,6 +220,7 @@ const guide: GuideState = {
 
 const bandit: ChoiceDue = { id: 'bandit', wants: 'help Alira', options: ['help Alira', 'help Kraityn', 'help Oak', 'kill all three'] }
 const crypt = log('The Chamber of Sins Level 2', '1_2_9_2', 15, 22)
+const encampment = log('The Forest Encampment', '1_2_town', 15, 22)
 
 /** The editor window instead of the overlay: its Profile tab on one profile. */
 export interface EditorScenario {
@@ -234,7 +238,7 @@ export interface Scenario {
   /** shoot the editor window, not the overlay */
   editor?: EditorScenario
   /** a tab — or, in Settings, a section heading — to click first */
-  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy' | 'What the overlay shows'
+  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy' | 'Overlay' | 'What the overlay shows'
   /** a button to press after the tab, by (part of) its text */
   click?: string
   /** short names from Settings (real name -> short) */
@@ -247,6 +251,11 @@ export interface Scenario {
   announce?: AnnounceSettings
   /** the panel's switches turned off (the rest stay on) */
   showFull?: Partial<ShowSet>
+  /** the compact strip instead of the panel, drawn for a 2560 x 1440 screen
+   *  (its text follows the screen's height), in a window as wide as it is */
+  strip?: boolean
+  /** the panel's text size (Settings → Overlay) */
+  panelText?: number
   /** a search copied just now: its header button shows the tick */
   copied?: 'vendor' | 'tree' | 'regex'
   /** what main answers for the Passives block's map */
@@ -271,6 +280,49 @@ const editorSnapshot: ProfileSnapshot = {
 const scenarios: Scenario[] = [
   // Act 2, the live stage: line colours, NEW, a pick, the bandit reminder.
   { name: 'gems-act2', tab: 'Gems', profile: profileSnapshot(3, 22, 2, { choiceDue: bandit }), log: crypt, trials, guide },
+  // The compact strip in a zone: the trial reminder and the next passive.
+  {
+    name: 'strip-zone',
+    strip: true,
+    profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
+    log: crypt,
+    trials,
+    guide
+  },
+  // ...in town: the gems of this act to take and buy, and the passive while
+  // there's room.
+  {
+    name: 'strip-town',
+    strip: true,
+    profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
+    log: encampment,
+    trials: inTown,
+    guide
+  },
+  // ...with the bandits due: the reminder takes a line, the passive steps aside.
+  {
+    name: 'strip-bandits',
+    strip: true,
+    profile: profileSnapshot(3, 22, 2, { choiceDue: bandit, passives: marauderTree }),
+    log: encampment,
+    trials: inTown,
+    guide
+  },
+  // Settings with the strip on: its switch and text size, and the Strip
+  // column in the table.
+  { name: 'settings-strip', settings: true, strip: true, tab: 'Overlay', profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
+  {
+    name: 'settings-show-strip',
+    settings: true,
+    strip: true,
+    tab: 'What the overlay shows',
+    profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
+    guide
+  },
+  // The full panel at 130 % text: the same window, everything bigger.
+  { name: 'gems-text130', tab: 'Gems', panelText: 1.3, profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
   // Switched off in Settings → What the overlay shows: the copy buttons, the
   // zone line, the bandit reminder and the links. The trial notice, next in
   // line behind the bandits, takes the bar.

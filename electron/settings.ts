@@ -4,7 +4,8 @@ import type { QuestPoints } from './profile/run.ts'
 import type { CopyChoice } from './copy-rules.ts'
 import type { ActRegex } from './search-regex.ts'
 import { DEFAULT_ANNOUNCE, sanitizeAnnounce, type AnnounceSettings } from './announce-rules.ts'
-import { SHOW_ALL, sanitizeShow, type ShowSet } from './show-rules.ts'
+import { SHOW_ALL, SHOW_STRIP_DEFAULT, sanitizeShow, type ShowSet } from './show-rules.ts'
+import { STRIP_TEXT_DEFAULT, STRIP_TEXT_STEPS } from './strip-place.ts'
 
 // Persistent, user-editable settings. electron-store writes JSON into the OS
 // userData folder. No personal data beyond local file paths
@@ -16,6 +17,8 @@ export interface HotkeyBindings {
   toggleTimer: string
   toggleClickThrough: string
   toggleMoveMode: string
+  /** the full panel over the compact strip, and back */
+  toggleFullPanel: string
   stepForward: string
   stepBack: string
   /** Copy the Gems tab's vendor search / the tree search / your own regex.
@@ -86,7 +89,19 @@ export interface AppSettings {
   announce: AnnounceSettings
   /** What the overlay panel shows (show-rules.ts): everything, by default. */
   showFull: ShowSet
+  /** The compact strip instead of the panel, the panel on a hotkey. A
+   *  preview: off until switched on. */
+  stripEnabled: boolean
+  /** What the strip shows: as the panel, but the Pantheon off. */
+  showStrip: ShowSet
+  /** The strip's text size, a step of STRIP_TEXT_STEPS around the game's. */
+  stripText: number
+  /** The full panel's (and Settings') text size, one of PANEL_TEXT_STEPS. */
+  panelText: number
 }
+
+/** The full panel's text sizes; 1 is the size it always had. */
+export const PANEL_TEXT_STEPS = [1, 1.15, 1.3, 1.5] as const
 
 /** What the renderer may change through the settings channel (see ipc.ts:
  *  every field is checked there, unknown ones are ignored). */
@@ -107,6 +122,10 @@ export type SettingsPatch = Partial<
     | 'autoCopyProtect'
     | 'announce'
     | 'showFull'
+    | 'stripEnabled'
+    | 'showStrip'
+    | 'stripText'
+    | 'panelText'
   >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
@@ -114,6 +133,9 @@ export type SettingsPatch = Partial<
  *  per-character guide progress. */
 interface StoreSchema extends AppSettings {
   progress: TrackerSnapshot | null
+  /** where the compact strip sits; null until it has been placed (it then
+   *  starts over the XP bar, see strip-place.ts) */
+  stripBounds: OverlayBounds | null
   /** where the run timer window sits — its own, not the overlay's */
   timerBounds: OverlayBounds
   /** the run timer window is shown (its own hotkey hides it); kept across
@@ -157,6 +179,7 @@ const defaults: StoreSchema = {
     toggleTimer: 'CommandOrControl+Shift+T',
     toggleClickThrough: 'CommandOrControl+Shift+C',
     toggleMoveMode: 'CommandOrControl+Shift+M',
+    toggleFullPanel: 'CommandOrControl+Shift+D',
     stepForward: 'CommandOrControl+Shift+N',
     stepBack: 'CommandOrControl+Shift+P',
     copyVendor: '',
@@ -177,6 +200,11 @@ const defaults: StoreSchema = {
   autoCopyProtect: true,
   announce: DEFAULT_ANNOUNCE,
   showFull: SHOW_ALL,
+  stripEnabled: false,
+  showStrip: SHOW_STRIP_DEFAULT,
+  stripText: STRIP_TEXT_DEFAULT,
+  panelText: 1,
+  stripBounds: null,
   progress: null,
   timerBounds: { width: 260, height: 360 },
   timerShown: true,
@@ -210,6 +238,20 @@ export function getAnnounce(): AnnounceSettings {
 /** Stored show switches made whole: an older settings.json lacks newer ones. */
 export function getShowFull(): ShowSet {
   return sanitizeShow(store.get('showFull'))
+}
+
+export function getShowStrip(): ShowSet {
+  return sanitizeShow(store.get('showStrip'), SHOW_STRIP_DEFAULT)
+}
+
+/** A strip text step as stored or sent; anything else is the game's size. */
+export function sanitizeStripText(v: unknown): number {
+  return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < STRIP_TEXT_STEPS.length ? v : STRIP_TEXT_DEFAULT
+}
+
+/** A panel text size as stored or sent; anything else is the old size. */
+export function sanitizePanelText(v: unknown): number {
+  return (PANEL_TEXT_STEPS as readonly unknown[]).includes(v) ? (v as number) : 1
 }
 
 /** Stored tab visibility merged over defaults (same nested-merge gap as hotkeys),
@@ -252,6 +294,10 @@ export function getSettings(): AppSettings {
     autoCopyLevelUp: store.get('autoCopyLevelUp'),
     autoCopyProtect: store.get('autoCopyProtect'),
     announce: getAnnounce(),
-    showFull: getShowFull()
+    showFull: getShowFull(),
+    stripEnabled: store.get('stripEnabled'),
+    showStrip: getShowStrip(),
+    stripText: sanitizeStripText(store.get('stripText')),
+    panelText: sanitizePanelText(store.get('panelText'))
   }
 }

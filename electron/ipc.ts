@@ -7,6 +7,9 @@ import {
   getAnnounce,
   getHotkeys,
   getShowFull,
+  getShowStrip,
+  sanitizePanelText,
+  sanitizeStripText,
   getSettings,
   sanitizeVisibleTabs,
   store,
@@ -108,14 +111,19 @@ export function registerIpc(
     if (typeof patch.autoCopyProtect === 'boolean') store.set('autoCopyProtect', patch.autoCopyProtect)
     if ('announce' in patch) store.set('announce', sanitizeAnnounce(patch.announce, getAnnounce()))
     if ('showFull' in patch) store.set('showFull', sanitizeShow(patch.showFull, getShowFull()))
+    if ('showStrip' in patch) store.set('showStrip', sanitizeShow(patch.showStrip, getShowStrip()))
+    if ('stripText' in patch) store.set('stripText', sanitizeStripText(patch.stripText))
+    if ('panelText' in patch) store.set('panelText', sanitizePanelText(patch.panelText))
     if (typeof patch.runTimer === 'boolean') {
       store.set('runTimer', patch.runTimer)
       timer.setEnabled(patch.runTimer)
     }
 
     let failed: string[] = []
-    if (patch.hotkeys) {
-      store.set('hotkeys', sanitizeHotkeys(patch.hotkeys))
+    if (patch.hotkeys) store.set('hotkeys', sanitizeHotkeys(patch.hotkeys))
+    // the strip's hotkey is taken only while it's on
+    if (typeof patch.stripEnabled === 'boolean') overlay.setStripEnabled(patch.stripEnabled)
+    if (patch.hotkeys || typeof patch.stripEnabled === 'boolean') {
       failed = registerHotkeys(overlay, guide, timerWindow, searches)
     }
     return { failed }
@@ -139,6 +147,11 @@ export function registerIpc(
     if (timerWindow.owns(e.sender)) timerWindow.resizeBy(delta.dx, delta.dy)
     else overlay.resizeBy(delta.dx, delta.dy)
   })
+
+  ipcMain.on(Channels.overlayStripHeight, (_e, height: unknown) => {
+    if (typeof height === 'number' && Number.isFinite(height) && height > 0) overlay.setStripHeight(height)
+  })
+  ipcMain.on(Channels.overlayToggleFullPanel, () => overlay.toggleFullPanel())
 
   ipcMain.on(Channels.overlayHoverUi, (e, over: unknown) => {
     if (timerWindow.owns(e.sender)) timerWindow.setHoverUi(!!over)
@@ -335,6 +348,7 @@ function sanitizeHotkeys(next: Partial<HotkeyBindings>): HotkeyBindings {
     toggleTimer: pickString(next.toggleTimer, prev.toggleTimer),
     toggleClickThrough: pickString(next.toggleClickThrough, prev.toggleClickThrough),
     toggleMoveMode: pickString(next.toggleMoveMode, prev.toggleMoveMode),
+    toggleFullPanel: pickString(next.toggleFullPanel, prev.toggleFullPanel),
     stepForward: pickString(next.stepForward, prev.stepForward),
     stepBack: pickString(next.stepBack, prev.stepBack),
     copyVendor: pickOptional(next.copyVendor, prev.copyVendor),

@@ -17,6 +17,7 @@ const HOTKEY_FIELDS: ReadonlyArray<readonly [HotkeyField, string]> = [
   ['toggleTimer', 'Show / hide run timer'],
   ['toggleClickThrough', 'Toggle click-through'],
   ['toggleMoveMode', 'Move / resize mode'],
+  ['toggleFullPanel', 'Full panel over the strip'],
   ['stepForward', 'Guide: next step'],
   ['stepBack', 'Guide: previous step'],
   ['copyVendor', 'Copy the Vendor search'],
@@ -66,6 +67,9 @@ export function SettingsPanel(): React.JSX.Element {
     autoCopyTown,
     autoCopyLevelUp,
     autoCopyProtect,
+    stripEnabled,
+    stripText,
+    panelText,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -84,6 +88,9 @@ export function SettingsPanel(): React.JSX.Element {
       autoCopyLevelUp: s.autoCopyLevelUp,
       autoCopyProtect: s.autoCopyProtect,
       moveMode: s.moveMode,
+      stripEnabled: s.stripEnabled,
+      stripText: s.stripText,
+      panelText: s.panelText,
       patch: s.patch
     }))
   )
@@ -162,6 +169,11 @@ export function SettingsPanel(): React.JSX.Element {
     void window.overlay?.setSettings({ autoCopyProtect: value })
   }
 
+  const setStrip = (value: Partial<Pick<SettingsPatchBridge, 'stripEnabled' | 'stripText' | 'panelText'>>): void => {
+    patch(value)
+    void window.overlay?.setSettings(value)
+  }
+
   const setRunTimer = (value: boolean): void => {
     patch({ runTimer: value })
     void window.overlay?.setSettings({ runTimer: value })
@@ -237,7 +249,7 @@ export function SettingsPanel(): React.JSX.Element {
   // The same surface as the overlay, so dragging the slider previews it here.
   const surface = panelSurface(opacity)
   return (
-    <div className="flex h-screen w-screen items-start justify-center p-2">
+    <div className="flex h-full w-full items-start justify-center p-2">
       <div
         data-interactive
         className={
@@ -522,6 +534,36 @@ export function SettingsPanel(): React.JSX.Element {
               <span className="text-xs text-overlay-text">Click-through by default</span>
               <Toggle on={clickThrough} onChange={setClickThrough} />
             </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-overlay-text">Panel text</span>
+              <Steps
+                steps={PANEL_TEXT}
+                value={PANEL_TEXT.findIndex(([v]) => v === panelText)}
+                onChange={(i) => setStrip({ panelText: PANEL_TEXT[i][0] })}
+                label="Panel text"
+              />
+            </div>
+
+            <div className="mt-3 border-t border-overlay-border/60 pt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-overlay-text">
+                  Compact strip <span className="text-[10px] text-warn">preview</span>
+                </span>
+                <Toggle on={stripEnabled} onChange={(v) => setStrip({ stripEnabled: v })} />
+              </div>
+              <p className="mt-1 text-[10px] text-overlay-muted">
+                A few lines instead of the panel: a reminder, the gems to get in the town you’re in, your next
+                passive point. It starts above the XP bar, where no vendor, stash or inventory window goes, and
+                grows away from the screen edge it sits on. The panel is on {formatAccelerator(hotkeys.toggleFullPanel)}{' '}
+                (Hotkeys). What it shows: the Strip column below.
+              </p>
+              {stripEnabled && (
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-xs text-overlay-text">Strip text</span>
+                  <Steps steps={STRIP_TEXT} value={stripText} onChange={(i) => setStrip({ stripText: i })} label="Strip text" />
+                </div>
+              )}
+            </div>
           </Section>
 
           <Section id="show" title="What the overlay shows">
@@ -585,6 +627,52 @@ export function SettingsPanel(): React.JSX.Element {
         </div>
         {moveMode && <ResizeGrip />}
       </div>
+    </div>
+  )
+}
+
+/** The panel's text sizes (settings.ts PANEL_TEXT_STEPS), as shown. */
+const PANEL_TEXT: ReadonlyArray<readonly [number, string]> = [
+  [1, '100 %'],
+  [1.15, '115 %'],
+  [1.3, '130 %'],
+  [1.5, '150 %']
+]
+
+/** The strip's text steps around the game's own (strip-place.ts STRIP_TEXT_STEPS). */
+const STRIP_TEXT: ReadonlyArray<readonly [number, string]> = [
+  [0, '−2'],
+  [1, '−1'],
+  [2, 'Game'],
+  [3, '+1'],
+  [4, '+2']
+]
+
+/** A row of buttons, one lit: a choice of a few steps. */
+function Steps(props: {
+  steps: ReadonlyArray<readonly [number, string]>
+  value: number
+  onChange: (index: number) => void
+  label: string
+}): React.JSX.Element {
+  return (
+    <div className="flex gap-0.5" role="radiogroup" aria-label={props.label}>
+      {props.steps.map(([, text], i) => (
+        <button
+          key={text}
+          role="radio"
+          aria-checked={i === props.value}
+          onClick={() => props.onChange(i)}
+          className={
+            'rounded px-1.5 py-0.5 text-[10px] ' +
+            (i === props.value
+              ? 'bg-overlay-accent/25 font-semibold text-overlay-accent'
+              : 'bg-white/10 text-overlay-muted hover:text-overlay-text')
+          }
+        >
+          {text}
+        </button>
+      ))}
     </div>
   )
 }

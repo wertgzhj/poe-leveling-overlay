@@ -6,8 +6,8 @@ import { voicesFor } from '../lib/speak'
 import { Check } from './shared'
 
 // Settings → What the overlay shows: one row per piece of information, with a
-// tick for the panel and one for the voice, so "do I want the bandits?" is
-// answered in one place. Off only hides it: tracking carries on. Below the
+// tick for the compact strip (while it's on), one for the panel and one for the
+// voice, so "do I want the bandits?" is answered in one place. Off only hides it: tracking carries on. Below the
 // table, how the voice speaks. Voice is all off until switched on.
 
 interface Row {
@@ -15,6 +15,9 @@ interface Row {
   hint: string
   /** the panel's switch; none for something only the voice says */
   show?: ShowItemBridge
+  /** the strip has room for it (it shows its own zone and level, and no
+   *  links or map) */
+  strip?: boolean
   /** the voice's switch; none for something it doesn't say */
   voice?: AnnounceEventBridge
   /** greyed out while this one is off (the Map button without the passives) */
@@ -26,30 +29,30 @@ const GROUPS: ReadonlyArray<readonly [string, readonly Row[]]> = [
     'Header',
     [
       { label: 'Zone and level', hint: 'The line under the tabs: zone, character, level. Log problems show either way.', show: 'zoneLine' },
-      { label: 'Zone too hard / too easy', hint: 'When the zone’s level costs experience, and by how much', show: 'zoneFit', voice: 'zone' },
-      { label: 'Copy buttons', hint: 'Vendor, Tree and Regex in the header. Their hotkeys work either way.', show: 'copyButtons' }
+      { label: 'Zone too hard / too easy', hint: 'When the zone’s level costs experience, and by how much', show: 'zoneFit', strip: true, voice: 'zone' },
+      { label: 'Copy buttons', hint: 'Vendor, Tree and Regex in the header. Their hotkeys work either way.', show: 'copyButtons', strip: true }
     ]
   ],
   [
     'Reminders',
     [
-      { label: 'Trial in this zone', hint: 'A trial you haven’t done is in this zone', show: 'trialHere', voice: 'trial' },
-      { label: 'Labyrinth unlocked', hint: 'All its trials done', show: 'lab', voice: 'lab' },
-      { label: 'Bandits', hint: 'What your build does with the bandits, when they’re due', show: 'bandit', voice: 'bandit' },
-      { label: 'Pantheon', hint: 'The gods your build wants: the reminder where one is fought, and the list in the Trials tab', show: 'pantheon', voice: 'pantheon' }
+      { label: 'Trial in this zone', hint: 'A trial you haven’t done is in this zone', show: 'trialHere', strip: true, voice: 'trial' },
+      { label: 'Labyrinth unlocked', hint: 'All its trials done', show: 'lab', strip: true, voice: 'lab' },
+      { label: 'Bandits', hint: 'What your build does with the bandits, when they’re due', show: 'bandit', strip: true, voice: 'bandit' },
+      { label: 'Pantheon', hint: 'The gods your build wants: the reminder where one is fought, and the list in the Trials tab', show: 'pantheon', strip: true, voice: 'pantheon' }
     ]
   ],
   [
     'Gems',
     [
-      { label: 'Gems to get', hint: 'The rewards to take and the gems to buy. Voice: their names, when a level-up makes them buyable.', show: 'gemsToGet', voice: 'gems' },
+      { label: 'Gems to get', hint: 'The rewards to take and the gems to buy; in the strip, those of the town you’re in. Voice: their names, when a level-up makes them buyable.', show: 'gemsToGet', strip: true, voice: 'gems' },
       { label: 'Your links', hint: 'The socket groups of the stage you’re on', show: 'links' }
     ]
   ],
   [
     'Passives',
     [
-      { label: 'Next passive point', hint: 'The node for your next point. Voice: on every level-up.', show: 'passive', voice: 'passive' },
+      { label: 'Next passive point', hint: 'The node for your next point. Voice: on every level-up.', show: 'passive', strip: true, voice: 'passive' },
       { label: 'Map button', hint: 'The tree map under the passives', show: 'passiveMap', needs: 'passive' }
     ]
   ]
@@ -62,18 +65,33 @@ const TABS: ReadonlyArray<readonly [keyof VisibleTabsBridge, string]> = [
   ['guide', 'Guide tab']
 ]
 
-/** The table's columns: what it's about, then a tick each. */
+/** The table's columns: what it's about, then a tick each; the strip's only
+ *  while it's on. */
 const GRID = 'grid grid-cols-[1fr_2.75rem_3.25rem] items-center gap-x-1'
+const GRID_STRIP = 'grid grid-cols-[1fr_2.5rem_2.75rem_3.25rem] items-center gap-x-1'
 
 export function ShowSettings(): React.JSX.Element {
-  const { announce, showFull, visibleTabs, patch } = useOverlayStore(
-    useShallow((s) => ({ announce: s.announce, showFull: s.showFull, visibleTabs: s.visibleTabs, patch: s.patch }))
+  const { announce, showFull, showStrip, stripEnabled, visibleTabs, patch } = useOverlayStore(
+    useShallow((s) => ({
+      announce: s.announce,
+      showFull: s.showFull,
+      showStrip: s.showStrip,
+      stripEnabled: s.stripEnabled,
+      visibleTabs: s.visibleTabs,
+      patch: s.patch
+    }))
   )
+  const grid = stripEnabled ? GRID_STRIP : GRID
 
   const setShow = (key: ShowItemBridge, on: boolean): void => {
     const next = { ...showFull, [key]: on }
     patch({ showFull: next })
     void window.overlay?.setSettings({ showFull: next })
+  }
+  const setStrip = (key: ShowItemBridge, on: boolean): void => {
+    const next = { ...showStrip, [key]: on }
+    patch({ showStrip: next })
+    void window.overlay?.setSettings({ showStrip: next })
   }
   const setVoice = (event: AnnounceEventBridge, on: boolean): void => {
     const next = { ...announce, events: { ...announce.events, [event]: on } }
@@ -88,22 +106,30 @@ export function ShowSettings(): React.JSX.Element {
 
   return (
     <>
-      <div className={GRID + ' mb-1 text-[10px] text-overlay-muted'}>
+      <div className={grid + ' mb-1 text-[10px] text-overlay-muted'}>
         <span />
+        {stripEnabled && <span className="text-center">Strip</span>}
         <span className="text-center">Panel</span>
         <span className="text-center">Voice</span>
       </div>
       {GROUPS.map(([group, rows]) => (
         <Fragment key={group}>
           <div className={'mb-1 mt-2.5 first:mt-0 ' + HEADING + 'text-overlay-muted'}>{group}</div>
-          {rows.map(({ label, hint, show, voice, needs }) => (
-            <div key={label} className={GRID + ' py-0.5'}>
+          {rows.map(({ label, hint, show, strip, voice, needs }) => (
+            <div key={label} className={grid + ' py-0.5'}>
               <span
                 className={'text-xs text-overlay-text' + (needs ? ' pl-3' : '')}
                 title={hint}
               >
                 {label}
               </span>
+              {stripEnabled && (
+                <span className="flex justify-center">
+                  {show && strip && (
+                    <Check on={showStrip[show]} onChange={(on) => setStrip(show, on)} label={`Show ${label} in the strip`} />
+                  )}
+                </span>
+              )}
               <span className="flex justify-center">
                 {show && (
                   <Check
@@ -139,11 +165,12 @@ export function ShowSettings(): React.JSX.Element {
         // Keep at least one tab: the last one on can't be switched off.
         const isLastOn = on && TABS.filter(([k]) => visibleTabs[k]).length === 1
         return (
-          <div key={key} className={GRID + ' py-0.5'}>
+          <div key={key} className={grid + ' py-0.5'}>
             <span className={'text-xs ' + (isLastOn ? 'text-overlay-muted' : 'text-overlay-text')}>
               {label}
               {isLastOn && <span className="ml-1 text-[10px] text-overlay-muted">(keep one)</span>}
             </span>
+            {stripEnabled && <span />}
             <span className="flex justify-center">
               <Check on={on} onChange={(v) => setTab(key, v)} disabled={isLastOn} label={`Show the ${label}`} />
             </span>

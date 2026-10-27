@@ -49,12 +49,23 @@ const PIP_CLASS: Record<SocketColorBridge, string> = {
 // The socket-colour dot. Shared by the link rows and the to-do list so a gem
 // looks the same wherever it turns up. Renders an empty box of the same size
 // when the colour is unknown (gems.json failed to load), so nothing shifts.
-export function Pip({ gem, dim }: { gem?: ColoredGemBridge; dim?: boolean }): React.JSX.Element {
+export function Pip({
+  gem,
+  dim,
+  scaled
+}: {
+  gem?: ColoredGemBridge
+  dim?: boolean
+  /** sized by the text around it (the compact strip) instead of fixed */
+  scaled?: boolean
+}): React.JSX.Element {
   const box =
     // 9px bold, the one exception to the 10px floor: the letter repeats the
     // colour for colour-blind eyes and must fit the dot. Black on red and
-    // green, white on blue — black on blue was 3.5:1.
-    'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold '
+    // green, white on blue: black on blue was 3.5:1. Scaled, the same
+    // proportions: the letter 0.55 of the text, the dot 0.9.
+    'inline-flex shrink-0 items-center justify-center rounded-full font-bold ' +
+    (scaled ? 'h-[1.6em] w-[1.6em] text-[0.55em] ' : 'h-4 w-4 text-[9px] ')
   // A letterless pip still carries a zero-width space: an empty inline-flex box
   // takes its baseline from its bottom edge instead of from text, which would
   // park white pips a few pixels below the lettered ones in the to-do list.

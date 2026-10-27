@@ -17,7 +17,9 @@ type Kind = 'vendor' | 'tree' | 'regex'
 /** How long a button stays lit after its search was copied. */
 const LIT_MS = 3000
 
-export function SearchButtons(): React.JSX.Element {
+/** `compact`: the strip's version, letters instead of words, sized by the
+ *  text around it. */
+export function SearchButtons({ compact = false }: { compact?: boolean }): React.JSX.Element {
   const { vendor, tree, regex, perAct, hotkeys, copied } = useOverlayStore(
     useShallow((s) => ({
       vendor: s.profile?.vendorSearch ?? null,
@@ -44,6 +46,7 @@ export function SearchButtons(): React.JSX.Element {
       <SearchButton
         kind="vendor"
         label="Vendor"
+        compact={compact}
         lit={lit === 'vendor'}
         title={
           vendor
@@ -55,6 +58,7 @@ export function SearchButtons(): React.JSX.Element {
       <SearchButton
         kind="tree"
         label="Tree"
+        compact={compact}
         lit={lit === 'tree'}
         title={
           tree
@@ -66,6 +70,7 @@ export function SearchButtons(): React.JSX.Element {
       <SearchButton
         kind="regex"
         label="Regex"
+        compact={compact}
         lit={lit === 'regex'}
         title={
           regex || perAct
@@ -87,6 +92,7 @@ function SearchButton(props: {
   lit: boolean
   title: string
   enabled: boolean
+  compact: boolean
 }): React.JSX.Element {
   return (
     <button
@@ -96,9 +102,9 @@ function SearchButton(props: {
       aria-label={`Copy the ${props.label} search`}
       className={
         // Fixed width, and the icon swaps in place: lit, the row mustn't shift.
-        'inline-flex min-w-[4.1rem] items-center justify-center gap-1 disabled:opacity-35 ' +
+        'inline-flex items-center justify-center disabled:opacity-35 ' +
         BUTTON +
-        BUTTON_SIZE.sm +
+        (props.compact ? 'gap-[0.2em] px-[0.4em] py-[0.1em] text-[0.7em]' : 'min-w-[4.1rem] gap-1 ' + BUTTON_SIZE.sm) +
         ' ' +
         (props.lit
           ? 'bg-ok/15 text-ok'
@@ -107,7 +113,7 @@ function SearchButton(props: {
     >
       {/* a copy icon says what clicking does; it turns into a tick once copied */}
       {props.lit ? <TickIcon /> : <CopyIcon />}
-      {props.label}
+      {props.compact ? props.label[0] : props.label}
     </button>
   )
 }

@@ -8,12 +8,16 @@ const [file, index] = arg.slice('--render-scenario='.length).split('#')
 const s = JSON.parse(readFileSync(file, 'utf8'))[Number(index)]
 
 const ok = (v) => Promise.resolve(v)
+// The strip's text follows the screen's height: draw it for 1440p, whatever
+// screen this runs on.
+if (s.strip) Object.defineProperty(window.screen, 'height', { get: () => 1440 })
 // electron/show-rules.ts SHOW_ALL; a scenario's showFull switches some off
 const ALL_SHOWN = Object.fromEntries(
   ['zoneLine', 'zoneFit', 'copyButtons', 'trialHere', 'lab', 'bandit', 'pantheon', 'gemsToGet', 'links', 'passive', 'passiveMap'].map((k) => [k, true])
 )
 const answers = {
-  getState: () => ok({ visible: true, clickThrough: false, moveMode: !!s.moveMode, settingsOpen: !!s.settings }),
+  getState: () =>
+    ok({ visible: true, clickThrough: false, moveMode: !!s.moveMode, settingsOpen: !!s.settings, view: s.strip ? 'strip' : 'panel' }),
   getSettings: () =>
     ok({
       bounds: { width: 380, height: 1100 },
@@ -24,6 +28,7 @@ const answers = {
         toggleTimer: 'CommandOrControl+Shift+T',
         toggleClickThrough: 'CommandOrControl+Shift+C',
         toggleMoveMode: 'CommandOrControl+Shift+M',
+        toggleFullPanel: 'CommandOrControl+Shift+D',
         stepForward: 'F3',
         stepBack: 'CommandOrControl+Shift+P',
         copyVendor: '',
@@ -48,7 +53,11 @@ const answers = {
         volume: 0.8,
         events: { trial: false, gems: false, zone: false, lab: false, bandit: false, pantheon: false, passive: false }
       },
-      showFull: { ...ALL_SHOWN, ...s.showFull }
+      showFull: { ...ALL_SHOWN, ...s.showFull },
+      stripEnabled: !!s.strip,
+      showStrip: { ...ALL_SHOWN, pantheon: false, ...s.showStrip },
+      stripText: 2,
+      panelText: s.panelText ?? 1
     }),
   gemNameList: () => ok(['Cast when Damage Taken Support', 'Melee Physical Damage Support', 'Sunder']),
   getAppInfo: () => ok({ version: '0.0.0', electron: process.versions.electron, isDev: false }),
