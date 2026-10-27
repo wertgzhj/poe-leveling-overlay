@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useOverlayStore } from './stores/overlayStore'
 import { useDebugStore } from './stores/debugStore'
 import { MainPanel } from './panels/MainPanel'
 import { SettingsPanel } from './panels/SettingsPanel'
 import { DebugPanel } from './panels/DebugPanel'
+import { StripPanel } from './panels/StripPanel'
 import { speak } from './lib/speak'
 
 export function App(): React.JSX.Element {
@@ -11,6 +12,8 @@ export function App(): React.JSX.Element {
   const applyLogSnapshot = useOverlayStore((s) => s.applyLogSnapshot)
   const settingsOpen = useOverlayStore((s) => s.settingsOpen)
   const debugOpen = useOverlayStore((s) => s.debugOpen)
+  const view = useOverlayStore((s) => s.view)
+  const panelText = useOverlayStore((s) => s.panelText)
 
   useEffect(() => {
     const api = window.overlay
@@ -34,7 +37,11 @@ export function App(): React.JSX.Element {
         autoCopyLevelUp: s.autoCopyLevelUp,
         autoCopyProtect: s.autoCopyProtect,
         announce: s.announce,
-        showFull: s.showFull
+        showFull: s.showFull,
+        stripEnabled: s.stripEnabled,
+        showStrip: s.showStrip,
+        stripText: s.stripText,
+        panelText: s.panelText
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()
@@ -131,9 +138,28 @@ export function App(): React.JSX.Element {
     }
   }, [])
 
-  if (settingsOpen) return <SettingsPanel />
-  if (debugOpen) return <DebugPanel />
-  return <MainPanel />
+  if (view === 'strip' && !settingsOpen) return <StripPanel />
+  return (
+    <Zoomed by={panelText}>
+      {settingsOpen ? <SettingsPanel /> : debugOpen ? <DebugPanel /> : <MainPanel />}
+    </Zoomed>
+  )
+}
+
+/**
+ * The full panel's text size (Settings → Overlay): the whole page scaled, and
+ * still exactly the window's size. CSS zoom multiplies the wrapper's own px
+ * size too, so it is given the window's size divided by the zoom.
+ */
+function Zoomed({ by, children }: { by: number; children: React.ReactNode }): React.JSX.Element {
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight })
+  useEffect(() => {
+    const onResize = (): void => setSize({ w: window.innerWidth, h: window.innerHeight })
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  if (by === 1) return <>{children}</>
+  return <div style={{ zoom: by, width: size.w / by, height: size.h / by }}>{children}</div>
 }
 
 const emptyTracked: TrackerStateBridge = {

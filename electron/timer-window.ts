@@ -21,7 +21,7 @@ export class TimerWindow {
   private win: BrowserWindow | null = null
   private enabled: boolean
   private shown: boolean
-  private state: OverlayState = { visible: false, clickThrough: true, moveMode: false, settingsOpen: false }
+  private state: OverlayState = { visible: false, clickThrough: true, moveMode: false, settingsOpen: false, view: 'panel' }
   private hoverUi = false
   private saveTimer: NodeJS.Timeout | null = null
   /** what the page last said its panel needs — refitted after a move */

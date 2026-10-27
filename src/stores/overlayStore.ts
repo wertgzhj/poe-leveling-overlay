@@ -6,6 +6,8 @@ interface OverlayStore {
   clickThrough: boolean
   moveMode: boolean
   settingsOpen: boolean
+  /** the compact strip or the full panel (see OverlayState) */
+  view: 'strip' | 'panel'
   // app + settings values
   appVersion: string
   isDev: boolean
@@ -29,6 +31,14 @@ interface OverlayStore {
   announce: AnnounceSettingsBridge
   /** What the panel shows (Settings → What the overlay shows) */
   showFull: ShowSetBridge
+  /** The compact strip is on (Settings → Overlay, preview) */
+  stripEnabled: boolean
+  /** What the strip shows */
+  showStrip: ShowSetBridge
+  /** The strip's text size step (strip-place.ts STRIP_TEXT_STEPS) */
+  stripText: number
+  /** The full panel's text size (settings.ts PANEL_TEXT_STEPS) */
+  panelText: number
   /** The last search copied without a click, and when — the header says so
    *  for a moment. */
   autoCopied: { kind: 'vendor' | 'tree' | 'regex'; at: number } | null
@@ -61,6 +71,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   clickThrough: true,
   moveMode: false,
   settingsOpen: false,
+  view: 'panel',
   appVersion: '',
   isDev: false,
   opacity: 0.95,
@@ -69,6 +80,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     toggleTimer: 'CommandOrControl+Shift+T',
     toggleClickThrough: 'CommandOrControl+Shift+C',
     toggleMoveMode: 'CommandOrControl+Shift+M',
+    toggleFullPanel: 'CommandOrControl+Shift+D',
     stepForward: 'CommandOrControl+Shift+N',
     stepBack: 'CommandOrControl+Shift+P',
     copyVendor: '',
@@ -104,6 +116,22 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     passive: true,
     passiveMap: true
   },
+  stripEnabled: false,
+  showStrip: {
+    zoneLine: true,
+    zoneFit: true,
+    copyButtons: true,
+    trialHere: true,
+    lab: true,
+    bandit: true,
+    pantheon: false,
+    gemsToGet: true,
+    links: true,
+    passive: true,
+    passiveMap: true
+  },
+  stripText: 2,
+  panelText: 1,
   autoCopied: null,
   logStatus: null,
   tracked: null,

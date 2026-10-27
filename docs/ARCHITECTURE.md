@@ -56,6 +56,10 @@ Main
 │                       overlay never holds focus while you play). Click-through
 │                       via setIgnoreMouseEvents(…, { forward: true }), plus a
 │                       move/resize mode, a click-through window can't be dragged.
+│                       With the compact strip on, one of two views, each with
+│                       its own rectangle: the strip (sized to its content,
+│                       growing away from its screen edge, strip-place.ts) or
+│                       the full panel (its hotkey; Settings always opens here).
 ├── LogService          Polling tail over Client.txt → parser → tracker.
 │                       On start it backscans the last 64 KB to resume zone and
 │                       level, then follows appended bytes.
@@ -74,12 +78,14 @@ Main
 ├── UpdateService       electron-updater against this repo's GitHub Releases.
 ├── EditorWindow        A normal window for editing routes and profiles.
 └── Hotkeys             globalShortcut: show/hide, click-through, move mode,
-                        step forward/back. Rebinding re-registers live.
+                        the full panel over the strip, step forward/back.
+                        Rebinding re-registers live.
 
 Renderer (overlay)          Renderer (editor)
-├── MainPanel (frame)       ├── RouteEditor
-│   ├── NoticeBar           ├── ProfileEditor
-│   ├── GuideTab            └── ProfileLibrary
+├── StripPanel (preview)    ├── RouteEditor
+├── MainPanel (frame)       ├── ProfileEditor
+│   ├── NoticeBar           └── ProfileLibrary
+│   ├── GuideTab
 │   ├── GemsTab (gems/: PlanRows, LinkGroup, Legend)
 │   └── TrialsTab
 ├── SettingsPanel (MulePicker, the Gems tab legend)
@@ -215,6 +221,20 @@ replaces only those, an empty clipboard, or a lone quoted search line
 (`mayOverwrite`), never a whisper, item or link you copied. That guard is a
 setting too (*Keep what you copied yourself*, on by default).
 
+### The compact strip: `electron/strip.ts`, `electron/strip-place.ts`
+
+A preview, off until switched on in Settings → *Overlay*. `stripModel` (pure)
+picks what goes under the strip's header, at most `STRIP_LINES` (four): the one
+reminder the notice bar would show, the gems of this act to take or buy while
+you're in its town, and the next passive point, in that order of importance;
+what doesn't fit is "+N more in the full panel". `strip-place.ts` (pure) knows
+where Path of Exile's UI leaves room: the band over the XP bar between the flask
+buttons and the skill bar, measured on a 2560 x 1440 game with every
+combination of vendor, reward, stash, world map, character sheet and inventory
+open, as fractions of the screen height (the game scales its UI by height). The
+strip starts there, its text at the game's size (20 px on 1440p), and grows away
+from the screen edge it sits nearer to, never off the screen.
+
 ### Spoken announcements: `electron/announce.ts`
 
 Main watches what the overlay already knows (the zone, the trials, the
@@ -222,7 +242,7 @@ profile snapshot, the zone's level against yours) after each zone, level-up
 and finished trial, and `Announcer` (`announce-rules.ts`, pure) turns it into
 news: only changes, never the state it starts from (a restart, a character
 switch or another profile is a baseline), a trial or costly zone once per
-character. Moments switched on in Settings → *Voice* are worded there
+character. Moments switched on in Settings → *What the overlay shows* are worded there
 (`phrase`, English or German) and sent to the overlay window, which speaks
 them with the chosen system voice (`src/lib/speak.ts`), queued, never over
 each other.

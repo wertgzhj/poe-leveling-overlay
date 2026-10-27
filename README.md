@@ -48,6 +48,12 @@ semi-automatically from a Path of Building import.
   per piece of information (the zone line, the copy buttons, the trial, Labyrinth,
   bandit and Pantheon reminders, the gems to get, your links, the passives) with a
   tick for the panel and one for the voice. Off only hides it: tracking carries on.
+- **A compact strip, if the panel is too much** (preview: Settings → *Overlay*).
+  A few lines instead of the panel, at the game's own text size: a reminder, the
+  gems to get in the town you're in, your next passive point. It starts above the
+  XP bar, where no vendor, stash or inventory window goes, grows away from the
+  screen edge it sits on, and never past four lines. The full panel is on
+  `Ctrl+Shift+D`. The panel's own text size can go up to 150 % there too.
 - **Says what matters, if you want it to.** In the same table: a trial in this
   zone, new gems to buy, a zone that costs experience, a Labyrinth ready, the
   bandits or Pantheon due, your next passive, each switched on on its own,
@@ -197,6 +203,7 @@ Two things to know:
 | Show / hide run timer | `Ctrl+Shift+T` | Only while Settings → *Run timer* is on |
 | Toggle click-through | `Ctrl+Shift+C` | Click-through lets clicks reach the game |
 | Move / resize mode | `Ctrl+Shift+M` | Drag the title bar; drag the corner to resize |
+| Full panel over the strip | `Ctrl+Shift+D` | Only while the compact strip is on; again to go back |
 | Guide: next step | `Ctrl+Shift+N` | Marks the current step done |
 | Guide: previous step | `Ctrl+Shift+P` | Reopens the last completed step |
 | Copy the Vendor search | *not set* | The Gems tab's gems to buy, for the vendor's search box |

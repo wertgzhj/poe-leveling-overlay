@@ -33,6 +33,10 @@ export type ShowSet = Record<ShowItem, boolean>
 /** Everything on: the overlay as it was before these switches existed. */
 export const SHOW_ALL: ShowSet = Object.fromEntries(SHOW_ITEMS.map((k) => [k, true])) as ShowSet
 
+/** The strip's: everything it has room for but the Pantheon, which waits
+ *  for you to come back for it. */
+export const SHOW_STRIP_DEFAULT: ShowSet = { ...SHOW_ALL, pantheon: false }
+
 /** Stored or sent switches, made whole: anything missing or not a boolean
  *  keeps the base's value. */
 export function sanitizeShow(raw: unknown, base: ShowSet = SHOW_ALL): ShowSet {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { BUTTON, button, BUTTON_SIZE, panelSurface, TAG, TAG_TONE } from '../lib/ui'
 import { SearchButtons } from './SearchButtons'
+import { formatAccelerator } from '../lib/accelerator'
 import { useOverlayStore } from '../stores/overlayStore'
 import { GuideBody } from './GuideTab'
 import { TrialHint } from './NoticeBar'
@@ -74,7 +75,7 @@ function DetectCharButton(): React.JSX.Element {
 /** The tab bar's order, and the order Settings lists them in. */
 export const TAB_ORDER = ['gems', 'trials', 'guide'] as const
 
-function trackerLine(
+export function trackerLine(
   logStatus: WatcherStatusBridge | null,
   tracked: TrackerStateBridge | null,
   languageMismatch: boolean
@@ -132,6 +133,8 @@ export function MainPanel(): React.JSX.Element {
     languageMismatch,
     zoneFit,
     show,
+    stripEnabled,
+    fullPanelKey,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -149,6 +152,8 @@ export function MainPanel(): React.JSX.Element {
       languageMismatch: s.languageMismatch,
       zoneFit: s.zoneFit,
       show: s.showFull,
+      stripEnabled: s.stripEnabled,
+      fullPanelKey: s.hotkeys.toggleFullPanel,
       patch: s.patch
     }))
   )
@@ -180,7 +185,7 @@ export function MainPanel(): React.JSX.Element {
 
   const surface = panelSurface(opacity)
   return (
-    <div className="flex h-screen w-screen items-start justify-center p-2">
+    <div className="flex h-full w-full items-start justify-center p-2">
       <div
         data-interactive
         className={
@@ -219,6 +224,16 @@ export function MainPanel(): React.JSX.Element {
               </button>
             )}
             {show.copyButtons && <SearchButtons />}
+            {stripEnabled && (
+              <button
+                className={'no-drag ' + button('quiet', 'sm')}
+                title={`Back to the compact strip${fullPanelKey ? ` (${formatAccelerator(fullPanelKey)})` : ''}`}
+                aria-label="Back to the compact strip"
+                onClick={() => window.overlay?.toggleFullPanel()}
+              >
+                ⤡
+              </button>
+            )}
             <button
               className={'no-drag ' + button('quiet', 'sm')}
               title="Settings"

@@ -129,6 +129,7 @@ function runSmoke(failedHotkeys: string[]): void {
     const status = {
       windowCreated: !!win,
       alwaysOnTop: win?.isAlwaysOnTop() ?? false,
+      bounds: win?.getBounds() ?? null,
       state: overlay.getState(),
       hotkeysFailed: failedHotkeys,
       tray: !!tray,

@@ -25,6 +25,9 @@ export function registerHotkeys(
     [hk.toggleTimer, () => timer.toggle()],
     [hk.toggleClickThrough, () => overlay.toggleClickThrough()],
     [hk.toggleMoveMode, () => overlay.toggleMoveMode()],
+    // only with the strip on: off, there's nothing to toggle, and a global
+    // hotkey would take the combo from every other program for nothing
+    [overlay.stripOn ? hk.toggleFullPanel : '', () => overlay.toggleFullPanel()],
     [hk.stepForward, () => guide.forward()],
     [hk.stepBack, () => guide.back()],
     // Copy for the game's search boxes — the clipboard only, the paste is

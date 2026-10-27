@@ -28,6 +28,10 @@ export const Channels = {
   overlayResizeBy: 'overlay:resize-by',
   /** renderer -> main: cursor is over visible UI (drives empty-area passthrough) */
   overlayHoverUi: 'overlay:hover-ui',
+  /** renderer -> main: the compact strip's content is this tall (px) */
+  overlayStripHeight: 'overlay:strip-height',
+  /** renderer -> main: open or close the full panel over the strip */
+  overlayToggleFullPanel: 'overlay:toggle-full-panel',
   /** renderer -> main (invoke): read persisted settings */
   settingsGetAll: 'settings:get-all',
   /** renderer -> main (invoke): patch settings; returns hotkeys that failed to bind */
@@ -171,6 +175,9 @@ export interface OverlayState {
   clickThrough: boolean
   moveMode: boolean
   settingsOpen: boolean
+  /** what the window shows: the compact strip (Settings → Overlay, preview)
+   *  or the full panel. Settings always opens on the panel. */
+  view: 'strip' | 'panel'
 }
 
 export interface AppInfo {
