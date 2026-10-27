@@ -13,6 +13,7 @@ const NO_GODS: PantheonStatusBridge[] = []
 export function TrialsBody(): React.JSX.Element {
   const trials = useOverlayStore((s) => s.trials)
   const pantheon = useOverlayStore((s) => s.profile?.pantheon ?? NO_GODS)
+  const showPantheon = useOverlayStore((s) => s.showFull.pantheon)
   if (!trials) return <p className="px-1 text-xs text-overlay-muted">Loading…</p>
 
   // done/total per Labyrinth, counted once instead of per row.
@@ -89,7 +90,7 @@ export function TrialsBody(): React.JSX.Element {
           </div>
         )
       })}
-      {pantheon.length > 0 && <PantheonList gods={pantheon} />}
+      {showPantheon && pantheon.length > 0 && <PantheonList gods={pantheon} />}
       <p className="mt-1 px-1 text-[10px] text-overlay-muted">
         Finishing a trial auto-checks it (Izaro&apos;s plaque line names the trial);
         the hint and a manual click are fallbacks. Each Labyrinth needs all of its

@@ -44,7 +44,11 @@ semi-automatically from a Path of Building import.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
   you finish it, telling you when a Labyrinth is ready to run, and noticing when
   you've beaten it.
-- **Says what matters, if you want it to.** Settings → *Voice*: a trial in this
+- **Shows only what you want.** Settings → *What the overlay shows* has one row
+  per piece of information (the zone line, the copy buttons, the trial, Labyrinth,
+  bandit and Pantheon reminders, the gems to get, your links, the passives) with a
+  tick for the panel and one for the voice. Off only hides it: tracking carries on.
+- **Says what matters, if you want it to.** In the same table: a trial in this
   zone, new gems to buy, a zone that costs experience, a Labyrinth ready, the
   bandits or Pantheon due, your next passive, each switched on on its own,
   in English or German, spoken by Windows' own voices on your PC.
@@ -216,8 +220,8 @@ while you're in a trial's zone, tells you when a Labyrinth's trials are all
 done, and you can click any trial to correct it. When Izaro dies in a Labyrinth's
 final arena, that Labyrinth is marked **done** and its trials are ticked with it.
 
-Don't use one of the tabs? **Settings → Overlay → Tabs to show** hides any of them
-(at least one stays on); with a single tab the switcher disappears entirely.
+Don't use one of the tabs? **Settings → What the overlay shows → Tabs** hides any of
+them (at least one stays on); with a single tab the switcher disappears entirely.
 
 All hotkeys are rebindable in-app: open **Settings** (the ⚙ button in the overlay, or
 the tray → *Settings…*), click a binding, and press the new combo, the change takes

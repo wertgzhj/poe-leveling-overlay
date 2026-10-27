@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { HEADING, button } from '../../lib/ui'
+import { useOverlayStore } from '../../stores/overlayStore'
 import { PassiveMap } from './PassiveMap'
 
 // The passive tree under the gems: the node for your next point (its stats in
@@ -11,6 +12,7 @@ import { PassiveMap } from './PassiveMap'
 
 export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Element {
   const [due, ...after] = view.next
+  const showMap = useOverlayStore((s) => s.showFull.passiveMap)
   const [mapOpen, setMapOpen] = useState(() => {
     try {
       return localStorage.getItem(MAP_KEY) === '1'
@@ -34,7 +36,7 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
       <div className="mb-1 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2">
           <span className={HEADING + 'text-overlay-muted'}>Passives</span>
-          {due && (
+          {due && showMap && (
             // a button that looks like one: the bare "▸ Map" read as a label
             <button
               onClick={toggleMap}
@@ -99,7 +101,7 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
         <p className="text-[10px] text-ok">✓ All {view.total} points placed. The tree is done.</p>
       )}
 
-      {due && mapOpen && <PassiveMap points={view.points} due={due.id} />}
+      {due && showMap && mapOpen && <PassiveMap points={view.points} due={due.id} />}
 
       {view.ascendancy && view.ascendancy.next.length > 0 && (
         <p className="mt-1.5 text-[10px] leading-snug text-overlay-muted">

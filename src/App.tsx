@@ -33,7 +33,8 @@ export function App(): React.JSX.Element {
         autoCopyTown: s.autoCopyTown,
         autoCopyLevelUp: s.autoCopyLevelUp,
         autoCopyProtect: s.autoCopyProtect,
-        announce: s.announce
+        announce: s.announce,
+        showFull: s.showFull
       })
     )
     const { setEvents, pushEvent } = useDebugStore.getState()

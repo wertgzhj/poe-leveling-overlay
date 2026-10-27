@@ -11,8 +11,8 @@ import { BuyRow, RewardGroupRow } from './PlanRows'
 // The Gems tab: what to socket at your level, and where each gem comes from.
 
 export function GemBody(): React.JSX.Element {
-  const { profile, guide } = useOverlayStore(
-    useShallow((s) => ({ profile: s.profile, guide: s.guide }))
+  const { profile, guide, show } = useOverlayStore(
+    useShallow((s) => ({ profile: s.profile, guide: s.guide, show: s.showFull }))
   )
 
   if (profile?.errors && profile.errors.length > 0 && !profile.activeStage) {
@@ -137,7 +137,7 @@ export function GemBody(): React.JSX.Element {
           aligned for the same reason. Anything that isn't a row spans all
           three. */}
       <div className="grid grid-cols-[4rem_1fr_6.5rem] items-baseline gap-x-1.5">
-        {plan.length > 0 && (
+        {show.gemsToGet && plan.length > 0 && (
           <div
             className={
               'col-span-3 mb-2 grid grid-cols-subgrid items-baseline gap-x-1.5 gap-y-1.5 rounded-md border p-2 ' +
@@ -195,7 +195,7 @@ export function GemBody(): React.JSX.Element {
           </div>
         )}
 
-        {stage ? (
+        {!show.links ? null : stage ? (
           <>
             {stage.groups.map((group, i) => (
               <SocketGroup
@@ -216,8 +216,8 @@ export function GemBody(): React.JSX.Element {
         )}
       </div>
 
-      {profile.passives && <Passives view={profile.passives} />}
-      {profile.treeMissing && (
+      {show.passive && profile.passives && <Passives view={profile.passives} />}
+      {show.passive && profile.treeMissing && (
         // Not a warning: the gems work without it. Where the tree would be,
         // how to get it.
         <p className="mt-1 rounded-md border border-overlay-border/60 bg-black/20 px-2 py-1.5 text-[10px] text-overlay-muted">

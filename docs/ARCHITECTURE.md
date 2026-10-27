@@ -23,7 +23,7 @@ This is the constraint everything else is designed around.
 | A separate overlay window on top of the game | Reading game memory, injection, process hooks |
 | Reading `Client.txt`, the game's own log file | Sending simulated input to the game |
 | Showing data, and hotkeys that control the overlay | Automating any part of gameplay |
-| Saying it out loud (system voices, Settings → Voice) | |
+| Saying it out loud (system voices, Settings → What the overlay shows) | |
 
 The app **only reads** and **sends nothing** to the Path of Exile process.
 Hotkeys act on the overlay alone: note that a global hotkey is consumed

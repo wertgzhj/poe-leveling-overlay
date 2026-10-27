@@ -8,7 +8,7 @@ import { GemShortNames } from './GemShortNames'
 import { MulePicker } from './MulePicker'
 import { ResizeGrip } from './MainPanel'
 import { Toggle } from './shared'
-import { VoiceSettings } from './VoiceSettings'
+import { ShowSettings } from './ShowSettings'
 
 type HotkeyField = keyof HotkeyBindingsBridge
 
@@ -26,13 +26,6 @@ const HOTKEY_FIELDS: ReadonlyArray<readonly [HotkeyField, string]> = [
 
 /** These may be left unset — and are, until you pick a combo. */
 const OPTIONAL_FIELDS: ReadonlySet<HotkeyField> = new Set(['copyVendor', 'copyTree', 'copyRegex'])
-
-// In the tab bar's order (see TAB_ORDER).
-const TAB_FIELDS: ReadonlyArray<readonly [keyof VisibleTabsBridge, string]> = [
-  ['gems', 'Gems'],
-  ['trials', 'Trials'],
-  ['guide', 'Guide']
-]
 
 // The game's stash/vendor search box length — 250 characters, confirmed in game
 // (October 2026): a 250-character paste went in whole, and that is where the box
@@ -66,7 +59,6 @@ export function SettingsPanel(): React.JSX.Element {
     muleChoice,
     activeId,
     characterName,
-    visibleTabs,
     searchRegex,
     actRegexes,
     runTimer,
@@ -85,7 +77,6 @@ export function SettingsPanel(): React.JSX.Element {
       muleChoice: s.profile?.muleChoice ?? null,
       activeId: s.profile?.activeId ?? null,
       characterName: s.characterName,
-      visibleTabs: s.visibleTabs,
       searchRegex: s.searchRegex,
       actRegexes: s.actRegexes,
       runTimer: s.runTimer,
@@ -174,11 +165,6 @@ export function SettingsPanel(): React.JSX.Element {
   const setRunTimer = (value: boolean): void => {
     patch({ runTimer: value })
     void window.overlay?.setSettings({ runTimer: value })
-  }
-
-  const setVisibleTabs = (value: VisibleTabsBridge): void => {
-    patch({ visibleTabs: value })
-    void window.overlay?.setSettings({ visibleTabs: value })
   }
 
   const commitPath = (value: string): void => {
@@ -536,31 +522,10 @@ export function SettingsPanel(): React.JSX.Element {
               <span className="text-xs text-overlay-text">Click-through by default</span>
               <Toggle on={clickThrough} onChange={setClickThrough} />
             </div>
-
-            <div className="mt-3 border-t border-overlay-border/60 pt-2">
-              <span className="text-[11px] text-overlay-muted">Tabs to show</span>
-              {TAB_FIELDS.map(([key, label]) => {
-                const on = visibleTabs[key]
-                // Keep at least one tab — the last one on can't be switched off.
-                const isLastOn = on && TAB_FIELDS.filter(([k]) => visibleTabs[k]).length === 1
-                return (
-                  <div key={key} className="mt-1.5 flex items-center justify-between">
-                    <span className={'text-xs ' + (isLastOn ? 'text-overlay-muted' : 'text-overlay-text')}>
-                      {label}
-                      {isLastOn && <span className="ml-1 text-[10px] text-overlay-muted">(keep one)</span>}
-                    </span>
-                    <Toggle
-                      on={on}
-                      onChange={(v) => !isLastOn && setVisibleTabs({ ...visibleTabs, [key]: v })}
-                    />
-                  </div>
-                )
-              })}
-            </div>
           </Section>
 
-          <Section id="voice" title="Voice">
-            <VoiceSettings />
+          <Section id="show" title="What the overlay shows">
+            <ShowSettings />
           </Section>
 
           <Section id="timer" title="Run timer">

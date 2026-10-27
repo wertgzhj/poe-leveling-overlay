@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   Announcer,
   DEFAULT_ANNOUNCE,
+  eventOf,
   phrase,
   sample,
   sanitizeAnnounce,
@@ -66,6 +67,7 @@ test('what each says, in English and German', () => {
     'Zone 5 levels too high',
     'Normal Labyrinth open',
     'Bandits: help Alira',
+    'Pantheon: Soul of Lunaris',
     'Next point: Born to Fight'
   ])
   assert.deepEqual(say('de'), [
@@ -74,6 +76,7 @@ test('what each says, in English and German', () => {
     'Zone 5 Level zu hoch',
     'Labyrinth offen: Normal',
     'Banditen: Alira helfen',
+    'Pantheon: Soul of Lunaris',
     'Nächster Punkt: Born to Fight'
   ])
   assert.equal(phrase({ event: 'gems', gems: ['A', 'B', 'C', 'D', 'E'] }, 'en'), 'New gems: A, B, C and 2 more')
@@ -92,4 +95,20 @@ test('settings are made whole: wrong or missing parts are the defaults', () => {
   // a patch over what's stored keeps the rest
   const stored = { ...DEFAULT_ANNOUNCE, lang: 'de' as const, events: { ...DEFAULT_ANNOUNCE.events, lab: true } }
   assert.deepEqual(sanitizeAnnounce({ volume: 0.5 }, stored), { ...stored, volume: 0.5 })
+})
+
+test('the old single bandit/Pantheon switch carries over to both', () => {
+  const on = sanitizeAnnounce({ events: { choice: true } }).events
+  assert.equal(on.bandit, true)
+  assert.equal(on.pantheon, true)
+  // a newer setting of either wins over the old one
+  const mixed = sanitizeAnnounce({ events: { choice: true, pantheon: false } }).events
+  assert.deepEqual([mixed.bandit, mixed.pantheon], [true, false])
+})
+
+test('each announcement answers to its own switch', () => {
+  assert.equal(eventOf({ event: 'choice', id: 'bandit', wants: 'help Alira' }), 'bandit')
+  assert.equal(eventOf({ event: 'choice', id: 'pantheon', wants: 'Soul of Lunaris' }), 'pantheon')
+  assert.equal(eventOf({ event: 'trial' }), 'trial')
+  for (const e of ANNOUNCE_EVENTS) assert.equal(eventOf(sample(e)), e, `the ${e} sample`)
 })

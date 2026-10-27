@@ -1,11 +1,11 @@
 // Spoken announcements: watch what the overlay knows, and when one of the
-// moments switched on in Settings → Voice happens, have the overlay window
-// say it (announce-rules.ts decides what's news and words it). The window
+// moments switched on in Settings → What the overlay shows happens, have the
+// overlay window say it (announce-rules.ts decides what's news and words it). The window
 // speaks through the system's own voices; nothing leaves the PC, and the game
 // gets nothing (docs/ARCHITECTURE.md#tos-position).
 
 import { Channels, type Spoken } from './channels.ts'
-import { Announcer, phrase, sample, type AnnounceEvent, type Announcement, type Observed } from './announce-rules.ts'
+import { Announcer, eventOf, phrase, sample, type AnnounceEvent, type Announcement, type Observed } from './announce-rules.ts'
 import { getAnnounce } from './settings.ts'
 import { vendorGems } from './profile/search.ts'
 import type { LogService } from './log/service.ts'
@@ -38,7 +38,7 @@ export class AnnounceService {
   private check(): void {
     const said = this.announcer.observe(this.observe())
     const on = getAnnounce().events
-    for (const a of said) if (on[a.event]) this.say(a)
+    for (const a of said) if (on[eventOf(a)]) this.say(a)
   }
 
   private observe(): Observed {
