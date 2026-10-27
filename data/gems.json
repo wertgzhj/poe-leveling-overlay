@@ -1,6 +1,6 @@
 {
   "_note": "gem -> { attr, sources }. attr computes the socket colour (str=red, dex=green, int=blue) and is hand-curated - a gem missing here renders a neutral pip with '?'. sources (per-class quest/vendor availability) are FILLED AUTOMATICALLY from the Path of Exile Wiki by the 'Fetch gem data' workflow (or npm run fetch-gems) - re-run it after a game patch to refresh. Hand edits to sources of wiki-known gems will be overwritten by the next fetch; attrs and extra gems are preserved. Shape: { \"kind\": \"quest\"|\"vendor\", \"act\": 1, \"quest\": \"...\", \"npc\": \"Nessa\", \"classes\": [\"Witch\"] } (classes omitted = all). The engine picks the earliest source per class (quest before vendor); known gems with no source fall back to Siosa/Lilly.",
-  "fetchedAt": "2026-10-19",
+  "fetchedAt": "2026-10-27",
   "gems": {
     "Ground Slam": {
       "attr": "str",
@@ -11,7 +11,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -78,7 +79,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -116,7 +118,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -154,7 +157,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -192,7 +196,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -267,7 +272,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -310,7 +316,8 @@
             "Duelist",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -345,7 +352,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -387,7 +395,8 @@
             "Templar",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -431,7 +440,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -471,7 +481,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -504,7 +515,8 @@
             "Templar",
             "Marauder",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -548,7 +560,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -584,7 +597,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "The Eternal Nightmare"
+          "quest": "The Eternal Nightmare",
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -614,7 +628,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -647,7 +662,8 @@
           "classes": [
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -685,7 +701,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -723,7 +740,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -762,7 +780,8 @@
           "classes": [
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -799,7 +818,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -836,7 +856,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -875,7 +896,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -914,7 +936,8 @@
           "classes": [
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -952,7 +975,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -990,7 +1014,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1028,7 +1053,8 @@
           "classes": [
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1068,7 +1094,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1102,7 +1129,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1161,7 +1189,8 @@
             "Shadow",
             "Scion",
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -1201,7 +1230,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -1240,7 +1270,8 @@
           "classes": [
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -1285,7 +1316,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -1308,7 +1340,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "The Eternal Nightmare"
+          "quest": "The Eternal Nightmare",
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -1339,7 +1372,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -1376,7 +1410,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -1445,7 +1480,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1484,7 +1520,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1551,7 +1588,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -1591,7 +1629,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1631,7 +1670,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1670,7 +1710,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1708,7 +1749,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -1745,7 +1787,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -1783,7 +1826,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1822,7 +1866,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -1860,7 +1905,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1897,7 +1943,8 @@
           "quest": "Breaking Some Eggs",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1934,7 +1981,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -1972,7 +2020,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -2011,7 +2060,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -2081,7 +2131,8 @@
           "classes": [
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -2124,7 +2175,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -2164,7 +2216,8 @@
             "Witch",
             "Templar",
             "Shadow"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -2203,7 +2256,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -2244,7 +2298,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "The Eternal Nightmare"
+          "quest": "The Eternal Nightmare",
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -2272,7 +2327,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -2310,7 +2366,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -2348,7 +2405,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -2388,7 +2446,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -2429,7 +2488,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -2471,7 +2531,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -2510,7 +2571,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -2632,7 +2694,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -2657,7 +2720,8 @@
           "quest": "Breaking the Seal",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -2690,7 +2754,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -2733,7 +2798,8 @@
           "classes": [
             "Marauder",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -2851,7 +2917,8 @@
             "Witch",
             "Templar",
             "Shadow"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -2889,7 +2956,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -2923,7 +2991,8 @@
             "Witch",
             "Templar",
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -2964,7 +3033,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -3015,7 +3085,8 @@
             "Templar",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -3052,7 +3123,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -3090,7 +3162,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -3137,7 +3210,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -3382,7 +3456,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -3459,7 +3534,8 @@
             "Witch",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -3538,7 +3614,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -3564,7 +3641,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -3604,7 +3682,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -3647,7 +3726,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -3679,7 +3759,8 @@
           "quest": "Breaking the Seal",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -3711,7 +3792,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -3760,7 +3842,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -3840,7 +3923,8 @@
           "classes": [
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -3883,7 +3967,8 @@
           "classes": [
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -3933,7 +4018,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -3975,7 +4061,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -4008,7 +4095,8 @@
           "classes": [
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -4081,7 +4169,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -4119,7 +4208,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -4157,7 +4247,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -4246,7 +4337,8 @@
           "quest": "Breaking Some Eggs",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -4286,7 +4378,8 @@
             "Duelist",
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -4377,7 +4470,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -4415,7 +4509,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -4488,7 +4583,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -4532,7 +4628,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -4605,7 +4702,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -4759,7 +4857,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -4797,7 +4896,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "The Eternal Nightmare"
+          "quest": "The Eternal Nightmare",
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -4857,7 +4957,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -4899,7 +5000,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -4943,7 +5045,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -4980,7 +5083,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -5019,7 +5123,8 @@
             "Witch",
             "Templar",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -5057,7 +5162,8 @@
             "Marauder",
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -5105,7 +5211,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -5184,7 +5291,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -5229,7 +5337,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -5267,7 +5376,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -5306,7 +5416,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -5355,7 +5466,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -5447,7 +5559,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -5486,7 +5599,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -5524,7 +5638,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -5570,7 +5685,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -5613,7 +5729,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -5661,7 +5778,8 @@
           "classes": [
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -5701,7 +5819,8 @@
             "Templar",
             "Witch",
             "Scion"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -5741,7 +5860,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -5844,7 +5964,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -5963,7 +6084,8 @@
           "classes": [
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -6012,7 +6134,8 @@
           "classes": [
             "Witch",
             "Scion"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -6045,7 +6168,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -6084,7 +6208,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -6122,7 +6247,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -6163,7 +6289,8 @@
             "Witch",
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -6224,7 +6351,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -6262,7 +6390,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -6324,7 +6453,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -6422,7 +6552,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -6460,7 +6591,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -6498,7 +6630,8 @@
           "classes": [
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -6544,7 +6677,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -6585,7 +6719,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -6666,7 +6801,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -6745,7 +6881,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -6831,7 +6968,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -6879,7 +7017,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -6928,7 +7067,8 @@
             "Shadow",
             "Scion",
             "Templar"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -6963,7 +7103,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -7048,7 +7189,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -7119,7 +7261,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -7159,7 +7302,8 @@
             "Shadow",
             "Templar",
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -7205,7 +7349,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -7251,7 +7396,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -7283,7 +7429,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -7329,7 +7476,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -7367,7 +7515,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -7404,7 +7553,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -7441,7 +7591,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -7508,7 +7659,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -7550,7 +7702,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -7596,7 +7749,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -7639,7 +7793,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -7688,7 +7843,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -7726,7 +7882,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -7763,7 +7920,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -7806,7 +7964,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -7858,7 +8017,8 @@
             "Templar",
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -7894,7 +8054,8 @@
           "quest": "Breaking the Seal",
           "classes": [
             "Scion"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -7961,7 +8122,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -8001,7 +8163,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -8048,7 +8211,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -8089,7 +8253,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -8129,7 +8294,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -8168,7 +8334,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -8205,7 +8372,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -8277,7 +8445,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -8316,7 +8485,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -8387,7 +8557,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -8432,7 +8603,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -8475,7 +8647,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -8513,7 +8686,8 @@
           "classes": [
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -8559,7 +8733,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -8623,7 +8798,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -8665,7 +8841,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -8705,7 +8882,8 @@
           "quest": "Breaking the Seal",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -8749,7 +8927,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -8778,7 +8957,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -8846,7 +9026,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -8921,7 +9102,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -8964,7 +9146,8 @@
           "classes": [
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -9040,7 +9223,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -9070,7 +9254,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -9172,7 +9357,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -9217,7 +9403,8 @@
           "classes": [
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -9252,7 +9439,8 @@
         {
           "kind": "quest",
           "act": 2,
-          "quest": "Intruders in Black"
+          "quest": "Intruders in Black",
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -9281,7 +9469,8 @@
         {
           "kind": "quest",
           "act": 2,
-          "quest": "Intruders in Black"
+          "quest": "Intruders in Black",
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -9313,7 +9502,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -9349,7 +9539,8 @@
         {
           "kind": "quest",
           "act": 2,
-          "quest": "Intruders in Black"
+          "quest": "Intruders in Black",
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -9381,7 +9572,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -9414,7 +9606,8 @@
             "Shadow",
             "Witch",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -9486,7 +9679,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -9527,7 +9721,8 @@
           "quest": "Breaking Some Eggs",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -9605,7 +9800,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -9643,7 +9839,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -9676,7 +9873,8 @@
           "classes": [
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -9718,7 +9916,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -9760,7 +9959,8 @@
             "Templar",
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -9806,7 +10006,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -9923,7 +10124,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -9969,7 +10171,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -10001,7 +10204,8 @@
           "classes": [
             "Witch",
             "Scion"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -10059,7 +10263,8 @@
             "Marauder",
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -10100,7 +10305,8 @@
             "Shadow",
             "Witch",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -10173,7 +10379,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "The Eternal Nightmare"
+          "quest": "The Eternal Nightmare",
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -10259,7 +10466,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -10302,7 +10510,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -10340,7 +10549,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -10378,7 +10588,8 @@
             "Witch",
             "Templar",
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -10417,7 +10628,8 @@
           "classes": [
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -10488,7 +10700,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -10527,7 +10740,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -10565,7 +10779,8 @@
           "quest": "Breaking the Seal",
           "classes": [
             "Scion"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -10725,7 +10940,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -10767,7 +10983,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -10842,7 +11059,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -10879,7 +11097,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -10951,7 +11170,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -10999,7 +11219,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -11111,7 +11332,8 @@
             "Duelist",
             "Ranger",
             "Scion"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -11154,7 +11376,8 @@
             "Templar",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -11196,7 +11419,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -11225,7 +11449,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -11270,7 +11495,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -11315,7 +11541,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -11361,7 +11588,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -11403,7 +11631,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -11441,7 +11670,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -11512,7 +11742,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -11552,7 +11783,8 @@
             "Witch",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -11622,7 +11854,8 @@
           "classes": [
             "Templar",
             "Witch"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -11660,7 +11893,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -11715,7 +11949,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -11752,7 +11987,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -11816,7 +12052,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -11866,7 +12103,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -11907,7 +12145,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -11951,7 +12190,8 @@
             "Marauder",
             "Duelist",
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -11993,7 +12233,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -12033,7 +12274,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -12073,7 +12315,8 @@
           "classes": [
             "Templar",
             "Marauder"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -12099,7 +12342,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -12137,7 +12381,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -12183,7 +12428,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -12209,7 +12455,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -12265,7 +12512,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -12318,7 +12566,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -12357,7 +12606,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -12466,7 +12716,8 @@
           "classes": [
             "Shadow",
             "Witch"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -12513,7 +12764,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -12545,7 +12797,8 @@
           "classes": [
             "Ranger",
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -12625,7 +12878,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -12747,7 +13001,8 @@
             "Duelist",
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -12779,7 +13034,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -12822,7 +13078,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -12909,7 +13166,8 @@
             "Templar",
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -12954,7 +13212,8 @@
             "Marauder",
             "Scion",
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -12992,7 +13251,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -13034,7 +13294,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -13160,7 +13421,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -13206,7 +13468,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -13254,7 +13517,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -13304,7 +13568,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -13353,7 +13618,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -13391,7 +13657,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -13435,7 +13702,8 @@
           "classes": [
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -13508,7 +13776,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -13568,7 +13837,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -13601,7 +13871,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -13639,7 +13910,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -13678,7 +13950,8 @@
           "classes": [
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -13712,7 +13985,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -13758,7 +14032,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -13800,7 +14075,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -13842,7 +14118,8 @@
           "classes": [
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -13883,7 +14160,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -13921,7 +14199,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -13962,7 +14241,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -14006,7 +14286,8 @@
             "Duelist",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -14038,7 +14319,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -14080,7 +14362,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -14116,7 +14399,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -14159,7 +14443,8 @@
           "classes": [
             "Templar",
             "Marauder"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -14197,7 +14482,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -14238,7 +14524,8 @@
           "quest": "Breaking Some Eggs",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -14281,7 +14568,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -14328,7 +14616,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -14360,7 +14649,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -14431,7 +14721,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -14473,7 +14764,8 @@
           "classes": [
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -14512,7 +14804,8 @@
           "quest": "Breaking the Seal",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -14545,7 +14838,8 @@
           "classes": [
             "Ranger",
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -14583,7 +14877,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -14621,7 +14916,8 @@
           "quest": "Breaking the Seal",
           "classes": [
             "Scion"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -14655,7 +14951,8 @@
             "Witch",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -14709,7 +15006,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -14753,7 +15051,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -14843,7 +15142,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -14911,7 +15211,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -14943,7 +15244,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -15015,7 +15317,8 @@
           "classes": [
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -15058,7 +15361,8 @@
             "Templar",
             "Marauder",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -15101,7 +15405,8 @@
           "quest": "Breaking Some Eggs",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -15144,7 +15449,8 @@
           "classes": [
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -15186,7 +15492,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -15228,7 +15535,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -15275,7 +15583,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -15317,7 +15626,8 @@
           "quest": "Enemy at the Gate",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -15386,7 +15696,8 @@
           "classes": [
             "Witch",
             "Templar"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -15424,7 +15735,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "Breaking the Seal"
+          "quest": "Breaking the Seal",
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -15455,7 +15767,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "Breaking the Seal"
+          "quest": "Breaking the Seal",
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -15489,7 +15802,8 @@
           "quest": "Breaking Some Eggs",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -15526,7 +15840,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "Breaking the Seal"
+          "quest": "Breaking the Seal",
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -15557,7 +15872,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "Breaking the Seal"
+          "quest": "Breaking the Seal",
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -15588,7 +15904,8 @@
           "classes": [
             "Witch",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -15630,7 +15947,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -15683,7 +16001,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -15718,7 +16037,8 @@
         {
           "kind": "quest",
           "act": 4,
-          "quest": "Breaking the Seal"
+          "quest": "Breaking the Seal",
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -15761,7 +16081,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -15800,7 +16121,8 @@
           "quest": "Mercy Mission",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -15839,7 +16161,8 @@
           "quest": "A Fixture of Fate",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -15877,7 +16200,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -15915,7 +16239,8 @@
           "classes": [
             "Marauder",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -15991,7 +16316,8 @@
             "Witch",
             "Scion",
             "Shadow"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -16029,7 +16355,8 @@
           "quest": "Breaking the Seal",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -16062,7 +16389,8 @@
           "classes": [
             "Ranger",
             "Duelist"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -16101,7 +16429,8 @@
           "classes": [
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -16152,7 +16481,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -16230,7 +16560,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -16265,7 +16596,8 @@
             "Shadow",
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -16306,7 +16638,8 @@
           "classes": [
             "Witch",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -16344,7 +16677,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -16390,7 +16724,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -16423,7 +16758,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -16703,7 +17039,8 @@
           "quest": "Lost in Love",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -16740,7 +17077,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -16780,7 +17118,8 @@
             "Marauder",
             "Duelist",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -16819,7 +17158,8 @@
           "quest": "The Eternal Nightmare",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -16886,7 +17226,8 @@
             "Marauder",
             "Templar",
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -16920,7 +17261,8 @@
             "Witch",
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -16966,7 +17308,8 @@
             "Templar",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Oyun"
         },
         {
           "kind": "vendor",
@@ -17007,7 +17350,8 @@
           "classes": [
             "Witch",
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -17054,7 +17398,8 @@
           "quest": "Sharp and Cruel",
           "classes": [
             "Marauder"
-          ]
+          ],
+          "npc": "Silk"
         },
         {
           "kind": "vendor",
@@ -17093,7 +17438,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Nessa"
         }
       ]
     },
@@ -17114,7 +17460,8 @@
             "Ranger",
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -17154,7 +17501,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Shadow"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -17197,7 +17545,8 @@
             "Marauder",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -17235,7 +17584,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -17272,7 +17622,8 @@
           "quest": "Breaking Some Eggs",
           "classes": [
             "Duelist"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -17312,7 +17663,8 @@
           "classes": [
             "Marauder",
             "Duelist"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -17350,7 +17702,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
@@ -17394,7 +17747,8 @@
             "Duelist",
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -17431,7 +17785,8 @@
           "quest": "Sever the Right Hand",
           "classes": [
             "Ranger"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -17473,7 +17828,8 @@
           "classes": [
             "Duelist",
             "Ranger"
-          ]
+          ],
+          "npc": "Siosa"
         },
         {
           "kind": "vendor",
@@ -17541,7 +17897,8 @@
           "quest": "The Siren's Cadence",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Nessa"
         },
         {
           "kind": "vendor",
@@ -17579,7 +17936,8 @@
           "quest": "The Caged Brute",
           "classes": [
             "Witch"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -17618,7 +17976,8 @@
           "classes": [
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Tarkleigh"
         },
         {
           "kind": "vendor",
@@ -17658,7 +18017,8 @@
           "classes": [
             "Ranger",
             "Shadow"
-          ]
+          ],
+          "npc": "Dialla"
         },
         {
           "kind": "vendor",
@@ -17691,7 +18051,8 @@
           "classes": [
             "Shadow",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -17732,7 +18093,8 @@
             "Witch",
             "Templar",
             "Scion"
-          ]
+          ],
+          "npc": "Maramoa"
         },
         {
           "kind": "vendor",
@@ -17794,7 +18156,8 @@
           "quest": "Intruders in Black",
           "classes": [
             "Templar"
-          ]
+          ],
+          "npc": "Greust"
         },
         {
           "kind": "vendor",
