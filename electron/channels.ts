@@ -9,6 +9,7 @@ import type { ResolvedStage, Acquisitions, MuleOption } from './profile/engine.t
 import type { TrialsSnapshot } from './trials/engine.ts'
 import type { LibraryEntry, LibraryResult } from './profile/library.ts'
 import type { ChoiceDue } from './profile/run.ts'
+import type { StageDraft } from './profile/pob-stages.ts'
 import type { PassivesView } from './profile/tree.ts'
 import type { RunTimerSnapshot } from './timer/engine.ts'
 import type { ImportResult } from './timer/service.ts'
@@ -120,7 +121,11 @@ export const Channels = {
   profileDismissChoice: 'profile:dismiss-choice',
   /** renderer -> main: tick/untick a Pantheon power as unlocked on this character */
   profileTogglePantheon: 'profile:toggle-pantheon',
-  /** renderer -> main (invoke): import a PoB code/link into an active profile */
+  /** renderer -> main (invoke): read a PoB code/link, for the import's review
+   *  step: where each gem set starts, as far as the build says */
+  pobRead: 'pob:read',
+  /** renderer -> main (invoke): import the build last read, at the start
+   *  levels the player confirmed, as the active profile */
   pobImport: 'pob:import',
   /** renderer -> main: open the editor window */
   editorOpen: 'editor:open',
@@ -335,6 +340,17 @@ export interface PobImportResponse {
   warnings: string[]
   errors: string[]
 }
+
+/** A read build, for the review step: its gem sets and where each starts. */
+export interface PobReadResponse {
+  ok: boolean
+  /** the build's name, as the profile will be called */
+  name?: string
+  drafts: StageDraft[]
+  errors: string[]
+}
+
+export type { StageDraft } from './profile/pob-stages.ts'
 
 export interface EditorRouteEntry {
   act: number

@@ -1,7 +1,9 @@
-// Path of Building import (pure — node builtins + fast-xml-parser only, no
-// Electron). Export string -> XML -> our Profile. Semi-automatic:
-// stage level ranges are read from SkillSet/Spec titles when present and guessed
-// (with a warning) otherwise, so the result is always a valid, editable profile.
+// Path of Building import (pure: node builtins + fast-xml-parser only, no
+// Electron). Export string -> XML -> our Profile. Where each gem set starts is
+// worked out by pob-stages.ts: from a range its title states, else from the
+// tree it shares a loadout with. The import's review step shows the result and
+// asks for what the build doesn't say; without one (tests, old callers) the
+// open ones are split evenly, with a warning.
 
 import { deflateSync, inflateSync } from 'node:zlib'
 import { XMLParser } from 'fast-xml-parser'
@@ -19,11 +21,15 @@ import {
   type Bandit
 } from './profile.ts'
 import { planFromSpecs, type PassivePlan, type TreeData, type TreeSpec } from './tree.ts'
+import { rangesFromStarts, stageDrafts, type StageDraft } from './pob-stages.ts'
 
 export interface PobImportResult {
   profile: Profile | null
   warnings: string[]
   errors: string[]
+  /** each gem set's start level as the build tells it, in PoB's order (for
+   *  the review step); absent when the build couldn't be read */
+  drafts?: StageDraft[]
 }
 
 export interface PobImportOptions {
@@ -31,6 +37,9 @@ export interface PobImportOptions {
   /** The passive tree: with it, the build's tree specs become the profile's
    *  `passives`, in the order to take them. */
   tree?: TreeData | null
+  /** each gem set's start level, in PoB's order, as the player confirmed them
+   *  in the review step; overrides what the build says */
+  starts?: readonly number[]
 }
 
 
@@ -109,10 +118,30 @@ export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImpor
     return { profile: null, warnings, errors: ['no skill gems found in the PoB export'] }
   }
 
-  const stages = buildStages(sets, warnings)
+  const specs = readSpecs(pob['Tree'])
+  const tree = opts.tree ?? null
+  const drafts = stageDrafts(
+    sets.map((s) => ({ title: s.title, gems: s.groups.reduce((n, g) => n + g.gems.length, 0) })),
+    specs.map((s) => ({ title: s.title, points: spentPoints(s, tree) })),
+    parseStageTitle
+  )
+  // Ranges every gem set states in its title keep their own ends ("1-11",
+  // "12-24"): the title-only path below. Otherwise start levels, each stage
+  // running to the next: as confirmed in the review step, or as read. Starts
+  // confirmed as read are no change, so stated ends stay.
+  const given = opts.starts?.length === sets.length ? opts.starts : null
+  const confirmed = given && given.some((n, i) => n !== drafts[i].start) ? [...given] : null
+  const starts = confirmed ?? drafts.map((d) => d.start)
+  const allTitled = drafts.every((d) => d.from === 'set-title')
+  const stages =
+    !confirmed && allTitled
+      ? buildStages(sets, warnings)
+      : starts.every((n): n is number => n != null)
+        ? stagesFromStarts(sets, starts, drafts, warnings)
+        : buildStages(sets, warnings)
   const gemPlan = buildGemPlan(stages)
 
-  const passives = readTree(pob['Tree'], opts.tree ?? null, warnings)
+  const passives = readTree(specs, tree, warnings)
 
   const profile: Profile = {
     meta: {
@@ -133,27 +162,54 @@ export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImpor
   const { errors: valErrors } = validateProfile(profile)
   for (const e of valErrors) warnings.push(`review: ${e}`)
 
-  return { profile, warnings, errors }
+  return { profile, warnings, errors, drafts }
 }
 
-/** The build's tree specs, in PoB's order, as a plan. PoB lists them the way
- *  levelling guides do — one per milestone — and that order is kept. */
-function readTree(treeRaw: unknown, tree: TreeData | null, warnings: string[]): PassivePlan | undefined {
+/** Stages at the given start levels, each running to the next one's. */
+function stagesFromStarts(sets: RawSet[], starts: number[], drafts: StageDraft[], warnings: string[]): Stage[] {
+  const labels = drafts.map((d) => d.label)
+  return rangesFromStarts(starts, CAMPAIGN_END, warnings, labels).map(({ index, range }) => ({
+    range,
+    label: labels[index],
+    socketGroups: sets[index].groups
+  }))
+}
+
+/** A tree spec as PoB lists it, with the tree version it was made for. */
+type PobSpec = TreeSpec & { version?: string }
+
+/** The build's tree specs as PoB lists them. */
+function readSpecs(treeRaw: unknown): PobSpec[] {
   const specsRaw = (treeRaw as Record<string, unknown> | undefined)?.['Spec']
-  if (!Array.isArray(specsRaw) || specsRaw.length === 0) return undefined
-  const specs: TreeSpec[] = []
-  let version: string | undefined
+  if (!Array.isArray(specsRaw)) return []
+  const specs: PobSpec[] = []
   for (const s of specsRaw as Record<string, unknown>[]) {
     const nodes = (attr(s, 'nodes') ?? '')
       .split(',')
       .map(Number)
       .filter((n) => Number.isInteger(n) && n > 0)
     if (nodes.length === 0) continue
-    version ??= attr(s, 'treeVersion')
     const masteries: Record<string, number> = {}
     for (const m of (attr(s, 'masteryEffects') ?? '').matchAll(/\{(\d+),(\d+)\}/g)) masteries[m[1]] = Number(m[2])
-    specs.push({ title: attr(s, 'title'), nodes, masteries })
+    specs.push({ title: attr(s, 'title'), nodes, masteries, version: attr(s, 'treeVersion') })
   }
+  return specs
+}
+
+/** The passive points a tree spends: its nodes but the class start and the
+ *  ascendancy's. Without tree data, all but the class start. */
+function spentPoints(spec: PobSpec, tree: TreeData | null): number {
+  if (!tree) return Math.max(0, spec.nodes.length - 1)
+  return spec.nodes.filter((id) => {
+    const n = tree.node(id)
+    return !!n && !n.ascendancy && n.kind !== 'start' && n.kind !== 'ascendancyStart'
+  }).length
+}
+
+/** The build's tree specs, in PoB's order, as a plan. PoB lists them the way
+ *  levelling guides do — one per milestone — and that order is kept. */
+function readTree(specs: PobSpec[], tree: TreeData | null, warnings: string[]): PassivePlan | undefined {
+  const version = specs.find((s) => s.version)?.version
   if (specs.length === 0) return undefined
   if (!tree) {
     warnings.push('the passive tree data is missing, so the build\'s tree was not imported.')

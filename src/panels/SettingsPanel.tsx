@@ -8,6 +8,7 @@ import { GemShortNames } from './GemShortNames'
 import { MulePicker } from './MulePicker'
 import { ResizeGrip } from './MainPanel'
 import { Toggle } from './shared'
+import { PobImport } from './PobImport'
 import { SettingsBackup } from './SettingsBackup'
 import { ShowSettings } from './ShowSettings'
 
@@ -102,9 +103,6 @@ export function SettingsPanel(): React.JSX.Element {
   const [findResult, setFindResult] = useState<'found' | 'none' | null>(null)
   const [charDraft, setCharDraft] = useState(characterName ?? '')
   const [regexDraft, setRegexDraft] = useState(searchRegex)
-  const [pobInput, setPobInput] = useState('')
-  const [pobBusy, setPobBusy] = useState(false)
-  const [pobResult, setPobResult] = useState<PobImportResponseBridge | null>(null)
 
   useEffect(() => setPathDraft(clientTxtPath ?? ''), [clientTxtPath])
   useEffect(() => setCharDraft(characterName ?? ''), [characterName])
@@ -234,19 +232,6 @@ export function SettingsPanel(): React.JSX.Element {
   }
 
 
-  const importPob = (): void => {
-    const input = pobInput.trim()
-    if (!input || pobBusy) return
-    setPobBusy(true)
-    setPobResult(null)
-    void window.overlay?.importPob(input).then((r) => {
-      setPobBusy(false)
-      setPobResult(r)
-      // The new profile arrives with the next profile snapshot, dropdown and all.
-      if (r?.ok) setPobInput('')
-    })
-  }
-
   // The same surface as the overlay, so dragging the slider previews it here.
   const surface = panelSurface(opacity)
   return (
@@ -343,48 +328,7 @@ export function SettingsPanel(): React.JSX.Element {
               Per character, like the profile: a level-1 alt of another class hands over a gem
               your build needs. In the Gems tab its line says <span className="text-mule">Mule (Ranger)</span>.
             </p>
-            <label className="mt-2 block text-[11px] text-overlay-muted">
-              Import from Path of Building
-            </label>
-            <textarea
-              spellCheck={false}
-              value={pobInput}
-              placeholder="paste a PoB export code, or a pobb.in / pastebin link"
-              onChange={(e) => setPobInput(e.target.value)}
-              rows={2}
-              className="mt-1 w-full resize-none rounded border border-overlay-border bg-black/30 px-2 py-1 font-mono text-[10px] text-overlay-text outline-none focus:border-overlay-accent"
-            />
-            <div className="mt-1 flex items-center gap-2">
-              <button
-                onClick={importPob}
-                disabled={pobBusy || pobInput.trim().length === 0}
-                className={button('primary', 'md')}
-              >
-                {pobBusy ? 'Importing…' : 'Import'}
-              </button>
-              <span className="text-[10px] text-overlay-muted">adds a new profile and makes it active</span>
-            </div>
-            {pobResult && (
-              <div
-                className={
-                  'mt-1.5 rounded-md p-1.5 text-[10px] ' +
-                  (pobResult.ok
-                    ? 'border border-ok/40 bg-ok/10 text-ok'
-                    : 'border border-danger/40 bg-danger/10 text-danger')
-                }
-              >
-                {pobResult.ok ? (
-                  <div>Imported as a new profile, now active. See the Gems tab.</div>
-                ) : (
-                  pobResult.errors.map((e, i) => <div key={i}>- {e}</div>)
-                )}
-                {pobResult.warnings.map((w, i) => (
-                  <div key={i} className="text-warn">
-                    ⚠ {w}
-                  </div>
-                ))}
-              </div>
-            )}
+            <PobImport />
           </Section>
 
           <Section id="search" title="Search & copy">

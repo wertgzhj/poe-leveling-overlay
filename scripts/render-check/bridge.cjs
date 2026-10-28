@@ -74,6 +74,7 @@ const answers = {
   editorLoadProfile: (id) =>
     ok(s.editor && { id, path: 'C:/…/profiles/' + id + '.json', bundled: false, profile: s.editor.profile, errors: [] }),
   editorPassivesCheck: () => ok(s.editor?.passivesCheck ?? null),
+  readPob: () => ok(s.pobRead),
   getGuide: () => ok(s.guide),
   getTrials: () => ok(s.trials),
   getUpdateStatus: () => ok({ state: 'current', version: '0.0.0' })

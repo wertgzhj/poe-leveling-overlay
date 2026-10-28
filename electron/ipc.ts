@@ -32,9 +32,9 @@ import type { TrialsService } from './trials/service.ts'
 import type { UpdateService } from './update/service.ts'
 import type { TimerService } from './timer/service.ts'
 import type { TimerWindow } from './timer-window.ts'
-import { importPobCode, importPobXml } from './profile/pob.ts'
+import { decodePobCode, importPobXml } from './profile/pob.ts'
 import { resolvePobInput } from './profile/pobbin.ts'
-import type { EditorSaveResult, LibraryResult, PobImportResponse, RouteImportResult } from './channels'
+import type { EditorSaveResult, LibraryResult, PobImportResponse, PobReadResponse, RouteImportResult } from './channels'
 import type { EditorWindow } from './editor-window.ts'
 import {
   loadForEditor,
@@ -306,17 +306,40 @@ export function registerIpc(
   ipcMain.on(Channels.updateInstall, () => update.install())
   ipcMain.on(Channels.updateOpenReleases, () => update.openReleases())
 
-  ipcMain.handle(Channels.pobImport, async (_e, input: unknown): Promise<PobImportResponse> => {
+  // The PoB import in two steps: read the build (and keep it), then import it
+  // at the start levels the player looked over in Settings.
+  let pobXml: string | null = null
+  ipcMain.handle(Channels.pobRead, async (_e, input: unknown): Promise<PobReadResponse> => {
+    pobXml = null
     if (typeof input !== 'string' || !input.trim()) {
-      return { ok: false, warnings: [], errors: ['paste a Path of Building code or link'] }
+      return { ok: false, drafts: [], errors: ['paste a Path of Building code or link'] }
     }
     const resolved = await resolvePobInput(input)
-    if (resolved.error) return { ok: false, warnings: [], errors: [resolved.error] }
-    const opts = { tree: profile.tree }
-    const result = resolved.xml ? importPobXml(resolved.xml, opts) : importPobCode(resolved.code as string, opts)
+    if (resolved.error) return { ok: false, drafts: [], errors: [resolved.error] }
+    let xml = resolved.xml
+    if (!xml) {
+      try {
+        xml = decodePobCode(resolved.code as string)
+      } catch (e) {
+        return { ok: false, drafts: [], errors: [`could not decode PoB code: ${(e as Error).message}`] }
+      }
+    }
+    const result = importPobXml(xml, { tree: profile.tree })
+    if (!result.profile || !result.drafts) return { ok: false, drafts: [], errors: result.errors }
+    pobXml = xml
+    return { ok: true, name: result.profile.meta.name, drafts: result.drafts, errors: [] }
+  })
+  ipcMain.handle(Channels.pobImport, (_e, starts: unknown): PobImportResponse => {
+    if (!pobXml) return { ok: false, warnings: [], errors: ['read a Path of Building build first'] }
+    const levels =
+      Array.isArray(starts) && starts.every((n) => Number.isInteger(n) && n >= 1 && n <= 100)
+        ? (starts as number[])
+        : undefined
+    const result = importPobXml(pobXml, { tree: profile.tree, starts: levels })
     if (!result.profile) return { ok: false, warnings: result.warnings, errors: result.errors }
     const added = profile.applyImport(result.profile)
     if (!added.ok) return { ok: false, warnings: result.warnings, errors: added.errors }
+    pobXml = null
     return { ok: true, path: added.entry?.path, warnings: result.warnings, errors: [] }
   })
 

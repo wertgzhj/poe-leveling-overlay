@@ -107,7 +107,10 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
 5. **Guide.** Advances as zones are entered; a portal to town and back must not
    skip steps; `Ctrl+Shift+N/P` correct the cursor; it crosses act boundaries.
 6. **Gems.** Pick a profile under Settings → Build profile, or paste a PoB code or
-   link into the importer. Play a second character and give it a profile of its
+   link into the importer. **Read build** must list every gem set with a start
+   level where the build gives one (a tree named `12 {1}` next to a set named
+   `{1}` gives 12) and an empty, marked box where it doesn't; **Import** stays
+   off until every box has a level. Play a second character and give it a profile of its
    own: switching back to the first should restore the first profile without a
    trip to Settings. The tab shows the current stage's links with colours
    and flips stages on level-up, the moment the level enters the next range.
