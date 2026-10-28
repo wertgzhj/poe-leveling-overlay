@@ -13,6 +13,7 @@ import {
   type PassiveMap,
   type PlanCheck,
   type PobImportResponse,
+  type PobReadResponse,
   type ProfileSnapshot,
   type RouteImportResult,
   type RunTimerSnapshot,
@@ -87,8 +88,8 @@ const api = {
   importProfileFile: (): Promise<LibraryResult | null> => ipcRenderer.invoke(Channels.profilesImportFile),
   exportProfileText: (id: string): Promise<string | null> => ipcRenderer.invoke(Channels.profilesExportText, id),
   importProfileText: (text: string): Promise<LibraryResult> => ipcRenderer.invoke(Channels.profilesImportText, text),
-  importPob: (input: string): Promise<PobImportResponse> =>
-    ipcRenderer.invoke(Channels.pobImport, input),
+  readPob: (input: string): Promise<PobReadResponse> => ipcRenderer.invoke(Channels.pobRead, input),
+  importPob: (starts: number[]): Promise<PobImportResponse> => ipcRenderer.invoke(Channels.pobImport, starts),
 
   getTrials: (): Promise<TrialsSnapshot> => ipcRenderer.invoke(Channels.trialsGet),
   onTrialsState: (cb: (snap: TrialsSnapshot) => void): (() => void) =>

@@ -54,6 +54,8 @@ type PassiveNodeViewBridge = import('../electron/channels.ts').PassiveNodeView
 type LibraryEntryBridge = import('../electron/profile/library.ts').LibraryEntry
 type LibraryResultBridge = import('../electron/profile/library.ts').LibraryResult
 type PobImportResponseBridge = import('../electron/channels.ts').PobImportResponse
+type PobReadResponseBridge = import('../electron/channels.ts').PobReadResponse
+type StageDraftBridge = import('../electron/channels.ts').StageDraft
 
 // --- trials ---
 type LabTierBridge = import('../electron/trials/engine.ts').LabTier

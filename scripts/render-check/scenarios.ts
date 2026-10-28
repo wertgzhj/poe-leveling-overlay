@@ -25,6 +25,7 @@ import type {
   PassivesView,
   PlanCheck,
   ProfileSnapshot,
+  PobReadResponse,
   AnnounceSettings
 } from '../../electron/channels.ts'
 import {
@@ -238,9 +239,22 @@ export interface Scenario {
   /** shoot the editor window, not the overlay */
   editor?: EditorScenario
   /** a tab — or, in Settings, a section heading — to click first */
-  tab?: 'Guide' | 'Gems' | 'Trials' | 'Gems tab' | 'Search & copy' | 'Overlay' | 'What the overlay shows' | 'Backup'
+  tab?:
+    | 'Guide'
+    | 'Gems'
+    | 'Trials'
+    | 'Gems tab'
+    | 'Search & copy'
+    | 'Overlay'
+    | 'What the overlay shows'
+    | 'Backup'
+    | 'Build profile'
+  /** text for the first text box, typed in before `click` */
+  paste?: string
   /** a button to press after the tab, by (part of) its text */
   click?: string
+  /** what main answers for a read PoB build (Settings → Build profile) */
+  pobRead?: PobReadResponse
   /** short names from Settings (real name -> short) */
   gemNames?: Record<string, string>
   settings?: boolean
@@ -323,6 +337,31 @@ const scenarios: Scenario[] = [
   },
   // Settings → Backup: save and load.
   { name: 'settings-backup', settings: true, tab: 'Backup', profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
+  // Settings → Build profile, a PoB build read: where each gem set starts,
+  // from its tree's points or title, and one the build doesn't say.
+  {
+    name: 'settings-pob-review',
+    settings: true,
+    tab: 'Build profile',
+    paste: 'https://pobb.in/example',
+    click: 'Read build',
+    pobRead: {
+      ok: true,
+      name: 'Berserker (imported)',
+      drafts: [
+        { label: 'After Tarkleigh', gems: 4, start: 2, from: 'tree-points', tree: 'After Tarkleigh' },
+        { label: 'After Brutus', gems: 7, start: 8, from: 'tree-points', tree: 'After Brutus' },
+        { label: '12', gems: 9, start: 12, from: 'tree-title', tree: '12' },
+        { label: 'Act 4', gems: 11, start: 28, from: 'set-title' },
+        { label: 'Endgame', gems: 14, start: null, from: null }
+      ],
+      errors: []
+    },
+    profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
+    guide
+  },
   // The full panel at 130 % text: the same window, everything bigger.
   { name: 'gems-text130', tab: 'Gems', panelText: 1.3, profile: profileSnapshot(3, 22, 2), log: crypt, trials, guide },
   // Switched off in Settings → What the overlay shows: the copy buttons, the

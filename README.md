@@ -33,7 +33,7 @@ semi-automatically from a Path of Building import.
   regex, and a level-up the tree search, never over something you copied
   yourself.
 - **Imports your Path of Building build**: paste an export code or a `pobb.in`
-  link and it writes the stages for you.
+  link and it writes the stages for you, after you've checked where each one starts.
 - **Says which passive to take next.** A build's PoB trees (one per levelling
   milestone) become an ordered list: under the gems, the node for your next
   point (by level and the Books of Skill you used) with the few after it, a
@@ -394,10 +394,16 @@ Wisdom   Ⓡ Holy Flame Totem               A1, Nessa
 
 **Import from Path of Building** instead of writing stages by hand: in
 **Settings → Build profile → Import from Path of Building**, paste a PoB export
-code or a `pobb.in` / `pastebin` link and hit **Import**, it decodes the build,
-reads the class and the per-level-range skill sets, and adds it as a **new** profile
-and makes it active: importing another build never replaces this one (reviewing any
-warnings it shows). Where each gem comes from is filled in from `data/gems.json` by
+code or a `pobb.in` / `pastebin` link and hit **Read build**. It decodes the build
+and lists its gem sets with the level each one starts at, for you to check before
+**Import**. PoB keeps one level per build, not per gem set, so the level comes from
+what the build states: a range in the gem set's title ("Level 12-20", "Act 2"), else
+the tree it shares a loadout with (the same title, or the same `{1}` ids, as PoB pairs
+them), by a level leading that tree's title ("12", "33 (Lab)") or else by the points
+it spends. A name like "After Brutus" is never read for a level: a gem set nothing
+links to is left empty for you to fill in. Each stage runs until the next one starts.
+**Import** adds it as a **new** profile and makes it active: importing another build
+never replaces this one (reviewing any warnings it shows). Where each gem comes from is filled in from `data/gems.json` by
 class. Headless equivalent:
 
 ```bash

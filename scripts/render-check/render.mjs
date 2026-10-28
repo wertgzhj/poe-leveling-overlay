@@ -84,6 +84,7 @@ async function shoot(index, scenario) {
     new Promise((resolve, reject) => {
       const tab = ${JSON.stringify(scenario.tab ?? null)}
       const then = ${JSON.stringify(scenario.click ?? null)}
+      let paste = ${JSON.stringify(scenario.paste ?? null)}
       const start = Date.now()
       const tick = () => {
         if (Date.now() - start > 20000) return reject(new Error('the overlay never rendered: ' + document.body.innerText.slice(0, 200)))
@@ -94,6 +95,14 @@ async function shoot(index, scenario) {
           if (button) button.click()
           // A second button to press once the tab is up (a legend, a toggle).
           const press = () => {
+            // Text into the first text box first (React reads it on input).
+            const box = paste && document.querySelector('textarea')
+            if (box) {
+              Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(box, paste)
+              box.dispatchEvent(new Event('input', { bubbles: true }))
+              paste = null
+              return setTimeout(press, 100)
+            }
             const b = then && [...document.querySelectorAll('button')].find((b) => b.textContent.includes(then))
             if (then && !b) return reject(new Error('no button saying ' + then))
             if (b) {
