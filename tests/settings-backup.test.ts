@@ -44,7 +44,8 @@ const settings: AppSettings = {
   stripEnabled: true,
   showStrip: SHOW_STRIP_DEFAULT,
   stripText: 2,
-  panelText: 1.15
+  panelText: 1.15,
+  laterRewards: 10
 }
 
 test("a backup carries how you set the overlay up, and nothing that's this PC's or yours", () => {

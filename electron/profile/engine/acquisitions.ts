@@ -27,7 +27,7 @@ export function acquisitionsForStage(
   gems?: GemData,
   ctx: AcquisitionContext = {}
 ): Acquisitions {
-  const { startingGems, playerLevel, actReached, liveIndex, mule } = ctx
+  const { startingGems, playerLevel, actReached, liveIndex, mule, laterRewards } = ctx
   const cls = profile.meta.class
   // The mule lookup classify() reads, holding only the one gem you chose — so
   // every other gem a different class could hand you stays a quest or a buy,
@@ -59,9 +59,12 @@ export function acquisitionsForStage(
   for (const entry of profile.gemPlan) planByGem.set(entry.gem.toLowerCase(), entry)
 
   // A gem you'll mule isn't an upcoming quest pick either; it joins the mule
-  // trip when its stage comes round.
+  // trip when its stage comes round. How far ahead to look is the player's
+  // call: from your level, or the stage's start when you paged ahead to it.
+  const ahead = laterRewards == null ? Infinity : laterRewards
+  const from = Math.max(playerLevel ?? 0, stage?.range[0] ?? 0)
   const upcoming = upcomingRewards(profile, stageIndex, used, planByGem, gems, startingGems, startingOwners).filter(
-    (e) => !e.mule?.length
+    (e) => !e.mule?.length && (e.fromLevel ?? 0) <= from + ahead
   )
   upcoming.sort(acquisitionOrder)
   const rewardGroups = buildRewardGroups(rewards, upcoming, gems, cls)

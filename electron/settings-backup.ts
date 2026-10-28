@@ -30,6 +30,7 @@ export const BACKUP_KEYS = {
   autoCopyLevelUp: 'Copy on a level-up',
   autoCopyProtect: 'Keep what you copied yourself',
   gemNames: 'Gem short names',
+  laterRewards: 'Rewards for later stages',
   runTimer: 'Run timer',
   hotkeys: 'Hotkeys'
 } as const satisfies Partial<Record<keyof AppSettings, string>>

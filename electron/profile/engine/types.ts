@@ -165,4 +165,7 @@ export interface AcquisitionContext {
    * is the player's call, so this is chosen per character, never assumed.
    */
   mule?: MuleChoice | null
+  /** How far ahead quest rewards for later stages are listed, in levels past
+   *  where you are (Settings → Gems tab): 0 none, null/undefined all. */
+  laterRewards?: number | null
 }

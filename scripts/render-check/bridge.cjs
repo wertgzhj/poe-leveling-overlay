@@ -57,7 +57,8 @@ const answers = {
       stripEnabled: !!s.strip,
       showStrip: { ...ALL_SHOWN, pantheon: false, ...s.showStrip },
       stripText: 2,
-      panelText: s.panelText ?? 1
+      panelText: s.panelText ?? 1,
+      laterRewards: null
     }),
   gemNameList: () => ok(['Cast when Damage Taken Support', 'Melee Physical Damage Support', 'Sunder']),
   getAppInfo: () => ok({ version: '0.0.0', electron: process.versions.electron, isDev: false }),

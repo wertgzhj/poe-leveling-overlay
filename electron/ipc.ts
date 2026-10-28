@@ -8,6 +8,7 @@ import {
   getHotkeys,
   getShowFull,
   getShowStrip,
+  sanitizeLaterRewards,
   sanitizePanelText,
   sanitizeStripText,
   getSettings,
@@ -116,6 +117,7 @@ export function registerIpc(
     if ('showStrip' in patch) store.set('showStrip', sanitizeShow(patch.showStrip, getShowStrip()))
     if ('stripText' in patch) store.set('stripText', sanitizeStripText(patch.stripText))
     if ('panelText' in patch) store.set('panelText', sanitizePanelText(patch.panelText))
+    if ('laterRewards' in patch) profile.setLaterRewards(sanitizeLaterRewards(patch.laterRewards))
     if (typeof patch.runTimer === 'boolean') {
       store.set('runTimer', patch.runTimer)
       timer.setEnabled(patch.runTimer)
