@@ -98,6 +98,16 @@ export interface AppSettings {
   stripText: number
   /** The full panel's (and Settings') text size, one of PANEL_TEXT_STEPS. */
   panelText: number
+  /** Quest rewards for later stages, how many levels ahead of you: one of
+   *  LATER_REWARD_STEPS, null for all of them (the default). */
+  laterRewards: number | null
+}
+
+/** Settings → Gems tab: how far ahead later stages' quest rewards are listed. */
+export const LATER_REWARD_STEPS = [0, 10, 20] as const
+
+export function sanitizeLaterRewards(v: unknown): number | null {
+  return (LATER_REWARD_STEPS as readonly unknown[]).includes(v) ? (v as number) : null
 }
 
 /** The full panel's text sizes; 1 is the size it always had. */
@@ -126,6 +136,7 @@ export type SettingsPatch = Partial<
     | 'showStrip'
     | 'stripText'
     | 'panelText'
+    | 'laterRewards'
   >
 > & { hotkeys?: Partial<HotkeyBindings> }
 
@@ -204,6 +215,7 @@ const defaults: StoreSchema = {
   showStrip: SHOW_STRIP_DEFAULT,
   stripText: STRIP_TEXT_DEFAULT,
   panelText: 1,
+  laterRewards: null,
   stripBounds: null,
   progress: null,
   timerBounds: { width: 260, height: 360 },
@@ -298,6 +310,7 @@ export function getSettings(): AppSettings {
     stripEnabled: store.get('stripEnabled'),
     showStrip: getShowStrip(),
     stripText: sanitizeStripText(store.get('stripText')),
-    panelText: sanitizePanelText(store.get('panelText'))
+    panelText: sanitizePanelText(store.get('panelText')),
+    laterRewards: sanitizeLaterRewards(store.get('laterRewards'))
   }
 }

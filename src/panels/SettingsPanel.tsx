@@ -72,6 +72,7 @@ export function SettingsPanel(): React.JSX.Element {
     stripEnabled,
     stripText,
     panelText,
+    laterRewards,
     patch
   } = useOverlayStore(
     useShallow((s) => ({
@@ -93,6 +94,7 @@ export function SettingsPanel(): React.JSX.Element {
       stripEnabled: s.stripEnabled,
       stripText: s.stripText,
       panelText: s.panelText,
+      laterRewards: s.laterRewards,
       patch: s.patch
     }))
   )
@@ -171,6 +173,12 @@ export function SettingsPanel(): React.JSX.Element {
   const setStrip = (value: Partial<Pick<SettingsPatchBridge, 'stripEnabled' | 'stripText' | 'panelText'>>): void => {
     patch(value)
     void window.overlay?.setSettings(value)
+  }
+
+  const setLaterRewards = (index: number): void => {
+    const value = LATER_REWARDS[index][0]
+    patch({ laterRewards: value })
+    void window.overlay?.setSettings({ laterRewards: value })
   }
 
   const setRunTimer = (value: boolean): void => {
@@ -528,6 +536,20 @@ export function SettingsPanel(): React.JSX.Element {
           </Section>
 
           <Section id="gems" title="Gems tab">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-overlay-text">Rewards for later stages</span>
+              <Steps
+                steps={LATER_REWARDS.map(([, text], i) => [i, text] as const)}
+                value={LATER_REWARDS.findIndex(([v]) => v === laterRewards)}
+                onChange={setLaterRewards}
+                label="Rewards for later stages"
+              />
+            </div>
+            <p className="mt-1 mb-2 text-[10px] text-overlay-muted">
+              Quest rewards your build only uses in a later stage, listed when the quest comes up so you
+              can take them for free. Limit them to the levels just ahead of you, or switch them off. With
+              less, a free gem can pass you by, and you&apos;d buy it later.
+            </p>
             <Legend />
             <GemShortNames />
           </Section>
@@ -581,6 +603,15 @@ export function SettingsPanel(): React.JSX.Element {
 }
 
 /** The panel's text sizes (settings.ts PANEL_TEXT_STEPS), as shown. */
+// Settings → Gems tab: how far ahead later stages' rewards are listed
+// (settings.ts LATER_REWARD_STEPS); null is all of them.
+const LATER_REWARDS: ReadonlyArray<readonly [number | null, string]> = [
+  [0, 'Off'],
+  [10, '10 lvl'],
+  [20, '20 lvl'],
+  [null, 'All']
+]
+
 const PANEL_TEXT: ReadonlyArray<readonly [number, string]> = [
   [1, '100 %'],
   [1.15, '115 %'],

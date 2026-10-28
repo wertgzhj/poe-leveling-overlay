@@ -39,6 +39,8 @@ interface OverlayStore {
   stripText: number
   /** The full panel's text size (settings.ts PANEL_TEXT_STEPS) */
   panelText: number
+  /** How many levels ahead later stages' quest rewards are listed; null all */
+  laterRewards: number | null
   /** The last search copied without a click, and when — the header says so
    *  for a moment. */
   autoCopied: { kind: 'vendor' | 'tree' | 'regex'; at: number } | null
@@ -132,6 +134,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   },
   stripText: 2,
   panelText: 1,
+  laterRewards: null,
   autoCopied: null,
   logStatus: null,
   tracked: null,
@@ -179,6 +182,7 @@ export function fromSettings(s: AppSettingsBridge): Partial<OverlayStore> {
     stripEnabled: s.stripEnabled,
     showStrip: s.showStrip,
     stripText: s.stripText,
-    panelText: s.panelText
+    panelText: s.panelText,
+    laterRewards: s.laterRewards
   }
 }

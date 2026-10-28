@@ -60,7 +60,7 @@ import {
   type LibraryEntry,
   type LibraryResult
 } from './library.ts'
-import { store } from '../settings.ts'
+import { sanitizeLaterRewards, store } from '../settings.ts'
 import {
   Channels,
   type EditorProfileLoad,
@@ -535,14 +535,16 @@ export class ProfileService {
     const act = this.runs.act(this.character)
     const liveIndex = activeStageIndex(profile, this.level)
     const mule = this.chosenMule(profile)
-    const key = `${this.profileRevision}|${stageIndex}|${liveIndex}|${this.level ?? ''}|${act ?? ''}|${mule?.gem ?? ''}`
+    const ahead = sanitizeLaterRewards(store.get('laterRewards'))
+    const key = `${this.profileRevision}|${stageIndex}|${liveIndex}|${this.level ?? ''}|${act ?? ''}|${mule?.gem ?? ''}|${ahead ?? ''}`
     if (this.acqCache?.key === key) return this.acqCache.value
     const value = acquisitionsForStage(profile, stageIndex, this.gems, {
       startingGems: this.startingByClass.get(profile.meta.class),
       playerLevel: this.level,
       actReached: act,
       liveIndex,
-      mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null
+      mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null,
+      laterRewards: ahead
     })
     this.acqCache = { key, value }
     return value
@@ -571,6 +573,12 @@ export class ProfileService {
       if (picked) return picked
     }
     return defaultMule(options)
+  }
+
+  /** Settings → Gems tab changed how far ahead later rewards are listed. */
+  setLaterRewards(ahead: number | null): void {
+    store.set('laterRewards', ahead)
+    this.push()
   }
 
   /** Choose the gem to mule on the tracked character, or null for none. */

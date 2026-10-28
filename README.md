@@ -27,7 +27,9 @@ semi-automatically from a Path of Building import.
   optional mule (a throwaway level-1 alt) is planned in. Settings → *Gems tab*
   explains every colour in words, and takes your own **short names** for gems:
   `CwDT` instead of Cast when Damage Taken: shown in the Gems tab with the full
-  name in the tooltip. *Vendor* in the header copies the gems to buy now as one search, to
+  name in the tooltip. Rewards a later stage needs show up when their quest does,
+  so you take them for free; *Rewards for later stages* there limits them to 10 or
+  20 levels ahead of you, or switches them off. *Vendor* in the header copies the gems to buy now as one search, to
   paste into the vendor's search box: they light up in its stock. Optionally
   (Settings → *Copy without a click*) a town copies the vendor search or your own
   regex, and a level-up the tree search, never over something you copied

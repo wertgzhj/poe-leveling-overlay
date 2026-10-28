@@ -439,6 +439,26 @@ test('upcoming lists later-stage quest-reward gems with their start level', () =
   )
 })
 
+test('rewards for later stages go only as far ahead as Settings says', () => {
+  const marauder = parseProfile(
+    JSON.stringify({
+      meta: { name: 'ahead', class: 'Marauder' },
+      stages: [
+        { range: [1, 11], socketGroups: [{ gems: ['Onslaught Support'] }] },
+        { range: [12, 24], socketGroups: [{ gems: ['Ground Slam'] }] }
+      ],
+      gemPlan: [{ gem: 'Onslaught Support' }, { gem: 'Ground Slam' }]
+    })
+  ).profile!
+  const upcoming = (playerLevel: number, laterRewards: number | null): string[] =>
+    acquisitionsForStage(marauder, 0, SOURCED_GEMS, { playerLevel, laterRewards }).upcoming.map((e) => e.gem)
+  assert.deepEqual(upcoming(1, null), ['Ground Slam'], 'all, the default')
+  assert.deepEqual(upcoming(1, 0), [], 'off')
+  assert.deepEqual(upcoming(1, 10), [], 'level 12 is 11 levels ahead of level 1')
+  assert.deepEqual(upcoming(2, 10), ['Ground Slam'], 'and 10 ahead of level 2')
+  assert.deepEqual(upcoming(1, 20), ['Ground Slam'])
+})
+
 test('actFromAreaId reads the act from numeric ids and ignores word ids', () => {
   // <part>_<act>_<zone>: the act is the SECOND number.
   assert.equal(actFromAreaId('1_1_2'), 1)
