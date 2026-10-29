@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 // A small piece of the passive tree around your next points, drawn when you
 // open it (Passives → Map). Main lays it out (electron/profile/tree-map.ts);
 // this only draws. Gold is taken by plan — the overlay counts points, it can't
-// see your tree — 1 is your next point, 2-6 the ones after, and the dashed
+// see your tree — 1 is your point now, 2-6 the ones after, and the dashed
 // line the way they go. Only the numbered nodes are named; everything else
 // has its name on hover. Clicking a numbered node copies its name, like the
 // list above.

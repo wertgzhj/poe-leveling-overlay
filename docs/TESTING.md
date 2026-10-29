@@ -256,8 +256,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      again, not the mule's level 2. That used to stick until a restart. A
      partymate's level-up must still never move tracking.
    - **Passives.** Import a PoB build with several trees (one per milestone):
-     under the gems, *Passives* names the node for your next point (its stats in
-     the tooltip) and the few after it, with the points counted top right (hover: level − 1
+     under the gems, *Passives* names the node your newest point goes on (its
+     stats in the tooltip; at level 2 the plan's first node, not its second) and the few after it, with the points counted top right (hover: level − 1
      plus Books of Skill). Level up: the next node moves on. Use a Book of Skill:
      it moves one more, and a restart doesn't count it twice. Reach a tree that
      drops nodes: an orange *Respec first* box names them for its first few
@@ -272,7 +272,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      search, it lights those and nothing else, no small nodes (✓ owner:
      quoted, the search reads a regex; unquoted, it splits at spaces).
      *▸ Map* opens a piece of the tree under the list: gold is taken by plan,
-     **1** (ringed) your next point, 2-6 the ones after, a dashed line the way
+     **1** (ringed) your point now, 2-6 the ones after, a dashed line the way
      they go, names only on the numbered notables, every name on hover; a
      numbered node copies its name on click. Level up: it moves on with the
      list. Closed or open, it stays that way after a restart.

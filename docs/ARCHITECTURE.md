@@ -185,7 +185,7 @@ file's first.
 
 **The map** (Passives → *Map*, `electron/profile/tree-map.ts`): main lays out
 the piece of the tree around your next points, what's in view, taken by plan
-(a stage's respec counted from its start), your next point and the five
+(a stage's respec counted from its start), your newest point's node and the five
 after, the links between, arcs along an orbit, and the renderer only draws it
 (`profile:passive-map`, asked again when the next point moves). The view is the
 next points' bounding box with room around it, at least a few groups wide.

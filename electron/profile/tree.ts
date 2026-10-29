@@ -295,6 +295,16 @@ export function planPosition(plan: PassivePlan, points: number): { at: number; t
   return { at: at < 0 ? i : at, total: i - refunds }
 }
 
+/**
+ * The node your newest point goes on: point n buys the plan's n-th node, so
+ * with 5 points it's the 5th, the one to place now, not the 6th that the next
+ * level brings. With none yet (level 1), the first node is due. The overlay
+ * can't see what you've placed: it takes it you place each point as you get it.
+ */
+export function duePosition(plan: PassivePlan, points: number): { at: number; total: number } {
+  return planPosition(plan, Math.max(0, points - 1))
+}
+
 /** Where the plan stands for a character with `points` passive points. */
 export function passivesView(
   plan: PassivePlan,
@@ -306,7 +316,7 @@ export function passivesView(
   const flat: Array<{ id: number; stage: number }> = []
   plan.stages.forEach((s, stage) => s.take.forEach((id) => flat.push({ id, stage })))
   const points = level == null ? 0 : Math.max(0, level - 1) + questPoints
-  const { at, total } = planPosition(plan, points)
+  const { at, total } = duePosition(plan, points)
   const effect = (stage: number, id: number): number | undefined => plan.stages[stage].masteries?.[String(id)]
   const next = flat.slice(at, at + LOOKAHEAD).map((s) => tree.view(s.id, effect(s.stage, s.id)))
 

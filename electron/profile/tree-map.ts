@@ -3,9 +3,9 @@
 // tests/tree.test.ts. It names nothing new: the same plan, points and next
 // nodes as passivesView, laid out where they sit on the tree.
 
-import { LOOKAHEAD, planPosition, type NodeKind, type PassivePlan, type TreeData } from './tree.ts'
+import { LOOKAHEAD, duePosition, type NodeKind, type PassivePlan, type TreeData } from './tree.ts'
 
-/** What a node is to you: taken by plan, your next point, one after, or not yours. */
+/** What a node is to you: taken by plan, your point now, one after, or not yours. */
 export type MapState = 'taken' | 'due' | 'next' | 'off'
 
 export interface MapNode {
@@ -15,7 +15,7 @@ export interface MapNode {
   kind: NodeKind
   name: string
   state: MapState
-  /** 1 for your next point, 2-6 for the ones after */
+  /** 1 for your point now, 2-6 for the ones after */
   num?: number
 }
 
@@ -55,9 +55,9 @@ export function passiveMap(
   start: number | undefined,
   aspect: number
 ): PassiveMap | null {
-  // the same place in the plan as the list (planPosition: a respec's points
+  // the same place in the plan as the list (duePosition: a respec's points
   // come back)
-  const { at: due } = planPosition(plan, points)
+  const { at: due } = duePosition(plan, points)
   const taken = new Set<number>(start != null ? [start] : [])
   const next: number[] = []
   let i = 0

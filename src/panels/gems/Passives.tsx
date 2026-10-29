@@ -3,7 +3,7 @@ import { HEADING, button } from '../../lib/ui'
 import { useOverlayStore } from '../../stores/overlayStore'
 import { PassiveMap } from './PassiveMap'
 
-// The passive tree under the gems: the node for your next point (its stats in
+// The passive tree under the gems: the node your newest point goes on (its stats in
 // the tooltip — under it they were more than anyone reads mid-run), the few after
 // it, a respec when one is due, and the next ascendancy points. Which node is
 // due follows your points — (level - 1) plus the Books of Skill you used — the
@@ -86,7 +86,7 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
       {due ? (
         <>
           <div className="flex items-baseline gap-1.5">
-            <span className="shrink-0 text-[10px] text-overlay-muted" title="Your next point">
+            <span className="shrink-0 text-[10px] text-overlay-muted" title="Where your newest point goes">
               ▸
             </span>
             <NodeName node={due} strong />

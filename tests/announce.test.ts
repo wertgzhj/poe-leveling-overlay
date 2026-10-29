@@ -68,7 +68,7 @@ test('what each says, in English and German', () => {
     'Normal Labyrinth open',
     'Bandits: help Alira',
     'Pantheon: Soul of Lunaris',
-    'Next point: Born to Fight'
+    'Passive point: Born to Fight'
   ])
   assert.deepEqual(say('de'), [
     'Trial in dieser Zone',
@@ -77,7 +77,7 @@ test('what each says, in English and German', () => {
     'Labyrinth offen: Normal',
     'Banditen: Alira helfen',
     'Pantheon: Soul of Lunaris',
-    'Nächster Punkt: Born to Fight'
+    'Passivpunkt: Born to Fight'
   ])
   assert.equal(phrase({ event: 'gems', gems: ['A', 'B', 'C', 'D', 'E'] }, 'en'), 'New gems: A, B, C and 2 more')
   assert.equal(phrase({ event: 'zone', verdict: 'over', by: 1 }, 'en'), 'Zone 1 level too low')
