@@ -89,7 +89,7 @@ test('ascendancy nodes come in their own list, in walking order', () => {
 test('a mastery shows the effect the build picked', () => {
   const tree = tiny()
   const plan = planFromSpecs([{ nodes: [1, 5, 6, 7], masteries: { 7: 100 } }], tree, '3_29')
-  const view = passivesView(plan, tree, 3, 0, 0)
+  const view = passivesView(plan, tree, 4, 0, 0)
   assert.equal(view.next[0].name, 'Mastery')
   assert.deepEqual(view.next[0].stats, ['picked effect'])
 })
@@ -105,12 +105,13 @@ const plan: PassivePlan = {
   ascendancy: [21, 22]
 }
 
-test('the due node follows level − 1 plus Books of Skill', () => {
+test('the due node is the one your newest point goes on: level − 1 plus Books of Skill', () => {
   const tree = tiny()
-  assert.equal(passivesView(plan, tree, 1, 0, 0).next[0].name, 'c', 'level 1: no points yet')
-  assert.equal(passivesView(plan, tree, 2, 0, 0).next[0].name, 'NEAR')
-  const withBook = passivesView(plan, tree, 2, 1, 0)
-  assert.equal(withBook.points, 2)
+  assert.equal(passivesView(plan, tree, 1, 0, 0).next[0].name, 'c', 'level 1: no points yet, the first is up')
+  assert.equal(passivesView(plan, tree, 2, 0, 0).next[0].name, 'c', 'level 2: the first point goes on the first node')
+  assert.equal(passivesView(plan, tree, 3, 0, 0).next[0].name, 'NEAR')
+  const withBook = passivesView(plan, tree, 3, 1, 0)
+  assert.equal(withBook.points, 3)
   assert.equal(withBook.next[0].name, 'a')
   assert.equal(withBook.stageLabel, 'early')
   assert.equal(passivesView(plan, tree, null, 0, 0).points, 0, 'no character yet: from the start')
@@ -142,9 +143,9 @@ test('a respec gives its points back: the plan moves on by as many nodes', () =>
 
 test('the respec shows as its stage begins, then gets out of the way', () => {
   const tree = tiny()
-  assert.deepEqual(passivesView(plan, tree, 3, 0, 0).refund, [], 'still in the first stage')
+  assert.deepEqual(passivesView(plan, tree, 4, 0, 0).refund, [], 'still in the first stage')
   assert.deepEqual(
-    passivesView(plan, tree, 4, 0, 0).refund.map((n) => n.name),
+    passivesView(plan, tree, 5, 0, 0).refund.map((n) => n.name),
     ['a']
   )
   assert.deepEqual(passivesView(plan, tree, 99, 0, 0).refund, [])
@@ -272,9 +273,9 @@ test('the Tree search: notables, keystones and masteries of this stage and the t
   // small nodes (c, d, a, b) left out: their names repeat all over a real tree
   // level 1: nothing before, and the six shown reach into stage 4
   assert.equal(passivesView(searchPlan, tree, 1, 0, 0).treeSearch, '"near|mastery|key|far"')
-  assert.equal(passivesView(searchPlan, tree, 5, 0, 0).treeSearch, '"near|mastery|key|far"', 'placed ones stay in')
+  assert.equal(passivesView(searchPlan, tree, 6, 0, 0).treeSearch, '"near|mastery|key|far"', 'placed ones stay in')
   // stage 4: stages 2 and 3 with it, NEAR's stage too far back — and refunded anyway
-  assert.equal(passivesView(searchPlan, tree, 6, 0, 0).treeSearch, '"mastery|key|far"')
+  assert.equal(passivesView(searchPlan, tree, 7, 0, 0).treeSearch, '"mastery|key|far"')
   assert.equal(passivesView(searchPlan, tree, 99, 0, 0).treeSearch, null, 'plan done')
 })
 
@@ -366,10 +367,10 @@ function placed(): TreeData {
   return new TreeData({ version: '3.29.1', treeVersion: '3_29', nodes, groups: { 9: [0, -1000] } })
 }
 
-test('the map marks what\'s taken, your next point and the ones after', () => {
+test('the map marks what\'s taken, your point now and the ones after', () => {
   const tree = placed()
   const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2, 3] }, { take: [4, 5, 6] }] }
-  const map = passiveMap(plan, tree, 2, 1, 1.5)!
+  const map = passiveMap(plan, tree, 3, 1, 1.5)!
   const state = Object.fromEntries(map.nodes.map((n) => [n.name, [n.state, n.num ?? null]]))
   assert.deepEqual(state, {
     START: ['taken', null],
@@ -395,14 +396,14 @@ test('a respec shows from when its stage begins', () => {
   const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2, 3] }, { refund: [3], take: [4, 5, 6] }] }
   const state = (points: number, name: string) =>
     passiveMap(plan, tree, points, 1, 1.5)!.nodes.find((n) => n.name === name)!.state
-  assert.equal(state(1, 'b'), 'due') // its turn
-  // two points: the respec is up, not done — b still there, c next
-  assert.equal(state(2, 'b'), 'taken')
-  assert.equal(state(2, 'c'), 'due')
-  // three: b went, and its point with the new one bought c and NOTE
-  assert.equal(state(3, 'b'), 'off')
-  assert.equal(state(3, 'NOTE'), 'taken')
-  assert.equal(state(3, 'd'), 'due')
+  assert.equal(state(2, 'b'), 'due') // its turn
+  // three points: the respec is up, not done — b still there, c now
+  assert.equal(state(3, 'b'), 'taken')
+  assert.equal(state(3, 'c'), 'due')
+  // four: b went, and its point with the new one bought c and NOTE
+  assert.equal(state(4, 'b'), 'off')
+  assert.equal(state(4, 'NOTE'), 'taken')
+  assert.equal(state(4, 'd'), 'due')
 })
 
 test('no map once the plan is done, or without positions', () => {

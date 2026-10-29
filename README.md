@@ -37,11 +37,11 @@ semi-automatically from a Path of Building import.
 - **Imports your Path of Building build**: paste an export code or a `pobb.in`
   link and it writes the stages for you, after you've checked where each one starts.
 - **Says which passive to take next.** A build's PoB trees (one per levelling
-  milestone) become an ordered list: under the gems, the node for your next
-  point (by level and the Books of Skill you used) with the few after it, a
+  milestone) become an ordered list: under the gems, the node your newest point
+  goes on (by level and the Books of Skill you used) with the few after it, a
   respec when the build drops nodes, and the next ascendancy points after each
   Labyrinth. Click a name to copy it for the in-game tree's search box, or
-  open *Map* for that piece of the tree, your next points numbered. The order
+  open *Map* for that piece of the tree, your points numbered. The order
   is worked out at import, and you can change it in the editor.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
   you finish it, telling you when a Labyrinth is ready to run, and noticing when
@@ -56,13 +56,13 @@ semi-automatically from a Path of Building import.
   path, your character and the window positions stay out of it.
 - **A compact strip, if the panel is too much** (preview: Settings → *Overlay*).
   A few lines instead of the panel, at the game's own text size: a reminder, the
-  gems to get in the town you're in, your next passive point. It starts above the
+  gems to get in the town you're in, where your passive point goes. It starts above the
   XP bar, where no vendor, stash or inventory window goes, grows away from the
   screen edge it sits on, and never past four lines. The full panel is on
   `Ctrl+Shift+D`. The panel's own text size can go up to 150 % there too.
 - **Says what matters, if you want it to.** In the same table: a trial in this
   zone, new gems to buy, a zone that costs experience, a Labyrinth ready, the
-  bandits or Pantheon due, your next passive, each switched on on its own,
+  bandits or Pantheon due, where your new passive point goes, each switched on on its own,
   in English or German, spoken by Windows' own voices on your PC.
 - **Times your runs, if you want it to.** Switch on Settings → *Run timer* and
   a small window of its own times each campaign from the Twilight Strand to

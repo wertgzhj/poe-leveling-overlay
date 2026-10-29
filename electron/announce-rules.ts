@@ -70,7 +70,7 @@ export interface Observed {
   labs: LabTier[]
   /** a bandit or Pantheon choice that's due */
   choice: { id: 'bandit' | 'pantheon'; wants: string } | null
-  /** the passive for your next point */
+  /** the passive your newest point goes on */
   passive: string | null
 }
 
@@ -155,7 +155,7 @@ export function phrase(a: Announcement, lang: AnnounceLang): string {
       return `Banditen: ${help ? `${help[1]} helfen` : /kill all/i.test(a.wants) ? 'alle drei töten' : a.wants}`
     }
     case 'passive':
-      return de ? `Nächster Punkt: ${a.name}` : `Next point: ${a.name}`
+      return de ? `Passivpunkt: ${a.name}` : `Passive point: ${a.name}`
   }
 }
 

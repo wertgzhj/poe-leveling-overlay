@@ -52,7 +52,7 @@ const GROUPS: ReadonlyArray<readonly [string, readonly Row[]]> = [
   [
     'Passives',
     [
-      { label: 'Next passive point', hint: 'The node for your next point. Voice: on every level-up.', show: 'passive', strip: true, voice: 'passive' },
+      { label: 'Passive point', hint: 'The node your newest point goes on. Voice: on every level-up.', show: 'passive', strip: true, voice: 'passive' },
       { label: 'Map button', hint: 'The tree map under the passives', show: 'passiveMap', needs: 'passive' }
     ]
   ]
