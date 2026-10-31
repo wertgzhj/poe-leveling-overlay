@@ -102,7 +102,7 @@ const marauderPlan = (() => {
   const specs = [12, 26].map((n, i) => ({
     title: i === 0 ? 'Act 2' : 'Act 3',
     nodes: [...nearest(47175, n), ...berserker, ...(i === 1 ? [25934] : [])],
-    masteries: i === 1 ? { 25934: 1626 } : {}
+    masteries: (i === 1 ? { 25934: 1626 } : {}) as Record<string, number>
   }))
   return planFromSpecs(specs, tree, tree.treeVersion)
 })()
