@@ -350,11 +350,12 @@ export function validatePassives(raw: unknown, errors: string[]): PassivePlan | 
     if (label) stage.label = label
     const refund = ids(o['refund'], `${where}: "refund"`)
     if (refund?.length) stage.refund = refund
-    const m = o['masteries']
-    if (m !== undefined) {
+    for (const field of ['masteries', 'remaster'] as const) {
+      const m = o[field]
+      if (m === undefined) continue
       if (typeof m !== 'object' || m === null || Array.isArray(m) || !Object.values(m).every((x) => Number.isInteger(x))) {
-        errors.push(`${where}: "masteries" must map mastery node ids to effect ids`)
-      } else if (Object.keys(m).length) stage.masteries = m as Record<string, number>
+        errors.push(`${where}: "${field}" must map mastery node ids to effect ids`)
+      } else if (Object.keys(m).length) stage[field] = m as Record<string, number>
     }
     stages.push(stage)
   })

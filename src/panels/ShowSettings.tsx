@@ -53,6 +53,7 @@ const GROUPS: ReadonlyArray<readonly [string, readonly Row[]]> = [
     'Passives',
     [
       { label: 'Passive point', hint: 'The node your newest point goes on. Voice: on every level-up.', show: 'passive', strip: true, voice: 'passive' },
+      { label: 'Respec', hint: 'Nodes the next PoB tree drops and masteries it switches, from when you can, until you mark it done. Voice: when it can be done.', show: 'respec', strip: true, voice: 'respec' },
       { label: 'Map button', hint: 'The tree map under the passives', show: 'passiveMap', needs: 'passive' }
     ]
   ]

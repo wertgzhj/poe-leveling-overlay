@@ -185,7 +185,9 @@ file's first.
 
 **The map** (Passives → *Map*, `electron/profile/tree-map.ts`): main lays out
 the piece of the tree around your next points, what's in view, taken by plan
-(a stage's respec counted from its start), your newest point's node and the five
+(a stage's respec counted from when it can be done), the three nodes before
+your point (dashed: maybe not placed yet), a pending respec's nodes (crossed
+out), your newest point's node and the five
 after, the links between, arcs along an orbit, and the renderer only draws it
 (`profile:passive-map`, asked again when the next point moves). The view is the
 next points' bounding box with room around it, at least a few groups wide.
@@ -194,10 +196,16 @@ next points' bounding box with room around it, at least a few groups wide.
 every "You have received a Passive Skill Point." line (a Book of Skill used, not
 the quest finished), counted per character, once each, the backscan's replays
 skipped by their timestamps (`CharacterRuns.addQuestPoint`). A respec gives its
-points back: from the stage that refunds nodes on, the plan is that many nodes
-further along than the points (`planPosition`), and the plan's total is its
-nodes less its refunds. With every point spent as a refunding stage begins,
-its first node is due, the respec shown in front of it. The next
+points back: from the respec on, the plan is that many nodes further along
+than the points (`planPosition`), and the plan's total is its nodes less its
+refunds. A respec comes when the game allows it: the game only takes a node
+out while the rest stay joined to the class's start, so `respecPoints` walks
+the tree's links to find how many of the stage's nodes come first (0 if
+nothing hangs off the refunded ones). With every point spent by then, the
+next node is due, the respec shown in front of it. The overlay can't see the
+tree, so a respec stays until it's marked done, per character
+(`CharacterRuns.dismiss`, keyed by `respecKey`). A mastery the next spec keeps
+with another effect picked is a `remaster`, part of the same respec. The next
 ascendancy points follow the Labyrinths the trials service saw beaten. Clicking
 a node copies its name for the in-game tree's search box; the renderer asks by
 node id, so it can't put arbitrary text on the clipboard.

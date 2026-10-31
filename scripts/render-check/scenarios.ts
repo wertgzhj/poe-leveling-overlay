@@ -111,6 +111,32 @@ const marauderPlan = (() => {
 const marauderTree: PassivesView = passivesView(marauderPlan, tree, 23, 1, 0)
 // ...and the map around it, as main lays it out for the block's 1.7 : 1.
 const marauderMap: PassiveMap | null = passiveMap(marauderPlan, tree, 23, classStartNode(tree, 'Marauder'), 1.7)
+// ...and an Act 4 tree that drops two leaves and switches the mastery: at
+// level 28 with the book, its respec is due.
+const marauderRespecPlan = (() => {
+  const berserker = nearest(29294, 2)
+  const dropped = [44606, 31080] // Intelligence, Dexterity: nothing hangs off them
+  const specs = [
+    { title: 'Act 2', nodes: [...nearest(47175, 12), ...berserker], masteries: {} as Record<string, number> },
+    { title: 'Act 3', nodes: [...nearest(47175, 26), ...berserker, 25934], masteries: { 25934: 1626 } },
+    {
+      title: 'Act 4',
+      nodes: [...nearest(47175, 32).filter((id) => !dropped.includes(id)), ...berserker, 25934],
+      masteries: { 25934: 27095 }
+    }
+  ]
+  return planFromSpecs(specs, tree, tree.treeVersion)
+})()
+const marauderStart = classStartNode(tree, 'Marauder')
+const marauderRespec: PassivesView = passivesView(marauderRespecPlan, tree, 28, 1, 0, { start: marauderStart })
+const marauderRespecMap: PassiveMap | null = passiveMap(
+  marauderRespecPlan,
+  tree,
+  28,
+  marauderStart,
+  1.7,
+  new Set(marauderRespec.respec?.nodes.map((n) => n.id) ?? [])
+)
 
 function profileSnapshot(
   stageIndex: number,
@@ -461,7 +487,7 @@ const scenarios: Scenario[] = [
       lang: 'de',
       voice: '',
       volume: 0.6,
-      events: { trial: true, gems: true, zone: false, lab: false, bandit: true, pantheon: false, passive: false }
+      events: { trial: true, gems: true, zone: false, lab: false, bandit: true, pantheon: false, passive: false, respec: true }
     },
     profile: profileSnapshot(3, 22, 2),
     log: crypt,
@@ -509,6 +535,26 @@ const scenarios: Scenario[] = [
     profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
     log: crypt,
     trials,
+    guide
+  },
+  // A respec due: the box with Done, and its nodes crossed out on the map.
+  {
+    name: 'gems-passives-respec',
+    tab: 'Gems',
+    click: 'Map',
+    passiveMap: marauderRespecMap,
+    profile: profileSnapshot(3, 22, 2, { passives: marauderRespec }),
+    log: crypt,
+    trials,
+    guide
+  },
+  // The strip with it: the respec takes the reminder line.
+  {
+    name: 'strip-respec',
+    strip: true,
+    profile: profileSnapshot(3, 22, 2, { passives: marauderRespec }),
+    log: encampment,
+    trials: inTown,
     guide
   },
   // A build imported before the overlay read trees: where the passives would

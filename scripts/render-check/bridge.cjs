@@ -13,7 +13,7 @@ const ok = (v) => Promise.resolve(v)
 if (s.strip) Object.defineProperty(window.screen, 'height', { get: () => 1440 })
 // electron/show-rules.ts SHOW_ALL; a scenario's showFull switches some off
 const ALL_SHOWN = Object.fromEntries(
-  ['zoneLine', 'zoneFit', 'copyButtons', 'trialHere', 'lab', 'bandit', 'pantheon', 'gemsToGet', 'links', 'passive', 'passiveMap'].map((k) => [k, true])
+  ['zoneLine', 'zoneFit', 'copyButtons', 'trialHere', 'lab', 'bandit', 'pantheon', 'gemsToGet', 'links', 'passive', 'respec', 'passiveMap'].map((k) => [k, true])
 )
 const answers = {
   getState: () =>

@@ -40,9 +40,12 @@ semi-automatically from a Path of Building import.
   milestone) become an ordered list: under the gems, the node your newest point
   goes on (by level and the Books of Skill you used) with the few after it and
   the three before (points you may have saved up on a run), masteries by the
-  effect your build picked, attribute nodes as STR, DEX and INT, a
-  respec when the build drops nodes, and the next ascendancy points after each
-  Labyrinth. Click a name to copy it for the in-game tree's search box, or
+  effect your build picked, attribute nodes as STR, DEX and INT, and the next
+  ascendancy points after each Labyrinth. When the next PoB tree drops nodes or
+  switches a mastery, a **respec** box names them: first which node to take
+  before they can go (sooner would cut your tree in two), then *Respec now*,
+  until you click *Done*. Its nodes are crossed out on the map; the strip and
+  the voice (*Respec due*) can say it too. Click a name to copy it for the in-game tree's search box, or
   open *Map* for that piece of the tree, your points numbered. The order
   is worked out at import, and you can change it in the editor.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment

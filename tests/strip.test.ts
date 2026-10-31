@@ -29,7 +29,8 @@ const base: StripInput = {
   trial: null,
   god: null,
   plan: [],
-  passive: { name: 'Life and Armour', points: 9, total: 26 }
+  passive: { name: 'Life and Armour', points: 9, total: 26 },
+  respec: null
 }
 
 test('a town is known by its area id, and so is its act', () => {
@@ -95,6 +96,14 @@ test('one reminder, the most costly to miss, and only the ones switched on', () 
   assert.equal(stripModel(all).notice?.kind, 'choice')
   assert.equal(stripModel({ ...all, show: { ...SHOW_ALL, bandit: false } }).notice?.kind, 'lab')
   assert.equal(stripModel({ ...all, choice: null, lab: null }).notice?.kind, 'trial')
+  // a respec: after a trial here, before a god
+  const respec = { key: 'respec:2:5', names: ['INT'], after: null }
+  assert.equal(stripModel({ ...all, choice: null, lab: null, respec }).notice?.kind, 'trial')
+  assert.equal(stripModel({ ...all, choice: null, lab: null, trial: null, respec }).notice?.kind, 'respec')
+  assert.equal(
+    stripModel({ ...all, choice: null, lab: null, trial: null, respec, show: { ...SHOW_ALL, respec: false } }).notice?.kind,
+    'god'
+  )
   const godOnly = { ...base, god: { soul: 'Soul of Shakari' } }
   assert.equal(stripModel(godOnly).notice?.kind, 'god')
   assert.equal(stripModel({ ...godOnly, show: { ...SHOW_ALL, pantheon: false } }).notice, null)

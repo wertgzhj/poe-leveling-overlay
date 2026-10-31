@@ -16,6 +16,7 @@ import { PassiveMap } from './PassiveMap'
 export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Element {
   const [due, ...after] = view.next
   const showMap = useOverlayStore((s) => s.showFull.passiveMap)
+  const showRespec = useOverlayStore((s) => s.showFull.respec)
   const [mapOpen, setMapOpen] = useState(() => {
     try {
       return localStorage.getItem(MAP_KEY) === '1'
@@ -80,39 +81,34 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
         </p>
       )}
 
-      {view.refund.length > 0 && (
-        <div className="mb-1.5 rounded border border-warn/40 bg-warn/10 px-1.5 py-1 text-[10px] text-warn">
-          <span aria-hidden>⚠ </span>Respec first: <NodeList nodes={view.refund} />
-        </div>
-      )}
+      {view.respec && showRespec && <Respec respec={view.respec} />}
 
       {due ? (
         <>
-          {view.before.length > 0 && (
-            <p
-              className="ml-3.5 text-[10px] leading-snug text-overlay-muted/80"
-              title="The points before: still to place if you saved some up"
-            >
-              <NodeList nodes={view.before} arrows /> →
-            </p>
-          )}
-          <div className="flex items-baseline gap-1.5">
-            <span className="shrink-0 text-[10px] text-overlay-muted" title="Where your newest point goes">
-              ▸
+          {/* one line on: the points before, yours now in bold, the ones after */}
+          <p className="text-[10px] leading-snug text-overlay-muted">
+            {view.before.length > 0 && (
+              <span className="text-overlay-muted/80" title="The points before: still to place if you saved some up">
+                <NodeList nodes={view.before} arrows />
+                {' → '}
+              </span>
+            )}
+            <span title="Where your newest point goes">
+              <NodeName node={due} strong />
             </span>
-            <NodeName node={due} strong />
-          </div>
-          {after.length > 0 && (
-            <p className="ml-3.5 text-[10px] leading-snug text-overlay-muted">
-              → <NodeList nodes={after} arrows />
-            </p>
-          )}
+            {after.length > 0 && (
+              <>
+                {' → '}
+                <NodeList nodes={after} arrows />
+              </>
+            )}
+          </p>
         </>
       ) : (
         <p className="text-[10px] text-ok">✓ All {view.total} points placed. The tree is done.</p>
       )}
 
-      {due && showMap && mapOpen && <PassiveMap points={view.points} due={due.id} />}
+      {due && showMap && mapOpen && <PassiveMap points={view.points} due={due.id} respec={view.respec?.key} />}
 
       {view.ascendancy && view.ascendancy.next.length > 0 && (
         <p className="mt-1.5 text-[10px] leading-snug text-overlay-muted">
@@ -127,6 +123,55 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
 }
 
 const LAB_NAMES = ['Normal', 'Cruel', 'Merciless', 'Eternal']
+
+/** A respec: what to take out and the masteries to switch, from when the
+ *  game lets you (before that, the node to take first) until you mark it
+ *  done. The overlay can't see your tree, so Done is yours to click. */
+function Respec({ respec }: { respec: NonNullable<PassivesViewBridge['respec']> }): React.JSX.Element {
+  return (
+    <div className="mb-1.5 rounded border border-warn/40 bg-warn/10 px-1.5 py-1 text-[10px] text-warn">
+      <div className="flex items-start gap-1.5">
+        <span className="min-w-0 flex-1 leading-snug">
+          <span aria-hidden>⚠ </span>
+          {respec.after ? (
+            <>
+              <b>Respec after</b> <NodeName node={respec.after} />
+              <span className="text-overlay-muted"> (sooner cuts your tree in two)</span>:{' '}
+            </>
+          ) : (
+            <b>Respec now: </b>
+          )}
+          {respec.nodes.length > 0 && <NodeList nodes={respec.nodes} />}
+        </span>
+        <button
+          onClick={() => window.overlay?.dismissChoice(respec.key)}
+          title="Mark it done: the overlay can't see your tree"
+          className="shrink-0 rounded bg-warn/20 px-1.5 font-medium hover:bg-warn/30"
+        >
+          Done ✓
+        </button>
+      </div>
+      {respec.masteries.map((m) => (
+        <div
+          key={m.node.id}
+          className="mt-0.5 truncate leading-snug"
+          title={`${m.node.name}\nnow: ${nodeLabel(m.node)}\nswitch to: ${m.to.join(', ')}`}
+        >
+          <MasteryTag />
+          switch to <span className="text-overlay-text">{m.to.join(', ') || m.node.name}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MasteryTag(): React.JSX.Element {
+  return (
+    <span className="mr-[0.3em] rounded-sm bg-white/10 px-[0.25em] text-[0.85em] font-semibold not-italic text-overlay-muted">
+      M
+    </span>
+  )
+}
 
 /** A folded map. */
 function MapIcon(): React.JSX.Element {
@@ -155,13 +200,14 @@ function NodeList({ nodes, arrows }: { nodes: PassiveNodeViewBridge[]; arrows?: 
   )
 }
 
-/** A node, short (nodeLabel): notables and keystones stand out, a mastery
+/** A node, short (nodeLabel): only the one for your point now is bold;
+ *  notables and keystones stand out by colour alone, a mastery
  *  is its picked effect behind an M. Click copies its name, which is what the
  *  game's search finds; the tooltip has the name and its stats. */
 function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: boolean }): React.JSX.Element {
   const [copied, setCopied] = useState(false)
   const big = node.kind === 'notable' || node.kind === 'keystone' || node.kind === 'jewel'
-  const tone = strong ? (big ? 'text-overlay-accent' : 'text-overlay-text') : big ? 'text-overlay-text' : ''
+  const tone = big ? 'text-overlay-accent' : strong ? 'text-overlay-text' : ''
   const title =
     [node.name + (node.kind !== 'small' ? ` (${node.kind})` : ''), ...node.stats].join('\n') +
     '\n\nClick to copy, then paste it into the passive tree search.'
@@ -180,7 +226,6 @@ function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: bool
         'text-left hover:underline ' +
         tone +
         (strong ? ' text-xs font-semibold' : '') +
-        (big && !strong ? ' font-medium' : '') +
         (node.kind === 'mastery' ? ' inline-block max-w-[20em] truncate align-bottom' : '')
       }
     >
@@ -188,11 +233,7 @@ function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: bool
         '✓ copied'
       ) : (
         <>
-          {node.kind === 'mastery' && (
-            <span className="mr-[0.3em] rounded-sm bg-white/10 px-[0.25em] text-[0.85em] font-semibold not-italic text-overlay-muted">
-              M
-            </span>
-          )}
+          {node.kind === 'mastery' && <MasteryTag />}
           {nodeLabel(node)}
         </>
       )}

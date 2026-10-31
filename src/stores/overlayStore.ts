@@ -103,7 +103,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     lang: 'en',
     voice: '',
     volume: 0.8,
-    events: { trial: false, gems: false, zone: false, lab: false, bandit: false, pantheon: false, passive: false }
+    events: { trial: false, gems: false, zone: false, lab: false, bandit: false, pantheon: false, passive: false, respec: false }
   },
   showFull: {
     zoneLine: true,
@@ -116,6 +116,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     gemsToGet: true,
     links: true,
     passive: true,
+    respec: true,
     passiveMap: true
   },
   stripEnabled: false,
@@ -130,6 +131,7 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
     gemsToGet: true,
     links: true,
     passive: true,
+    respec: true,
     passiveMap: true
   },
   stripText: 2,

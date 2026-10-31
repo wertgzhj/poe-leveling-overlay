@@ -9,7 +9,7 @@ import type { LabTier } from './trials/engine.ts'
 /** The moments the overlay can announce, each switched on or off on its own.
  *  The bandits and the Pantheon are one kind of announcement ('choice') but two
  *  switches, like their two rows in Settings → What the overlay shows. */
-export const ANNOUNCE_EVENTS = ['trial', 'gems', 'zone', 'lab', 'bandit', 'pantheon', 'passive'] as const
+export const ANNOUNCE_EVENTS = ['trial', 'gems', 'zone', 'lab', 'bandit', 'pantheon', 'passive', 'respec'] as const
 export type AnnounceEvent = (typeof ANNOUNCE_EVENTS)[number]
 
 export const ANNOUNCE_LANGS = ['en', 'de'] as const
@@ -29,7 +29,16 @@ export const DEFAULT_ANNOUNCE: AnnounceSettings = {
   lang: 'en',
   voice: '',
   volume: 0.8,
-  events: { trial: false, gems: false, zone: false, lab: false, bandit: false, pantheon: false, passive: false }
+  events: {
+    trial: false,
+    gems: false,
+    zone: false,
+    lab: false,
+    bandit: false,
+    pantheon: false,
+    passive: false,
+    respec: false
+  }
 }
 
 /** Stored or sent settings, made whole: anything missing or wrong is the default. */
@@ -72,6 +81,9 @@ export interface Observed {
   choice: { id: 'bandit' | 'pantheon'; wants: string } | null
   /** the passive your newest point goes on */
   passive: string | null
+  /** a respec that can be done now and isn't marked done: its key and what
+   *  it takes out */
+  respec: { key: string; names: string[] } | null
 }
 
 export type Announcement =
@@ -81,6 +93,7 @@ export type Announcement =
   | { event: 'lab'; lab: LabTier }
   | { event: 'choice'; id: 'bandit' | 'pantheon'; wants: string }
   | { event: 'passive'; name: string }
+  | { event: 'respec'; names: string[] }
 
 /**
  * Turns what the overlay sees, moment by moment, into what's worth saying:
@@ -118,6 +131,7 @@ export class Announcer {
     for (const lab of now.labs) if (!prev.labs.includes(lab)) out.push({ event: 'lab', lab })
     if (now.choice && now.choice.id !== prev.choice?.id) out.push({ event: 'choice', ...now.choice })
     if (now.passive && now.passive !== prev.passive) out.push({ event: 'passive', name: now.passive })
+    if (now.respec && now.respec.key !== prev.respec?.key) out.push({ event: 'respec', names: now.respec.names })
     return out
   }
 }
@@ -156,6 +170,12 @@ export function phrase(a: Announcement, lang: AnnounceLang): string {
     }
     case 'passive':
       return de ? `Passivpunkt: ${a.name}` : `Passive point: ${a.name}`
+    case 'respec': {
+      const named = a.names.slice(0, GEMS_SAID).join(', ')
+      const more = a.names.length - GEMS_SAID
+      if (de) return `Achtung, Respec: ${named}${more > 0 ? ` und ${more} weitere` : ''}`
+      return `Respec due: ${named}${more > 0 ? ` and ${more} more` : ''}`
+    }
   }
 }
 
@@ -181,5 +201,7 @@ export function sample(event: AnnounceEvent): Announcement {
       return { event: 'choice', id: 'pantheon', wants: 'Soul of Lunaris' }
     case 'passive':
       return { event, name: 'Born to Fight' }
+    case 'respec':
+      return { event, names: ['Strength', 'Life and Armour'] }
   }
 }
