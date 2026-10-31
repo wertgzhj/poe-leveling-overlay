@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { LAB_LABEL } from '../../electron/trials/engine.ts'
 import { stripModel, type StripGem, type StripNotice } from '../../electron/strip.ts'
 import { stripFontSize } from '../../electron/strip-place.ts'
+import { nodeLabel } from '../../electron/profile/tree.ts'
 import { formatAccelerator } from '../lib/accelerator'
 import { button, panelSurface } from '../lib/ui'
 import { useOverlayStore } from '../stores/overlayStore'
@@ -65,7 +66,10 @@ export function StripPanel(): React.JSX.Element {
     god: god ? { soul: god.soul, side: god.side } : null,
     // the live stage's list: a stage paged to in the panel isn't where you are
     plan: onLive ? (s.profile?.acquisitions?.plan ?? []) : [],
-    passive: passives && due ? { name: due.name, points: passives.points, total: passives.total } : null
+    passive:
+      passives && due
+        ? { name: (due.kind === 'mastery' ? 'M ' : '') + nodeLabel(due), points: passives.points, total: passives.total }
+        : null
   })
 
   const watching = s.logStatus?.state === 'watching' && !s.languageMismatch

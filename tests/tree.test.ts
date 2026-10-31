@@ -7,12 +7,16 @@ import {
   TreeData,
   checkPlan,
   classStartNode,
+  earlierPositions,
+  nodeLabel,
   orderNodes,
   planPosition,
   resortAscendancy,
   resortStage,
   passivesView,
   planFromSpecs,
+  type NodeKind,
+  type PassiveNodeView,
   type PassivePlan,
   type TreeFile,
   type TreeNode
@@ -104,6 +108,25 @@ const plan: PassivePlan = {
   ],
   ascendancy: [21, 22]
 }
+
+test('the few nodes before the due one are listed too, not back across a respec', () => {
+  const tree = tiny()
+  assert.deepEqual(passivesView(plan, tree, 2, 0, 0).before, [], 'nothing before the first')
+  assert.deepEqual(passivesView(plan, tree, 4, 0, 0).before.map((n) => n.name), ['c', 'NEAR'])
+  // stage 2 refunds a: what came before the respec isn't listed
+  assert.deepEqual(passivesView(plan, tree, 5, 0, 0).before.map((n) => n.name), [])
+  assert.deepEqual(earlierPositions({ tree: '3_29', stages: [{ take: [1, 2, 3, 4, 5] }] }, 4), [1, 2, 3])
+})
+
+test('labels: a mastery by its picked effect, attribute nodes short', () => {
+  const view = (name: string, kind: NodeKind, stats: string[] = []): PassiveNodeView => ({ id: 1, name, kind, stats })
+  assert.equal(nodeLabel(view('Life Mastery', 'mastery', ['+50 to maximum Life'])), '+50 to maximum Life')
+  assert.equal(nodeLabel(view('Life Mastery', 'mastery')), 'Life Mastery', 'no effect picked: its name')
+  assert.equal(nodeLabel(view('Strength', 'small')), 'STR')
+  assert.equal(nodeLabel(view('Dexterity and Intelligence', 'small')), 'DEX+INT')
+  assert.equal(nodeLabel(view('Life', 'small')), 'Life')
+  assert.equal(nodeLabel(view('Strength', 'notable')), 'Strength', 'only the small ones')
+})
 
 test('the due node is the one your newest point goes on: level − 1 plus Books of Skill', () => {
   const tree = tiny()
@@ -374,8 +397,9 @@ test('the map marks what\'s taken, your point now and the ones after', () => {
   const state = Object.fromEntries(map.nodes.map((n) => [n.name, [n.state, n.num ?? null]]))
   assert.deepEqual(state, {
     START: ['taken', null],
-    a: ['taken', null],
-    b: ['taken', null],
+    // the two before your point now: maybe not placed yet
+    a: ['earlier', null],
+    b: ['earlier', null],
     c: ['due', 1],
     NOTE: ['next', 2],
     d: ['next', 3]
@@ -384,7 +408,7 @@ test('the map marks what\'s taken, your point now and the ones after', () => {
   const onOrbit = map.links.filter((l) => l.arc)
   assert.equal(onOrbit.length, 2)
   assert.ok(onOrbit.every((l) => l.arc!.r === 400 && l.state === 'path'))
-  assert.equal(map.links.filter((l) => l.state === 'taken').length, 2) // start—a, a—b
+  assert.equal(map.links.filter((l) => l.state === 'taken').length, 0) // start—a, a—b are your way too
   // the view holds every numbered node
   const [bx, by, bw, bh] = map.box
   for (const n of map.nodes.filter((n) => n.num)) assert.ok(n.x > bx && n.x < bx + bw && n.y > by && n.y < by + bh)
@@ -402,7 +426,9 @@ test('a respec shows from when its stage begins', () => {
   assert.equal(state(3, 'c'), 'due')
   // four: b went, and its point with the new one bought c and NOTE
   assert.equal(state(4, 'b'), 'off')
-  assert.equal(state(4, 'NOTE'), 'taken')
+  assert.equal(state(4, 'NOTE'), 'earlier')
+  // the earlier ones stop at the respec: b is gone, the start stays taken
+  assert.equal(state(4, 'START'), 'taken')
   assert.equal(state(4, 'd'), 'due')
 })
 

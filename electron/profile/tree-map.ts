@@ -3,10 +3,11 @@
 // tests/tree.test.ts. It names nothing new: the same plan, points and next
 // nodes as passivesView, laid out where they sit on the tree.
 
-import { LOOKAHEAD, duePosition, type NodeKind, type PassivePlan, type TreeData } from './tree.ts'
+import { LOOKAHEAD, duePosition, earlierPositions, type NodeKind, type PassivePlan, type TreeData } from './tree.ts'
 
-/** What a node is to you: taken by plan, your point now, one after, or not yours. */
-export type MapState = 'taken' | 'due' | 'next' | 'off'
+/** What a node is to you: taken by plan, one of the few before your point
+ *  now (maybe not placed yet), your point now, one after, or not yours. */
+export type MapState = 'taken' | 'earlier' | 'due' | 'next' | 'off'
 
 export interface MapNode {
   id: number
@@ -22,7 +23,8 @@ export interface MapNode {
 export interface MapLink {
   from: [number, number]
   to: [number, number]
-  /** taken: both ends taken; path: the way your next points go; off: the rest */
+  /** taken: both ends taken; path: the way your points go, the earlier ones
+   *  too; off: the rest */
   state: 'taken' | 'path' | 'off'
   /** two nodes on one orbit of a group join along it, as in the game */
   arc?: { r: number; sweep: 0 | 1 }
@@ -60,12 +62,15 @@ export function passiveMap(
   const { at: due } = duePosition(plan, points)
   const taken = new Set<number>(start != null ? [start] : [])
   const next: number[] = []
+  const earlierAt = new Set(earlierPositions(plan, due))
+  const earlier = new Set<number>()
   let i = 0
   for (const stage of plan.stages) {
     // a respec counts once you're past its stage's start (planPosition)
     if (i < due) for (const id of stage.refund ?? []) taken.delete(id)
     for (const id of stage.take) {
-      if (i < due) taken.add(id)
+      if (earlierAt.has(i)) earlier.add(id)
+      else if (i < due) taken.add(id)
       else if (next.length < LOOKAHEAD) next.push(id)
       i++
     }
@@ -74,7 +79,9 @@ export function passiveMap(
     const n = tree.node(id)
     return n?.x != null && n.y != null ? [n.x, n.y] : null
   }
-  const placed = next.map(at).filter((p): p is [number, number] => p != null)
+  if (next.length === 0) return null
+  // the earlier ones too: after a run, they're where you are
+  const placed = [...earlier, ...next].map(at).filter((p): p is [number, number] => p != null)
   if (placed.length === 0) return null
 
   // Around your next points, just wide enough for all of them: their
@@ -95,7 +102,7 @@ export function passiveMap(
 
   const stateOf = (id: number): MapState => {
     const k = next.indexOf(id)
-    return k === 0 ? 'due' : k > 0 ? 'next' : taken.has(id) ? 'taken' : 'off'
+    return k === 0 ? 'due' : k > 0 ? 'next' : earlier.has(id) ? 'earlier' : taken.has(id) ? 'taken' : 'off'
   }
   const nodes: MapNode[] = []
   const links: MapLink[] = []

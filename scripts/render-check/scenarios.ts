@@ -98,17 +98,19 @@ function nearest(start: number, count: number): number[] {
 }
 const marauderPlan = (() => {
   const berserker = nearest(29294, 2)
+  // Act 3 takes the Two Hand Mastery too, with one effect picked
   const specs = [12, 26].map((n, i) => ({
     title: i === 0 ? 'Act 2' : 'Act 3',
-    nodes: [...nearest(47175, n), ...berserker],
-    masteries: {}
+    nodes: [...nearest(47175, n), ...berserker, ...(i === 1 ? [25934] : [])],
+    masteries: (i === 1 ? { 25934: 1626 } : {}) as Record<string, number>
   }))
   return planFromSpecs(specs, tree, tree.treeVersion)
 })()
-// Level 9 with one Book of Skill: the ninth point is due.
-const marauderTree: PassivesView = passivesView(marauderPlan, tree, 9, 1, 0)
+// Level 23 with one Book of Skill: the 23rd point is due, three before it
+// maybe still to place.
+const marauderTree: PassivesView = passivesView(marauderPlan, tree, 23, 1, 0)
 // ...and the map around it, as main lays it out for the block's 1.7 : 1.
-const marauderMap: PassiveMap | null = passiveMap(marauderPlan, tree, 9, classStartNode(tree, 'Marauder'), 1.7)
+const marauderMap: PassiveMap | null = passiveMap(marauderPlan, tree, 23, classStartNode(tree, 'Marauder'), 1.7)
 
 function profileSnapshot(
   stageIndex: number,

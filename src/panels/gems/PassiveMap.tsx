@@ -91,8 +91,9 @@ export function PassiveMap({ points, due }: { points: number; due: number | unde
           ))}
       </svg>
       <p className="mt-0.5 text-[10px] text-overlay-muted">
-        <span className="text-overlay-accent">●</span> taken by plan, <b className="text-overlay-text">1</b> your next
-        point, 2 to 6 after, dashed: the way
+        <span className="text-overlay-accent">●</span> taken by plan,{' '}
+        <span className="text-overlay-accent">◌</span> the points before (maybe not placed yet),{' '}
+        <b className="text-overlay-text">1</b> your point now, 2 to 6 after, dashed: the way
       </p>
     </div>
   )
@@ -105,17 +106,28 @@ const LINK = {
 } as const
 
 function MapNodeMark({ node: n, k }: { node: PassiveMapBridge['nodes'][number]; k: number }): React.JSX.Element {
-  // a numbered node is big enough for its number, small or not
-  const r = Math.max(R[n.kind] ?? 4, n.num != null ? 6.5 : 0) * k
+  // a numbered node is big enough for its number, small or not; an earlier
+  // one big enough to see its dashes
+  const r = Math.max(R[n.kind] ?? 4, n.num != null ? 6.5 : n.state === 'earlier' ? 5.5 : 0) * k
+  const earlier = n.state === 'earlier'
   const mine = n.state === 'due' || n.state === 'next'
-  const fill = n.state === 'due' || n.state === 'taken' ? 'var(--color-overlay-accent)' : mine ? '#0e1118' : '#1f2533'
-  const stroke = n.state === 'due' ? '#ffffff' : mine ? 'var(--color-overlay-text)' : n.state === 'taken' ? '#e9cf8a' : '#3a4458'
-  const width = mine ? 1.8 : 1
+  // an earlier one: a gold ring, dashed, hollow: yours, maybe not placed yet
+  const fill = n.state === 'due' || n.state === 'taken' ? 'var(--color-overlay-accent)' : mine || earlier ? '#0e1118' : '#1f2533'
+  const stroke =
+    n.state === 'due'
+      ? '#ffffff'
+      : mine
+        ? 'var(--color-overlay-text)'
+        : n.state === 'taken' || earlier
+          ? '#e9cf8a'
+          : '#3a4458'
+  const width = mine || earlier ? 1.8 : 1
   const copy = (): void => void window.overlay?.copyPassive(n.id)
+  const clickable = n.num != null || earlier
   const ring = n.kind === 'mastery' || n.kind === 'start'
   return (
-    <g onClick={n.num != null ? copy : undefined} className={n.num != null ? 'cursor-pointer' : undefined}>
-      <title>{n.name + (n.num != null ? ' (click to copy)' : '')}</title>
+    <g onClick={clickable ? copy : undefined} className={clickable ? 'cursor-pointer' : undefined}>
+      <title>{n.name + (earlier ? ', a point before (click to copy)' : n.num != null ? ' (click to copy)' : '')}</title>
       {n.state === 'due' && (
         <circle cx={n.x} cy={n.y} r={r + 5 * k} fill="none" stroke="var(--color-overlay-accent)" strokeWidth={2 * k} opacity={0.6} />
       )}
@@ -135,10 +147,10 @@ function MapNodeMark({ node: n, k }: { node: PassiveMapBridge['nodes'][number]; 
           cx={n.x}
           cy={n.y}
           r={r}
-          fill={ring && !mine && n.state !== 'taken' ? 'none' : fill}
+          fill={ring && !mine && !earlier && n.state !== 'taken' ? 'none' : fill}
           stroke={stroke}
           strokeWidth={width * k}
-          strokeDasharray={n.kind === 'mastery' && mine ? `${2 * k} ${2 * k}` : undefined}
+          strokeDasharray={(n.kind === 'mastery' && mine) || earlier ? `${2 * k} ${2 * k}` : undefined}
         />
       )}
       {n.num != null && (

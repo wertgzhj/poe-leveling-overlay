@@ -95,6 +95,9 @@ export interface PassivesView {
   stageLabel: string | null
   /** the next nodes, the due one first; empty once the plan is done */
   next: PassiveNodeView[]
+  /** the few nodes before the due one, earliest first: points you may have
+   *  saved up (EARLIER_SHOWN) */
+  before: PassiveNodeView[]
   /** the nodes to refund before the next ones, when a respec is due */
   refund: PassiveNodeView[]
   /** the ascendancy notables the next Labyrinth's points go to, and how many
@@ -112,6 +115,9 @@ export interface PassivesView {
 
 /** How many nodes ahead the overlay lists. */
 export const LOOKAHEAD = 6
+/** How many nodes before the due one it lists too: the overlay can't see
+ *  your tree, and after a run you may have a few points still to place. */
+export const EARLIER_SHOWN = 3
 /** A respec is shown while the stage that needs it is this many points in. */
 const RESPEC_WINDOW = 3
 const KEY_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'jewel'])
@@ -305,6 +311,41 @@ export function duePosition(plan: PassivePlan, points: number): { at: number; to
   return planPosition(plan, Math.max(0, points - 1))
 }
 
+/**
+ * The plan positions just before `at`, earliest first: at most EARLIER_SHOWN,
+ * never back across a respec (what's before it may be gone, and is far away).
+ * None once the plan is done.
+ */
+export function earlierPositions(plan: PassivePlan, at: number): number[] {
+  const stageOf: number[] = []
+  plan.stages.forEach((s, stage) => s.take.forEach(() => stageOf.push(stage)))
+  if (at >= stageOf.length) return []
+  const here = stageOf[at]
+  const out: number[] = []
+  for (let i = at - 1; i >= 0 && out.length < EARLIER_SHOWN; i--) {
+    const respecBetween = plan.stages.slice(stageOf[i] + 1, here + 1).some((s) => s.refund?.length)
+    if (respecBetween) break
+    out.unshift(i)
+  }
+  return out
+}
+
+const ATTRIBUTES: Record<string, string> = {
+  Strength: 'STR',
+  Dexterity: 'DEX',
+  Intelligence: 'INT',
+  'Strength and Dexterity': 'STR+DEX',
+  'Strength and Intelligence': 'STR+INT',
+  'Dexterity and Intelligence': 'DEX+INT'
+}
+
+/** A node as the overlay writes it, short: a mastery by the effect the build
+ *  picked, an attribute node as STR, DEX or INT, the rest by name. */
+export function nodeLabel(node: PassiveNodeView): string {
+  if (node.kind === 'mastery') return node.stats.length ? node.stats.join(', ') : node.name
+  return (node.kind === 'small' && ATTRIBUTES[node.name]) || node.name
+}
+
 /** Where the plan stands for a character with `points` passive points. */
 export function passivesView(
   plan: PassivePlan,
@@ -319,6 +360,7 @@ export function passivesView(
   const { at, total } = duePosition(plan, points)
   const effect = (stage: number, id: number): number | undefined => plan.stages[stage].masteries?.[String(id)]
   const next = flat.slice(at, at + LOOKAHEAD).map((s) => tree.view(s.id, effect(s.stage, s.id)))
+  const before = earlierPositions(plan, at).map((i) => tree.view(flat[i].id, effect(flat[i].stage, flat[i].id)))
 
   let refund: PassiveNodeView[] = []
   const due = flat[at]
@@ -381,6 +423,7 @@ export function passivesView(
     total,
     stageLabel: due ? (plan.stages[due.stage].label ?? null) : null,
     next,
+    before,
     refund,
     ascendancy: asc.length ? { labs, next: ascNext } : null,
     treeMismatch:
