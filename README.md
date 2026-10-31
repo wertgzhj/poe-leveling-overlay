@@ -38,7 +38,9 @@ semi-automatically from a Path of Building import.
   link and it writes the stages for you, after you've checked where each one starts.
 - **Says which passive to take next.** A build's PoB trees (one per levelling
   milestone) become an ordered list: under the gems, the node your newest point
-  goes on (by level and the Books of Skill you used) with the few after it, a
+  goes on (by level and the Books of Skill you used) with the few after it and
+  the three before (points you may have saved up on a run), masteries by the
+  effect your build picked, attribute nodes as STR, DEX and INT, a
   respec when the build drops nodes, and the next ascendancy points after each
   Labyrinth. Click a name to copy it for the in-game tree's search box, or
   open *Map* for that piece of the tree, your points numbered. The order

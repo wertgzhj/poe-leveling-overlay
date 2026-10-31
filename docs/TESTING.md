@@ -257,7 +257,10 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      partymate's level-up must still never move tracking.
    - **Passives.** Import a PoB build with several trees (one per milestone):
      under the gems, *Passives* names the node your newest point goes on (its
-     stats in the tooltip; at level 2 the plan's first node, not its second) and the few after it, with the points counted top right (hover: level − 1
+     stats in the tooltip; at level 2 the plan's first node, not its second),
+     the three before it dimmed above (none back across a respec), a mastery
+     as **M** and its picked effect, attribute nodes as STR, DEX and INT. The
+     map rings the three before in dashed gold and keeps them in view and the few after it, with the points counted top right (hover: level − 1
      plus Books of Skill). Level up: the next node moves on. Use a Book of Skill:
      it moves one more, and a restart doesn't count it twice. Reach a tree that
      drops nodes: an orange *Respec first* box names them for its first few

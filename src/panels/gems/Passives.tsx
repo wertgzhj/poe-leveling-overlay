@@ -1,11 +1,14 @@
 import { useState } from 'react'
+// Pure, from the main process side (no Electron imports).
+import { nodeLabel } from '../../../electron/profile/tree.ts'
 import { HEADING, button } from '../../lib/ui'
 import { useOverlayStore } from '../../stores/overlayStore'
 import { PassiveMap } from './PassiveMap'
 
 // The passive tree under the gems: the node your newest point goes on (its stats in
 // the tooltip — under it they were more than anyone reads mid-run), the few after
-// it, a respec when one is due, and the next ascendancy points. Which node is
+// it, the few before it (points you may have saved up on a run), a respec
+// when one is due, and the next ascendancy points. Which node is
 // due follows your points — (level - 1) plus the Books of Skill you used — the
 // way the gem stage follows your level. Clicking a name copies it, to paste
 // into the in-game tree's search box; nothing more (docs/ARCHITECTURE.md#tos-position).
@@ -85,6 +88,14 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
 
       {due ? (
         <>
+          {view.before.length > 0 && (
+            <p
+              className="ml-3.5 text-[10px] leading-snug text-overlay-muted/80"
+              title="The points before: still to place if you saved some up"
+            >
+              <NodeList nodes={view.before} arrows /> →
+            </p>
+          )}
           <div className="flex items-baseline gap-1.5">
             <span className="shrink-0 text-[10px] text-overlay-muted" title="Where your newest point goes">
               ▸
@@ -93,7 +104,7 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
           </div>
           {after.length > 0 && (
             <p className="ml-3.5 text-[10px] leading-snug text-overlay-muted">
-              then <NodeList nodes={after} arrows />
+              → <NodeList nodes={after} arrows />
             </p>
           )}
         </>
@@ -144,8 +155,9 @@ function NodeList({ nodes, arrows }: { nodes: PassiveNodeViewBridge[]; arrows?: 
   )
 }
 
-/** A node's name: notables and keystones stand out, masteries are italic.
- *  Click copies it; the tooltip has its stats. */
+/** A node, short (nodeLabel): notables and keystones stand out, a mastery
+ *  is its picked effect behind an M. Click copies its name, which is what the
+ *  game's search finds; the tooltip has the name and its stats. */
 function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: boolean }): React.JSX.Element {
   const [copied, setCopied] = useState(false)
   const big = node.kind === 'notable' || node.kind === 'keystone' || node.kind === 'jewel'
@@ -169,10 +181,21 @@ function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: bool
         tone +
         (strong ? ' text-xs font-semibold' : '') +
         (big && !strong ? ' font-medium' : '') +
-        (node.kind === 'mastery' ? ' italic' : '')
+        (node.kind === 'mastery' ? ' inline-block max-w-[20em] truncate align-bottom' : '')
       }
     >
-      {copied ? '✓ copied' : node.name}
+      {copied ? (
+        '✓ copied'
+      ) : (
+        <>
+          {node.kind === 'mastery' && (
+            <span className="mr-[0.3em] rounded-sm bg-white/10 px-[0.25em] text-[0.85em] font-semibold not-italic text-overlay-muted">
+              M
+            </span>
+          )}
+          {nodeLabel(node)}
+        </>
+      )}
     </button>
   )
 }
