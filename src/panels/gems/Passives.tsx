@@ -207,7 +207,7 @@ function NodeList({ nodes, arrows }: { nodes: PassiveNodeViewBridge[]; arrows?: 
 function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: boolean }): React.JSX.Element {
   const [copied, setCopied] = useState(false)
   const big = node.kind === 'notable' || node.kind === 'keystone' || node.kind === 'jewel'
-  const tone = strong ? (big ? 'text-overlay-accent' : 'text-overlay-text') : big ? 'text-overlay-text' : ''
+  const tone = big ? 'text-overlay-accent' : strong ? 'text-overlay-text' : ''
   const title =
     [node.name + (node.kind !== 'small' ? ` (${node.kind})` : ''), ...node.stats].join('\n') +
     '\n\nClick to copy, then paste it into the passive tree search.'
