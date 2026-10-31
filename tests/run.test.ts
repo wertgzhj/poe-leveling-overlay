@@ -67,9 +67,12 @@ test('a profile that names no decision gets no reminder', () => {
   assert.equal(runs.choiceDue('Marauder1', { name: 'x', class: 'Witch' }), null)
   assert.equal(runs.choiceDue('Marauder1', undefined), null)
   assert.equal(runs.choiceDue('Marauder1', { ...BUILD, bandit: 'Kill all' })?.wants, 'kill all three')
-  // Only the two known reminders can be dismissed.
+  // Only the two known reminders and respecs can be dismissed.
   assert.equal(runs.dismiss('Marauder1', 'something'), false)
   assert.equal(runs.dismiss(null, 'bandit'), false)
+  assert.equal(runs.dismiss('Marauder1', 'respec:3:12.45'), true)
+  assert.ok(runs.dismissed('Marauder1').has('respec:3:12.45'))
+  assert.equal(runs.dismiss('Marauder1', 'respec:three'), false)
 })
 
 test("a fresh character forgets its namesake's run, and only its own", () => {

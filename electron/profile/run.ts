@@ -175,10 +175,17 @@ export class CharacterRuns {
     return null
   }
 
-  /** Acknowledge a reminder. One-shot decisions, so it never comes back.
-   *  Returns true when something changed. */
+  /** What this character has marked done: the choices, and respecs by
+   *  their key ("respec:…", tree.ts respecKey). */
+  dismissed(name: string | null): Set<string> {
+    return new Set(name ? (this.store.get('dismissedChoices')[name] ?? []) : [])
+  }
+
+  /** Acknowledge a reminder, or mark a respec done. One-shot, so it never
+   *  comes back. Returns true when something changed. */
   dismiss(name: string | null, id: string): boolean {
-    if (!name || (id !== 'bandit' && id !== 'pantheon')) return false
+    const respec = /^respec:\d+:[\d.]*$/.test(id) && id.length <= 400
+    if (!name || (id !== 'bandit' && id !== 'pantheon' && !respec)) return false
     const map = this.store.get('dismissedChoices')
     const done = map[name] ?? []
     if (done.includes(id)) return false

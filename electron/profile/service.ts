@@ -480,7 +480,10 @@ export class ProfileService {
   private passives(): PassivesView | null {
     const plan = this.profile?.passives
     if (!plan || !this.tree) return null
-    return passivesView(plan, this.tree, this.level, this.runs.questPoints(this.character), this.labsDone())
+    return passivesView(plan, this.tree, this.level, this.runs.questPoints(this.character), this.labsDone(), {
+      start: classStartNode(this.tree, this.profile!.meta.class),
+      done: this.runs.dismissed(this.character)
+    })
   }
 
   /** The passive map around the next points (opened with a click in the
@@ -489,7 +492,9 @@ export class ProfileService {
     const plan = this.profile?.passives
     if (!plan || !this.tree) return null
     const points = this.level == null ? 0 : Math.max(0, this.level - 1) + this.runs.questPoints(this.character)
-    return passiveMap(plan, this.tree, points, classStartNode(this.tree, this.profile!.meta.class), aspect)
+    // the respec the list shows, its nodes marked until you mark it done
+    const refunds = new Set(this.current().passives?.respec?.nodes.map((n) => n.id) ?? [])
+    return passiveMap(plan, this.tree, points, classStartNode(this.tree, this.profile!.meta.class), aspect, refunds)
   }
 
   /** The Tree button's search, as the overlay shows it now. */

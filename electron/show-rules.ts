@@ -24,6 +24,8 @@ export const SHOW_ITEMS = [
   'links',
   /** the Gems tab's passives block */
   'passive',
+  /** a respec the build asks for, until you mark it done */
+  'respec',
   /** the Map button inside it */
   'passiveMap'
 ] as const

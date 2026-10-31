@@ -8,6 +8,7 @@ import { Channels, type Spoken } from './channels.ts'
 import { Announcer, eventOf, phrase, sample, type AnnounceEvent, type Announcement, type Observed } from './announce-rules.ts'
 import { getAnnounce } from './settings.ts'
 import { vendorGems } from './profile/search.ts'
+import { respecNames } from './profile/tree.ts'
 import type { LogService } from './log/service.ts'
 import type { OverlayController } from './overlay.ts'
 import type { ProfileService } from './profile/service.ts'
@@ -57,7 +58,12 @@ export class AnnounceService {
       gems: shown.viewedIndex === shown.liveIndex && shown.acquisitions ? vendorGems(shown.acquisitions.plan) : [],
       labs: trials.unlockedLabs,
       choice: shown.choiceDue ? { id: shown.choiceDue.id, wants: shown.choiceDue.wants } : null,
-      passive: shown.passives?.next[0]?.name ?? null
+      passive: shown.passives?.next[0]?.name ?? null,
+      // said when it can be done: not while it waits for a node first
+      respec:
+        shown.passives?.respec && !shown.passives.respec.after
+          ? { key: shown.passives.respec.key, names: respecNames(shown.passives.respec) }
+          : null
     }
   }
 

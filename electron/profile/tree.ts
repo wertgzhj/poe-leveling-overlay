@@ -52,10 +52,14 @@ export interface PassiveStage {
   label?: string
   /** node ids, one passive point each */
   take: number[]
-  /** nodes this stage drops — refund them first */
+  /** nodes this stage drops: refunded once that can't cut the tree in two
+   *  (respecPoints) */
   refund?: number[]
   /** mastery node id -> the effect picked */
   masteries?: Record<string, number>
+  /** masteries kept from before with another effect picked: node id -> the
+   *  new effect. Part of the stage's respec. */
+  remaster?: Record<string, number>
 }
 
 /** The tree part of a profile. */
@@ -98,8 +102,8 @@ export interface PassivesView {
   /** the few nodes before the due one, earliest first: points you may have
    *  saved up (EARLIER_SHOWN) */
   before: PassiveNodeView[]
-  /** the nodes to refund before the next ones, when a respec is due */
-  refund: PassiveNodeView[]
+  /** a respec the build asks for, until you mark it done */
+  respec: RespecView | null
   /** the ascendancy notables the next Labyrinth's points go to, and how many
    *  Labyrinths are beaten */
   ascendancy: { labs: number; next: PassiveNodeView[] } | null
@@ -113,13 +117,25 @@ export interface PassivesView {
   treeSearch: string | null
 }
 
+/** A respec: nodes a PoB tree drops, masteries it switches. The overlay can't
+ *  see your tree, so it's shown until you mark it done. */
+export interface RespecView {
+  /** what Done remembers it by, per character (respecKey) */
+  key: string
+  /** the nodes to take out */
+  nodes: PassiveNodeView[]
+  /** masteries to switch: the node with the effect it has, and the one to pick */
+  masteries: Array<{ node: PassiveNodeView; to: string[] }>
+  /** the node to take before the nodes can go: taking them out sooner cuts
+   *  your tree in two, which the game doesn't allow. null: now. */
+  after: PassiveNodeView | null
+}
+
 /** How many nodes ahead the overlay lists. */
 export const LOOKAHEAD = 6
 /** How many nodes before the due one it lists too: the overlay can't see
  *  your tree, and after a run you may have a few points still to place. */
 export const EARLIER_SHOWN = 3
-/** A respec is shown while the stage that needs it is this many points in. */
-const RESPEC_WINDOW = 3
 const KEY_KINDS: ReadonlySet<NodeKind> = new Set(['notable', 'keystone', 'jewel'])
 /** Stages before the current one the Tree button still searches. */
 const SEARCH_BACK = 2
@@ -177,6 +193,8 @@ export function planFromSpecs(specs: TreeSpec[], tree: TreeData, treeVersion: st
 
   const stages: PassiveStage[] = []
   let have = new Set<number>()
+  // the effect each mastery you have is set to
+  const effects = new Map<number, number>()
   const ascendancy: number[] = []
   for (const spec of specs) {
     // Starting nodes cost nothing and anchor every walk.
@@ -194,11 +212,23 @@ export function planFromSpecs(specs: TreeSpec[], tree: TreeData, treeVersion: st
       const effect = spec.masteries[String(id)]
       if (effect != null) masteries[String(id)] = effect
     }
+    const remaster: Record<string, number> = {}
+    for (const id of kept) {
+      const effect = spec.masteries[String(id)]
+      const before = effects.get(id)
+      if (effect != null && before != null && effect !== before) remaster[String(id)] = effect
+    }
+    for (const id of refund) effects.delete(id)
+    for (const id of now) {
+      const effect = spec.masteries[String(id)]
+      if (effect != null) effects.set(id, effect)
+    }
     const stage: PassiveStage = { take }
     if (spec.title) stage.label = spec.title
     if (refund.length) stage.refund = refund
     if (Object.keys(masteries).length) stage.masteries = masteries
-    if (take.length || refund.length) stages.push(stage)
+    if (Object.keys(remaster).length) stage.remaster = remaster
+    if (take.length || refund.length || stage.remaster) stages.push(stage)
     have = now
 
     const newAsc = spec.nodes.filter((id) => isAscendancy(id) && !ascendancy.includes(id))
@@ -282,21 +312,33 @@ export function orderNodes(tree: TreeData, from: Set<number>, wanted: number[]):
  * nodes are bought again elsewhere — so from the stage that refunds them on,
  * the plan is that many nodes further along than the points alone say.
  */
-export function planPosition(plan: PassivePlan, points: number): { at: number; total: number } {
+export function planPosition(
+  plan: PassivePlan,
+  points: number,
+  respecAt: readonly number[] = []
+): { at: number; total: number } {
   let allocated = 0
   let i = 0
   let at = -1
-  for (const stage of plan.stages) {
-    // Every point spent as the stage begins: its first node is due, with the
-    // respec in front of it. Only spending past that means you did the respec.
-    if (at < 0 && allocated >= points) at = i
-    if (at < 0) allocated -= stage.refund?.length ?? 0
-    for (let k = 0; k < stage.take.length; k++, i++) {
-      if (at >= 0) continue
-      if (allocated >= points) at = i
-      else allocated++
+  plan.stages.forEach((stage, s) => {
+    // The respec comes after this many of the stage's nodes (respecPoints;
+    // at its start without one). Every point spent by then: the next node is
+    // due, with the respec in front of it. Only spending past that means you
+    // did the respec.
+    const r = Math.min(respecAt[s] ?? 0, stage.take.length)
+    for (let k = 0; k <= stage.take.length; k++) {
+      if (k === r) {
+        if (at < 0 && allocated >= points) at = i
+        if (at < 0) allocated -= stage.refund?.length ?? 0
+      }
+      if (k === stage.take.length) break
+      if (at < 0) {
+        if (allocated >= points) at = i
+        else allocated++
+      }
+      i++
     }
-  }
+  })
   const refunds = plan.stages.reduce((n, s) => n + (s.refund?.length ?? 0), 0)
   return { at: at < 0 ? i : at, total: i - refunds }
 }
@@ -307,8 +349,117 @@ export function planPosition(plan: PassivePlan, points: number): { at: number; t
  * level brings. With none yet (level 1), the first node is due. The overlay
  * can't see what you've placed: it takes it you place each point as you get it.
  */
-export function duePosition(plan: PassivePlan, points: number): { at: number; total: number } {
-  return planPosition(plan, Math.max(0, points - 1))
+export function duePosition(
+  plan: PassivePlan,
+  points: number,
+  respecAt: readonly number[] = []
+): { at: number; total: number } {
+  return planPosition(plan, Math.max(0, points - 1), respecAt)
+}
+
+/**
+ * For each stage, how many of its nodes come before its refunds can go: the
+ * game only takes a node out when the rest stay joined to your class's start,
+ * and a respec often waits for the new way round to be in place. 0: at once.
+ * Without the start (unknown class), 0 everywhere.
+ */
+export function respecPoints(plan: PassivePlan, tree: TreeData, start: number | undefined): number[] {
+  const out: number[] = []
+  const have = new Set<number>()
+  for (const stage of plan.stages) {
+    const refund = new Set(stage.refund ?? [])
+    let r = 0
+    if (refund.size && start != null) {
+      r = stage.take.length
+      for (let n = 0; n <= stage.take.length; n++) {
+        const left = new Set([...have, ...stage.take.slice(0, n)].filter((id) => !refund.has(id)))
+        if (joined(tree, start, left)) {
+          r = n
+          break
+        }
+      }
+    }
+    out.push(r)
+    for (const id of refund) have.delete(id)
+    for (const id of stage.take) have.add(id)
+  }
+  return out
+}
+
+/** Whether every node of `nodes` is reached from `start` through them.
+ *  Masteries hang off their group, not a link, and nodes the data doesn't
+ *  know can't be walked: both are left out. */
+function joined(tree: TreeData, start: number, nodes: ReadonlySet<number>): boolean {
+  const seen = new Set([start])
+  const queue = [start]
+  while (queue.length) {
+    for (const next of tree.node(queue.pop()!)?.links ?? []) {
+      if (nodes.has(next) && !seen.has(next)) {
+        seen.add(next)
+        queue.push(next)
+      }
+    }
+  }
+  return [...nodes].every((id) => {
+    const n = tree.node(id)
+    return !n || n.kind === 'mastery' || seen.has(id)
+  })
+}
+
+/** What a respec takes out and switches, by name: for the voice, or `short`
+ *  (nodeLabel, STR not Strength) for the strip. */
+export function respecNames(r: RespecView, short = false): string[] {
+  return [...r.nodes.map((n) => (short ? nodeLabel(n) : n.name)), ...r.masteries.map((m) => m.node.name)]
+}
+
+/** What Done remembers a respec by: its stage, and what it changes. */
+export function respecKey(plan: PassivePlan, stage: number): string {
+  const s = plan.stages[stage]
+  return `respec:${stage}:${[...(s?.refund ?? []), ...Object.keys(s?.remaster ?? {})].join('.')}`
+}
+
+/**
+ * The respec to show at plan position `at` (on stage `stage`): the current
+ * stage's, else the one before's, until it's marked done. Before the stage's
+ * nodes make it possible, it says which node to take first.
+ */
+function respecView(
+  plan: PassivePlan,
+  tree: TreeData,
+  at: number,
+  stage: number,
+  respecAt: readonly number[],
+  done: ReadonlySet<string> = new Set()
+): RespecView | null {
+  for (const s of [stage, stage - 1]) {
+    const st = plan.stages[s]
+    if (!st || (!st.refund?.length && !st.remaster)) continue
+    const key = respecKey(plan, s)
+    if (done.has(key)) continue
+    const start = plan.stages.slice(0, s).reduce((n, x) => n + x.take.length, 0)
+    const r = Math.min(respecAt[s] ?? 0, st.take.length)
+    const masteries = Object.entries(st.remaster ?? {}).map(([id, effect]) => ({
+      node: tree.view(Number(id), effectBefore(plan, s, Number(id))),
+      to: tree.view(Number(id), effect).stats
+    }))
+    return {
+      key,
+      nodes: (st.refund ?? []).map((id) => tree.view(id)),
+      masteries,
+      after: at < start + r ? tree.view(st.take[r - 1]) : null
+    }
+  }
+  return null
+}
+
+/** The effect a mastery had before stage `stage`. */
+function effectBefore(plan: PassivePlan, stage: number, id: number): number | undefined {
+  for (let s = stage - 1; s >= 0; s--) {
+    const st = plan.stages[s]
+    const effect = st.remaster?.[String(id)] ?? st.masteries?.[String(id)]
+    if (effect != null) return effect
+  }
+  return undefined
 }
 
 /**
@@ -352,23 +503,21 @@ export function passivesView(
   tree: TreeData,
   level: number | null,
   questPoints: number,
-  labs: number
+  labs: number,
+  /** your class's start, for when a respec can be done; the respecs marked done */
+  opts: { start?: number; done?: ReadonlySet<string> } = {}
 ): PassivesView {
   const flat: Array<{ id: number; stage: number }> = []
   plan.stages.forEach((s, stage) => s.take.forEach((id) => flat.push({ id, stage })))
   const points = level == null ? 0 : Math.max(0, level - 1) + questPoints
-  const { at, total } = duePosition(plan, points)
+  const respecAt = respecPoints(plan, tree, opts.start)
+  const { at, total } = duePosition(plan, points, respecAt)
   const effect = (stage: number, id: number): number | undefined => plan.stages[stage].masteries?.[String(id)]
   const next = flat.slice(at, at + LOOKAHEAD).map((s) => tree.view(s.id, effect(s.stage, s.id)))
   const before = earlierPositions(plan, at).map((i) => tree.view(flat[i].id, effect(flat[i].stage, flat[i].id)))
 
-  let refund: PassiveNodeView[] = []
   const due = flat[at]
-  if (due) {
-    const stageStart = flat.findIndex((s) => s.stage === due.stage)
-    const stage = plan.stages[due.stage]
-    if (stage.refund?.length && at - stageStart < RESPEC_WINDOW) refund = stage.refund.map((id) => tree.view(id))
-  }
+  const respec = respecView(plan, tree, at, due?.stage ?? plan.stages.length, respecAt, opts.done)
 
   // Of a Labyrinth's two points, only the notables matter to read; the small
   // node on the way is just the way. Two small ones: the notable they lead to.
@@ -424,7 +573,7 @@ export function passivesView(
     stageLabel: due ? (plan.stages[due.stage].label ?? null) : null,
     next,
     before,
-    refund,
+    respec,
     ascendancy: asc.length ? { labs, next: ascNext } : null,
     treeMismatch:
       plan.tree === tree.treeVersion

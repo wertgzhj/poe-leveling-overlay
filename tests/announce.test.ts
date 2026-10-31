@@ -20,7 +20,8 @@ const base: Observed = {
   gems: ['Cleave'],
   labs: [],
   choice: null,
-  passive: 'Strength'
+  passive: 'Strength',
+  respec: null
 }
 
 test('the first look, a character switch and another profile say nothing', () => {
@@ -47,6 +48,15 @@ test('each change is said once', () => {
   ])
 })
 
+test('a respec is said once, when it can be done', () => {
+  const a = new Announcer()
+  a.observe(base)
+  const due = { ...base, respec: { key: 'respec:3:12.13', names: ['a', 'b'] } }
+  assert.deepEqual(a.observe(due), [{ event: 'respec', names: ['a', 'b'] }])
+  assert.deepEqual(a.observe(due), [], 'still due: not again')
+  assert.deepEqual(a.observe(base), [], 'marked done: nothing to say')
+})
+
 test('a trial zone and a costly zone are said once, not again on the way back', () => {
   const a = new Announcer()
   a.observe(base)
@@ -68,7 +78,8 @@ test('what each says, in English and German', () => {
     'Normal Labyrinth open',
     'Bandits: help Alira',
     'Pantheon: Soul of Lunaris',
-    'Passive point: Born to Fight'
+    'Passive point: Born to Fight',
+    'Respec due: Strength, Life and Armour'
   ])
   assert.deepEqual(say('de'), [
     'Trial in dieser Zone',
@@ -77,7 +88,8 @@ test('what each says, in English and German', () => {
     'Labyrinth offen: Normal',
     'Banditen: Alira helfen',
     'Pantheon: Soul of Lunaris',
-    'Passivpunkt: Born to Fight'
+    'Passivpunkt: Born to Fight',
+    'Achtung, Respec: Strength, Life and Armour'
   ])
   assert.equal(phrase({ event: 'gems', gems: ['A', 'B', 'C', 'D', 'E'] }, 'en'), 'New gems: A, B, C and 2 more')
   assert.equal(phrase({ event: 'zone', verdict: 'over', by: 1 }, 'en'), 'Zone 1 level too low')

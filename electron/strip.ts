@@ -23,7 +23,16 @@ export type StripNotice =
   | { kind: 'choice'; id: 'bandit' | 'pantheon'; wants: string }
   | { kind: 'lab'; lab: LabTier }
   | { kind: 'trial'; id: string }
+  | ({ kind: 'respec' } & StripRespec)
   | { kind: 'god'; soul: string; side?: string }
+
+/** A respec as the strip says it: what to take out, and the node to take
+ *  first when it can't be done yet. */
+export interface StripRespec {
+  key: string
+  names: string[]
+  after: string | null
+}
 
 /** One thing to pick up in this town. */
 export interface StripGem {
@@ -43,6 +52,8 @@ export interface StripInput {
   lab: LabTier | null
   /** a trial in this zone you haven't done */
   trial: string | null
+  /** a respec not marked done yet */
+  respec: StripRespec | null
   /** a Pantheon god your build wants, fought here */
   god: { soul: string; side?: string } | null
   /** the live stage's to-do list (see Acquisitions.plan) */
@@ -71,6 +82,7 @@ function noticeOf(input: StripInput): StripNotice | null {
   if (input.choice && show[input.choice.id]) return { kind: 'choice', ...input.choice }
   if (input.lab && show.lab) return { kind: 'lab', lab: input.lab }
   if (input.trial && show.trialHere) return { kind: 'trial', id: input.trial }
+  if (input.respec && show.respec) return { kind: 'respec', ...input.respec }
   if (input.god && show.pantheon) return { kind: 'god', ...input.god }
   return null
 }

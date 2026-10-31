@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { LAB_LABEL } from '../../electron/trials/engine.ts'
 import { stripModel, type StripGem, type StripNotice } from '../../electron/strip.ts'
 import { stripFontSize } from '../../electron/strip-place.ts'
-import { nodeLabel } from '../../electron/profile/tree.ts'
+import { nodeLabel, respecNames } from '../../electron/profile/tree.ts'
 import { formatAccelerator } from '../lib/accelerator'
 import { button, panelSurface } from '../lib/ui'
 import { useOverlayStore } from '../stores/overlayStore'
@@ -66,6 +66,13 @@ export function StripPanel(): React.JSX.Element {
     god: god ? { soul: god.soul, side: god.side } : null,
     // the live stage's list: a stage paged to in the panel isn't where you are
     plan: onLive ? (s.profile?.acquisitions?.plan ?? []) : [],
+    respec: passives?.respec
+      ? {
+          key: passives.respec.key,
+          names: respecNames(passives.respec, true),
+          after: passives.respec.after ? nodeLabel(passives.respec.after) : null
+        }
+      : null,
     passive:
       passives && due
         ? { name: (due.kind === 'mastery' ? 'M ' : '') + nodeLabel(due), points: passives.points, total: passives.total }
@@ -195,11 +202,15 @@ function GemLine({ gem }: { gem: StripGem }): React.JSX.Element {
   )
 }
 
-/** The one reminder, with its button: Done for a trial or a god, ✕ for a
- *  choice or a Labyrinth. */
+/** The one reminder, with its button: Done for a trial, a respec or a god,
+ *  ✕ for a choice or a Labyrinth. */
 function NoticeLine({ notice }: { notice: StripNotice }): React.JSX.Element {
-  const trial = notice.kind === 'trial'
+  // a trial and a respec are things to do: orange
+  const trial = notice.kind === 'trial' || notice.kind === 'respec'
   const text =
+    notice.kind === 'respec'
+      ? `Respec${notice.after ? ` after ${notice.after}` : ''}: ${notice.names.join(', ')}`
+      :
     notice.kind === 'choice'
       ? `${notice.id === 'bandit' ? 'Bandits' : 'Pantheon'}: ${notice.wants}`
       : notice.kind === 'lab'
@@ -208,12 +219,12 @@ function NoticeLine({ notice }: { notice: StripNotice }): React.JSX.Element {
           ? 'Trial in this zone'
           : `Pantheon: ${notice.soul.replace(/^Soul of (the )?/, '')}${notice.side ? ` in ${notice.side}` : ' is here'}`
   const act = (): void => {
-    if (notice.kind === 'choice') window.overlay?.dismissChoice(notice.id)
+    if (notice.kind === 'choice' || notice.kind === 'respec') window.overlay?.dismissChoice(notice.kind === 'respec' ? notice.key : notice.id)
     else if (notice.kind === 'lab') window.overlay?.trialsDismissLab(notice.lab)
     else if (notice.kind === 'trial') window.overlay?.trialsToggle(notice.id)
     else window.overlay?.togglePantheon(notice.soul)
   }
-  const done = notice.kind === 'trial' || notice.kind === 'god'
+  const done = notice.kind === 'trial' || notice.kind === 'respec' || notice.kind === 'god'
   return (
     <div
       className={
@@ -222,7 +233,7 @@ function NoticeLine({ notice }: { notice: StripNotice }): React.JSX.Element {
       }
     >
       <span className={trial ? '' : 'text-overlay-accent'} aria-hidden>
-        {trial ? '△' : notice.kind === 'lab' ? '⌂' : '◆'}
+        {notice.kind === 'respec' ? '⚠' : trial ? '△' : notice.kind === 'lab' ? '⌂' : '◆'}
       </span>
       <span className="min-w-0 flex-1 truncate">{text}</span>
       <button

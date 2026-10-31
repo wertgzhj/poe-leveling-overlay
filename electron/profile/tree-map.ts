@@ -3,11 +3,12 @@
 // tests/tree.test.ts. It names nothing new: the same plan, points and next
 // nodes as passivesView, laid out where they sit on the tree.
 
-import { LOOKAHEAD, duePosition, earlierPositions, type NodeKind, type PassivePlan, type TreeData } from './tree.ts'
+import { LOOKAHEAD, duePosition, earlierPositions, respecPoints, type NodeKind, type PassivePlan, type TreeData } from './tree.ts'
 
 /** What a node is to you: taken by plan, one of the few before your point
- *  now (maybe not placed yet), your point now, one after, or not yours. */
-export type MapState = 'taken' | 'earlier' | 'due' | 'next' | 'off'
+ *  now (maybe not placed yet), your point now, one after, one a respec takes
+ *  out (until you mark it done), or not yours. */
+export type MapState = 'taken' | 'earlier' | 'due' | 'next' | 'refund' | 'off'
 
 export interface MapNode {
   id: number
@@ -46,42 +47,47 @@ const MARGIN = 300
 /**
  * The map for `points` passive points: the nodes in view, each with what it is
  * to you. Taken means taken by the plan — the overlay counts points, it can't
- * see your tree. A stage's respec counts from the moment the stage begins.
- * null when the plan is done, or the tree data has no positions.
- * `aspect` is width / height of where it's drawn.
+ * see your tree. A stage's respec counts from when it can be done
+ * (respecPoints). null when the plan is done, or the tree data has no
+ * positions. `aspect` is width / height of where it's drawn; `refunds`, the
+ * nodes of a respec not marked done yet, are marked to take out.
  */
 export function passiveMap(
   plan: PassivePlan,
   tree: TreeData,
   points: number,
   start: number | undefined,
-  aspect: number
+  aspect: number,
+  refunds: ReadonlySet<number> = new Set()
 ): PassiveMap | null {
   // the same place in the plan as the list (duePosition: a respec's points
   // come back)
-  const { at: due } = duePosition(plan, points)
+  const respecAt = respecPoints(plan, tree, start)
+  const { at: due } = duePosition(plan, points, respecAt)
   const taken = new Set<number>(start != null ? [start] : [])
   const next: number[] = []
   const earlierAt = new Set(earlierPositions(plan, due))
   const earlier = new Set<number>()
   let i = 0
-  for (const stage of plan.stages) {
-    // a respec counts once you're past its stage's start (planPosition)
-    if (i < due) for (const id of stage.refund ?? []) taken.delete(id)
-    for (const id of stage.take) {
+  plan.stages.forEach((stage, s) => {
+    stage.take.forEach((id, k) => {
+      // a respec counts once you're past where it can be done (planPosition)
+      if (k === (respecAt[s] ?? 0) && i < due) for (const r of stage.refund ?? []) taken.delete(r)
       if (earlierAt.has(i)) earlier.add(id)
       else if (i < due) taken.add(id)
       else if (next.length < LOOKAHEAD) next.push(id)
       i++
-    }
-  }
+    })
+    // after the stage's last node, or a stage that only takes out
+    if ((respecAt[s] ?? 0) >= stage.take.length && i < due) for (const r of stage.refund ?? []) taken.delete(r)
+  })
   const at = (id: number): [number, number] | null => {
     const n = tree.node(id)
     return n?.x != null && n.y != null ? [n.x, n.y] : null
   }
   if (next.length === 0) return null
   // the earlier ones too: after a run, they're where you are
-  const placed = [...earlier, ...next].map(at).filter((p): p is [number, number] => p != null)
+  const placed = [...earlier, ...next, ...refunds].map(at).filter((p): p is [number, number] => p != null)
   if (placed.length === 0) return null
 
   // Around your next points, just wide enough for all of them: their
@@ -102,6 +108,7 @@ export function passiveMap(
 
   const stateOf = (id: number): MapState => {
     const k = next.indexOf(id)
+    if (refunds.has(id)) return 'refund'
     return k === 0 ? 'due' : k > 0 ? 'next' : earlier.has(id) ? 'earlier' : taken.has(id) ? 'taken' : 'off'
   }
   const nodes: MapNode[] = []
@@ -124,7 +131,7 @@ export function passiveMap(
       if (!b || b.x == null || b.y == null || b.kind === 'mastery' || (shown.has(other) && other < id)) continue
       const sa = stateOf(id)
       const sb = stateOf(other)
-      const mine = (s: MapState): boolean => s !== 'off'
+      const mine = (s: MapState): boolean => s !== 'off' && s !== 'refund'
       const state = sa === 'taken' && sb === 'taken' ? 'taken' : mine(sa) && mine(sb) ? 'path' : 'off'
       links.push({ from: [a.x!, a.y!], to: [b.x, b.y], state, ...arcOf(tree, a, b) })
     }

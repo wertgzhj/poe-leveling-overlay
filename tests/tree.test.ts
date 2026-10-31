@@ -11,6 +11,8 @@ import {
   nodeLabel,
   orderNodes,
   planPosition,
+  respecKey,
+  respecPoints,
   resortAscendancy,
   resortStage,
   passivesView,
@@ -164,14 +166,75 @@ test('a respec gives its points back: the plan moves on by as many nodes', () =>
   assert.equal(planPosition(big, 0).at, 0)
 })
 
-test('the respec shows as its stage begins, then gets out of the way', () => {
+test('the respec shows as its stage begins, and stays until marked done', () => {
   const tree = tiny()
-  assert.deepEqual(passivesView(plan, tree, 4, 0, 0).refund, [], 'still in the first stage')
-  assert.deepEqual(
-    passivesView(plan, tree, 5, 0, 0).refund.map((n) => n.name),
-    ['a']
+  assert.equal(passivesView(plan, tree, 4, 0, 0).respec, null, 'still in the first stage')
+  const view = passivesView(plan, tree, 5, 0, 0, { start: 1 })
+  assert.deepEqual(view.respec?.nodes.map((n) => n.name), ['a'])
+  assert.equal(view.respec?.after, null, 'a can go at once: nothing hangs off it')
+  assert.deepEqual(passivesView(plan, tree, 99, 0, 0).respec?.nodes.map((n) => n.name), ['a'], 'not done yet')
+  const key = respecKey(plan, 1)
+  assert.equal(passivesView(plan, tree, 99, 0, 0, { done: new Set([key]) }).respec, null)
+})
+
+// A loop: the old way to X is a-b, the new one c-d.
+//   start(1) — a(2) — b(3) — X(4)
+//       \                    /
+//        c(5) ——— d(6) ———
+function loop(): TreeData {
+  const n = (name: string, kind: TreeNode['kind'], links: number[]): TreeNode => ({ name, kind, stats: [], links, group: 0 })
+  return new TreeData({
+    version: '3.29.1',
+    treeVersion: '3_29',
+    nodes: {
+      1: n('START', 'start', [2, 5]),
+      2: n('a', 'small', [1, 3]),
+      3: n('b', 'small', [2, 4]),
+      4: n('X', 'notable', [3, 6]),
+      5: n('c', 'small', [1, 6]),
+      6: n('d', 'small', [5, 4]),
+      7: n('e', 'small', [4])
+    }
+  })
+}
+const loopPlan: PassivePlan = {
+  tree: '3_29',
+  stages: [{ take: [2, 3, 4] }, { label: 'new way', take: [5, 6, 7], refund: [2, 3] }]
+}
+
+test('a respec waits until the new way round is in place', () => {
+  const tree = loop()
+  assert.deepEqual(respecPoints(loopPlan, tree, 1), [0, 2], 'c and d first, or X is cut off')
+  assert.deepEqual(respecPoints(loopPlan, tree, undefined), [0, 0], 'no start: at once, as before')
+  // 3 points: a, b, X. The 4th goes on c: the respec waits for d
+  const v4 = passivesView(loopPlan, tree, 5, 0, 0, { start: 1 })
+  assert.equal(v4.next[0].name, 'c')
+  assert.equal(v4.respec?.after?.name, 'd')
+  // the 5th on d: now a and b can go, and their two points buy e and more
+  const v5 = passivesView(loopPlan, tree, 6, 0, 0, { start: 1 })
+  assert.equal(v5.next[0].name, 'd')
+  assert.equal(v5.respec?.after?.name, 'd', 'd itself still to place')
+  const v6 = passivesView(loopPlan, tree, 7, 0, 0, { start: 1 })
+  assert.equal(v6.respec?.after, null, 'respec now')
+  assert.equal(v6.next[0].name, 'e', 'the 6th point and the two back: e, the last')
+  assert.equal(v6.total, 4)
+})
+
+test('a mastery switched to another effect is part of the respec', () => {
+  const tree = tiny()
+  const plan = planFromSpecs(
+    [
+      { title: '10', nodes: [1, 5, 6, 7], masteries: { 7: 100 } },
+      { title: '20', nodes: [1, 5, 6, 7, 8], masteries: { 7: 101 } }
+    ],
+    tree,
+    '3_29'
   )
-  assert.deepEqual(passivesView(plan, tree, 99, 0, 0).refund, [])
+  assert.deepEqual(plan.stages[1].remaster, { 7: 101 })
+  const view = passivesView(plan, tree, 5, 0, 0, { start: 1 })
+  assert.equal(view.respec?.masteries.length, 1)
+  assert.deepEqual(view.respec?.masteries[0].node.stats, ['picked effect'])
+  assert.deepEqual(view.respec?.nodes, [])
 })
 
 test('a finished plan has nothing next', () => {
@@ -427,6 +490,8 @@ test('a respec shows from when its stage begins', () => {
   // four: b went, and its point with the new one bought c and NOTE
   assert.equal(state(4, 'b'), 'off')
   assert.equal(state(4, 'NOTE'), 'earlier')
+  // until the respec is marked done, its nodes are marked to take out
+  assert.equal(passiveMap(plan, tree, 4, 1, 1.5, new Set([3]))!.nodes.find((n) => n.name === 'b')!.state, 'refund')
   // the earlier ones stop at the respec: b is gone, the start stays taken
   assert.equal(state(4, 'START'), 'taken')
   assert.equal(state(4, 'd'), 'due')

@@ -16,6 +16,7 @@ import { PassiveMap } from './PassiveMap'
 export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Element {
   const [due, ...after] = view.next
   const showMap = useOverlayStore((s) => s.showFull.passiveMap)
+  const showRespec = useOverlayStore((s) => s.showFull.respec)
   const [mapOpen, setMapOpen] = useState(() => {
     try {
       return localStorage.getItem(MAP_KEY) === '1'
@@ -80,11 +81,7 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
         </p>
       )}
 
-      {view.refund.length > 0 && (
-        <div className="mb-1.5 rounded border border-warn/40 bg-warn/10 px-1.5 py-1 text-[10px] text-warn">
-          <span aria-hidden>⚠ </span>Respec first: <NodeList nodes={view.refund} />
-        </div>
-      )}
+      {view.respec && showRespec && <Respec respec={view.respec} />}
 
       {due ? (
         <>
@@ -112,7 +109,7 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
         <p className="text-[10px] text-ok">✓ All {view.total} points placed. The tree is done.</p>
       )}
 
-      {due && showMap && mapOpen && <PassiveMap points={view.points} due={due.id} />}
+      {due && showMap && mapOpen && <PassiveMap points={view.points} due={due.id} respec={view.respec?.key} />}
 
       {view.ascendancy && view.ascendancy.next.length > 0 && (
         <p className="mt-1.5 text-[10px] leading-snug text-overlay-muted">
@@ -127,6 +124,55 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
 }
 
 const LAB_NAMES = ['Normal', 'Cruel', 'Merciless', 'Eternal']
+
+/** A respec: what to take out and the masteries to switch, from when the
+ *  game lets you (before that, the node to take first) until you mark it
+ *  done. The overlay can't see your tree, so Done is yours to click. */
+function Respec({ respec }: { respec: NonNullable<PassivesViewBridge['respec']> }): React.JSX.Element {
+  return (
+    <div className="mb-1.5 rounded border border-warn/40 bg-warn/10 px-1.5 py-1 text-[10px] text-warn">
+      <div className="flex items-start gap-1.5">
+        <span className="min-w-0 flex-1 leading-snug">
+          <span aria-hidden>⚠ </span>
+          {respec.after ? (
+            <>
+              <b>Respec after</b> <NodeName node={respec.after} />
+              <span className="text-overlay-muted"> (sooner cuts your tree in two)</span>:{' '}
+            </>
+          ) : (
+            <b>Respec now: </b>
+          )}
+          {respec.nodes.length > 0 && <NodeList nodes={respec.nodes} />}
+        </span>
+        <button
+          onClick={() => window.overlay?.dismissChoice(respec.key)}
+          title="Mark it done: the overlay can't see your tree"
+          className="shrink-0 rounded bg-warn/20 px-1.5 font-medium hover:bg-warn/30"
+        >
+          Done ✓
+        </button>
+      </div>
+      {respec.masteries.map((m) => (
+        <div
+          key={m.node.id}
+          className="mt-0.5 truncate leading-snug"
+          title={`${m.node.name}\nnow: ${nodeLabel(m.node)}\nswitch to: ${m.to.join(', ')}`}
+        >
+          <MasteryTag />
+          switch to <span className="text-overlay-text">{m.to.join(', ') || m.node.name}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MasteryTag(): React.JSX.Element {
+  return (
+    <span className="mr-[0.3em] rounded-sm bg-white/10 px-[0.25em] text-[0.85em] font-semibold not-italic text-overlay-muted">
+      M
+    </span>
+  )
+}
 
 /** A folded map. */
 function MapIcon(): React.JSX.Element {
@@ -188,11 +234,7 @@ function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: bool
         '✓ copied'
       ) : (
         <>
-          {node.kind === 'mastery' && (
-            <span className="mr-[0.3em] rounded-sm bg-white/10 px-[0.25em] text-[0.85em] font-semibold not-italic text-overlay-muted">
-              M
-            </span>
-          )}
+          {node.kind === 'mastery' && <MasteryTag />}
           {nodeLabel(node)}
         </>
       )}
