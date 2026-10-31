@@ -258,7 +258,7 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - **Passives.** Import a PoB build with several trees (one per milestone):
      under the gems, *Passives* names the node your newest point goes on (its
      stats in the tooltip; at level 2 the plan's first node, not its second),
-     the three before it dimmed above (none back across a respec), a mastery
+     the three before it dimmed in front of it, on one line with the rest (none back across a respec), a mastery
      as **M** and its picked effect, attribute nodes as STR, DEX and INT, and
      the few after it. The map rings the three before in dashed gold and keeps
      them in view. The points are counted top right (hover: level − 1

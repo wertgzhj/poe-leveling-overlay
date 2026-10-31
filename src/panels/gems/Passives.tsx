@@ -85,25 +85,24 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
 
       {due ? (
         <>
-          {view.before.length > 0 && (
-            <p
-              className="ml-3.5 text-[10px] leading-snug text-overlay-muted/80"
-              title="The points before: still to place if you saved some up"
-            >
-              <NodeList nodes={view.before} arrows /> →
-            </p>
-          )}
-          <div className="flex items-baseline gap-1.5">
-            <span className="shrink-0 text-[10px] text-overlay-muted" title="Where your newest point goes">
-              ▸
+          {/* one line on: the points before, yours now in bold, the ones after */}
+          <p className="text-[10px] leading-snug text-overlay-muted">
+            {view.before.length > 0 && (
+              <span className="text-overlay-muted/80" title="The points before: still to place if you saved some up">
+                <NodeList nodes={view.before} arrows />
+                {' → '}
+              </span>
+            )}
+            <span title="Where your newest point goes">
+              <NodeName node={due} strong />
             </span>
-            <NodeName node={due} strong />
-          </div>
-          {after.length > 0 && (
-            <p className="ml-3.5 text-[10px] leading-snug text-overlay-muted">
-              → <NodeList nodes={after} arrows />
-            </p>
-          )}
+            {after.length > 0 && (
+              <>
+                {' → '}
+                <NodeList nodes={after} arrows />
+              </>
+            )}
+          </p>
         </>
       ) : (
         <p className="text-[10px] text-ok">✓ All {view.total} points placed. The tree is done.</p>
