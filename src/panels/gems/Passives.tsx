@@ -200,7 +200,8 @@ function NodeList({ nodes, arrows }: { nodes: PassiveNodeViewBridge[]; arrows?: 
   )
 }
 
-/** A node, short (nodeLabel): notables and keystones stand out, a mastery
+/** A node, short (nodeLabel): only the one for your point now is bold;
+ *  notables and keystones stand out by colour alone, a mastery
  *  is its picked effect behind an M. Click copies its name, which is what the
  *  game's search finds; the tooltip has the name and its stats. */
 function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: boolean }): React.JSX.Element {
@@ -225,7 +226,6 @@ function NodeName({ node, strong }: { node: PassiveNodeViewBridge; strong?: bool
         'text-left hover:underline ' +
         tone +
         (strong ? ' text-xs font-semibold' : '') +
-        (big && !strong ? ' font-medium' : '') +
         (node.kind === 'mastery' ? ' inline-block max-w-[20em] truncate align-bottom' : '')
       }
     >
