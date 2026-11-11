@@ -8,19 +8,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 // point now, 2-6 the ones after, the dashed line the way they go, and the
 // faint gold the rest of the plan. Only the numbered nodes are named (zoomed
 // in, the notables too); everything else has its name on hover. Clicking a
-// numbered node copies its name, like the list above. It takes the room
-// there is: the panel's width, and as tall as the panel shows (useMapSize),
-// at the same scale, so a bigger window shows more of the tree.
+// numbered node copies its name, like the list above. It's as wide as the
+// panel (useMapSize), at the same scale, so a wider window shows more of the
+// tree rather than bigger nodes.
 
-/** Width / height it's asked for, and the flattest it gets. */
+/** Width / height of the drawing. */
 const ASPECT = 1.7
 /** Tree units per px it opens at, at least: a few groups across the old
  *  340 px block. A bigger window shows more of the tree, not bigger nodes. */
 const OPEN_SCALE = 3000 / 340
 /** As far as it zooms in, in tree units per px (a group or so across). */
 const MIN_SCALE = 700 / 340
-/** Room under the map in the panel's view, in px: the legend below it. */
-const LEGEND_PX = 56
 /** A drag shorter than this (px) is a click. */
 const DRAG_PX = 4
 
@@ -67,24 +65,21 @@ export function PassiveMap({
   return <MapView map={map} view={view} setView={setView} />
 }
 
-/** The size the map gets: the panel's width, and as tall as the panel's view
- *  has room for under it (never flatter than ASPECT). Follows the window. */
+/** The size the map gets: the panel's width, ASPECT : 1. Follows the window
+ *  when it's resized. */
 function useMapSize(ref: React.RefObject<HTMLDivElement | null>): [number, number, boolean] {
   const [size, setSize] = useState<[number, number, boolean]>([340, 200, false])
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    // the panel's scrolling body: as much of it as it shows
-    const scroller = el.closest('.overflow-y-auto') ?? document.documentElement
     const measure = (): void => {
       const w = Math.max(1, Math.round(el.clientWidth))
-      const h = Math.max(Math.round(w / ASPECT), Math.round(scroller.clientHeight - LEGEND_PX))
+      const h = Math.round(w / ASPECT)
       setSize((s) => (s[0] === w && s[1] === h && s[2] ? s : [w, h, true]))
     }
     measure()
     const watch = new ResizeObserver(measure)
     watch.observe(el)
-    watch.observe(scroller)
     return () => watch.disconnect()
   }, [ref])
   return size
@@ -108,7 +103,7 @@ function MapView({
   useEffect(() => {
     if (shown.current || !measured) return
     shown.current = true
-    wrapRef.current?.parentElement?.scrollIntoView({ block: 'end' })
+    wrapRef.current?.parentElement?.scrollIntoView({ block: 'nearest' })
   }, [measured])
 
   /** a box in view, centred, at the scale it fits at (not below `least`) */
