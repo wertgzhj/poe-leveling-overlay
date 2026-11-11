@@ -34,6 +34,18 @@ const announceService = new AnnounceService(logService, profileService, trialsSe
 overlay.addStateListener((state) => timerWindow.follow(state))
 let tray: ReturnType<typeof createTray> = null
 
+// Linux, before anything starts:
+//  - X11 (XWayland under a Wayland session), unless the player picked a platform
+//    with --ozone-platform. Native Wayland lets no app keep a window on top,
+//    place it, or take a global hotkey, which is the whole overlay. The game,
+//    run through Proton/Wine, is an X11 window there too.
+//  - speech-dispatcher, which Chromium leaves off on Linux: without it the
+//    voice has nothing to speak with.
+if (process.platform === 'linux') {
+  if (!app.commandLine.hasSwitch('ozone-platform')) app.commandLine.appendSwitch('ozone-platform', 'x11')
+  app.commandLine.appendSwitch('enable-speech-dispatcher')
+}
+
 // Single instance: a second launch just resurfaces the existing overlay.
 if (!app.requestSingleInstanceLock()) {
   app.quit()

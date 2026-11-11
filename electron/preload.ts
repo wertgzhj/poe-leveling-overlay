@@ -139,6 +139,8 @@ const api = {
     ipcRenderer.send(Channels.overlayResizeBy, { dx, dy }),
 
   setHoverUi: (over: boolean): void => ipcRenderer.send(Channels.overlayHoverUi, over),
+  onCursor: (cb: (point: { x: number; y: number } | null) => void): (() => void) =>
+    subscribe(Channels.overlayCursor, cb),
   setStripHeight: (height: number): void => ipcRenderer.send(Channels.overlayStripHeight, height),
   toggleFullPanel: (): void => ipcRenderer.send(Channels.overlayToggleFullPanel),
 

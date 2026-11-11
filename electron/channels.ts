@@ -29,6 +29,9 @@ export const Channels = {
   overlayResizeBy: 'overlay:resize-by',
   /** renderer -> main: cursor is over visible UI (drives empty-area passthrough) */
   overlayHoverUi: 'overlay:hover-ui',
+  /** main -> renderer (Linux only): where the cursor is in the window, or null
+   *  when it left — stands in for forwarded mouse moves (cursor-poll.ts) */
+  overlayCursor: 'overlay:cursor',
   /** renderer -> main: the compact strip's content is this tall (px) */
   overlayStripHeight: 'overlay:strip-height',
   /** renderer -> main: open or close the full panel over the strip */

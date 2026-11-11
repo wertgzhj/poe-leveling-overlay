@@ -55,11 +55,11 @@ clean those as you touch the file, not in a sweep.
 
 Build the change as a throwaway dev build that never touches the update feed:
 
-1. Repo → **Actions → Build Windows → Run workflow** → in **"Use workflow from"**
+1. Repo → **Actions → Build Windows and Linux → Run workflow** → in **"Use workflow from"**
    pick your branch → **Run**.
 2. Download the **`windows-portable`** artifact from the finished run (the
-   installer is in **`windows-nsis`**), unzip it, and
-   run the **portable** `.exe` in its own folder.
+   installer is in **`windows-nsis`**, the Linux AppImage in **`linux-appimage`**),
+   unzip it, and run the **portable** `.exe` in its own folder.
 
 That build is version `0.0.0` and is an **artifact, not a release**: your
 installed app and the auto-update feed are untouched. Delete it when you're done.
@@ -94,9 +94,10 @@ no command line needed:
 3. Target **`main`**, title `vX.Y.Z`, **leave "Set as a pre-release" unchecked**
 4. **Publish release**
 
-Publishing creates the tag, which triggers **Build Windows**. It builds with the
-tag's version and attaches the installer, portable exe, their `.blockmap`s, and
-**`latest.yml`** (the file the updater reads). Give it ~5 minutes; the release
+Publishing creates the tag, which triggers **Build Windows and Linux**. It builds with the
+tag's version and attaches the installer, portable exe, their `.blockmap`s,
+**`latest.yml`** (the file the updater reads), and the Linux AppImage with its
+own feed, **`latest-linux.yml`**. Give it ~5 minutes; the release
 looks empty until the build finishes and the files appear. Every install then
 updates within ~10s of launch, or on demand via **Settings → Updates → Check**.
 

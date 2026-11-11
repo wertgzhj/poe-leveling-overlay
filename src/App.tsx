@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { overInteractive } from './lib/hover'
 import { fromSettings, useOverlayStore } from './stores/overlayStore'
 import { useDebugStore } from './stores/debugStore'
 import { MainPanel } from './panels/MainPanel'
@@ -106,10 +107,16 @@ export function App(): React.JSX.Element {
       dragging = false
       send(overUi(e))
     }
+    // Linux: the cursor's position from the main process while the window
+    // ignores the mouse (no pointer events reach it then).
+    const offCursor = api.onCursor((point) => {
+      if (!dragging) send(overInteractive(point))
+    })
     window.addEventListener('pointerover', onOver, true)
     window.addEventListener('pointerdown', onDown, true)
     window.addEventListener('pointerup', onUp, true)
     return () => {
+      offCursor()
       window.removeEventListener('pointerover', onOver, true)
       window.removeEventListener('pointerdown', onDown, true)
       window.removeEventListener('pointerup', onUp, true)

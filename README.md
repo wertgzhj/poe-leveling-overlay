@@ -73,7 +73,8 @@ semi-automatically from a Path of Building import.
 - **Says what matters, if you want it to.** In the same table: a trial in this
   zone, new gems to buy, a zone that costs experience, a Labyrinth ready, the
   bandits or Pantheon due, where your new passive point goes, each switched on on its own,
-  in English or German, spoken by Windows' own voices on your PC.
+  in English or German, spoken by your system's own voices (Windows' voices; on Linux,
+  speech-dispatcher).
 - **Times your runs, if you want it to.** Switch on Settings → *Run timer* and
   a small window of its own times each campaign from the Twilight Strand to
   Kitava in Act 10: zones, towns, hideout, Labyrinth and loading screens, act
@@ -157,7 +158,7 @@ Download one of two files from the latest
 - **Portable**: `PoE-Leveling-Overlay-<version>-portable.exe`: no install; double-click
   the exe directly. It doesn't update itself.
 
-Both are built by the **Build Windows** GitHub Action; how a release is cut is in
+Both are built by the **Build Windows and Linux** GitHub Action; how a release is cut is in
 [`CONTRIBUTING.md`](CONTRIBUTING.md#cut-a-release-go-live).
 
 The build is **unsigned**, so Windows SmartScreen warns on first run: choose
@@ -170,6 +171,36 @@ workflow and commit it was built from.
 
 To build it yourself on Windows: `npm ci && npm run make-icon && npm run package:win`
 (output in `dist/`). See [Development](#development) for source setup.
+
+## Install (Linux)
+
+Download `PoE-Leveling-Overlay-<version>-x86_64.AppImage` from the same
+[**Release**](https://github.com/wertgzhj/poe-leveling-overlay/releases/latest), make it
+executable and run it:
+
+```bash
+chmod +x PoE-Leveling-Overlay-*-x86_64.AppImage
+```
+
+```bash
+./PoE-Leveling-Overlay-*-x86_64.AppImage
+```
+
+It **updates itself** like the Windows installer. Some distributions need `libfuse2`
+for AppImages (`sudo apt install libfuse2` on Ubuntu/Debian). It plays with the game
+run through **Steam (Proton)** or **Wine/Lutris/Heroic/Bottles**:
+
+- It finds `Client.txt` itself in Steam's folder (native or Flatpak) and every Steam
+  library, and in the usual Wine prefixes (`$WINEPREFIX`, `~/.wine`, Lutris'
+  `~/Games/path-of-exile`, …). Otherwise **Settings → Game log → Browse…**.
+- It runs as an **X11** window, under Wayland through XWayland, as the game does:
+  native Wayland lets no app stay on top or take a global hotkey. Start it with
+  `--ozone-platform=wayland` to try native Wayland anyway.
+- On X11 a compositor must be running for the transparent window (every desktop
+  has one; bare window managers may need `picom`).
+- The voice needs `speech-dispatcher` (and a voice such as `espeak-ng`) installed.
+
+To build it yourself: `npm ci && npm run make-icon && npm run package:linux`.
 
 ## Updating
 
@@ -192,7 +223,7 @@ Two things to know:
   is private, either make it public, or point `publish.repo` in `electron-builder.yml` at
   a separate **public** releases repo. Without a reachable feed the app still runs: it
   just reports "Couldn't check" in Settings and never nags.
-- Auto-update targets the **installer**; the **portable** exe doesn't self-update:
+- Auto-update targets the **installer** and the Linux **AppImage**; the **portable** exe doesn't self-update:
   it checks, then says a new version is out (Settings → Updates, and the version
   corner) with a button to the download page. Dev/unpackaged runs show
   updates as *disabled*.
@@ -205,6 +236,8 @@ Two things to know:
    **Browse…** picks the file):
    - Steam: `…\steamapps\common\Path of Exile\logs\Client.txt`
    - Standalone: `…\Grinding Gear Games\Path of Exile\logs\Client.txt`
+   - Linux: the same folders, in Steam's library or inside the Wine prefix
+     (`…/drive_c/Program Files (x86)/Grinding Gear Games/…`)
 2. Run Path of Exile in **Windowed Fullscreen**: exclusive fullscreen covers overlays.
 3. Run the game in **English**. Two of the three log lines the overlay reads are
    translated by the game, and only English patterns ship: on another language
@@ -437,6 +470,8 @@ npm run import-pob -- "<pob code or file>" --name "My Build" --out data/profiles
 - **A gem says "drop/trade" but you can buy it:** the gem data may predate a patch,
   repo → Actions → *Fetch gem data* → *Run workflow*, then report it if it persists.
 - **A hotkey does nothing:** another app may already own that combo, rebind it.
+- **Linux: the overlay isn't on top, or hotkeys do nothing:** it was started on native
+  Wayland (`--ozone-platform=wayland`); start it without that flag so it runs on X11/XWayland.
 - **Text is hard to read in bright areas:** raise **Settings → Overlay → Opacity** to
   70 % or more. Below that, Settings says so: the panel can only cover the game, not
   dim it, so over snow or a bright effect a see-through background loses contrast.
@@ -486,8 +521,8 @@ Acts 1-10. `tests/areas.test.ts` keeps the trial zones and the guide routes
 agreeing with that table. See `data/fixtures/README.md` for the capture +
 sanitize workflow.
 
-Requires Node 22.6+ (the tests run TypeScript directly). The app targets Windows; `npm run package:win` builds the installer
-(run on Windows or with wine).
+Requires Node 22.6+ (the tests run TypeScript directly). The app targets Windows and Linux; `npm run package:win` builds the installer
+(run on Windows or with wine), `npm run package:linux` the AppImage.
 
 ## License
 

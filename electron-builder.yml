@@ -65,6 +65,16 @@ nsis:
 portable:
   # NO SPACES — same GitHub/electron-updater naming mismatch as the installer above.
   artifactName: PoE-Leveling-Overlay-${version}-portable.exe
+linux:
+  # AppImage: one file, runs on any distribution (chmod +x, double-click), and
+  # the in-app updater can replace it (latest-linux.yml next to it on the release).
+  target:
+    - AppImage
+  icon: build/icon.png
+  category: Game
+  # NO SPACES — same GitHub/electron-updater naming mismatch as the installer above.
+  artifactName: PoE-Leveling-Overlay-${version}-x86_64.${ext}
+  synopsis: Leveling overlay for the Path of Exile 1 campaign
 # The build is unsigned (no code-signing certificate), so Windows SmartScreen
 # will warn on first run — "More info -> Run anyway". Building the .exe requires
 # a Windows host (see .github/workflows/build-windows.yml, which runs it on a

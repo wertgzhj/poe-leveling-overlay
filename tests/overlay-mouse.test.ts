@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { shouldIgnoreMouse } from '../electron/overlay-mouse.ts'
+import { shouldIgnoreMouse, waitsForHover } from '../electron/overlay-mouse.ts'
 
 const base = { moveMode: false, clickThrough: false, settingsOpen: false, hoverUi: false }
 
@@ -26,4 +26,14 @@ test('settings stays interactive AND its empty area passes through (the bug)', (
 test('interactive mode: the panel captures, the empty area passes through', () => {
   assert.equal(shouldIgnoreMouse({ ...base, hoverUi: true }), false)
   assert.equal(shouldIgnoreMouse({ ...base, hoverUi: false }), true)
+})
+
+// Linux has no forwarded mouse moves: the cursor is polled exactly while the
+// window ignores the mouse only for want of hover (electron/cursor-poll.ts).
+test('waitsForHover: only while hover alone keeps the window ignoring', () => {
+  assert.equal(waitsForHover(base), true)
+  assert.equal(waitsForHover({ ...base, hoverUi: true }), false) // takes the mouse already
+  assert.equal(waitsForHover({ ...base, moveMode: true }), false) // whole window grabbable
+  assert.equal(waitsForHover({ ...base, clickThrough: true }), false) // ignores whatever the hover
+  assert.equal(waitsForHover({ ...base, clickThrough: true, settingsOpen: true }), true) // Settings: hover decides
 })

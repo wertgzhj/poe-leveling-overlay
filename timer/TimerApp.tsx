@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
+import { overInteractive } from '../src/lib/hover'
 import { button, HEADING, panelSurface, TAG, TAG_TONE } from '../src/lib/ui'
 
 // The run timer window: the run in progress — its clock, where the time went,
@@ -699,10 +700,16 @@ function useHoverReporting(): void {
       dragging = false
       send(overUi(e))
     }
+    // Linux: the cursor's position from the main process while the window
+    // ignores the mouse (no pointer events reach it then).
+    const offCursor = api.onCursor((point) => {
+      if (!dragging) send(overInteractive(point))
+    })
     window.addEventListener('pointerover', onOver, true)
     window.addEventListener('pointerdown', onDown, true)
     window.addEventListener('pointerup', onUp, true)
     return () => {
+      offCursor()
       window.removeEventListener('pointerover', onOver, true)
       window.removeEventListener('pointerdown', onDown, true)
       window.removeEventListener('pointerup', onUp, true)

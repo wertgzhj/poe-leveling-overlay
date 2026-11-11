@@ -2,8 +2,9 @@ import { join } from 'node:path'
 import { app, BrowserWindow, screen, type Rectangle } from 'electron'
 import { store } from './settings'
 import { Channels, type OverlayState } from './channels'
-import { shouldIgnoreMouse } from './overlay-mouse'
+import { shouldIgnoreMouse, waitsForHover } from './overlay-mouse'
 import { anchoredResize, defaultStripBounds } from './strip-place.ts'
+import { CursorPoll } from './cursor-poll.ts'
 
 const RENDERER_DEV_URL = process.env['ELECTRON_RENDERER_URL']
 
@@ -23,6 +24,8 @@ export class OverlayController {
   private moveMode = false
   private settingsOpen = false
   private hoverUi = false
+  /** Linux only: where the cursor is, while the window ignores the mouse */
+  private readonly cursorPoll = new CursorPoll()
   private stripEnabled: boolean
   /** the full panel is open over the strip (its hotkey) */
   private panelOpen = false
@@ -91,6 +94,7 @@ export class OverlayController {
     this.win.on('moved', () => this.persistBoundsSoon())
     this.win.on('resized', () => this.persistBoundsSoon())
     this.win.on('closed', () => {
+      this.cursorPoll.stop()
       this.win = null
     })
 
@@ -235,13 +239,14 @@ export class OverlayController {
     // Decision is a pure function (overlay-mouse.ts, unit-tested). forward:true
     // keeps mousemove flowing so the renderer can keep reporting hover even when
     // the window is currently ignoring clicks.
-    const ignore = shouldIgnoreMouse({
+    const state = {
       moveMode: this.moveMode,
       clickThrough: this.clickThrough,
       settingsOpen: this.settingsOpen,
       hoverUi: this.hoverUi
-    })
-    this.win.setIgnoreMouseEvents(ignore, { forward: true })
+    }
+    this.win.setIgnoreMouseEvents(shouldIgnoreMouse(state), { forward: true })
+    this.cursorPoll.set(this.win, waitsForHover(state))
   }
 
   /** In-main consumers of the interaction state (the run timer window
