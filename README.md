@@ -12,6 +12,8 @@ semi-automatically from a Path of Building import.
 
 *Not affiliated with or endorsed by Grinding Gear Games.*
 
+<img width="2560" height="1440" alt="0" src="https://github.com/user-attachments/assets/a6df8005-81a4-4258-800e-5469ee157ad7" />
+
 ## What it does
 
 - **Reads your game log, so it keeps up on its own.** Zone and level come from
