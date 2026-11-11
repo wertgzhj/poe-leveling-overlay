@@ -46,7 +46,9 @@ semi-automatically from a Path of Building import.
   before they can go (sooner would cut your tree in two), then *Respec now*,
   until you click *Done*. Its nodes are crossed out on the map; the strip and
   the voice (*Respec due*) can say it too. Click a name to copy it for the in-game tree's search box, or
-  open *Map* for that piece of the tree, your points numbered. The order
+  open *Map* for that piece of the tree, your points numbered. Drag the map
+  to look around and zoom with the wheel; *Plan* shows your whole plan at once
+  (what's taken, what's still to come in fainter gold), ↺ brings you back. The order
   is worked out at import, and you can change it in the editor.
 - **Tracks all twelve Trials of Ascendancy**, auto-checking each one the moment
   you finish it, telling you when a Labyrinth is ready to run, and noticing when
