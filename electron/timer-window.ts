@@ -2,7 +2,8 @@ import { join } from 'node:path'
 import { BrowserWindow, screen, type Rectangle, type WebContents } from 'electron'
 import { store } from './settings'
 import { Channels, type OverlayState } from './channels'
-import { shouldIgnoreMouse } from './overlay-mouse'
+import { shouldIgnoreMouse, waitsForHover } from './overlay-mouse'
+import { CursorPoll } from './cursor-poll.ts'
 
 const RENDERER_DEV_URL = process.env['ELECTRON_RENDERER_URL']
 
@@ -23,6 +24,8 @@ export class TimerWindow {
   private shown: boolean
   private state: OverlayState = { visible: false, clickThrough: true, moveMode: false, settingsOpen: false, view: 'panel' }
   private hoverUi = false
+  /** Linux only: where the cursor is, while the window ignores the mouse */
+  private readonly cursorPoll = new CursorPoll()
   private saveTimer: NodeJS.Timeout | null = null
   /** what the page last said its panel needs — refitted after a move */
   private needed = 0
@@ -158,19 +161,21 @@ export class TimerWindow {
     })
     this.win.on('resized', () => this.persistBoundsSoon())
     this.win.on('closed', () => {
+      this.cursorPoll.stop()
       this.win = null
     })
   }
 
   private applyMouseEvents(): void {
     if (!this.win || this.win.isDestroyed()) return
-    const ignore = shouldIgnoreMouse({
+    const state = {
       moveMode: this.state.moveMode,
       clickThrough: this.state.clickThrough,
       settingsOpen: false,
       hoverUi: this.hoverUi
-    })
-    this.win.setIgnoreMouseEvents(ignore, { forward: true })
+    }
+    this.win.setIgnoreMouseEvents(shouldIgnoreMouse(state), { forward: true })
+    this.cursorPoll.set(this.win, waitsForHover(state))
   }
 
   private persistBoundsSoon(): void {

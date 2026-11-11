@@ -31,7 +31,7 @@ the manual pass below rather than by tests.
 
 ## Manual pass (Windows, with the game running)
 
-Get a build from **Actions → Build Windows → latest run → Artifacts →
+Get a build from **Actions → Build Windows and Linux → latest run → Artifacts →
 `windows-nsis`** (installer) or **`windows-portable`**, unzip, and run the installer or the portable exe (SmartScreen
 → *More info → Run anyway*). From source: `npm ci && npm run make-icon &&
 npm run dev`.
@@ -587,6 +587,6 @@ start" and never suggests buying them.
 ## Releasing
 
 See [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for the full workflow. In short: a
-manual *Build Windows* run produces an artifact only, and a `v*` tag builds with
+manual *Build Windows and Linux* run produces an artifact only, and a `v*` tag builds with
 that version and publishes a Release with both exes plus `latest.yml` and the
 blockmaps that the in-app updater reads.

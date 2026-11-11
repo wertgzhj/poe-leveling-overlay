@@ -1,7 +1,8 @@
-name: Build Windows
+name: Build Windows and Linux
 
 # Produces the double-clickable Windows build on a Windows runner (electron-builder
-# can't build a Windows target from Linux without wine).
+# can't build a Windows target from Linux without wine), and the Linux AppImage
+# on a Linux one.
 #
 #  - Manual run (Actions tab -> Run workflow): a DEV build. Uploads the exes as
 #    run artifacts only — no release, and the version stays package.json's 0.0.0.
@@ -102,8 +103,63 @@ jobs:
             dist/latest.yml
           if-no-files-found: error
 
+  linux:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # Same gate as the Windows build: a wrong tag can't be taken back.
+      - name: Check the release tag (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          published=$(gh api "repos/${{ github.repository }}/releases" --paginate \
+            --jq '.[] | select(.draft | not) | select(.prerelease | not) | .tag_name')
+          node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/check-release-tag.ts "$GITHUB_REF_NAME" $published
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate icons
+        run: npm run make-icon
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Bundle (main + preload + renderer)
+        run: npm run build
+
+      - name: Package (AppImage)
+        run: |
+          version=()
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version=(-c.extraMetadata.version="${GITHUB_REF_NAME#v}")
+          fi
+          npx electron-builder --linux AppImage --config electron-builder.yml --publish never "${version[@]}"
+
+      # latest-linux.yml is the AppImage's update feed, as latest.yml is the
+      # installer's.
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux-appimage
+          path: |
+            dist/*.AppImage
+            dist/latest-linux.yml
+          if-no-files-found: error
+
   release:
-    needs: build
+    needs: [build, linux]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
@@ -113,7 +169,6 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: windows-*
           path: dist
           merge-multiple: true
 
@@ -125,15 +180,19 @@ jobs:
         run: |
           cd dist
           ls -l
-          ls *-setup.exe *-portable.exe
-          # The feed must name the installer, or every install 404s on update.
+          ls *-setup.exe *-portable.exe *.AppImage
+          # The feeds must name the installer and the AppImage, or every install
+          # 404s on update.
           grep -q -- '-setup.exe' latest.yml
-          sha256sum *.exe > SHA256SUMS.txt && cat SHA256SUMS.txt
+          grep -q -- '.AppImage' latest-linux.yml
+          sha256sum *.exe *.AppImage > SHA256SUMS.txt && cat SHA256SUMS.txt
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: dist/*.exe
+          subject-path: |
+            dist/*.exe
+            dist/*.AppImage
 
       # latest.yml + the .blockmap must be on the release for the in-app updater
       # (electron-updater) to see the new version and download it.
@@ -146,5 +205,7 @@ jobs:
             dist/*.exe
             dist/*.exe.blockmap
             dist/latest.yml
+            dist/*.AppImage
+            dist/latest-linux.yml
             dist/SHA256SUMS.txt
           generate_release_notes: true

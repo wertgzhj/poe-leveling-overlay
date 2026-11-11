@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { LogParser, type LogPatterns, type ParsedLogEvent } from './parser.ts'
 import { parseStamp, type LineStamp } from '../timer/stamp.ts'
-import { locateClientTxt, steamPathFromReg, type LocateFs } from './locate.ts'
+import { locateClientTxt, locateClientTxtLinux, steamPathFromReg, type LocateFs } from './locate.ts'
 import { ProgressTracker, zoneFit, type AreaState, type LevelUpEvent } from './tracker.ts'
 // Both are pure modules; the safe-range formula is the gem panel's too, and
 // duplicating it here would let the two drift.
@@ -96,10 +96,13 @@ export class LogService {
   }
 
   /** Where this machine keeps Path of Exile's Client.txt, or null when none of
-   *  the usual places has one (see locate.ts). Windows only, like the game. */
+   *  the usual places has one (see locate.ts): Windows, and Linux (Proton/Wine). */
   locateClientTxt(): string | null {
-    if (process.platform !== 'win32') return null
     try {
+      if (process.platform === 'linux') {
+        return locateClientTxtLinux({ home: process.env['HOME'], winePrefix: process.env['WINEPREFIX'] }, NODE_FS)
+      }
+      if (process.platform !== 'win32') return null
       return locateClientTxt(
         {
           programFilesX86: process.env['ProgramFiles(x86)'],

@@ -1,7 +1,7 @@
 // Finding Client.txt on first launch, so a new user doesn't have to dig for it.
 // Pure: the file system and the environment come in as arguments, so the tests
-// run anywhere. Windows paths throughout (path.win32), because that's where
-// the game is.
+// run anywhere. Windows paths (path.win32) for Windows; Linux, where the game
+// runs through Proton or Wine, has its own list at the bottom (path.posix).
 //
 // Where Path of Exile 1 keeps its log, per launcher:
 //  - Steam: <library>\steamapps\common\Path of Exile\logs\Client.txt, in the
@@ -11,7 +11,7 @@
 //  - Epic: wherever its install manifest says
 // "Path of Exile 2" lives in a folder of its own and is never matched.
 
-import { win32 } from 'node:path'
+import { posix, win32 } from 'node:path'
 
 export interface LocateEnv {
   /** %ProgramFiles(x86)% */
@@ -80,16 +80,7 @@ export function clientTxtCandidates(env: LocateEnv, fs: LocateFs): string[] {
  * moved. null when there's none.
  */
 export function locateClientTxt(env: LocateEnv, fs: LocateFs): string | null {
-  let best: string | null = null
-  let bestTime = -Infinity
-  for (const path of clientTxtCandidates(env, fs)) {
-    const time = fs.mtime(path)
-    if (time != null && time > bestTime) {
-      best = path
-      bestTime = time
-    }
-  }
-  return best
+  return newest(clientTxtCandidates(env, fs), fs)
 }
 
 /** The library folders in Steam's libraryfolders.vdf ("path" entries; the
@@ -109,6 +100,94 @@ function epicInstall(json: string | null): string | null {
   } catch {
     return null
   }
+}
+
+// ---- Linux ----
+// The game itself runs through Proton (Steam) or Wine (Lutris, Heroic, Bottles,
+// a plain prefix), but its log is an ordinary file on the Linux side:
+//  - Steam: <library>/steamapps/common/Path of Exile/logs/Client.txt, in Steam's
+//    folder (~/.local/share/Steam, ~/.steam/steam, the Flatpak's under ~/.var)
+//    or any library listed in its libraryfolders.vdf
+//  - a Wine prefix: <prefix>/drive_c/Program Files (x86)/Grinding Gear Games/…
+//    in the usual prefixes (~/.wine, Lutris's ~/Games/path-of-exile, …)
+
+export interface LinuxLocateEnv {
+  /** $HOME */
+  home?: string
+  /** $WINEPREFIX, when one is set */
+  winePrefix?: string
+}
+
+/** Where Steam keeps itself on Linux, native install and Flatpak. */
+const LINUX_STEAM = [
+  '.local/share/Steam',
+  '.steam/steam',
+  '.steam/root',
+  '.var/app/com.valvesoftware.Steam/.local/share/Steam',
+  '.var/app/com.valvesoftware.Steam/data/Steam'
+]
+
+/** Wine prefixes the usual launchers make for the standalone client. */
+const LINUX_PREFIXES = [
+  '.wine',
+  'Games/path-of-exile',
+  'Games/path-of-exile/prefix',
+  'Games/Heroic/Prefixes/default/Path of Exile',
+  '.var/app/com.usebottles.bottles/data/bottles/bottles/Path-of-Exile',
+  '.local/share/bottles/bottles/Path-of-Exile'
+]
+
+/** Every place a Client.txt could be on Linux, most likely first. */
+export function linuxClientTxtCandidates(env: LinuxLocateEnv, fs: LocateFs): string[] {
+  const out: string[] = []
+  const add = (p: string): void => {
+    if (!out.includes(p)) out.push(p)
+  }
+  const home = env.home
+  const log = posix.join('logs', 'Client.txt')
+
+  if (home) {
+    for (const rel of LINUX_STEAM) {
+      const steam = posix.join(home, rel)
+      const vdf = fs.read(posix.join(steam, 'steamapps', 'libraryfolders.vdf'))
+      for (const lib of [steam, ...linuxSteamLibraries(vdf)]) {
+        add(posix.join(lib, 'steamapps', 'common', POE_FOLDER, log))
+      }
+    }
+  }
+
+  const prefixes = [env.winePrefix, ...(home ? LINUX_PREFIXES.map((rel) => posix.join(home, rel)) : [])]
+  for (const prefix of prefixes) {
+    if (!prefix) continue
+    for (const pf of ['Program Files (x86)', 'Program Files']) {
+      add(posix.join(prefix, 'drive_c', pf, 'Grinding Gear Games', POE_FOLDER, log))
+    }
+  }
+  return out
+}
+
+/** linuxClientTxtCandidates' most recently written Client.txt, or null. */
+export function locateClientTxtLinux(env: LinuxLocateEnv, fs: LocateFs): string | null {
+  return newest(linuxClientTxtCandidates(env, fs), fs)
+}
+
+/** The library folders in a Linux Steam's libraryfolders.vdf. */
+export function linuxSteamLibraries(vdf: string | null): string[] {
+  if (!vdf) return []
+  return [...vdf.matchAll(/"path"\s+"([^"]+)"/g)].map((m) => posix.normalize(m[1]))
+}
+
+function newest(paths: string[], fs: LocateFs): string | null {
+  let best: string | null = null
+  let bestTime = -Infinity
+  for (const path of paths) {
+    const time = fs.mtime(path)
+    if (time != null && time > bestTime) {
+      best = path
+      bestTime = time
+    }
+  }
+  return best
 }
 
 /** Steam's folder from `reg query HKCU\Software\Valve\Steam /v SteamPath`

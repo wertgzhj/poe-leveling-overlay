@@ -2,7 +2,10 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   clientTxtCandidates,
+  linuxClientTxtCandidates,
+  linuxSteamLibraries,
   locateClientTxt,
+  locateClientTxtLinux,
   steamLibraries,
   steamPathFromReg,
   type LocateEnv,
@@ -115,4 +118,61 @@ test('the same folder reached two ways is one candidate', () => {
     p.toLowerCase().startsWith('c:\\program files (x86)\\steam\\')
   )
   assert.equal(steam.length, 1)
+})
+
+// ---- Linux: Proton and Wine ----
+
+// A pretend Linux machine: case-sensitive, forward slashes.
+function linux(files: Record<string, { text?: string; mtime?: number }>): LocateFs {
+  return {
+    read: (p) => files[p]?.text ?? null,
+    list: (dir) =>
+      Object.keys(files)
+        .filter((p) => p.startsWith(dir + '/') && !p.slice(dir.length + 1).includes('/'))
+        .map((p) => p.slice(dir.length + 1)),
+    mtime: (p) => files[p]?.mtime ?? null
+  }
+}
+
+const HOME = '/home/exile'
+const PROTON_LOG = `${HOME}/.local/share/Steam/steamapps/common/Path of Exile/logs/Client.txt`
+
+test('Linux: the Steam (Proton) install is found', () => {
+  assert.equal(locateClientTxtLinux({ home: HOME }, linux({ [PROTON_LOG]: { mtime: 1 } })), PROTON_LOG)
+})
+
+test('Linux: the Flatpak Steam is found', () => {
+  const flatpak = `${HOME}/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Path of Exile/logs/Client.txt`
+  assert.equal(locateClientTxtLinux({ home: HOME }, linux({ [flatpak]: { mtime: 1 } })), flatpak)
+})
+
+test('Linux: a Steam library on another disk, from libraryfolders.vdf', () => {
+  const vdf = `"libraryfolders"
+{
+\t"0" { "path"\t\t"${HOME}/.local/share/Steam" }
+\t"1" { "path"\t\t"/mnt/games/SteamLibrary" }
+}`
+  assert.deepEqual(linuxSteamLibraries(vdf), [`${HOME}/.local/share/Steam`, '/mnt/games/SteamLibrary'])
+  const onMnt = '/mnt/games/SteamLibrary/steamapps/common/Path of Exile/logs/Client.txt'
+  const fs = linux({
+    [`${HOME}/.local/share/Steam/steamapps/libraryfolders.vdf`]: { text: vdf },
+    [onMnt]: { mtime: 5 }
+  })
+  assert.equal(locateClientTxtLinux({ home: HOME }, fs), onMnt)
+})
+
+test('Linux: the standalone client in a Wine prefix ($WINEPREFIX first)', () => {
+  const lutris = `${HOME}/Games/path-of-exile/drive_c/Program Files (x86)/Grinding Gear Games/Path of Exile/logs/Client.txt`
+  assert.equal(locateClientTxtLinux({ home: HOME }, linux({ [lutris]: { mtime: 1 } })), lutris)
+  const custom = '/opt/poe/drive_c/Program Files (x86)/Grinding Gear Games/Path of Exile/logs/Client.txt'
+  const all = linuxClientTxtCandidates({ home: HOME, winePrefix: '/opt/poe' }, linux({}))
+  assert.ok(all.includes(custom))
+  assert.ok(all.indexOf(custom) < all.indexOf(lutris))
+})
+
+test('Linux: nothing installed, nothing found; Path of Exile 2 is never matched', () => {
+  assert.equal(locateClientTxtLinux({ home: HOME }, linux({})), null)
+  assert.equal(locateClientTxtLinux({}, linux({})), null)
+  const poe2 = `${HOME}/.local/share/Steam/steamapps/common/Path of Exile 2/logs/Client.txt`
+  assert.equal(locateClientTxtLinux({ home: HOME }, linux({ [poe2]: { mtime: 1 } })), null)
 })

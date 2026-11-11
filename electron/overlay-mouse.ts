@@ -34,3 +34,13 @@ export function shouldIgnoreMouse(state: MousePassthroughState): boolean {
   if (state.clickThrough && !state.settingsOpen) return true
   return !state.hoverUi
 }
+
+/**
+ * True when the window ignores the mouse only because the cursor isn't over the
+ * panel — so it must keep learning where the cursor is to take it back. On
+ * Windows forward:true does that; Linux has no forwarding, so the main process
+ * polls the cursor instead (cursor-poll.ts) while this holds.
+ */
+export function waitsForHover(state: MousePassthroughState): boolean {
+  return shouldIgnoreMouse(state) && !state.moveMode && !(state.clickThrough && !state.settingsOpen)
+}
