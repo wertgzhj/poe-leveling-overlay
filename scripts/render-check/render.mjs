@@ -110,7 +110,12 @@ async function shoot(index, scenario) {
               // Bring what it opened into view: the panel scrolls, the shot doesn't.
               requestAnimationFrame(() => b.scrollIntoView({ block: 'start' }))
             }
-            document.fonts.ready.then(() => setTimeout(resolve, 300))
+            // The passive map draws the whole tree once it has its size:
+            // wait for its nodes, or the shot catches it empty.
+            const drawn = () => then !== 'Map' || document.querySelector('svg[aria-label^="The passive tree"] circle')
+            // (drawn in software here, the whole tree takes its time to paint)
+            const settle = () => (drawn() ? setTimeout(resolve, then === 'Map' ? 1500 : 300) : setTimeout(settle, 50))
+            document.fonts.ready.then(settle)
           }
           setTimeout(press, then ? 100 : 0)
         } else setTimeout(tick, 50)

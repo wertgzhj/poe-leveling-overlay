@@ -184,13 +184,20 @@ stage (`resortStage`) over two invoke channels, the plan validated like a
 file's first.
 
 **The map** (Passives → *Map*, `electron/profile/tree-map.ts`): main lays out
-the piece of the tree around your next points, what's in view, taken by plan
+the whole tree (without the ascendancies), what's taken by plan
 (a stage's respec counted from when it can be done), the three nodes before
 your point (dashed: maybe not placed yet), a pending respec's nodes (crossed
 out), your newest point's node and the five
-after, the links between, arcs along an orbit, and the renderer only draws it
-(`profile:passive-map`, asked again when the next point moves). The view is the
-next points' bounding box with room around it, at least a few groups wide.
+after, the rest of the plan past them (faint gold), the links between, arcs
+along an orbit, and the renderer draws it (`profile:passive-map`, asked again
+when the next point moves). It opens on `box`, the next points' bounding box
+with room around it, at least a few groups wide; dragging and the wheel move
+the view in the renderer alone, out to `extent` (the whole tree), and *Plan*
+jumps to `plan` (every node the plan touches). The renderer sizes it to the
+panel's width at 1.7 : 1 and keeps the scale in tree units per px, so a wider
+window shows more of the tree rather than bigger nodes. Node sizes follow the zoom by
+its square root, in quarter steps, so the ~3 000 nodes aren't drawn again on
+every turn of the wheel; zoomed in, the notables get names.
 
 **Which node is due** follows the points the character has: level − 1, plus
 every "You have received a Passive Skill Point." line (a Book of Skill used, not

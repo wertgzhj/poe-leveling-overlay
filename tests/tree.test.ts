@@ -465,8 +465,10 @@ test('the map marks what\'s taken, your point now and the ones after', () => {
     b: ['earlier', null],
     c: ['due', 1],
     NOTE: ['next', 2],
-    d: ['next', 3]
-  }) // 'far away' is out of view
+    d: ['next', 3],
+    // out of where it opens, but there to drag to
+    'far away': ['off', null]
+  })
   // b—c is the way on; a—b is taken; c—NOTE runs along the orbit
   const onOrbit = map.links.filter((l) => l.arc)
   assert.equal(onOrbit.length, 2)
@@ -476,6 +478,34 @@ test('the map marks what\'s taken, your point now and the ones after', () => {
   const [bx, by, bw, bh] = map.box
   for (const n of map.nodes.filter((n) => n.num)) assert.ok(n.x > bx && n.x < bx + bw && n.y > by && n.y < by + bh)
   assert.ok(Math.abs(bw / bh - 1.5) < 0.01)
+})
+
+test('the map holds the whole tree: the plan past the few after, and where it zooms out to', () => {
+  // a line of nine nodes up from the start, and one far away
+  const nodes: Record<string, TreeNode> = {
+    1: { name: 'START', kind: 'start', stats: [], links: [2], x: 0, y: 0 },
+    50: { name: 'far away', kind: 'notable', stats: [], links: [], x: 20000, y: 20000 }
+  }
+  for (let id = 2; id <= 10; id++) {
+    const links = [id - 1, ...(id < 10 ? [id + 1] : [])]
+    nodes[id] = { name: `n${id}`, kind: 'small', stats: [], links, x: 0, y: -300 * (id - 1) }
+  }
+  const tree = new TreeData({ version: '3.29.1', treeVersion: '3_29', nodes })
+  const plan: PassivePlan = { tree: '3_29', stages: [{ take: [2, 3, 4, 5, 6, 7] }, { take: [8, 9, 10] }] }
+  const map = passiveMap(plan, tree, 0, 1, 1.5)!
+  const state = (name: string) => map.nodes.find((n) => n.name === name)!.state
+  // six from your point now, the rest of the plan later, the far one not yours
+  assert.equal(state('n7'), 'next')
+  assert.equal(state('n8'), 'later')
+  assert.equal(state('n10'), 'later')
+  assert.equal(state('far away'), 'off')
+  assert.equal(map.links.filter((l) => l.state === 'later').length, 3) // n7-n8, n8-n9, n9-n10
+  // the whole tree in the extent, the whole plan in the overview, both 1.5 : 1
+  const [ex, ey, ew, eh] = map.extent
+  assert.ok(ex < 0 && ey < -2700 && ex + ew > 20000 && ey + eh > 20000)
+  const [px, py, pw, ph] = map.plan
+  assert.ok(px < 0 && py < -2700 && px + pw > 0 && py + ph > 0 && px + pw < 20000)
+  for (const [, , w, h] of [map.extent, map.plan]) assert.ok(Math.abs(w / h - 1.5) < 0.01)
 })
 
 test('a respec shows from when its stage begins', () => {

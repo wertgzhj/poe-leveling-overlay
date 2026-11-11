@@ -261,7 +261,13 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      the three before it dimmed in front of it, on one line with the rest (none back across a respec), a mastery
      as **M** and its picked effect, attribute nodes as STR, DEX and INT, and
      the few after it. The map rings the three before in dashed gold and keeps
-     them in view. The points are counted top right (hover: level − 1
+     them in view. Drag it: the view moves, the panel doesn't, and a click on
+     a numbered node still copies it. The wheel zooms where the pointer is
+     (zoomed in, the notables are named); *Plan* shows the whole plan, the
+     nodes past the six after in faint gold; ↺ goes back. Level up with the
+     view moved: it stays where you put it. Opened, it scrolls into view
+     with its legend. Make the window wider (move mode): the map grows with
+     it (1.7 : 1) and shows more of the tree, nodes the same size. The points are counted top right (hover: level − 1
      plus Books of Skill). Level up: the next node moves on. Use a Book of Skill:
      it moves one more, and a restart doesn't count it twice. Reach a tree that
      drops nodes or switches a mastery: an orange box names them. Where taking
