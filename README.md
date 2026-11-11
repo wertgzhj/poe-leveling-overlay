@@ -173,9 +173,11 @@ To build it yourself on Windows: `npm ci && npm run make-icon && npm run package
 
 The **installed** build updates itself: no need to watch GitHub. On launch (and every
 few hours) it checks this repo's GitHub Releases; a newer version downloads in the
-background, then the overlay shows an **Update vX.Y.Z is ready: Restart & update**
-prompt. One click swaps it in and reopens. You can also check on demand in
-**Settings → Updates**. Nothing is installed without that click.
+background, then the overlay says **Update vX.Y.Z installs when you quit**, with
+**Restart now** next to it. Click that to swap it in and reopen at once, or keep
+playing: the next time you quit the overlay it installs silently, and the next
+start is the new version. An update still downloading when you quit waits for
+the quit after it. You can also check on demand in **Settings → Updates**.
 
 The running version is always visible bottom-right of the overlay (`vX.Y.Z`). While an
 update downloads it shows live progress (`v0.1.0 ⬇ 42%`), and once ready it becomes a

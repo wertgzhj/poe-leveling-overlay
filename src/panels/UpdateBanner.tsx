@@ -3,7 +3,8 @@ import { button } from '../lib/ui'
 
 // The passive "effortless update" nudge inside the main panel. Silent until the
 // updater has something worth showing: a download in progress (thin, transient)
-// or a ready-to-install build (prominent, one-click restart). Everything else —
+// or a ready-to-install build (prominent, one-click restart; left alone, it
+// installs when you quit: autoInstallOnAppQuit). Everything else —
 // idle/checking/up-to-date/disabled/errors — lives in Settings so normal play
 // isn't interrupted. Dismiss hides it; the Settings row still offers Restart.
 export function UpdateBanner(): React.JSX.Element | null {
@@ -35,18 +36,18 @@ export function UpdateBanner(): React.JSX.Element | null {
       <div className="flex items-center gap-2 border-b border-overlay-accent/40 bg-overlay-accent/15 px-3 py-1.5">
         <span className="text-overlay-accent">⬆</span>
         <span className="min-w-0 flex-1 truncate text-[11px] text-overlay-text">
-          Update <b>v{update.version}</b> is ready.
+          Update <b>v{update.version}</b> installs when you quit.
         </span>
         <button
           className={'shrink-0 ' + button('primary', 'sm')}
-          title="Restart now to finish updating"
+          title="Restart now to update at once"
           onClick={() => window.overlay?.installUpdate()}
         >
-          Restart &amp; update
+          Restart now
         </button>
         <button
           className="shrink-0 text-overlay-muted hover:text-overlay-text"
-          title="Later (Settings still has the Restart button)"
+          title="Later: it installs when you quit (Settings still has the Restart button)"
           aria-label="Dismiss"
           onClick={() => patch({ updateDismissed: true })}
         >
