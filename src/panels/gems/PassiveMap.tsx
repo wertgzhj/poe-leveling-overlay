@@ -8,20 +8,31 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 // point now, 2-6 the ones after, the dashed line the way they go, and the
 // faint gold the rest of the plan. Only the numbered nodes are named (zoomed
 // in, the notables too); everything else has its name on hover. Clicking a
-// numbered node copies its name, like the list above.
+// numbered node copies its name, like the list above. It takes the room
+// there is: the panel's width, and as tall as the panel shows (useMapSize),
+// at the same scale, so a bigger window shows more of the tree.
 
-/** Width / height of the drawing. */
+/** Width / height it's asked for, and the flattest it gets. */
 const ASPECT = 1.7
-/** The width it's laid out for, in px: sizes below are in these. */
-const WIDTH_PX = 340
-/** As far as it zooms in: this much of the tree across (a group or so). */
-const MIN_VIEW = 700
+/** Tree units per px it opens at, at least: a few groups across the old
+ *  340 px block. A bigger window shows more of the tree, not bigger nodes. */
+const OPEN_SCALE = 3000 / 340
+/** As far as it zooms in, in tree units per px (a group or so across). */
+const MIN_SCALE = 700 / 340
+/** Room under the map in the panel's view, in px: the legend below it. */
+const LEGEND_PX = 56
 /** A drag shorter than this (px) is a click. */
 const DRAG_PX = 4
 
 const R: Record<string, number> = { small: 3.6, notable: 6.5, keystone: 8.5, jewel: 5.5, mastery: 5.5, start: 8 }
 
 type Box = [number, number, number, number]
+/** where you're looking: its centre on the tree, and tree units per px */
+interface View {
+  cx: number
+  cy: number
+  scale: number
+}
 
 export function PassiveMap({
   points,
@@ -35,7 +46,7 @@ export function PassiveMap({
 }): React.JSX.Element {
   const [map, setMap] = useState<PassiveMapBridge | null | 'loading'>('loading')
   // where you're looking; null: where it opens (around your next points)
-  const [view, setView] = useState<Box | null>(null)
+  const [view, setView] = useState<View | null>(null)
 
   // Again whenever your next point moves.
   useEffect(() => {
@@ -53,44 +64,85 @@ export function PassiveMap({
   if (map === 'loading') return <div className="mt-1.5 aspect-[1.7] rounded bg-black/30" />
   if (!map) return <p className="mt-1.5 text-[10px] text-overlay-muted">No map: the tree data has no positions.</p>
 
-  return <MapView map={map} view={view ?? map.box} setView={setView} />
+  return <MapView map={map} view={view} setView={setView} />
+}
+
+/** The size the map gets: the panel's width, and as tall as the panel's view
+ *  has room for under it (never flatter than ASPECT). Follows the window. */
+function useMapSize(ref: React.RefObject<HTMLDivElement | null>): [number, number, boolean] {
+  const [size, setSize] = useState<[number, number, boolean]>([340, 200, false])
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    // the panel's scrolling body: as much of it as it shows
+    const scroller = el.closest('.overflow-y-auto') ?? document.documentElement
+    const measure = (): void => {
+      const w = Math.max(1, Math.round(el.clientWidth))
+      const h = Math.max(Math.round(w / ASPECT), Math.round(scroller.clientHeight - LEGEND_PX))
+      setSize((s) => (s[0] === w && s[1] === h && s[2] ? s : [w, h, true]))
+    }
+    measure()
+    const watch = new ResizeObserver(measure)
+    watch.observe(el)
+    watch.observe(scroller)
+    return () => watch.disconnect()
+  }, [ref])
+  return size
 }
 
 function MapView({
   map,
-  view,
+  view: chosen,
   setView
 }: {
   map: PassiveMapBridge
-  view: Box
-  setView: React.Dispatch<React.SetStateAction<Box | null>>
+  view: View | null
+  setView: React.Dispatch<React.SetStateAction<View | null>>
 }): React.JSX.Element {
   const svgRef = useRef<SVGSVGElement>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [W, H, measured] = useMapSize(wrapRef)
 
+  // Opened: brought into view with its legend, once it has its size.
+  const shown = useRef(false)
+  useEffect(() => {
+    if (shown.current || !measured) return
+    shown.current = true
+    wrapRef.current?.parentElement?.scrollIntoView({ block: 'end' })
+  }, [measured])
+
+  /** a box in view, centred, at the scale it fits at (not below `least`) */
+  const fitting = useCallback(
+    ([x, y, w, h]: Box, least = 0): View => ({ cx: x + w / 2, cy: y + h / 2, scale: Math.max(w / W, h / H, least) }),
+    [W, H]
+  )
   /** the view, kept on the tree and between the zoom limits */
   const clamp = useCallback(
-    ([x, y, w]: Box): Box => {
+    ({ cx, cy, scale }: View): View => {
       const [ex, ey, ew, eh] = map.extent
-      const width = Math.min(Math.max(w, MIN_VIEW), ew * 1.1)
-      const height = width / ASPECT
-      // the centre stays on the tree
-      const cx = Math.min(Math.max(x + w / 2, ex), ex + ew)
-      const cy = Math.min(Math.max(y + w / ASPECT / 2, ey), ey + eh)
-      return [cx - width / 2, cy - height / 2, width, height]
+      return {
+        cx: Math.min(Math.max(cx, ex), ex + ew),
+        cy: Math.min(Math.max(cy, ey), ey + eh),
+        scale: Math.min(Math.max(scale, MIN_SCALE), Math.max(ew / W, eh / H) * 1.1)
+      }
     },
-    [map.extent]
+    [map.extent, W, H]
   )
+  const opening = useMemo(() => clamp(fitting(map.box, OPEN_SCALE)), [clamp, fitting, map.box])
+  const view = chosen ? clamp(chosen) : opening
 
   /** zoom by `f` (above 1: out) around a point of the drawing, 0-1 across and down */
   const zoom = useCallback(
     (f: number, fx = 0.5, fy = 0.5): void =>
       setView((v) => {
-        const [x, y, w, h] = v ?? map.box
-        const [, , nw] = clamp([0, 0, w * f, h * f])
-        const g = nw / w
-        return clamp([x + fx * w * (1 - g), y + fy * h * (1 - g), nw, nw / ASPECT])
+        const { cx, cy, scale } = v ? clamp(v) : opening
+        const to = clamp({ cx, cy, scale: scale * f }).scale
+        // the point under the pointer stays under it
+        const px = cx + (fx - 0.5) * W * scale
+        const py = cy + (fy - 0.5) * H * scale
+        return clamp({ cx: px - (fx - 0.5) * W * to, cy: py - (fy - 0.5) * H * to, scale: to })
       }),
-    [clamp, setView, map.box]
+    [clamp, setView, opening, W, H]
   )
 
   // The wheel zooms where the pointer is. Its own listener: React's is
@@ -108,22 +160,10 @@ function MapView({
   }, [zoom])
 
   // Dragging moves the view; a short one is still a click on a node.
-  const drag = useRef<{
-    x: number
-    y: number
-    from: Box
-    moved: boolean
-    id: number
-  } | null>(null)
+  const drag = useRef<{ x: number; y: number; from: View; moved: boolean; id: number } | null>(null)
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>): void => {
     if (e.button !== 0) return
-    drag.current = {
-      x: e.clientX,
-      y: e.clientY,
-      from: view,
-      moved: false,
-      id: e.pointerId
-    }
+    drag.current = { x: e.clientX, y: e.clientY, from: view, moved: false, id: e.pointerId }
   }
   const onPointerMove = (e: React.PointerEvent<SVGSVGElement>): void => {
     const d = drag.current
@@ -135,8 +175,8 @@ function MapView({
       d.moved = true
       e.currentTarget.setPointerCapture(d.id)
     }
-    const per = d.from[2] / e.currentTarget.getBoundingClientRect().width // tree units per px
-    setView(clamp([d.from[0] - dx * per, d.from[1] - dy * per, d.from[2], d.from[3]]))
+    const { cx, cy, scale } = d.from
+    setView(clamp({ cx: cx - dx * scale, cy: cy - dy * scale, scale }))
   }
   const onPointerUp = (e: React.PointerEvent<SVGSVGElement>): void => {
     if (drag.current?.moved) e.currentTarget.releasePointerCapture(drag.current.id)
@@ -146,10 +186,11 @@ function MapView({
   // Sizes go with the zoom, but slower: zoomed out, the tree stays readable
   // as a shape; zoomed in, the nodes don't fill the view. In steps, so the
   // whole tree isn't drawn again on every turn of the wheel.
-  const k0 = map.box[2] / WIDTH_PX // tree units per px where it opens
-  const kNow = 2 ** (Math.round(Math.log2(view[2] / WIDTH_PX) * 4) / 4)
+  const k0 = opening.scale // tree units per px where it opens
+  const kNow = 2 ** (Math.round(Math.log2(view.scale) * 4) / 4)
   const s = k0 * Math.sqrt(kNow / k0) // node sizes
   const named = kNow < k0 * 0.7 // zoomed in: the notables get names too
+  const viewBox = [view.cx - (W * view.scale) / 2, view.cy - (H * view.scale) / 2, W * view.scale, H * view.scale]
 
   const links = useMemo(
     () =>
@@ -210,16 +251,17 @@ function MapView({
     [map.nodes, named, s, kNow]
   )
 
-  const moved = view !== map.box
+  const moved = chosen != null
   const tool =
     'flex h-5 min-w-5 items-center justify-center rounded bg-black/60 px-1 text-[10px] text-overlay-muted hover:bg-white/15 hover:text-overlay-text'
   return (
     <div className="mt-1.5">
-      <div className="relative">
+      <div ref={wrapRef} className="relative">
         <svg
           ref={svgRef}
-          viewBox={view.map((v) => Math.round(v)).join(' ')}
-          className="block aspect-[1.7] w-full cursor-grab touch-none select-none rounded border border-overlay-border bg-[#0b0e14] active:cursor-grabbing"
+          viewBox={viewBox.map((v) => Math.round(v)).join(' ')}
+          style={{ height: H }}
+          className="block w-full cursor-grab touch-none select-none rounded border border-overlay-border bg-[#0b0e14] active:cursor-grabbing"
           role="img"
           aria-label="The passive tree around your next points: drag to move, the wheel to zoom"
           onPointerDown={onPointerDown}
@@ -231,10 +273,15 @@ function MapView({
             zoom(0.5, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height)
           }}
         >
-          {links}
-          {nodes}
-          {/* names last, over every node and line */}
-          {names}
+          {/* drawn once it has its size: the whole tree, not twice */}
+          {measured && (
+            <>
+              {links}
+              {nodes}
+              {/* names last, over every node and line */}
+              {names}
+            </>
+          )}
         </svg>
         <div className="absolute right-1 top-1 flex gap-0.5">
           <button
@@ -248,7 +295,7 @@ function MapView({
           <button className={tool} onClick={() => zoom(1.5)} title="Zoom out (or the wheel)" aria-label="Zoom out">
             −
           </button>
-          <button className={tool} onClick={() => setView(clamp(map.plan))} title="Your whole plan at once">
+          <button className={tool} onClick={() => setView(clamp(fitting(map.plan)))} title="Your whole plan at once">
             Plan
           </button>
           {moved && (

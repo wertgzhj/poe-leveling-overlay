@@ -193,7 +193,10 @@ along an orbit, and the renderer draws it (`profile:passive-map`, asked again
 when the next point moves). It opens on `box`, the next points' bounding box
 with room around it, at least a few groups wide; dragging and the wheel move
 the view in the renderer alone, out to `extent` (the whole tree), and *Plan*
-jumps to `plan` (every node the plan touches). Node sizes follow the zoom by
+jumps to `plan` (every node the plan touches). The renderer sizes it to the
+room there is (the panel's width, the height its scrolling body shows, never
+flatter than 1.7 : 1) and keeps the scale in tree units per px, so a bigger
+window shows more of the tree rather than bigger nodes. Node sizes follow the zoom by
 its square root, in quarter steps, so the ~3 000 nodes aren't drawn again on
 every turn of the wheel; zoomed in, the notables get names.
 

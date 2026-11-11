@@ -265,7 +265,9 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      a numbered node still copies it. The wheel zooms where the pointer is
      (zoomed in, the notables are named); *Plan* shows the whole plan, the
      nodes past the six after in faint gold; ↺ goes back. Level up with the
-     view moved: it stays where you put it. The points are counted top right (hover: level − 1
+     view moved: it stays where you put it. Opened, it fills the panel's
+     height and scrolls into view with its legend; resize the window (move
+     mode): it grows with it and shows more of the tree, nodes the same size. The points are counted top right (hover: level − 1
      plus Books of Skill). Level up: the next node moves on. Use a Book of Skill:
      it moves one more, and a restart doesn't count it twice. Reach a tree that
      drops nodes or switches a mastery: an orange box names them. Where taking
