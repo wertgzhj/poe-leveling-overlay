@@ -78,7 +78,7 @@ const answers = {
   readPob: () => ok(s.pobRead),
   getGuide: () => ok(s.guide),
   getTrials: () => ok(s.trials),
-  getUpdateStatus: () => ok({ state: 'current', version: '0.0.0' })
+  getUpdateStatus: () => ok(s.update ?? { state: 'current', version: '0.0.0' })
 }
 
 window.overlay = new Proxy(answers, {

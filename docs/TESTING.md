@@ -359,8 +359,12 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    other acts alone.
 10. **Auto-update** (installed build only). Needs a published Release newer than
    the installed version. Launch an older build: within ~10s Settings → Updates
-   shows it downloading, then the overlay offers *Restart & update*; one click
-   reinstalls silently and reopens on the new version. The bottom-right version
+   shows it downloading, then the overlay says it *installs when you quit*,
+   with *Restart now*; one click reinstalls silently and reopens on the new
+   version. Again with an older build, but once it's downloaded quit from the
+   tray instead: no window, the installer runs silently, and the next start is
+   the new version. Quit while it's still downloading: nothing installs, and
+   the next start downloads it again. The bottom-right version
    badge tracks the same flow and is clickable once ready. Dev and unpackaged
    runs report updates as *disabled*; an unreachable feed reports *Couldn't
    check* and never nags.

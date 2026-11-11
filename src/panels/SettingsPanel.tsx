@@ -677,7 +677,7 @@ function UpdateRow(): React.JSX.Element {
       case 'downloading':
         return `Downloading v${update.version}… ${update.percent}%`
       case 'ready':
-        return `v${update.version} downloaded. Restart to finish.`
+        return `v${update.version} downloaded. Restart to update now, or it installs when you quit.`
       case 'available':
         return `v${update.version} is out. This portable copy doesn't update itself. Download the new one.`
       case 'publishing':

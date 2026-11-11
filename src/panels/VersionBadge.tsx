@@ -15,7 +15,7 @@ export function VersionBadge(): React.JSX.Element | null {
     return (
       <button
         onClick={() => window.overlay?.installUpdate()}
-        title="New version downloaded. Click to restart & update now"
+        title="New version downloaded: click to restart & update now, or it installs when you quit"
         className="absolute bottom-1 right-2 flex items-center gap-1 rounded-full border border-overlay-accent/50 bg-overlay-accent/20 px-2 py-0.5 text-[10px] font-medium text-overlay-accent hover:bg-overlay-accent/35"
       >
         v{appVersion} → v{update.version}

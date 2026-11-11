@@ -302,6 +302,8 @@ export interface Scenario {
   copied?: 'vendor' | 'tree' | 'regex'
   /** what main answers for the Passives block's map */
   passiveMap?: PassiveMap | null
+  /** the updater's state (Updates in Settings, the banner, the version corner) */
+  update?: { state: 'ready'; version: string }
   /** a long regex, so the counter shows its warning */
   regex?: string
   /** regexes for some acts (Settings → Search & copy → Per act) */
@@ -572,6 +574,17 @@ const scenarios: Scenario[] = [
     name: 'gems-short-names',
     tab: 'Gems',
     gemNames: { 'Melee Physical Damage Support': 'MPD', 'Chance to Bleed Support': 'CtB' },
+    profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
+    guide
+  },
+  // An update downloaded: the banner says it installs on quit, the corner
+  // offers it too.
+  {
+    name: 'update-ready',
+    tab: 'Gems',
+    update: { state: 'ready', version: '0.99.0' },
     profile: profileSnapshot(3, 22, 2),
     log: crypt,
     trials,
