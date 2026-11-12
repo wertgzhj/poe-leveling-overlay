@@ -3,12 +3,24 @@
 import { normalizeGemName, type GemData } from '../gems.ts'
 import { baseClassOf, type CharClass, type Profile } from '../profile.ts'
 
-/** A gem to mule, and the classes that get it by clearing the Twilight Strand. */
-export interface MuleChoice {
+/** One gem a mule hands over, and how it gets it. */
+export interface MuleGem {
   gem: string
-  classes: string[]
-  how?: MuleHow
+  how: MuleHow
 }
+
+/**
+ * A mule: one level-1 alt of another class, and every gem of this build it
+ * hands over on the Twilight Strand. One alt, so one class — the plan never
+ * sends you off to roll two.
+ */
+export interface MuleChoice {
+  cls: string
+  gems: MuleGem[]
+}
+
+/** A mule you can pick in Settings. The same shape as the choice itself. */
+export type MuleOption = MuleChoice
 
 /** A mule is rolled for its starting gems and deleted, usually after levelling
  *  once on Hillock — so it never gets far. Past this it's a real character.
@@ -23,25 +35,20 @@ export const STRAND_QUEST = 'Enemy at the Gate'
 /** How a mule of a class gets a gem — the cheapest way it can. */
 export type MuleHow = 'start' | 'reward' | 'vendor'
 
-export interface MuleOption {
-  gem: string
-  /** Classes whose fresh character gets it, cheapest way first. */
-  classes: string[]
-  how: MuleHow
-}
-
-const HOW_RANK: Record<MuleHow, number> = { start: 0, reward: 1, vendor: 2 }
-
-/**
- * What a level-1 alt of `cls` gets by clearing the Twilight Strand: the gems it
- * starts with, the Strand quest's reward options, and what Nessa sells it once
- * that quest is done. Normalized gem -> how. Everything else is past a mule.
- */
-function strandGems(cls: string, starting: readonly string[], gems: GemData | undefined, wanted: Iterable<string>): Map<string, MuleHow> {
-  const got = new Map<string, MuleHow>()
+/** Every way a level-1 alt of `cls` gets each gem by clearing the Twilight
+ *  Strand: the gems it starts with, the Strand quest's reward options, and what
+ *  Nessa sells it once that quest is done. Normalized gem -> ways. */
+function strandGems(
+  cls: string,
+  starting: readonly string[],
+  gems: GemData | undefined,
+  wanted: Iterable<string>
+): Map<string, Set<MuleHow>> {
+  const got = new Map<string, Set<MuleHow>>()
   const note = (key: string, how: MuleHow): void => {
-    const had = got.get(key)
-    if (!had || HOW_RANK[how] < HOW_RANK[had]) got.set(key, how)
+    const ways = got.get(key) ?? new Set<MuleHow>()
+    ways.add(how)
+    got.set(key, ways)
   }
   for (const gem of starting) note(normalizeGemName(gem), 'start')
   for (const gem of wanted) {
@@ -55,21 +62,48 @@ function strandGems(cls: string, starting: readonly string[], gems: GemData | un
 }
 
 /**
- * The gems of this build worth muling: any gem a fresh character of another
- * class gets on the Twilight Strand that yours doesn't. In the order the build
- * first uses them.
+ * What one alt of `cls` can hand over of `wanted` (in the order the build first
+ * uses them): every gem it starts with, ONE gem as Hillock's reward — a quest
+ * hands out one — and the rest from Nessa. A gem only the reward offers takes
+ * the reward first, since Nessa can't stand in for it; a gem she sells too is
+ * bought. A second reward-only gem is past this mule.
+ */
+function muleGems(ways: ReadonlyMap<string, ReadonlySet<MuleHow>>, wanted: readonly string[]): MuleGem[] {
+  const out = new Map<string, MuleGem>()
+  const rest: string[] = []
+  for (const gem of wanted) {
+    const w = ways.get(normalizeGemName(gem))
+    if (!w) continue
+    if (w.has('start')) out.set(gem, { gem, how: 'start' })
+    else rest.push(gem)
+  }
+  const can = (gem: string, how: MuleHow): boolean => !!ways.get(normalizeGemName(gem))?.has(how)
+  const rewardTo =
+    rest.find((g) => can(g, 'reward') && !can(g, 'vendor')) ?? rest.find((g) => can(g, 'reward'))
+  for (const gem of rest) {
+    if (gem === rewardTo) out.set(gem, { gem, how: 'reward' })
+    else if (can(gem, 'vendor')) out.set(gem, { gem, how: 'vendor' })
+  }
+  // Back in the build's order.
+  return wanted.flatMap((g) => out.get(g) ?? [])
+}
+
+/**
+ * The mules this build could use: for each other class, every gem of the build
+ * its fresh character gets on the Twilight Strand that yours doesn't. A Ranger
+ * hands over Momentum (it starts with it) and Frost Blades (Hillock's reward)
+ * on the same trip, so it's one mule, not a choice between them. Classes that
+ * hand over nothing are left out; the rest follow the build: the one whose
+ * first gem is needed first, then the one with more gems.
  *
- * Not tied to any one gem. Momentum is the usual answer — a Ranger starts with
- * it, and Nessa sells it to a Ranger after Hillock — but a Duelist hands over
- * Chance to Bleed the same way, and which one is worth an alt is the player's
- * call. `starting` is class -> the gems that class starts with.
+ * `starting` is class -> the gems that class starts with.
  */
 export function muleOptions(
   profile: Profile,
   gems: GemData | undefined,
   starting: Readonly<Record<string, readonly string[]>>
 ): MuleOption[] {
-  // First stage each gem appears in, so options follow the run.
+  // First stage each gem appears in, so a mule's gems follow the run.
   const firstUse = new Map<string, { gem: string; at: number }>()
   profile.stages.forEach((stage, i) => {
     for (const g of stage.socketGroups) {
@@ -79,31 +113,47 @@ export function muleOptions(
       }
     }
   })
-  const wanted = [...firstUse.values()].map((v) => v.gem)
-  const own = strandGems(profile.meta.class, starting[profile.meta.class] ?? [], gems, wanted)
+  const used = [...firstUse.values()]
+  const own = strandGems(profile.meta.class, starting[profile.meta.class] ?? [], gems, used.map((u) => u.gem))
+  // Your own class gets these on the Strand anyway: nothing to mule.
+  const wanted = used.filter((u) => !own.has(normalizeGemName(u.gem)))
+  const atOf = new Map(wanted.map((u) => [u.gem, u.at]))
 
-  const options: (MuleOption & { at: number })[] = []
-  for (const [key, { gem, at }] of firstUse) {
-    if (own.has(key)) continue // your own class gets it on the Strand anyway
-    const offers: { cls: string; how: MuleHow }[] = []
-    for (const cls of Object.keys(starting)) {
-      if (cls === profile.meta.class) continue
-      const how = strandGems(cls, starting[cls] ?? [], gems, [gem]).get(key)
-      if (how) offers.push({ cls, how })
-    }
-    if (offers.length === 0) continue
-    offers.sort((a, b) => HOW_RANK[a.how] - HOW_RANK[b.how] || a.cls.localeCompare(b.cls))
-    options.push({ gem, classes: offers.map((o) => o.cls), how: offers[0].how, at })
+  const options: MuleOption[] = []
+  for (const cls of Object.keys(starting)) {
+    if (cls === profile.meta.class) continue
+    const ways = strandGems(cls, starting[cls] ?? [], gems, wanted.map((u) => u.gem))
+    const got = muleGems(ways, wanted.map((u) => u.gem))
+    if (got.length) options.push({ cls, gems: got })
   }
-  options.sort((a, b) => a.at - b.at || a.gem.localeCompare(b.gem))
-  return options.map(({ at: _at, ...o }) => o)
+  const first = (o: MuleOption): number => Math.min(...o.gems.map((g) => atOf.get(g.gem) ?? Infinity))
+  options.sort((a, b) => first(a) - first(b) || b.gems.length - a.gems.length || a.cls.localeCompare(b.cls))
+  return options
 }
 
-/** The mule you get unless you pick another: Momentum when the build has it
- *  — the classic, and what you'd mule if you mule anything — otherwise the
- *  gem the build needs first. */
+/** The mule you get unless you pick another: the class that hands over
+ *  Momentum when the build has it — the classic, and what you'd mule if you
+ *  mule anything — the one with the most gems if several do; otherwise the
+ *  first option. */
 export function defaultMule(options: readonly MuleOption[]): MuleOption | null {
-  return options.find((o) => normalizeGemName(o.gem) === 'momentum') ?? options[0] ?? null
+  const momentum = options.filter((o) => o.gems.some((g) => normalizeGemName(g.gem) === 'momentum'))
+  if (momentum.length) {
+    const rank = (o: MuleOption): number =>
+      o.gems.find((g) => normalizeGemName(g.gem) === 'momentum')!.how === 'start' ? 0 : 1
+    return [...momentum].sort((a, b) => rank(a) - rank(b) || b.gems.length - a.gems.length)[0]
+  }
+  return options[0] ?? null
+}
+
+/** The mule a stored setting names: a class, as now, or a gem, as the setting
+ *  held when a mule was one gem (it becomes the mule that hands it over).
+ *  undefined = nothing stored, or nothing it still names. */
+export function storedMule(options: readonly MuleOption[], stored: string): MuleOption | undefined {
+  const byClass = options.find((o) => o.cls === stored)
+  if (byClass) return byClass
+  const key = normalizeGemName(stored)
+  const holders = options.filter((o) => o.gems.some((g) => normalizeGemName(g.gem) === key))
+  return defaultMule(holders) ?? undefined
 }
 
 /**

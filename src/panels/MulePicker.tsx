@@ -1,4 +1,4 @@
-import { muleInstruction } from '../lib/sources'
+import { muleTripInstruction } from '../lib/sources'
 
 // The per-character mule choice, in Settings → Build profile: a decision for
 // the whole run, made where the other per-character choice (the profile) is
@@ -9,16 +9,17 @@ import { muleInstruction } from '../lib/sources'
 // otherwise — which is how "No mule" turned grey on grey.
 const OPTION = 'bg-overlay-panel text-overlay-text'
 
-/** One gem per character, picked from what a fresh alt of another class gets
- *  on the Twilight Strand. On by default (Momentum, else the first gem the
- *  build needs); "No mule" turns it off for this character. Solo or in a
- *  party makes no difference — a party of Marauders mules all the same. */
+/** One alt per character: a class, and every gem of the build its fresh
+ *  character gets on the Twilight Strand. On by default (the class with
+ *  Momentum, else the first option); "No mule" turns it off for this
+ *  character. Solo or in a party makes no difference — a party of Marauders
+ *  mules all the same. */
 export function MulePicker({
   choice
 }: {
   choice: { options: MuleOptionBridge[]; chosen: string | null }
 }): React.JSX.Element {
-  const chosen = choice.options.find((o) => o.gem === choice.chosen) ?? null
+  const chosen = choice.options.find((o) => o.cls === choice.chosen) ?? null
   const short = (gem: string): string => gem.replace(/ Support$/, '')
   return (
     <select
@@ -27,7 +28,7 @@ export function MulePicker({
       aria-label="Mule"
       title={
         chosen
-          ? `${muleInstruction(chosen.classes, chosen.how)} Per character: pick another gem, or "No mule".`
+          ? `${muleTripInstruction(chosen.cls, chosen.gems)} Per character: pick another class, or "No mule".`
           : 'Not muling on this character: every gem comes from a quest or a vendor.'
       }
       className={
@@ -36,9 +37,8 @@ export function MulePicker({
       }
     >
       {choice.options.map((o) => (
-        <option key={o.gem} value={o.gem} className={OPTION}>
-          {short(o.gem)} (from a {o.classes[0]})
-          {o.classes.length > 1 ? ` (or ${o.classes.slice(1).join(', ')})` : ''}
+        <option key={o.cls} value={o.cls} className={OPTION}>
+          {o.cls}: {o.gems.map((g) => short(g.gem)).join(', ')}
         </option>
       ))}
       <option value="" className={OPTION}>

@@ -39,6 +39,7 @@ import {
   mulingClass,
   muleOptions,
   defaultMule,
+  storedMule,
   type MuleOption,
   type Acquisitions
 } from './engine.ts'
@@ -439,7 +440,7 @@ export class ProfileService {
     // about it a moment later is the overlay arguing with itself.
     const options = profile ? this.muleOptionsFor(profile) : []
     const muling =
-      mismatch && profile ? mulingClass(profile, trackedClass, level, [...new Set(options.flatMap((o) => o.classes))]) : null
+      mismatch && profile ? mulingClass(profile, trackedClass, level, options.map((o) => o.cls)) : null
 
     const acquisitions = profile ? this.acquisitions(profile, stageIndex) : null
     return {
@@ -471,7 +472,7 @@ export class ProfileService {
       // build has anything another class starts with.
       muleChoice:
         profile && this.character && options.length > 0
-          ? { options, chosen: this.chosenMule(profile)?.gem ?? null }
+          ? { options, chosen: this.chosenMule(profile)?.cls ?? null }
           : null
     }
   }
@@ -541,21 +542,21 @@ export class ProfileService {
     const liveIndex = activeStageIndex(profile, this.level)
     const mule = this.chosenMule(profile)
     const ahead = sanitizeLaterRewards(store.get('laterRewards'))
-    const key = `${this.profileRevision}|${stageIndex}|${liveIndex}|${this.level ?? ''}|${act ?? ''}|${mule?.gem ?? ''}|${ahead ?? ''}`
+    const key = `${this.profileRevision}|${stageIndex}|${liveIndex}|${this.level ?? ''}|${act ?? ''}|${mule?.cls ?? ''}|${ahead ?? ''}`
     if (this.acqCache?.key === key) return this.acqCache.value
     const value = acquisitionsForStage(profile, stageIndex, this.gems, {
       startingGems: this.startingByClass.get(profile.meta.class),
       playerLevel: this.level,
       actReached: act,
       liveIndex,
-      mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null,
+      mule,
       laterRewards: ahead
     })
     this.acqCache = { key, value }
     return value
   }
 
-  /** The gems this build could mule, recomputed only when the profile changes. */
+  /** The mules this build could use, recomputed only when the profile changes. */
   private muleOptionsFor(profile: Profile): MuleOption[] {
     if (this.muleCache?.revision === this.profileRevision) return this.muleCache.options
     const options = muleOptions(profile, this.gems, startingGemsJson.classes)
@@ -564,9 +565,10 @@ export class ProfileService {
   }
 
   /**
-   * The gem you mule on the tracked character. Unset means the default
-   * (Momentum, else the first gem the build needs); null means you chose not
-   * to mule. A stored gem the profile no longer has falls back to the default
+   * The alt you mule on the tracked character. Unset means the default (the
+   * class with Momentum, else the first option); null means you chose not to
+   * mule. Stored is a class, or a gem from when a mule was one gem (see
+   * storedMule). One the profile no longer has falls back to the default
    * rather than to nothing.
    */
   private chosenMule(profile: Profile): MuleOption | null {
@@ -574,7 +576,7 @@ export class ProfileService {
     const stored = this.character ? store.get('muleByCharacter')[this.character] : undefined
     if (stored === null) return null
     if (typeof stored === 'string') {
-      const picked = options.find((o) => normalizeGemName(o.gem) === normalizeGemName(stored))
+      const picked = storedMule(options, stored)
       if (picked) return picked
     }
     return defaultMule(options)
@@ -586,10 +588,10 @@ export class ProfileService {
     this.push()
   }
 
-  /** Choose the gem to mule on the tracked character, or null for none. */
-  setMule(gem: string | null): void {
+  /** Choose the class to mule on the tracked character, or null for none. */
+  setMule(cls: string | null): void {
     if (!this.character) return
-    store.set('muleByCharacter', { ...store.get('muleByCharacter'), [this.character]: gem })
+    store.set('muleByCharacter', { ...store.get('muleByCharacter'), [this.character]: cls })
     this.push()
   }
 

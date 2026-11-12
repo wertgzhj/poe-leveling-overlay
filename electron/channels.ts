@@ -53,7 +53,7 @@ export const Channels = {
   dialogPickClientTxt: 'dialog:pick-client-txt',
   /** renderer -> main (invoke): look for Client.txt and use it; the path or null */
   logLocateClientTxt: 'log:locate-client-txt',
-  /** renderer -> main: the gem to mule on the tracked character (null = none) */
+  /** renderer -> main: the class to mule on the tracked character (null = none) */
   profileSetMule: 'profile:set-mule',
   /** renderer -> main (invoke): switch the active profile by library id */
   profilesActivate: 'profiles:activate',
@@ -295,7 +295,7 @@ export interface ProfileSnapshot {
   library: LibraryEntry[]
   /** The active profile's library id; null if it isn't in the library. */
   activeId: string | null
-  /** What this build could mule and which gem you mule on the tracked
+  /** What this build could mule and which class you mule on the tracked
    *  character (null = none) — null altogether when there's no character yet or
    *  nothing to mule. */
   muleChoice: { options: MuleOption[]; chosen: string | null } | null

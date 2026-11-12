@@ -78,6 +78,32 @@ export function muleInstruction(classes: readonly string[], how: MuleHow | undef
   }
 }
 
+/** The whole mule trip in one go, for the Settings picker: what the alt starts
+ *  with, takes as Hillock's reward and buys from Nessa. Per gem, the links say
+ *  the same with muleInstruction. */
+export function muleTripInstruction(cls: string, gems: readonly { gem: string; how: MuleHow }[]): string {
+  const names = (how: MuleHow): string[] => gems.filter((g) => g.how === how).map((g) => shortGem(g.gem))
+  const steps: string[] = []
+  const start = names('start')
+  if (start.length) steps.push(`it starts with ${listOf(start)}`)
+  const reward = names('reward')
+  if (reward.length) steps.push(`clear the Twilight Strand and take ${listOf(reward)} as Hillock's reward`)
+  const vendor = names('vendor')
+  if (vendor.length) {
+    steps.push(`${reward.length ? '' : 'clear the Twilight Strand and '}buy ${listOf(vendor)} from Nessa with Scrolls of Wisdom from your stash`)
+  }
+  const free = vendor.length ? '' : ' Free.'
+  return `Roll a level-1 ${cls}: ${steps.join('; ')}. Stash ${gems.length > 1 ? 'them' : 'it'}, delete the alt.${free}`
+}
+
+function shortGem(gem: string): string {
+  return gem.replace(/ Support$/, '')
+}
+
+function listOf(items: readonly string[]): string {
+  return items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
+}
+
 export interface SourceMark {
   label: string
   title: string
