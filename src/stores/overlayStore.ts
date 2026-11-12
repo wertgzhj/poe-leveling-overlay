@@ -24,9 +24,6 @@ interface OverlayStore {
   gemNames: Record<string, string>
   /** The run timer is on: it records runs and shows its window. */
   runTimer: boolean
-  autoCopyTown: 'off' | 'vendor' | 'tree' | 'regex'
-  autoCopyLevelUp: 'off' | 'vendor' | 'tree' | 'regex'
-  autoCopyProtect: boolean
   /** Spoken announcements (Settings → What the overlay shows) */
   announce: AnnounceSettingsBridge
   /** What the panel shows (Settings → What the overlay shows) */
@@ -41,8 +38,7 @@ interface OverlayStore {
   panelText: number
   /** How many levels ahead later stages' quest rewards are listed; null all */
   laterRewards: number | null
-  /** The last search copied without a click, and when — the header says so
-   *  for a moment. */
+  /** The last search copied, and when: the header says so for a moment. */
   autoCopied: { kind: 'vendor' | 'tree' | 'regex'; at: number } | null
   // log tracking
   logStatus: WatcherStatusBridge | null
@@ -96,9 +92,6 @@ export const useOverlayStore = create<OverlayStore>((set) => ({
   actRegexes: [],
   gemNames: {},
   runTimer: false,
-  autoCopyTown: 'off',
-  autoCopyLevelUp: 'off',
-  autoCopyProtect: true,
   announce: {
     lang: 'en',
     voice: '',
@@ -176,9 +169,6 @@ export function fromSettings(s: AppSettingsBridge): Partial<OverlayStore> {
     actRegexes: s.actRegexes,
     gemNames: s.gemNames,
     runTimer: s.runTimer,
-    autoCopyTown: s.autoCopyTown,
-    autoCopyLevelUp: s.autoCopyLevelUp,
-    autoCopyProtect: s.autoCopyProtect,
     announce: s.announce,
     showFull: s.showFull,
     stripEnabled: s.stripEnabled,

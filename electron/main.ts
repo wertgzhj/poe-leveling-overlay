@@ -29,7 +29,7 @@ profileService.attachEditor(editorWindow)
 const updateService = new UpdateService(overlay)
 const timerWindow = new TimerWindow()
 const timerService = new TimerService(logService, timerWindow)
-const searchService = new SearchService(logService, profileService, overlay)
+const searchService = new SearchService(profileService, overlay)
 const announceService = new AnnounceService(logService, profileService, trialsService, overlay)
 overlay.addStateListener((state) => timerWindow.follow(state))
 let tray: ReturnType<typeof createTray> = null

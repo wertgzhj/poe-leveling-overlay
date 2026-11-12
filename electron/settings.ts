@@ -1,7 +1,6 @@
 import Store from 'electron-store'
 import type { TrackerSnapshot } from './log/tracker.ts'
 import type { QuestPoints } from './profile/run.ts'
-import type { CopyChoice } from './copy-rules.ts'
 import type { ActRegex } from './search-regex.ts'
 import { DEFAULT_ANNOUNCE, sanitizeAnnounce, type AnnounceSettings } from './announce-rules.ts'
 import { SHOW_ALL, SHOW_STRIP_DEFAULT, sanitizeShow, type ShowSet } from './show-rules.ts'
@@ -76,15 +75,6 @@ export interface AppSettings {
   /** Record runs and show the run timer window. Off unless switched on —
    *  nothing is recorded until then. */
   runTimer: boolean
-  /** What walking into a town copies without a click (searches.ts): one of
-   *  the overlay's searches, or 'off'. */
-  autoCopyTown: CopyChoice
-  /** What a level-up copies without a click. */
-  autoCopyLevelUp: CopyChoice
-  /** Copying without a click only replaces an empty clipboard or a search,
-   *  never something you copied (mayOverwrite, copy-rules.ts). On by default; off, it
-   *  replaces anything. */
-  autoCopyProtect: boolean
   /** Spoken announcements (announce-rules.ts): every moment off by default. */
   announce: AnnounceSettings
   /** What the overlay panel shows (show-rules.ts): everything, by default. */
@@ -127,9 +117,6 @@ export type SettingsPatch = Partial<
     | 'actRegexes'
     | 'gemNames'
     | 'runTimer'
-    | 'autoCopyTown'
-    | 'autoCopyLevelUp'
-    | 'autoCopyProtect'
     | 'announce'
     | 'showFull'
     | 'stripEnabled'
@@ -206,9 +193,6 @@ const defaults: StoreSchema = {
   actRegexes: [],
   gemNames: {},
   runTimer: false,
-  autoCopyTown: 'off',
-  autoCopyLevelUp: 'off',
-  autoCopyProtect: true,
   announce: DEFAULT_ANNOUNCE,
   showFull: SHOW_ALL,
   stripEnabled: false,
@@ -233,6 +217,16 @@ const defaults: StoreSchema = {
 }
 
 export const store = new Store<StoreSchema>({ name: 'settings', defaults })
+
+// "Copy without a click" (a town or a level-up copied a search, after reading
+// the clipboard) is gone: GGG's overlay rules allow reading the clipboard only
+// once per manual key press. A settings.json from before still holds its keys;
+// they do nothing now, and go so no copy of them lingers.
+// (Keys the schema no longer knows, hence the untyped view of the store.)
+const legacy = store as unknown as { has(key: string): boolean; delete(key: string): void }
+for (const key of ['autoCopyTown', 'autoCopyLevelUp', 'autoCopyProtect']) {
+  if (legacy.has(key)) legacy.delete(key)
+}
 
 /** Stored hotkeys merged over defaults — a settings.json written by an older
  *  version lacks newly added bindings, and electron-store defaults don't merge
@@ -302,9 +296,6 @@ export function getSettings(): AppSettings {
     actRegexes: store.get('actRegexes'),
     gemNames: store.get('gemNames'),
     runTimer: store.get('runTimer'),
-    autoCopyTown: store.get('autoCopyTown'),
-    autoCopyLevelUp: store.get('autoCopyLevelUp'),
-    autoCopyProtect: store.get('autoCopyProtect'),
     announce: getAnnounce(),
     showFull: getShowFull(),
     stripEnabled: store.get('stripEnabled'),

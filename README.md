@@ -10,7 +10,7 @@ semi-automatically from a Path of Building import.
          ![The overlay on top of Act 1](docs/screenshot.png)
      A short GIF of the stage flipping on level-up works even better. -->
 
-*Not affiliated with or endorsed by Grinding Gear Games.*
+*This product isn't affiliated with or endorsed by Grinding Gear Games in any way.*
 
 <img width="2560" height="1440" alt="0" src="https://github.com/user-attachments/assets/a6df8005-81a4-4258-800e-5469ee157ad7" />
 
@@ -32,10 +32,9 @@ semi-automatically from a Path of Building import.
   name in the tooltip. Rewards a later stage needs show up when their quest does,
   so you take them for free; *Rewards for later stages* there limits them to 10 or
   20 levels ahead of you, or switches them off. *Vendor* in the header copies the gems to buy now as one search, to
-  paste into the vendor's search box: they light up in its stock. Optionally
-  (Settings → *Copy without a click*) a town copies the vendor search or your own
-  regex, and a level-up the tree search, never over something you copied
-  yourself.
+  paste into the vendor's search box: they light up in its stock. It copies
+  only when you click or press a hotkey, never on its own, and never reads your
+  clipboard.
 - **Imports your Path of Building build**: paste an export code or a `pobb.in`
   link and it writes the stages for you, after you've checked where each one starts.
 - **Says which passive to take next.** A build's PoB trees (one per levelling
@@ -124,6 +123,9 @@ the `v*` tag that builds it.
 The overlay is a **separate window that sits on top of the game**. It only ever
 **reads** the official `Client.txt` log file and **sends nothing** to the Path of
 Exile process: no memory reading, no injection, no simulated input, no automation.
+It never reads the screen or the clipboard, and writes to the clipboard only when
+you click a button or press its hotkey, as GGG's
+[overlay and macro rules](https://www.pathofexile.com/developer/docs#policy) ask.
 Hotkeys control the overlay only (the key combo is consumed system-wide and never
 forwarded to the game). This mirrors long-tolerated tools like Awakened PoE Trade
 and Exile Leveling. Full guardrails:
