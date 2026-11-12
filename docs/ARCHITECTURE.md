@@ -32,8 +32,35 @@ system-wide before the game sees it, so the defaults avoid PoE's own binds and
 everything is rebindable.
 
 Path of Exile must run in **Windowed Fullscreen**; exclusive fullscreen covers
-overlays. This mirrors long-tolerated tools like Awakened PoE Trade and Exile
-Leveling.
+overlays.
+
+### Against GGG's policy, rule by rule
+
+From the [developer policy](https://www.pathofexile.com/developer/docs#policy)
+for executable apps that run independently from the game (wording as of 3.30.0,
+12 November 2026). Check it again when GGG's
+[changelog](https://www.pathofexile.com/developer/docs/changelog) mentions the
+policy.
+
+| GGG's rule | What the overlay does |
+|---|---|
+| Apps reading the screen, the clipboard or the game's logs follow the overlay rules: read only while the user is aware of what is done with the data | Reads only `Client.txt`, and the README and Settings → *Game log* say what for: zone, level, trials, deaths, run times |
+| Reading the screen or clipboard only once per manual key press | Never reads either. It writes the clipboard on a click or a hotkey, nothing else (`electron/clipboard.ts`) |
+| Input that affects the game follows the macro rules: invoked manually, never by timers, **file changes** or the screen; one set function; one action | Sends no input to the game at all. A log change only updates the panel, the strip, the timer and the voice; it never triggers input, nor a copy meant for pasting (*Copy without a click* was removed for this) |
+| Apps that interact with the game or its files (ToS 7b, 7c, 7i) | None: no memory reading, injection, hooks, or changes to the client or its files |
+| Only documented APIs; OAuth, User-Agent, rate limits | Calls no GGG API. Network: GitHub (updates), pobb.in and pastebin (your PoB import), SECURITY.md lists it |
+| The "not affiliated" notice; no GGG logos; no commercial use of GGG's IP | The notice is in the README and Settings → *Updates*; own icon; MIT, no monetisation |
+
+"Reacting to file changes" sits in the macro rules: it limits what may *send
+input*, not what may read the log. The overlay rules name the game's logs
+separately and limit only screen and clipboard reads to a key press. Should GGG
+ever say that tailing `Client.txt` itself is out, the overlay's core goes with
+it (as would every levelling tool's), so watch for that.
+
+Data tooling, not the app: the *Fetch gem data* workflow reads a few tables
+(quest reward NPCs) from GGG's patch server with `pathofexile-dat`, on GitHub,
+never on a player's PC. GGG's policy only supports its API and Data Exports, so
+this is the one grey area; the fetch runs without it if it ever has to go.
 
 ## Stack
 
