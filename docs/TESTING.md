@@ -127,12 +127,16 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    - **One mule per character, your choice: in Settings → Build profile →
      Mule**, whenever the build has a gem another class gets by clearing the
      Twilight Strand (its starting gems, Hillock's reward, or Nessa's first
-     stock) that yours doesn't. On a fresh character it defaults to
-     **Momentum** (else the gem the build needs first). The Gems tab has **no**
-     mule row and no dropdown; the chosen gem's line in the links reads
-     `Mule (Ranger)`, and it's never *also* a quest pick: on a Marauder
-     muling Momentum, Mercy Mission must hand over Chance to Bleed, with no
-     "pick one". Pick Chance to Bleed instead and they swap. **No mule** turns
+     stock) that yours doesn't. The dropdown lists classes with their gems
+     (`Ranger: Momentum, Frost Blades`); on a fresh character it defaults to
+     the class with **Momentum** (else the first). The Gems tab has **no**
+     mule row and no dropdown; every gem of the chosen alt reads
+     `Mule (Ranger)` in the links (a build with Momentum and Frost Blades on
+     a Witch: both, Frost Blades no longer in the Library), and none is *also*
+     a quest pick: on a Marauder muling the Ranger, Mercy Mission must hand
+     over Chance to Bleed, with no "pick one". Pick the Duelist instead and
+     they swap. A setting saved when the mule was one gem comes back as the
+     class that hands that gem over. **No mule** turns
      it off for that character: Mercy Mission is a pick between both again, and
      no `Mule` appears anywhere. The choice is per character and survives a
      restart; another character keeps its own. Before the log names a

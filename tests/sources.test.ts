@@ -4,6 +4,7 @@ import {
   MUTED,
   SOURCE_ALIAS,
   SOURCE_TONE,
+  muleTripInstruction,
   sourceMark,
   sourceName,
   sourceTone
@@ -96,4 +97,19 @@ test('the mule instruction says how the alt gets it, and whether it costs anythi
   const vendor = sourceMark({ bucket: 'purchase', mule: ['Witch'], muleHow: 'vendor' })?.title ?? ''
   assert.match(vendor, /buy it from Nessa/)
   assert.doesNotMatch(vendor, /Free/)
+})
+
+test('the mule picker says the whole trip: what the alt starts with, takes and buys', () => {
+  assert.equal(
+    muleTripInstruction('Ranger', [
+      { gem: 'Frost Blades', how: 'reward' },
+      { gem: 'Momentum Support', how: 'start' }
+    ]),
+    "Roll a level-1 Ranger: it starts with Momentum; clear the Twilight Strand and take Frost Blades as Hillock's reward. Stash them, delete the alt. Free."
+  )
+  // Only a Nessa buy costs anything, and it still needs the Strand cleared.
+  assert.equal(
+    muleTripInstruction('Duelist', [{ gem: 'Frost Blades', how: 'vendor' }]),
+    'Roll a level-1 Duelist: clear the Twilight Strand and buy Frost Blades from Nessa with Scrolls of Wisdom from your stash. Stash it, delete the alt.'
+  )
 })

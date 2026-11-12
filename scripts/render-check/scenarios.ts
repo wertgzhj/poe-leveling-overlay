@@ -156,7 +156,7 @@ function profileSnapshot(
     playerLevel: level,
     actReached: act,
     liveIndex: extra.liveIndex ?? stageIndex,
-    mule: mule ? { gem: mule.gem, classes: mule.classes, how: mule.how } : null
+    mule
   }
   return {
     meta: profile.meta,
@@ -176,7 +176,7 @@ function profileSnapshot(
     choiceDue: extra.choiceDue ?? null,
     library: [],
     activeId: null,
-    muleChoice: { options, chosen: mule?.gem ?? null },
+    muleChoice: { options, chosen: mule?.cls ?? null },
     pantheon: extra.pantheon ?? [],
     passives: extra.passives ?? null,
     treeMissing: extra.treeMissing ?? false

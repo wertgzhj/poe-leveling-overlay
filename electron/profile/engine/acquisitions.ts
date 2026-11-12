@@ -29,12 +29,10 @@ export function acquisitionsForStage(
 ): Acquisitions {
   const { startingGems, playerLevel, actReached, liveIndex, mule, laterRewards } = ctx
   const cls = profile.meta.class
-  // The mule lookup classify() reads, holding only the one gem you chose — so
-  // every other gem a different class could hand you stays a quest or a buy,
+  // The mule lookup classify() reads, holding the gems of the one alt you
+  // chose — so every gem another class could hand you stays a quest or a buy,
   // and the plan never sends you off to roll two alts.
-  const startingOwners = mule
-    ? new Map([[normalizeGemName(mule.gem), mule.classes]])
-    : undefined
+  const startingOwners = mule ? new Map(mule.gems.map((g) => [normalizeGemName(g.gem), [mule.cls]])) : undefined
   const stage = profile.stages[stageIndex]
   const { used, copies } = stageGems(stage)
 
@@ -277,10 +275,11 @@ function leftFromLastPick(
  *  right for a Nessa buy as much as for a starting gem. Annotates the entries
  *  in place — the plan holds the same objects, so it reads the note too. */
 function markMuleHow(mule: MuleChoice | null | undefined, entries: readonly AcquisitionEntry[]): void {
-  if (!mule?.how) return
-  const key = normalizeGemName(mule.gem)
+  if (!mule) return
+  const how = new Map(mule.gems.map((g) => [normalizeGemName(g.gem), g.how]))
   for (const e of entries) {
-    if (e.mule?.length && normalizeGemName(e.gem) === key) e.muleHow = mule.how
+    const h = e.mule?.length ? how.get(normalizeGemName(e.gem)) : undefined
+    if (h) e.muleHow = h
   }
 }
 

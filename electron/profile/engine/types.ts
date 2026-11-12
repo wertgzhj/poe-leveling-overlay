@@ -34,8 +34,8 @@ export interface AcquisitionEntry {
   cost?: string
   /** the class's starting gem — already in inventory, so don't buy/quest it. */
   starting?: boolean
-  /** the gem you chose to mule, and the classes whose fresh character hands it
-   *  over on the Twilight Strand (see muleOptions). */
+  /** muled: the class of the alt you chose, whose fresh character hands this
+   *  gem over on the Twilight Strand (see muleOptions). */
   mule?: string[]
   /** how that mule gets it: it starts with it, takes it as Hillock's reward, or
    *  buys it from Nessa. Decides whether the mule is free. */
@@ -159,8 +159,8 @@ export interface AcquisitionContext {
    *  for is the live one. */
   liveIndex?: number | null
   /**
-   * The one gem you mule on this character, and the classes that can hand it
-   * over (see muleOptions). null/undefined = no mule: every gem comes from its
+   * The alt you mule on this character: its class and every gem it hands over
+   * (see muleOptions). null/undefined = no mule: every gem comes from its
    * quest or its vendor. Whether rolling an alt is worth it — in a party, say —
    * is the player's call, so this is chosen per character, never assumed.
    */

@@ -18,7 +18,7 @@ import {
   acquisitionsForStage
 } from '../electron/profile/engine.ts'
 import { repoPath } from './helpers.ts'
-import { defaultMule, muleOptions, mulingClass, MULE_MAX_LEVEL } from '../electron/profile/engine.ts'
+import { defaultMule, muleOptions, mulingClass, storedMule, MULE_MAX_LEVEL } from '../electron/profile/engine.ts'
 
 function exampleProfile(): Profile {
   const { profile, errors } = parseProfile(readFileSync(repoPath('data/profiles/example.json'), 'utf8'))
@@ -834,7 +834,7 @@ test('the gem you mule is flagged with the class that hands it over', () => {
   const acq = acquisitionsForStage(profile, 0, gems, {
     startingGems: starting,
     playerLevel: 10,
-    mule: { gem: 'Ruthless Support', classes: startingOwners.get(normalizeGemName('Ruthless Support'))! }
+    mule: { cls: startingOwners.get(normalizeGemName('Ruthless Support'))![0], gems: [{ gem: 'Ruthless Support', how: 'start' }] }
   })
 
   // A Witch can't quest Ruthless Support, but a level-1 Marauder starts with it.
@@ -860,7 +860,7 @@ test('a muled gem is not on the list: the choice is in Settings, the links say M
   ).profile!
   const plan = acquisitionsForStage(profile, 0, gems, {
     playerLevel: 10,
-    mule: { gem: 'Ruthless Support', classes: ['Marauder'] }
+    mule: { cls: 'Marauder', gems: [{ gem: 'Ruthless Support', how: 'start' }] }
   }).plan
 
   assert.deepEqual(
@@ -1326,18 +1326,19 @@ function berserker(): Profile {
 test('the mule options are what another class gets on the Strand and yours does not', () => {
   const options = muleOptions(berserker(), exampleGems(), startingClasses())
   // Momentum: a Ranger starts with it. Chance to Bleed: a Duelist does. Both
-  // only reach a Marauder at Mercy Mission, so both are options — in the order
-  // the build first needs them.
+  // only reach a Marauder at Mercy Mission, so both alts are options — in the
+  // order the build first needs their gems.
   assert.deepEqual(
-    options.map((o) => [o.gem, o.classes[0], o.how]),
+    options.map((o) => [o.cls, o.gems.map((g) => [g.gem, g.how])]),
     [
-      ['Momentum Support', 'Ranger', 'start'],
-      ['Chance to Bleed Support', 'Duelist', 'start']
+      ['Ranger', [['Momentum Support', 'start']]],
+      ['Duelist', [['Chance to Bleed Support', 'start']]]
     ]
   )
   // Ground Slam is Hillock's reward for a Marauder anyway; Ruthless is its own
   // starting gem. Neither is worth an alt.
-  assert.ok(!options.some((o) => o.gem === 'Ground Slam' || o.gem === 'Ruthless Support'))
+  const offered = options.flatMap((o) => o.gems.map((g) => g.gem))
+  assert.ok(!offered.includes('Ground Slam') && !offered.includes('Ruthless Support'))
 })
 
 test('Hillock reward and Nessa stock count, not only starting gems', () => {
@@ -1364,18 +1365,106 @@ test('Hillock reward and Nessa stock count, not only starting gems', () => {
   ).profile!
   const options = muleOptions(profile, gems, { Marauder: ['Heavy Strike'], Witch: ['Fireball'], Templar: ['Glacial Hammer'] })
   assert.deepEqual(
-    options.map((o) => [o.gem, o.classes, o.how]).sort(),
+    options.map((o) => [o.cls, o.gems.map((g) => [g.gem, g.how])]).sort(),
     [
-      ['Arcane Surge Support', ['Witch'], 'vendor'],
-      ['Holy Flame Totem', ['Templar'], 'reward']
+      ['Templar', [['Holy Flame Totem', 'reward']]],
+      ['Witch', [['Arcane Surge Support', 'vendor']]]
     ]
   )
 })
 
-test('the default mule is Momentum, or else the gem needed first', () => {
+test('one alt hands over everything its class gets on the Strand', () => {
+  // The case that made a mule a class, not a gem: a Ranger starts with
+  // Momentum AND takes Frost Blades as Hillock's reward (or buys it from
+  // Nessa). A Witch gets neither before the Library, so one Ranger alt
+  // covers both.
+  const gems = new GemData({
+    'Momentum Support': { attr: 'dex', requiredLevel: 1, sources: [{ kind: 'vendor', act: 3, npc: 'Siosa' }] },
+    'Frost Blades': {
+      attr: 'dex',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Ranger'] },
+        { kind: 'vendor', act: 1, npc: 'Nessa', quest: 'Enemy at the Gate', classes: ['Duelist', 'Ranger', 'Scion', 'Shadow'] },
+        { kind: 'vendor', act: 3, npc: 'Siosa', quest: 'A Fixture of Fate' }
+      ]
+    }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'frost', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Frost Blades', 'Momentum Support'] }] }],
+      gemPlan: [{ gem: 'Frost Blades' }, { gem: 'Momentum Support' }]
+    })
+  ).profile!
+  const options = muleOptions(profile, gems, { Witch: ['Fireball'], Ranger: ['Burning Arrow', 'Momentum Support'], Duelist: ['Double Strike'] })
+  const ranger = defaultMule(options)!
+  assert.equal(ranger.cls, 'Ranger')
+  assert.deepEqual(
+    ranger.gems.map((g) => [g.gem, g.how]),
+    [
+      ['Frost Blades', 'reward'],
+      ['Momentum Support', 'start']
+    ]
+  )
+  // A Duelist only buys Frost Blades from Nessa: an option, not the default.
+  assert.deepEqual(options.find((o) => o.cls === 'Duelist')?.gems, [{ gem: 'Frost Blades', how: 'vendor' }])
+
+  // Both gems' lines say Mule (Ranger), each with how the alt gets it, and
+  // neither is in the Library any more.
+  const acq = acquisitionsForStage(profile, 0, gems, { mule: ranger, playerLevel: 2 })
+  const frost = acq.purchases.find((e) => e.gem === 'Frost Blades')
+  const momentum = acq.purchases.find((e) => e.gem === 'Momentum Support')
+  assert.deepEqual([frost?.mule, frost?.muleHow], [['Ranger'], 'reward'])
+  assert.deepEqual([momentum?.mule, momentum?.muleHow], [['Ranger'], 'start'])
+  assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.mule), 'no mule rows on the list')
+})
+
+test('a mule takes one Hillock reward: the reward-only gem gets it, the rest are bought', () => {
+  const gems = new GemData({
+    'Only Reward': { attr: 'dex', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Ranger'] }] },
+    'Reward Or Buy': {
+      attr: 'dex',
+      requiredLevel: 1,
+      sources: [
+        { kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Ranger'] },
+        { kind: 'vendor', act: 1, npc: 'Nessa', quest: 'Enemy at the Gate', classes: ['Ranger'] }
+      ]
+    },
+    'Second Reward Only': { attr: 'dex', requiredLevel: 1, sources: [{ kind: 'quest', act: 1, quest: 'Enemy at the Gate', classes: ['Ranger'] }] }
+  })
+  const profile = parseProfile(
+    JSON.stringify({
+      meta: { name: 'picks', class: 'Witch' },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: ['Reward Or Buy', 'Only Reward', 'Second Reward Only'] }] }],
+      gemPlan: []
+    })
+  ).profile!
+  const [ranger] = muleOptions(profile, gems, { Witch: ['Fireball'], Ranger: ['Burning Arrow'] })
+  // One quest, one reward: the gem Nessa can't sell takes it; the one she
+  // sells is bought; a second reward-only gem is past this mule.
+  assert.deepEqual(
+    ranger.gems.map((g) => [g.gem, g.how]),
+    [
+      ['Reward Or Buy', 'vendor'],
+      ['Only Reward', 'reward']
+    ]
+  )
+})
+
+test('a stored mule: a class, or a gem from when a mule was one gem', () => {
   const options = muleOptions(berserker(), exampleGems(), startingClasses())
-  assert.equal(defaultMule(options)?.gem, 'Momentum Support')
-  assert.equal(defaultMule(options.filter((o) => o.gem !== 'Momentum Support'))?.gem, 'Chance to Bleed Support')
+  assert.equal(storedMule(options, 'Duelist')?.cls, 'Duelist')
+  assert.equal(storedMule(options, 'Momentum Support')?.cls, 'Ranger')
+  assert.equal(storedMule(options, 'Momentum')?.cls, 'Ranger', 'the name without Support too')
+  assert.equal(storedMule(options, 'Chance to Bleed Support')?.cls, 'Duelist')
+  assert.equal(storedMule(options, 'Fireball'), undefined, 'nothing it names any more: the default applies')
+})
+
+test('the default mule is the class with Momentum, or else the first option', () => {
+  const options = muleOptions(berserker(), exampleGems(), startingClasses())
+  assert.equal(defaultMule(options)?.cls, 'Ranger')
+  assert.equal(defaultMule(options.filter((o) => o.cls !== 'Ranger'))?.cls, 'Duelist')
   assert.equal(defaultMule([]), null)
 })
 
@@ -1394,7 +1483,7 @@ test('the muled gem leaves the quest pick, and the pick goes to the next gem', (
   assert.equal(mercy?.pickOne, false)
 })
 
-test('only the chosen gem is muled — never two alts', () => {
+test('only the chosen alt is muled — never two', () => {
   // Chance to Bleed could come from a Duelist too, but Momentum is the mule:
   // Chance to Bleed stays the quest's.
   const profile = berserker()
@@ -1411,11 +1500,11 @@ test('only the chosen gem is muled — never two alts', () => {
 })
 
 test('a mule for a later stage still frees its quest pick', () => {
-  // Choose Chance to Bleed (needed from level 8): Mercy Mission hands over
+  // Mule a Duelist for Chance to Bleed (needed from level 8): Mercy Mission hands over
   // Momentum instead, and neither stage lists the mule.
   const profile = berserker()
   const gems = exampleGems()
-  const bleed = muleOptions(profile, gems, startingClasses()).find((o) => o.gem === 'Chance to Bleed Support')!
+  const bleed = muleOptions(profile, gems, startingClasses()).find((o) => o.cls === 'Duelist')!
   const acq = acquisitionsForStage(profile, 0, gems, { mule: bleed, playerLevel: 2 })
   assert.ok(!acq.plan.some((it) => it.kind === 'buy' && it.entry.gem === 'Chance to Bleed Support'))
   const mercy = acq.rewardGroups.find((g) => g.quest === 'Mercy Mission')
@@ -1435,7 +1524,7 @@ test('no mule makes every gem a quest or a buy again', () => {
 
 test('a low-level alt of a class this build mules from is a mule, not the wrong profile', () => {
   const profile = berserker()
-  const classes = muleOptions(profile, exampleGems(), startingClasses()).flatMap((o) => o.classes)
+  const classes = muleOptions(profile, exampleGems(), startingClasses()).map((o) => o.cls)
   assert.equal(mulingClass(profile, 'Ranger', 2, classes), 'Ranger')
   assert.equal(mulingClass(profile, 'Deadeye', 1, classes), 'Ranger', 'an ascended name reads as its base class')
   // Past a mule's level, a class this build takes nothing from, or your own

@@ -318,8 +318,9 @@ export function SettingsPanel(): React.JSX.Element {
               </p>
             )}
             <p className="mt-1 text-[10px] text-overlay-muted">
-              Per character, like the profile: a level-1 alt of another class hands over a gem
-              your build needs. In the Gems tab its line says <span className="text-mule">Mule (Ranger)</span>.
+              Per character, like the profile: a level-1 alt of another class hands over every gem
+              your build needs that it gets on the Twilight Strand. In the Gems tab their lines say{' '}
+              <span className="text-mule">Mule (Ranger)</span>.
             </p>
             <PobImport />
           </Section>

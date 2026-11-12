@@ -384,14 +384,17 @@ Wisdom   Ⓡ Holy Flame Totem               A1, Nessa
 - A gem needed in **two different links** shows its count there too: `2× Alt` means
   two purchases. A quest hands out exactly one reward, so a reward needed twice reads
   `Reward +1`: one free, the rest you buy or find.
-- **Muling**: rolling a throwaway level-1 character of another class for a gem it
+- **Muling**: rolling a throwaway level-1 character of another class for the gems it
   gets on the Twilight Strand (its starting gems, Hillock's reward, or Nessa's first
   stock): is your call, per character, in **Settings → Build profile → Mule**, next
-  to the profile that's also chosen per character: the gem (Momentum by default,
-  when the build uses it) or **No mule**. Solo or in a party makes no difference. The
-  Gems tab doesn't list the mule as something to get; the gem's line in the links
-  says `Mule (Ranger)`. It also leaves its quest pick, so that quest hands over the
-  next gem you want instead.
+  to the profile that's also chosen per character: the class (`Ranger: Momentum,
+  Frost Blades`; the one with Momentum by default, when the build uses it) or
+  **No mule**. One alt hands over **every** gem of your build its class gets there:
+  what it starts with, one Hillock reward (a quest hands out one), and the rest
+  from Nessa. Solo or in a party makes no difference. The Gems tab doesn't list the
+  mule as something to get; each muled gem's line in the links says `Mule (Ranger)`.
+  It also leaves its quest pick, so that quest hands over the next gem you want
+  instead.
 - A quest that offers several of your gems is one **pick**, so it gets its own box
   reading `PICK ONE, BUY REST`, with the price of the ones you don't take. There's
   one gem vendor per town, so that's where; a line under the gems only appears when

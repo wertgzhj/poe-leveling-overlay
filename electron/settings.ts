@@ -161,8 +161,9 @@ interface StoreSchema extends AppSettings {
   questPoints: Record<string, QuestPoints>
   pantheonUnlocked: Record<string, string[]>
   dismissedChoices: Record<string, string[]>
-  /** character -> the gem you mule on it, or null for none. Absent = the
-   *  default (Momentum, else the build's first): muling generally beats a quest
+  /** character -> the class you mule on it, or null for none. (Older
+   *  settings hold a gem: see storedMule.) Absent = the default (the class
+   *  with Momentum, else the build's first): muling generally beats a quest
    *  reward, but whether it's worth an alt is the player's call per character. */
   muleByCharacter: Record<string, string | null>
 }

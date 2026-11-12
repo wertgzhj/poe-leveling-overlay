@@ -7,6 +7,17 @@
 
 export { type ColoredSocketGroup, type ResolvedStage, type AcquisitionEntry, type Acquisitions, type LinkMark, type RewardGroup, type ShoppingStop, type AcquisitionItem, type AcquisitionContext } from './engine/types.ts'
 export { actFromAreaId, activeStageIndex, stepStageView, resolveStage } from './engine/stages.ts'
-export { MULE_MAX_LEVEL, STRAND_QUEST, muleOptions, defaultMule, mulingClass, type MuleChoice, type MuleHow, type MuleOption } from './engine/mule.ts'
+export {
+  MULE_MAX_LEVEL,
+  STRAND_QUEST,
+  muleOptions,
+  defaultMule,
+  storedMule,
+  mulingClass,
+  type MuleChoice,
+  type MuleGem,
+  type MuleHow,
+  type MuleOption
+} from './engine/mule.ts'
 export { acquisitionsForStage, planWindow } from './engine/acquisitions.ts'
 export { linkChanges, stageCopies, type LinkChanges } from './engine/links.ts'
