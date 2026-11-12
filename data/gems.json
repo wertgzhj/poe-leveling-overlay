@@ -1,6 +1,6 @@
 {
   "_note": "gem -> { attr, sources }. attr computes the socket colour (str=red, dex=green, int=blue) and is hand-curated - a gem missing here renders a neutral pip with '?'. sources (per-class quest/vendor availability) are FILLED AUTOMATICALLY from the Path of Exile Wiki by the 'Fetch gem data' workflow (or npm run fetch-gems) - re-run it after a game patch to refresh. Hand edits to sources of wiki-known gems will be overwritten by the next fetch; attrs and extra gems are preserved. Shape: { \"kind\": \"quest\"|\"vendor\", \"act\": 1, \"quest\": \"...\", \"npc\": \"Nessa\", \"classes\": [\"Witch\"] } (classes omitted = all). The engine picks the earliest source per class (quest before vendor); known gems with no source fall back to Siosa/Lilly.",
-  "fetchedAt": "2026-10-27",
+  "fetchedAt": "2026-11-12",
   "gems": {
     "Ground Slam": {
       "attr": "str",
@@ -18187,6 +18187,42 @@
     "Reap of Butchery": {
       "attr": "str",
       "requiredLevel": 28
+    },
+    "Arcane Link": {
+      "attr": "str",
+      "requiredLevel": 34,
+      "sources": [
+        {
+          "kind": "quest",
+          "act": 4,
+          "quest": "Breaking the Seal",
+          "classes": [
+            "Scion"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 4,
+          "npc": "Petarus and Vanja",
+          "quest": "Breaking the Seal",
+          "classes": [
+            "Scion",
+            "Marauder",
+            "Duelist",
+            "Templar"
+          ]
+        },
+        {
+          "kind": "vendor",
+          "act": 6,
+          "npc": "Lilly Roth",
+          "quest": "Fallen from Grace"
+        }
+      ]
+    },
+    "Fireball of Radiation": {
+      "attr": "int",
+      "requiredLevel": 1
     }
   }
 }
