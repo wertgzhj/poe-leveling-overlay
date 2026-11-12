@@ -127,9 +127,11 @@ It never reads the screen or the clipboard, and writes to the clipboard only whe
 you click a button or press its hotkey, as GGG's
 [overlay and macro rules](https://www.pathofexile.com/developer/docs#policy) ask.
 Hotkeys control the overlay only (the key combo is consumed system-wide and never
-forwarded to the game). This mirrors long-tolerated tools like Awakened PoE Trade
-and Exile Leveling. Full guardrails:
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#tos-position).
+forwarded to the game). Reading `Client.txt` falls under GGG's overlay rules,
+which allow the game's logs as long as you know what the overlay does with them:
+it shows and says where you are, and never turns a log line into input for the
+game. GGG doesn't endorse third-party tools and can change its policy at any
+time. Rule by rule: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#tos-position).
 
 ## How this was built
 
