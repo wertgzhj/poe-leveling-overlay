@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import { copyText } from './clipboard.ts'
 import { Channels, type AppInfo, type SettingsBackupLoad, type SettingsSetResult } from './channels'
-import { COPY_CHOICES, SEARCH_KINDS, type CopyChoice, type SearchKind } from './copy-rules.ts'
+import { SEARCH_KINDS, type SearchKind } from './copy-rules.ts'
 import type { SearchService } from './searches.ts'
 import {
   getAnnounce,
@@ -109,9 +109,6 @@ export function registerIpc(
     if ('gemNames' in patch) {
       store.set('gemNames', sanitizeGemNames(patch.gemNames, (gem) => profile.canonicalGemName(gem)))
     }
-    if (COPY_CHOICES.includes(patch.autoCopyTown as CopyChoice)) store.set('autoCopyTown', patch.autoCopyTown)
-    if (COPY_CHOICES.includes(patch.autoCopyLevelUp as CopyChoice)) store.set('autoCopyLevelUp', patch.autoCopyLevelUp)
-    if (typeof patch.autoCopyProtect === 'boolean') store.set('autoCopyProtect', patch.autoCopyProtect)
     if ('announce' in patch) store.set('announce', sanitizeAnnounce(patch.announce, getAnnounce()))
     if ('showFull' in patch) store.set('showFull', sanitizeShow(patch.showFull, getShowFull()))
     if ('showStrip' in patch) store.set('showStrip', sanitizeShow(patch.showStrip, getShowStrip()))

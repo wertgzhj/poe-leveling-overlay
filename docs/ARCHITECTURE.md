@@ -23,6 +23,7 @@ This is the constraint everything else is designed around.
 | A separate overlay window on top of the game | Reading game memory, injection, process hooks |
 | Reading `Client.txt`, the game's own log file | Sending simulated input to the game |
 | Showing data, and hotkeys that control the overlay | Automating any part of gameplay |
+| Writing a search to the clipboard on a click or hotkey | Reading the clipboard or the screen; doing anything on its own when the log changes, beyond showing it and saying it |
 | Saying it out loud (system voices, Settings → What the overlay shows) | |
 
 The app **only reads** and **sends nothing** to the Path of Exile process.
@@ -220,21 +221,21 @@ node id, so it can't put arbitrary text on the clipboard.
 **One place for the searches** (`electron/searches.ts`): the vendor search,
 the tree search and your own regex are *kinds* (`SearchKind`); `searchFor(kind)`
 builds the text (from the profile snapshot last pushed, so a copy is exactly
-what's on screen) and the Vendor/Tree/Regex buttons, the hotkeys and copying
-without a click all go through it and one IPC channel (`clipboard:copy-search`,
+what's on screen) and the Vendor/Tree/Regex buttons and the hotkeys all go
+through it and one IPC channel (`clipboard:copy-search`,
 the kind checked in main). Your regex is the one for the act the character has
 reached (`regexForAct` in `search-regex.ts`: the first *Per act* range that
 covers it, else the general one); the reached act is the one the gem plan uses
 too, kept per character. Text building is pure (`profile/search.ts`, the tree
 window in `tree.ts`); so are the copy rules (`copy-rules.ts`).
 
-**Copying without a click** (Settings → Search & copy, off by default): each
-trigger (walking into a town, a level-up) maps to one kind or nothing. Only
-changes count, never the state a restart resumes at (`AutoCopyTrigger`). Every clipboard write goes through
-`electron/clipboard.ts`, which remembers the overlay's own; copying on its own
-replaces only those, an empty clipboard, or a lone quoted search line
-(`mayOverwrite`), never a whisper, item or link you copied. That guard is a
-setting too (*Keep what you copied yourself*, on by default).
+**Copying only on a click or a hotkey.** Every clipboard write goes through
+`electron/clipboard.ts`, and the overlay never reads the clipboard. GGG's
+overlay rules allow a clipboard read only once per manual key press, and their
+macro rules count reacting to file changes as an automated invocation, so
+nothing copies on a log event (a town, a level-up). An earlier *Copy without a
+click* setting did both and was removed for the 3.30 policy wording; its keys
+are dropped from `settings.json` on start (`settings.ts`).
 
 ### The compact strip: `electron/strip.ts`, `electron/strip-place.ts`
 

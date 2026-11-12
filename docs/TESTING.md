@@ -73,13 +73,8 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
    stash or vendor search box pastes exactly the string. The counter turns orange
    and gains a ⚠ past **250** characters: the game's search box limit, confirmed in game. (The
    community regex tools say 50; that is wrong by a factor of five.)
-   *Copy without a click* → *Entering a town*: "gems to buy", walk into a
-   town and *Vendor* in the header lights up as `✓ Vendor` for a moment; Ctrl+V at the
-   vendor pastes the Gems tab's vendor search. "your regex" (only with
-   one set): `✓ Regex`, your string. *A level-up* set to "passives (Tree)": level up out in a
-   zone, `✓ Tree`, the tree search. Each works without the other. Copy a whisper or an item first: neither then replaces it,
-   unless *Keep what you copied yourself* is off, when they do. A restart
-   in a town copies nothing until you level or walk into a town again.
+   Walk into a town and level up with something of your own on the clipboard:
+   it is still there afterwards (nothing copies without a click).
    *Per act*: "+ Acts" adds a row starting after the last one; set Acts 1-3
    with one regex, then click Regex in Act 1 and in Act
    4: the first pastes the row's, the second the general one. Moving "from"

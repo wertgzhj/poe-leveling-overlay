@@ -66,9 +66,6 @@ export function SettingsPanel(): React.JSX.Element {
     actRegexes,
     runTimer,
     moveMode,
-    autoCopyTown,
-    autoCopyLevelUp,
-    autoCopyProtect,
     stripEnabled,
     stripText,
     panelText,
@@ -87,9 +84,6 @@ export function SettingsPanel(): React.JSX.Element {
       searchRegex: s.searchRegex,
       actRegexes: s.actRegexes,
       runTimer: s.runTimer,
-      autoCopyTown: s.autoCopyTown,
-      autoCopyLevelUp: s.autoCopyLevelUp,
-      autoCopyProtect: s.autoCopyProtect,
       moveMode: s.moveMode,
       stripEnabled: s.stripEnabled,
       stripText: s.stripText,
@@ -155,19 +149,6 @@ export function SettingsPanel(): React.JSX.Element {
   const setClickThrough = (value: boolean): void => {
     patch({ clickThrough: value })
     void window.overlay?.setSettings({ clickThrough: value })
-  }
-
-  const setAutoCopyTown = (value: CopyChoice): void => {
-    patch({ autoCopyTown: value })
-    void window.overlay?.setSettings({ autoCopyTown: value })
-  }
-  const setAutoCopyLevelUp = (value: CopyChoice): void => {
-    patch({ autoCopyLevelUp: value })
-    void window.overlay?.setSettings({ autoCopyLevelUp: value })
-  }
-  const setAutoCopyProtect = (value: boolean): void => {
-    patch({ autoCopyProtect: value })
-    void window.overlay?.setSettings({ autoCopyProtect: value })
   }
 
   const setStrip = (value: Partial<Pick<SettingsPatchBridge, 'stripEnabled' | 'stripText' | 'panelText'>>): void => {
@@ -286,6 +267,10 @@ export function SettingsPanel(): React.JSX.Element {
         <div className="space-y-1.5 overflow-y-auto px-3 py-3">
           <Section id="updates" title="Updates">
             <UpdateRow />
+            {/* GGG's developer policy asks every public tool to say this. */}
+            <p className="mt-2 text-[10px] text-overlay-muted">
+              This product isn&apos;t affiliated with or endorsed by Grinding Gear Games in any way.
+            </p>
           </Section>
 
           <button
@@ -373,30 +358,6 @@ export function SettingsPanel(): React.JSX.Element {
             </div>
             <div className={'mt-3 ' + HEADING + 'text-overlay-muted'}>Per act</div>
             <ActRegexRows saved={actRegexes} onCommit={commitActRegexes} />
-            <div className={'mt-3 ' + HEADING + 'text-overlay-muted'}>Copy without a click</div>
-            <CopyChoiceRow
-              label="Entering a town"
-              value={autoCopyTown}
-              onChange={setAutoCopyTown}
-              hasRegex={!!regexDraft.trim() || actRegexes.length > 0}
-            />
-            <CopyChoiceRow
-              label="A level-up"
-              value={autoCopyLevelUp}
-              onChange={setAutoCopyLevelUp}
-              hasRegex={!!regexDraft.trim() || actRegexes.length > 0}
-            />
-            <div className="mt-1.5 flex items-center justify-between gap-2">
-              <span className="text-xs text-overlay-text">Keep what you copied yourself</span>
-              <Toggle on={autoCopyProtect} onChange={setAutoCopyProtect} />
-            </div>
-            <p className="mt-1 text-[10px] text-overlay-muted">
-              The button in the header lights up for what was copied.{' '}
-              {autoCopyProtect
-                ? 'It only replaces an empty clipboard or a search, never a whisper, an item or a link you copied.'
-                : 'Off: it replaces whatever is on the clipboard, a whisper or an item you copied included.'}{' '}
-              Pasting stays yours.
-            </p>
           </Section>
 
           <Section id="log" title="Game log">
@@ -766,40 +727,6 @@ function Section({ id, title, children }: { id: string; title: string; children:
   )
 }
 
-type CopyChoice = 'off' | 'vendor' | 'tree' | 'regex'
-
-/** What a trigger copies without a click — any of the overlay's searches. */
-function CopyChoiceRow({
-  label,
-  value,
-  onChange,
-  hasRegex
-}: {
-  label: string
-  value: CopyChoice
-  onChange: (v: CopyChoice) => void
-  /** "your regex" can't be picked while you keep none */
-  hasRegex: boolean
-}): React.JSX.Element {
-  return (
-    <div className="mt-1 flex items-center justify-between gap-2">
-      <span className="text-xs text-overlay-text">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as CopyChoice)}
-        className="rounded border border-overlay-border bg-black/30 px-2 py-1 text-[11px] text-overlay-text outline-none focus:border-overlay-accent"
-      >
-        <option value="off">nothing</option>
-        <option value="vendor">gems to buy (Vendor)</option>
-        <option value="tree">passives (Tree)</option>
-        <option value="regex" disabled={!hasRegex}>
-          your regex
-        </option>
-      </select>
-    </div>
-  )
-}
-
 const ACTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 /**
@@ -901,7 +828,7 @@ function ActRegexRows({
       <div className="mt-1 flex items-start justify-between gap-2">
         <p className="text-[10px] text-overlay-muted">
           {rows.length
-            ? 'In these acts, “your regex” (the button, its hotkey, copying without a click) is the one for the act you’ve reached; elsewhere, the one above. The first range that fits wins.'
+            ? 'In these acts, “your regex” (the button and its hotkey) is the one for the act you’ve reached; elsewhere, the one above. The first range that fits wins.'
             : 'Optional: a different regex for some acts, used there instead of the one above.'}
         </p>
         <button onClick={add} className={'shrink-0 ' + button('ghost', 'sm')}>
