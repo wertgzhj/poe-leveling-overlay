@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { nodeLabel } from '../../../electron/profile/tree.ts'
 import { HEADING, button } from '../../lib/ui'
 import { useOverlayStore } from '../../stores/overlayStore'
-import { PassiveMap } from './PassiveMap'
+import { ASPECT, PassiveMap, SIDE_ASPECT } from './PassiveMap'
 
 // The passive tree under the gems: the node your newest point goes on (its stats in
 // the tooltip — under it they were more than anyone reads mid-run), the few after
@@ -13,7 +13,8 @@ import { PassiveMap } from './PassiveMap'
 // way the gem stage follows your level. Clicking a name copies it, to paste
 // into the in-game tree's search box; nothing more (docs/ARCHITECTURE.md#tos-position).
 
-export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Element {
+/** `side`: in the side column of a wide window (GemsTab), where the map is taller. */
+export function Passives({ view, side = false }: { view: PassivesViewBridge; side?: boolean }): React.JSX.Element {
   const [due, ...after] = view.next
   const showMap = useOverlayStore((s) => s.showFull.passiveMap)
   const showRespec = useOverlayStore((s) => s.showFull.respec)
@@ -108,7 +109,9 @@ export function Passives({ view }: { view: PassivesViewBridge }): React.JSX.Elem
         <p className="text-[10px] text-ok">✓ All {view.total} points placed. The tree is done.</p>
       )}
 
-      {due && showMap && mapOpen && <PassiveMap points={view.points} due={due.id} respec={view.respec?.key} />}
+      {due && showMap && mapOpen && (
+        <PassiveMap points={view.points} due={due.id} respec={view.respec?.key} aspect={side ? SIDE_ASPECT : ASPECT} />
+      )}
 
       {view.ascendancy && view.ascendancy.next.length > 0 && (
         <p className="mt-1.5 text-[10px] leading-snug text-overlay-muted">

@@ -59,7 +59,7 @@ async function shoot(index, scenario) {
   const win = new BrowserWindow({
     show: false,
     // the strip at 1440p is 480 wide (strip-place.ts), with its window's margin
-    width: scenario.strip && !scenario.settings ? 488 : 380,
+    width: scenario.strip && !scenario.settings ? 488 : (scenario.width ?? 380),
     height: scenario.strip && !scenario.settings ? 260 : 1100,
     backgroundColor: '#1c1a17',
     useContentSize: true,

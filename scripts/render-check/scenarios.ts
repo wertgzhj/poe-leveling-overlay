@@ -298,6 +298,8 @@ export interface Scenario {
   strip?: boolean
   /** the panel's text size (Settings → Overlay) */
   panelText?: number
+  /** the window's width, when not the usual 380 (a wide one on a second screen) */
+  width?: number
   /** a search copied just now: its header button shows the tick */
   copied?: 'vendor' | 'tree' | 'regex'
   /** what main answers for the Passives block's map */
@@ -533,6 +535,18 @@ const scenarios: Scenario[] = [
     name: 'gems-passives-map',
     tab: 'Gems',
     click: 'Map',
+    passiveMap: marauderMap,
+    profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
+    log: crypt,
+    trials,
+    guide
+  },
+  // A window made wide: the passives and the map beside the gems.
+  {
+    name: 'gems-passives-wide',
+    tab: 'Gems',
+    click: 'Map',
+    width: 820,
     passiveMap: marauderMap,
     profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
     log: crypt,
