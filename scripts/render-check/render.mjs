@@ -85,6 +85,7 @@ async function shoot(index, scenario) {
       const tab = ${JSON.stringify(scenario.tab ?? null)}
       const then = ${JSON.stringify(scenario.click ?? null)}
       let paste = ${JSON.stringify(scenario.paste ?? null)}
+      const untick = ${JSON.stringify(scenario.untick ?? null)}
       const start = Date.now()
       const tick = () => {
         if (Date.now() - start > 20000) return reject(new Error('the overlay never rendered: ' + document.body.innerText.slice(0, 200)))
@@ -107,6 +108,8 @@ async function shoot(index, scenario) {
             if (then && !b) return reject(new Error('no button saying ' + then))
             if (b) {
               b.click()
+              // A tick box the click brought up, unticked (by its label).
+              if (untick) setTimeout(() => document.querySelector('input[aria-label="' + untick + '"]')?.click(), 100)
               // Bring what it opened into view: the panel scrolls, the shot doesn't.
               requestAnimationFrame(() => b.scrollIntoView({ block: 'start' }))
             }
@@ -123,6 +126,9 @@ async function shoot(index, scenario) {
       tick()
     })
   `)
+  // A hidden window paints on its own schedule: wait for two frames, or the
+  // shot can catch the one from before the click (the PoB review missing).
+  await win.webContents.executeJavaScript('new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))')
   const image = await win.webContents.capturePage()
   win.destroy()
   return image.toPNG()
