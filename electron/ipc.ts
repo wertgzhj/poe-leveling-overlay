@@ -328,13 +328,17 @@ export function registerIpc(
     pobXml = xml
     return { ok: true, name: result.profile.meta.name, drafts: result.drafts, errors: [] }
   })
-  ipcMain.handle(Channels.pobImport, (_e, starts: unknown): PobImportResponse => {
+  ipcMain.handle(Channels.pobImport, (_e, starts: unknown, leaveOut: unknown): PobImportResponse => {
     if (!pobXml) return { ok: false, warnings: [], errors: ['read a Path of Building build first'] }
     const levels =
       Array.isArray(starts) && starts.every((n) => Number.isInteger(n) && n >= 1 && n <= 100)
         ? (starts as number[])
         : undefined
-    const result = importPobXml(pobXml, { tree: profile.tree, starts: levels })
+    const skipped =
+      Array.isArray(leaveOut) && leaveOut.every((n) => Number.isInteger(n) && n >= 0 && n < 1000)
+        ? (leaveOut as number[])
+        : undefined
+    const result = importPobXml(pobXml, { tree: profile.tree, starts: levels, leaveOut: skipped })
     if (!result.profile) return { ok: false, warnings: result.warnings, errors: result.errors }
     const added = profile.applyImport(result.profile)
     if (!added.ok) return { ok: false, warnings: result.warnings, errors: added.errors }

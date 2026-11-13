@@ -48,7 +48,9 @@ semi-automatically from a Path of Building import.
   until you click *Done*. Its nodes are crossed out on the map; the strip and
   the voice (*Respec due*) can say it too. Click a name to copy it for the in-game tree's search box, or
   open *Map* for that piece of the tree, your points numbered. It's as wide
-  as the overlay window, so a wider window shows more of the tree. Drag the map
+  as the overlay window, so a wider window shows more of the tree. From 700 px
+  wide, the passives and the map get a column of their own beside the gems,
+  staying put while the gems scroll. Drag the map
   to look around and zoom with the wheel; *Plan* shows your whole plan at once
   (what's taken, what's still to come in fainter gold), ↺ brings you back. The order
   is worked out at import, and you can change it in the editor.
@@ -456,6 +458,8 @@ the tree it shares a loadout with (the same title, or the same `{1}` ids, as PoB
 them), by a level leading that tree's title ("12", "33 (Lab)") or else by the points
 it spends. A name like "After Brutus" is never read for a level: a gem set nothing
 links to is left empty for you to fill in. Each stage runs until the next one starts.
+Untick a gem set you don't want (an endgame or a swap setup) and it stays out, along
+with any tree only it uses.
 **Import** adds it as a **new** profile and makes it active: importing another build
 never replaces this one (reviewing any warnings it shows). Where each gem comes from is filled in from `data/gems.json` by
 class. Headless equivalent:

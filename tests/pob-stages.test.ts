@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { loadoutOf, rangesFromStarts, stageDrafts, treeTitleLevel } from '../electron/profile/pob-stages.ts'
+import { loadoutOf, rangesFromStarts, stageDrafts, treesKept, treeTitleLevel } from '../electron/profile/pob-stages.ts'
 import { importPobXml, parseStageTitle } from '../electron/profile/pob.ts'
 import { validateProfile } from '../electron/profile/profile.ts'
 
@@ -153,4 +153,50 @@ test('confirmed start levels set the stages, in level order', () => {
 test('starts that don\'t match the gem sets are ignored', () => {
   const r = importPobXml(LOADOUT_XML, { starts: [12] })
   assert.ok(r.warnings.some((w) => w.includes('split evenly')))
+})
+
+// ---------- gem sets left out ----------
+
+test('a gem set left out is not imported, and the starts are for the ones kept', () => {
+  // Endgame unticked: the two levelling sets, at the levels confirmed for them.
+  const r = importPobXml(LOADOUT_XML, { leaveOut: [2], starts: [12, 20] })
+  assert.ok(r.profile)
+  assert.deepEqual(
+    r.profile.stages.map((s) => [s.label, s.range]),
+    [
+      ['12', [1, 19]],
+      ['20', [20, 70]]
+    ]
+  )
+  assert.ok(!r.profile.stages.some((s) => s.socketGroups.some((g) => g.gems.includes('Arc'))))
+  assert.ok(!r.profile.gemPlan.some((e) => e.gem === 'Arc'))
+  // The review step still lists every gem set.
+  assert.equal(r.drafts?.length, 3)
+  assert.deepEqual(validateProfile(r.profile).errors, [])
+})
+
+test('the middle set left out: the next one takes over from where it starts', () => {
+  const r = importPobXml(LOADOUT_XML, { leaveOut: [1], starts: [12, 40] })
+  assert.deepEqual(
+    r.profile?.stages.map((s) => [s.label, s.range]),
+    [
+      ['12', [1, 39]],
+      ['Endgame', [40, 70]]
+    ]
+  )
+})
+
+test('every gem set left out: nothing to import, and it says so', () => {
+  const r = importPobXml(LOADOUT_XML, { leaveOut: [0, 1, 2] })
+  assert.equal(r.profile, null)
+  assert.match(r.errors.join(' '), /keep at least one/)
+})
+
+test('a tree leaves with the gem sets that alone use it', () => {
+  const sets = ['Act 1 {1}', 'Leveling {2,3}', 'Endgame {4}', 'Swap']
+  const specs = ['12 {1}', '30 {2}', '60 {3,4}', 'Endgame {4}', 'Swap', 'Unpaired']
+  // Endgame and Swap out: their own trees go; "60 {3,4}" is Leveling's too and
+  // stays; a tree no gem set pairs with stays.
+  assert.deepEqual(treesKept(sets, new Set([2, 3]), specs), [true, true, true, false, false, true])
+  assert.deepEqual(treesKept(sets, new Set(), specs), [true, true, true, true, true, true])
 })

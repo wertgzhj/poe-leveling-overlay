@@ -12,8 +12,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 // panel (useMapSize), at the same scale, so a wider window shows more of the
 // tree rather than bigger nodes.
 
-/** Width / height of the drawing. */
-const ASPECT = 1.7
+/** Width / height of the drawing under the gems. */
+export const ASPECT = 1.7
+/** Width / height in the side column of a wide window (GemsTab): taller,
+ *  since that column has the height and nothing under it. */
+export const SIDE_ASPECT = 1.15
 /** Tree units per px it opens at, at least: a few groups across the old
  *  340 px block. A bigger window shows more of the tree, not bigger nodes. */
 const OPEN_SCALE = 3000 / 340
@@ -35,12 +38,15 @@ interface View {
 export function PassiveMap({
   points,
   due,
-  respec
+  respec,
+  aspect = ASPECT
 }: {
   points: number
   due: number | undefined
   /** the respec shown, by key: marking it done takes its marks away */
   respec?: string
+  /** width / height: ASPECT under the gems, SIDE_ASPECT beside them */
+  aspect?: number
 }): React.JSX.Element {
   const [map, setMap] = useState<PassiveMapBridge | null | 'loading'>('loading')
   // where you're looking; null: where it opens (around your next points)
@@ -49,7 +55,7 @@ export function PassiveMap({
   // Again whenever your next point moves.
   useEffect(() => {
     let stale = false
-    void window.overlay?.passiveMap(ASPECT).then((m) => {
+    void window.overlay?.passiveMap(aspect).then((m) => {
       if (!stale) setMap(m ?? null)
     })
     return () => {
@@ -57,46 +63,48 @@ export function PassiveMap({
     }
     // not read inside: they're what says the map needs asking for again
     // oxlint-disable-next-line react/exhaustive-effect-dependencies
-  }, [points, due, respec])
+  }, [points, due, respec, aspect])
 
-  if (map === 'loading') return <div className="mt-1.5 aspect-[1.7] rounded bg-black/30" />
+  if (map === 'loading') return <div className="mt-1.5 rounded bg-black/30" style={{ aspectRatio: aspect }} />
   if (!map) return <p className="mt-1.5 text-[10px] text-overlay-muted">No map: the tree data has no positions.</p>
 
-  return <MapView map={map} view={view} setView={setView} />
+  return <MapView map={map} view={view} setView={setView} aspect={aspect} />
 }
 
-/** The size the map gets: the panel's width, ASPECT : 1. Follows the window
+/** The size the map gets: the panel's width, aspect : 1. Follows the window
  *  when it's resized. */
-function useMapSize(ref: React.RefObject<HTMLDivElement | null>): [number, number, boolean] {
+function useMapSize(ref: React.RefObject<HTMLDivElement | null>, aspect: number): [number, number, boolean] {
   const [size, setSize] = useState<[number, number, boolean]>([340, 200, false])
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const measure = (): void => {
       const w = Math.max(1, Math.round(el.clientWidth))
-      const h = Math.round(w / ASPECT)
+      const h = Math.round(w / aspect)
       setSize((s) => (s[0] === w && s[1] === h && s[2] ? s : [w, h, true]))
     }
     measure()
     const watch = new ResizeObserver(measure)
     watch.observe(el)
     return () => watch.disconnect()
-  }, [ref])
+  }, [ref, aspect])
   return size
 }
 
 function MapView({
   map,
   view: chosen,
-  setView
+  setView,
+  aspect
 }: {
   map: PassiveMapBridge
   view: View | null
   setView: React.Dispatch<React.SetStateAction<View | null>>
+  aspect: number
 }): React.JSX.Element {
   const svgRef = useRef<SVGSVGElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
-  const [W, H, measured] = useMapSize(wrapRef)
+  const [W, H, measured] = useMapSize(wrapRef, aspect)
 
   // Opened: brought into view with its legend, once it has its size.
   const shown = useRef(false)
