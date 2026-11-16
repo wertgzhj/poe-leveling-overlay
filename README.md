@@ -401,7 +401,8 @@ Wisdom   Ⓡ Holy Flame Totem               A1, Nessa
   reading `PICK ONE, BUY REST`, with the price of the ones you don't take. There's
   one gem vendor per town, so that's where; a line under the gems only appears when
   it's somewhere else: `↳ buy the rest in the Library` (violet) or `in Act 6`. (*The Caged Brute* is two picks (a
-  support and a skill) and shows as two.) On the **next** stage the rest come back
+  support and a skill), and *Breaking Some Eggs* is two (a skill, then a movement
+  skill: Dash, Frostblink or Shield Charge); each shows as two.) On the **next** stage the rest come back
   once, as one buy row reading `↳ whichever you didn't pick`: the quest handed over
   exactly one, and the overlay can't see your inventory.
 - **The list holds what you can get from the acts you've reached**: for this stage,

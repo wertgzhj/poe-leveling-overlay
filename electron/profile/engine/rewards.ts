@@ -80,25 +80,38 @@ export function owedFromPicks(
  *  is ONE pick in game, so a group with several of your gems is a choice —
  *  take one, buy the rest. Singleton groups are plain "take it". */
 /**
- * Quests that hand out TWO rewards — a support gem and a skill gem, each its own
- * pick — where every other quest hands out one.
+ * Quests that hand out TWO rewards, each its own pick, where every other quest
+ * hands out one. The wiki lists both under the one quest name, so the data
+ * alone can't tell them apart. Two kinds:
  *
- * The wiki lists both under the one quest name, so the data alone can't tell
- * them apart, and the tab made one "pick one" box of all nine of The Caged
- * Brute's gems: take Faster Attacks or Leap Slam, buy the rest. In the game you
- * get both. Confirmed in game for The Caged Brute; checked against the data, it
- * is the only quest whose reward list mixes supports and skills for every
- * class. (The Eternal Nightmare mixes them for the Templar only, and that's one
- * window: Arcanist Brand is a skill gem that sits among the supports.)
+ * - The Caged Brute: a support gem and a skill gem. The tab made one "pick
+ *   one" box of all nine of its gems: take Faster Attacks or Leap Slam, buy the
+ *   rest. In the game you get both. Checked against the data, it is the only
+ *   quest whose reward list mixes supports and skills for every class. (The
+ *   Eternal Nightmare mixes them for the Templar only, and that's one window:
+ *   Arcanist Brand is a skill gem that sits among the supports.)
+ * - Breaking Some Eggs: the skill gems, then a window of its own for a
+ *   movement skill (Dash, Frostblink or Shield Charge, whichever the class
+ *   gets). Both are skill gems, so this one goes by name. Seen in game for the
+ *   Ranger (Dash on its own window, Puncture with the others); every class per
+ *   the wiki's reward table, confirmed by the owner.
  *
  * Keyed by quest name, lowercased. Add a quest here only once its two windows
  * have been seen in game.
  */
-const TWO_REWARD_QUESTS: ReadonlySet<string> = new Set(['the caged brute'])
+const TWO_REWARD_QUESTS: ReadonlyMap<string, 'support' | 'movement'> = new Map([
+  ['the caged brute', 'support'],
+  ['breaking some eggs', 'movement']
+])
+
+/** Breaking Some Eggs' second window, by gem name, lowercased. */
+const MOVEMENT_GEMS: ReadonlySet<string> = new Set(['dash', 'frostblink', 'shield charge'])
 
 /** Which of a two-reward quest's picks a gem belongs to; undefined otherwise. */
 function rewardSlot(e: AcquisitionEntry, gemData?: GemData): RewardGroup['slot'] {
-  if (!e.quest || !TWO_REWARD_QUESTS.has(e.quest.toLowerCase())) return undefined
+  const kind = e.quest ? TWO_REWARD_QUESTS.get(e.quest.toLowerCase()) : undefined
+  if (!kind) return undefined
+  if (kind === 'movement') return MOVEMENT_GEMS.has(e.gem.toLowerCase()) ? 'movement' : 'skill'
   // The gem data decides: a PoB profile spells supports without " Support".
   const support = gemData?.isSupport(e.gem) ?? /\sSupport$/i.test(e.gem)
   return support ? 'support' : 'skill'

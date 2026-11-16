@@ -1681,3 +1681,37 @@ test('no act known, no link marks', () => {
   const profile = berserker()
   assert.deepEqual(acquisitionsForStage(profile, 1, exampleGems(), { playerLevel: 9 }).linkMarks, {})
 })
+
+// Breaking Some Eggs: the skill gems on one window, a movement skill on a second.
+// From the report: a Ranger got Dash on a window of its own and Puncture with
+// the others, where the tab said "pick Dash or Puncture, buy the rest".
+function eggs(cls: string, wanted: string[]): Profile {
+  return parseProfile(
+    JSON.stringify({
+      meta: { name: 'eggs', class: cls },
+      stages: [{ range: [1, 20], socketGroups: [{ gems: wanted }] }],
+      gemPlan: wanted.map((gem) => ({ gem }))
+    })
+  ).profile!
+}
+const eggGroups = (profile: Profile): Array<[string | undefined, string[], boolean]> =>
+  acquisitionsForStage(profile, 0, exampleGems(), { playerLevel: 9 })
+    .rewardGroups.filter((g) => g.quest === 'Breaking Some Eggs')
+    .map((g) => [g.slot, g.gems.map((e) => e.gem).sort(), g.pickOne])
+
+test('Breaking Some Eggs: Dash and Puncture are two rewards for a Ranger, not one pick', () => {
+  assert.deepEqual(eggGroups(eggs('Ranger', ['Puncture', 'Dash'])).sort(), [
+    ['movement', ['Dash'], false],
+    ['skill', ['Puncture'], false]
+  ])
+})
+
+test('Breaking Some Eggs: two movement skills are still one pick on their window', () => {
+  // A Duelist is offered Dash and Shield Charge on the movement window.
+  assert.deepEqual(eggGroups(eggs('Duelist', ['Dash', 'Shield Charge', 'Puncture'])).sort(), [
+    ['movement', ['Dash', 'Shield Charge'], true],
+    ['skill', ['Puncture'], false]
+  ])
+  // A Scion's Dash and Frostblink: the same window.
+  assert.deepEqual(eggGroups(eggs('Scion', ['Dash', 'Frostblink'])), [['movement', ['Dash', 'Frostblink'], true]])
+})
