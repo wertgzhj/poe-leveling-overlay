@@ -128,7 +128,8 @@ export const Channels = {
    *  step: where each gem set starts, as far as the build says */
   pobRead: 'pob:read',
   /** renderer -> main (invoke): import the build last read, at the start
-   *  levels the player confirmed, as the active profile */
+   *  levels the player confirmed and without the gem sets they left out, as
+   *  the active profile */
   pobImport: 'pob:import',
   /** renderer -> main: open the editor window */
   editorOpen: 'editor:open',

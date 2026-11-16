@@ -100,6 +100,23 @@ export function stageDrafts(
 }
 
 /**
+ * Which tree specs stay when some gem sets are left out of the import: every
+ * tree but those that belong only to left-out sets (by PoB's pairing). A tree
+ * a kept set shares stays, and so does one no set pairs with — nothing says
+ * it's the left-out sets'. `leftOut` holds indices into `sets`.
+ */
+export function treesKept(
+  sets: readonly (string | undefined)[],
+  leftOut: ReadonlySet<number>,
+  specs: readonly (string | undefined)[]
+): boolean[] {
+  return specs.map((spec) => {
+    const owners = sets.map((set, i) => (linked(set, spec) ? i : -1)).filter((i) => i >= 0)
+    return owners.length === 0 || owners.some((i) => !leftOut.has(i))
+  })
+}
+
+/**
  * Level ranges from start levels, given in PoB's order: sorted by start, each
  * running to the next one's start, the last to `end`, the first from level 1. Two sets starting at
  * the same level can't share it: the later one moves up a level (and it says

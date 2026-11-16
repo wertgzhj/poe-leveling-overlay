@@ -21,7 +21,7 @@ import {
   type Bandit
 } from './profile.ts'
 import { planFromSpecs, type PassivePlan, type TreeData, type TreeSpec } from './tree.ts'
-import { rangesFromStarts, stageDrafts, type StageDraft } from './pob-stages.ts'
+import { rangesFromStarts, stageDrafts, treesKept, type StageDraft } from './pob-stages.ts'
 
 export interface PobImportResult {
   profile: Profile | null
@@ -37,9 +37,13 @@ export interface PobImportOptions {
   /** The passive tree: with it, the build's tree specs become the profile's
    *  `passives`, in the order to take them. */
   tree?: TreeData | null
-  /** each gem set's start level, in PoB's order, as the player confirmed them
-   *  in the review step; overrides what the build says */
+  /** each imported gem set's start level, in PoB's order (the left-out ones
+   *  skipped), as the player confirmed them in the review step; overrides what
+   *  the build says */
   starts?: readonly number[]
+  /** gem sets to leave out, by their index in PoB's order (the review step's
+   *  tick boxes). A tree only they use leaves with them. */
+  leaveOut?: readonly number[]
 }
 
 
@@ -113,18 +117,32 @@ export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImpor
   const ascend = attr(build, 'ascendClassName')
   const buildLevel = intAttr(build, 'level')
 
-  const sets = readSkillSets(pob['Skills'], warnings)
-  if (sets.length === 0) {
+  const allSets = readSkillSets(pob['Skills'], warnings)
+  if (allSets.length === 0) {
     return { profile: null, warnings, errors: ['no skill gems found in the PoB export'] }
   }
 
-  const specs = readSpecs(pob['Tree'])
+  const allSpecs = readSpecs(pob['Tree'])
   const tree = opts.tree ?? null
-  const drafts = stageDrafts(
-    sets.map((s) => ({ title: s.title, gems: s.groups.reduce((n, g) => n + g.gems.length, 0) })),
-    specs.map((s) => ({ title: s.title, points: spentPoints(s, tree) })),
+  // Every gem set's draft, for the review step, which lists them all.
+  const allDrafts = stageDrafts(
+    allSets.map((s) => ({ title: s.title, gems: s.groups.reduce((n, g) => n + g.gems.length, 0) })),
+    allSpecs.map((s) => ({ title: s.title, points: spentPoints(s, tree) })),
     parseStageTitle
   )
+  // Gem sets left out in the review step, and the trees only they use.
+  const leftOut = new Set((opts.leaveOut ?? []).filter((i) => Number.isInteger(i) && i >= 0 && i < allSets.length))
+  if (leftOut.size >= allSets.length) {
+    return { profile: null, warnings, errors: ['every gem set is left out: keep at least one'], drafts: allDrafts }
+  }
+  const sets = allSets.filter((_, i) => !leftOut.has(i))
+  const drafts = allDrafts.filter((_, i) => !leftOut.has(i))
+  const keepTree = treesKept(
+    allSets.map((s) => s.title),
+    leftOut,
+    allSpecs.map((s) => s.title)
+  )
+  const specs = allSpecs.filter((_, i) => keepTree[i])
   // Ranges every gem set states in its title keep their own ends ("1-11",
   // "12-24"): the title-only path below. Otherwise start levels, each stage
   // running to the next: as confirmed in the review step, or as read. Starts
@@ -162,7 +180,7 @@ export function importPobXml(xml: string, opts: PobImportOptions = {}): PobImpor
   const { errors: valErrors } = validateProfile(profile)
   for (const e of valErrors) warnings.push(`review: ${e}`)
 
-  return { profile, warnings, errors, drafts }
+  return { profile, warnings, errors, drafts: allDrafts }
 }
 
 /** Stages at the given start levels, each running to the next one's. */

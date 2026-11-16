@@ -298,6 +298,10 @@ export interface Scenario {
   strip?: boolean
   /** the panel's text size (Settings → Overlay) */
   panelText?: number
+  /** a tick box to untick after `click`, by its aria-label */
+  untick?: string
+  /** the window's width, when not the usual 380 (a wide one on a second screen) */
+  width?: number
   /** a search copied just now: its header button shows the tick */
   copied?: 'vendor' | 'tree' | 'regex'
   /** what main answers for the Passives block's map */
@@ -371,6 +375,31 @@ const scenarios: Scenario[] = [
   // from its tree's points or title, and one the build doesn't say.
   {
     name: 'settings-pob-review',
+    settings: true,
+    tab: 'Build profile',
+    paste: 'https://pobb.in/example',
+    click: 'Read build',
+    pobRead: {
+      ok: true,
+      name: 'Berserker (imported)',
+      drafts: [
+        { label: 'After Tarkleigh', gems: 4, start: 2, from: 'tree-points', tree: 'After Tarkleigh' },
+        { label: 'After Brutus', gems: 7, start: 8, from: 'tree-points', tree: 'After Brutus' },
+        { label: '12', gems: 9, start: 12, from: 'tree-title', tree: '12' },
+        { label: 'Act 4', gems: 11, start: 28, from: 'set-title' },
+        { label: 'Endgame', gems: 14, start: null, from: null }
+      ],
+      errors: []
+    },
+    profile: profileSnapshot(3, 22, 2),
+    log: crypt,
+    trials,
+    guide
+  },
+  // The same with the endgame gem set unticked: left out, no level needed.
+  {
+    name: 'settings-pob-leave-out',
+    untick: 'Import Endgame',
     settings: true,
     tab: 'Build profile',
     paste: 'https://pobb.in/example',
@@ -533,6 +562,18 @@ const scenarios: Scenario[] = [
     name: 'gems-passives-map',
     tab: 'Gems',
     click: 'Map',
+    passiveMap: marauderMap,
+    profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
+    log: crypt,
+    trials,
+    guide
+  },
+  // A window made wide: the passives and the map beside the gems.
+  {
+    name: 'gems-passives-wide',
+    tab: 'Gems',
+    click: 'Map',
+    width: 820,
     passiveMap: marauderMap,
     profile: profileSnapshot(3, 22, 2, { passives: marauderTree }),
     log: crypt,

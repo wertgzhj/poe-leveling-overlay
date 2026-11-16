@@ -89,7 +89,8 @@ const api = {
   exportProfileText: (id: string): Promise<string | null> => ipcRenderer.invoke(Channels.profilesExportText, id),
   importProfileText: (text: string): Promise<LibraryResult> => ipcRenderer.invoke(Channels.profilesImportText, text),
   readPob: (input: string): Promise<PobReadResponse> => ipcRenderer.invoke(Channels.pobRead, input),
-  importPob: (starts: number[]): Promise<PobImportResponse> => ipcRenderer.invoke(Channels.pobImport, starts),
+  importPob: (starts: number[], leaveOut: number[] = []): Promise<PobImportResponse> =>
+    ipcRenderer.invoke(Channels.pobImport, starts, leaveOut),
 
   getTrials: (): Promise<TrialsSnapshot> => ipcRenderer.invoke(Channels.trialsGet),
   onTrialsState: (cb: (snap: TrialsSnapshot) => void): (() => void) =>
