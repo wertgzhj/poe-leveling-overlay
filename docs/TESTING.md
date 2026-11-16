@@ -148,7 +148,11 @@ Run Path of Exile in **Windowed Fullscreen** with an **English client**.
      must show Faster Attacks as a plain `Reward` and a separate *pick one* box
      for Leap Slam / Intimidating Cry, never one box for all three. Same with
      a Path of Building import, which spells it `Faster Attacks` (no
-     "Support"), and no later stage lists Faster Attacks as `(if not picked)`. Every other
+     "Support"), and no later stage lists Faster Attacks as `(if not picked)`.
+   - **Breaking Some Eggs gives two rewards** too: the skill gems, then a
+     movement skill (Dash, Frostblink, Shield Charge). A Ranger build with
+     Puncture and Dash shows both as a plain `Reward`, no *pick one* box; a
+     Duelist with Dash and Shield Charge gets one box for those two only. Every other
      quest is one reward; a quest seen in game to give two goes in
      `TWO_REWARD_QUESTS` (`electron/profile/engine.ts`).
    - On a **fresh character in Act 1** the list holds Act 1 only. Act 2's quest
@@ -497,6 +501,7 @@ that once: a table everyone believed, wrong in two tiers.
 | Vendor price tiers: Wisdom 1-7, Transmutation 8-15, Alteration 16-27, Chance 28-37, Alchemy 38+ | `COST_TIERS` | ✓ game, every tier |
 | The stash/vendor search box takes 250 characters | `SEARCH_BOX_LIMIT` | ✓ game |
 | The Caged Brute gives two rewards (a skill and a support) | `TWO_REWARD_QUESTS` | ✓ game. Other quests: ○, by the data, no other quest mixes skills and supports for every class |
+| Breaking Some Eggs gives two rewards (a skill, then a movement skill: Dash, Frostblink, Shield Charge) | `TWO_REWARD_QUESTS`, `MOVEMENT_GEMS` | ✓ game for the Ranger (a player's report); every class per the wiki's reward table, owner-confirmed |
 | The starting skill and support per class | `data/starting-gems.json` | ✓ game (owner-confirmed) |
 | Quest order within an act, derived from the levels its rewards need | `GemData` | ✓ data: reproduces the real order for every act |
 | `Client.txt` in Steam's default folder | `locate.ts` | ✓ game. Other Steam libraries, standalone, Epic: ○, from the launchers' documented layouts |

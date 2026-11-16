@@ -102,7 +102,7 @@ export interface RewardGroup {
   pickOne: boolean
   /** which of a quest's two rewards this is, for the quests that give two
    *  (see TWO_REWARD_QUESTS); absent for every other quest. */
-  slot?: 'support' | 'skill'
+  slot?: 'support' | 'skill' | 'movement'
   gems: AcquisitionEntry[]
   /** the copies you DON'T get free, what the dearest of them costs, and where
    *  you can buy them. Only set on a pickOne group — see buyRest(). */
